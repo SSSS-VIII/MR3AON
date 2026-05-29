@@ -1,0 +1,713 @@
+{
+    "sheng'yshengy": {},
+    "主页点击深渊冒险": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    120,
+                    335,
+                    470
+                ],
+                "expected": [
+                    "深渊冒险"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "尝试进入深渊主页"
+        ]
+    },
+    "使能节点深渊挑战寻找队伍右滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "深渊挑战寻找队伍右滑"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "深渊挑战准备加入队伍"
+        ]
+    },
+    "使能节点深渊挑战寻找队伍左滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "深渊挑战寻找队伍左滑"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "深渊挑战准备加入队伍"
+        ]
+    },
+    "使能节点深渊挑战结束": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "深渊挑战结束"
+                }
+            }
+        },
+        "post_delay": 0
+    },
+    "关闭节点深渊挑战寻找队伍右滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "深渊挑战寻找队伍右滑"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "使能节点深渊挑战寻找队伍左滑"
+        ]
+    },
+    "关闭节点深渊挑战寻找队伍左滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "深渊挑战寻找队伍左滑"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "使能节点深渊挑战寻找队伍右滑"
+        ]
+    },
+    "卡牌槽下方有文字": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "识别到未选择的卡牌槽",
+                "roi_offset": [
+                    -75,
+                    426,
+                    120,
+                    60
+                ],
+                "expected": [
+                    ".*"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "卡牌槽下方没文字": {
+        "next": [
+            "退出深渊选卡"
+        ]
+    },
+    "尝试进入深渊主页": {
+        "next": [
+            "深渊主页"
+        ]
+    },
+    "尝试退出深渊选卡但未识别到叉叉": {},
+    "意外出现相同的装备卡": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    504,
+                    220,
+                    267,
+                    72
+                ],
+                "expected": [
+                    "无法装备相同的卡"
+                ]
+            }
+        },
+        "next": [
+            "退出深渊选卡"
+        ]
+    },
+    "新建节点1": {
+        "next": [
+            "主页点击深渊冒险",
+            "尝试进入深渊主页"
+        ]
+    },
+    "新建节点4": {},
+    "本周深渊挑战已结束": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    722,
+                    452,
+                    335,
+                    98
+                ],
+                "expected": [
+                    "本周深渊挑战已结束"
+                ]
+            }
+        }
+    },
+    "深渊主页": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    590,
+                    0,
+                    687,
+                    111
+                ],
+                "expected": [
+                    "深渊积分|上轮成绩"
+                ]
+            }
+        },
+        "next": [
+            "点击深渊挑战"
+        ]
+    },
+    "深渊卡选卡点击装备": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    785,
+                    470,
+                    275,
+                    170
+                ],
+                "expected": [
+                    "装备"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "点击装备后选择未选择的卡槽",
+            "点击装备后没有未选择的卡槽"
+        ]
+    },
+    "深渊卡选卡页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    145,
+                    379,
+                    1020,
+                    90
+                ],
+                "expected": [
+                    "深渊卡只能在周五深渊"
+                ]
+            }
+        },
+        "next": [
+            "选卡回到队伍页面了",
+            "[JumpBack]意外出现相同的装备卡",
+            "[JumpBack]深渊卡选卡点击装备",
+            "[JumpBack]识别到未选择的卡牌槽",
+            "[JumpBack]退出深渊选卡"
+        ]
+    },
+    "深渊挑战entry": {
+        "next": [
+            "深渊挑战核心节点"
+        ]
+    },
+    "深渊挑战准备加入队伍": {
+        "next": [
+            "深渊挑战点击加入队伍",
+            "深渊挑战没发现队伍"
+        ]
+    },
+    "深渊挑战刷新队伍页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    568,
+                    270,
+                    151
+                ],
+                "expected": [
+                    "刷新队伍"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "深渊挑战寻找队伍右滑",
+            "深渊挑战寻找队伍左滑"
+        ]
+    },
+    "深渊挑战寻找队伍右滑": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    7,
+                    558,
+                    277,
+                    162
+                ],
+                "expected": [
+                    "刷新队伍"
+                ]
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    1000,
+                    650,
+                    1,
+                    1
+                ],
+                "end": [
+                    [
+                        500,
+                        650,
+                        1,
+                        1
+                    ]
+                ]
+            }
+        },
+        "next": [
+            "关闭节点深渊挑战寻找队伍右滑"
+        ]
+    },
+    "深渊挑战寻找队伍左滑": {
+        "enabled": false,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    7,
+                    558,
+                    277,
+                    162
+                ],
+                "expected": [
+                    "刷新队伍"
+                ]
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    500,
+                    650,
+                    1,
+                    1
+                ],
+                "end": [
+                    [
+                        1000,
+                        650,
+                        1,
+                        1
+                    ]
+                ]
+            }
+        },
+        "next": [
+            "关闭节点深渊挑战寻找队伍左滑"
+        ]
+    },
+    "深渊挑战时间未结束": {
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "深渊挑战时间结束": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "TimeAfter",
+                "custom_recognition_param": {
+                    "time": "21:00"
+                }
+            }
+        },
+        "next": [
+            "使能节点深渊挑战结束"
+        ]
+    },
+    "深渊挑战核心节点": {
+        "next": [
+            "深渊挑战结束",
+            "[JumpBack]深渊挑战刷新队伍页面",
+            "[JumpBack]深渊挑战结算确定",
+            "[JumpBack]深渊挑战点击出发",
+            "[JumpBack]深渊挑战等待队伍开启",
+            "[JumpBack]深渊挑战识别到深渊卡",
+            "[JumpBack]深渊卡选卡页面"
+        ]
+    },
+    "深渊挑战没发现队伍": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "深渊挑战时间结束",
+            "深渊挑战时间未结束"
+        ]
+    },
+    "深渊挑战点击出发": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    982,
+                    582,
+                    292,
+                    136
+                ],
+                "expected": [
+                    "出发"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "深渊挑战点击加入队伍": {},
+    "深渊挑战等待队伍开启": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    982,
+                    582,
+                    292,
+                    136
+                ],
+                "expected": [
+                    "取消准备|返回观战"
+                ]
+            }
+        }
+    },
+    "深渊挑战结束": {
+        "enabled": false
+    },
+    "深渊挑战结算确定": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    456,
+                    576,
+                    370,
+                    143
+                ],
+                "expected": [
+                    "继续|确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "深渊挑战识别到深渊卡": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    832,
+                    609,
+                    135,
+                    99
+                ],
+                "expected": [
+                    "深渊卡"
+                ]
+            }
+        },
+        "next": [
+            "识别到深渊卡后识别到取消准备则等待",
+            "识别到深渊卡后识别到准备",
+            "识别到深渊卡后未识别到准备和取消准备"
+        ]
+    },
+    "深渊挑战购买卡牌": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    922,
+                    2,
+                    358,
+                    117
+                ],
+                "expected": [
+                    "购买卡牌"
+                ]
+            }
+        }
+    },
+    "深渊挑战购买深渊卡标志": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    484,
+                    122,
+                    306,
+                    86
+                ],
+                "expected": [
+                    "购买深渊卡"
+                ]
+            }
+        }
+    },
+    "点击叉叉退出深渊选卡": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "叉叉0.png",
+                    "叉叉1.png",
+                    "叉叉2.png",
+                    "叉叉3.png",
+                    "叉叉4.png",
+                    "叉叉5.png"
+                ]
+            }
+        }
+    },
+    "点击深渊挑战": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    202,
+                    436,
+                    888,
+                    219
+                ],
+                "expected": [
+                    "深渊挑战"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": 500,
+        "next": [
+            "点击深渊挑战"
+        ]
+    },
+    "点击装备后没有未选择的卡槽": {
+        "next": [
+            "退出深渊选卡"
+        ]
+    },
+    "点击装备后选择未选择的卡槽": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    18,
+                    76,
+                    1247,
+                    271
+                ],
+                "expected": [
+                    "未选择"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "识别到未选择的卡牌槽": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    18,
+                    76,
+                    1247,
+                    271
+                ],
+                "expected": [
+                    "未选择"
+                ]
+            }
+        },
+        "next": [
+            "卡牌槽下方有文字",
+            "卡牌槽下方没文字"
+        ]
+    },
+    "识别到深渊卡后未识别到准备和取消准备": {},
+    "识别到深渊卡后识别到准备": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    982,
+                    582,
+                    292,
+                    136
+                ],
+                "expected": [
+                    "准备"
+                ]
+            }
+        },
+        "next": [
+            "识别到深渊卡后识别到准备则点击深渊卡"
+        ]
+    },
+    "识别到深渊卡后识别到准备则点击深渊卡": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    832,
+                    609,
+                    135,
+                    99
+                ],
+                "expected": [
+                    "深渊"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "识别到深渊卡后识别到取消准备则等待": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    982,
+                    582,
+                    292,
+                    136
+                ],
+                "expected": [
+                    "取消准备|返回观战|未就绪"
+                ]
+            }
+        }
+    },
+    "退出深渊选卡": {
+        "next": [
+            "点击叉叉退出深渊选卡",
+            "尝试退出深渊选卡但未识别到叉叉"
+        ]
+    },
+    "选卡回到队伍页面了": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    825,
+                    595,
+                    149,
+                    124
+                ],
+                "expected": [
+                    "深渊"
+                ]
+            }
+        },
+        "next": [
+            "选完卡后发现取消准备则不点击",
+            "选完卡后点击准备",
+            "选完卡后没发现准备和取消准备按钮"
+        ]
+    },
+    "选完卡后发现取消准备则不点击": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    972,
+                    591,
+                    306,
+                    128
+                ],
+                "expected": [
+                    "取消准备"
+                ]
+            }
+        }
+    },
+    "选完卡后没发现准备和取消准备按钮": {},
+    "选完卡后点击准备": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    972,
+                    591,
+                    306,
+                    128
+                ],
+                "expected": [
+                    "准备"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "队伍内购买卡牌": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1098,
+                    49,
+                    182,
+                    109
+                ],
+                "expected": ""
+            }
+        }
+    }
+}

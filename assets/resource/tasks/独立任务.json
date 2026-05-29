@@ -84,6 +84,9 @@
                 "standalone"
             ],
             "description": "<span style=\"color:deepskyblue;font-size:15px\">系统会先判断当前是否为<strong>周六、周日</strong>，非周末将<strong>直接跳过</strong>。</span>"
+        },{
+            "name":"深渊挑战",
+            "entry": "深渊挑战entry"
         }
     ],
     "option": {
