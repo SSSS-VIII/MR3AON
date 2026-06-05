@@ -1,0 +1,1081 @@
+{
+    "S_SS+点击准备": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    952,
+                    562,
+                    328,
+                    154
+                ],
+                "expected": [
+                    "准备"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "重置节点S_SS+等待超时计数"
+        ]
+    },
+    "S_SS+点击刷新": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1068,
+                    130,
+                    155,
+                    79
+                ],
+                "expected": [
+                    "刷新"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 0
+    },
+    "S_SS+点击加入": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    172,
+                    191,
+                    114,
+                    66
+                ],
+                "expected": [
+                    "悬",
+                    "赏"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    384,
+                    291,
+                    30,
+                    30
+                ]
+            }
+        },
+        "post_delay": 0
+    },
+    "S_SS+队伍已解散": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    585,
+                    200,
+                    265,
+                    111
+                ],
+                "expected": [
+                    "已经开始战斗",
+                    "队伍已经解散"
+                ]
+            }
+        },
+        "next": [
+            "S_SS+点击刷新"
+        ]
+    },
+    "S_SS+开始抢悬赏": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 60000,
+        "rate_limit": 100,
+        "next": [
+            "[JumpBack]S_SS+队伍已解散",
+            "[JumpBack]S_SS+点击加入",
+            "[JumpBack]S_SS+点击刷新",
+            "S_SS+已准备",
+            "[JumpBack]S_SS+点击准备",
+            "[JumpBack]S_SS+悬赏仍在主页中",
+            "[JumpBack]S_SS+悬赏意外点击到别人个人信息",
+            "S_SS+悬赏识别到进入了战斗"
+        ]
+    },
+    "S_SS+完成回到了主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    4,
+                    136,
+                    434,
+                    459
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true,
+                "threshold": [
+                    0.8
+                ]
+            }
+        },
+        "action": {
+            "type": "StopTask"
+        },
+        "focus": "任务完成：S_SS+✅"
+    },
+    "S_SS+悬赏讨伐失败": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    500,
+                    465,
+                    285,
+                    247
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "S_SS+entry": {
+        "next": [
+            "[JumpBack]S_SS+entry入口",
+            "S_SS+任务出错"
+        ]
+    },
+    "S_SS+entry入口": {
+        "max_hit": 3,
+        "next": [
+            "重置S_SS+内部节点计数器"
+        ]
+    },
+    "S_SS+任务出错": {
+        "focus": "任务出错：S_SS+❌"
+    },
+    "S_SS+确认在主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    500,
+                    712
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true,
+                "threshold": [
+                    0.8
+                ]
+            }
+        },
+        "next": [
+            "S_SS+进入集会所"
+        ]
+    },
+    "S_SS+进入集会所": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    646,
+                    362,
+                    631,
+                    355
+                ],
+                "template": [
+                    "集会所.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    67,
+                    -20,
+                    -17,
+                    -2
+                ]
+            }
+        },
+        "post_wait_freezes": {
+            "time": 400,
+            "threshold": 0.8
+        },
+        "next": [
+            "S_SS+集会所主页",
+            "[JumpBack]S_SS+悬赏讨伐失败",
+            "S_SS+进入集会所"
+        ]
+    },
+    "S_SS+集会所主页": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    21,
+                    3,
+                    379,
+                    132
+                ],
+                "template": [
+                    "集会所主页.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "S_SS+点击悬赏令页面",
+            "[JumpBack]S_SS+集会所右滑计数"
+        ]
+    },
+    "S_SS+集会所右滑": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    21,
+                    3,
+                    379,
+                    132
+                ],
+                "template": [
+                    "集会所主页.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    1260,
+                    400,
+                    1,
+                    1
+                ],
+                "end": [
+                    [
+                        700,
+                        400,
+                        1,
+                        1
+                    ]
+                ],
+                "end_hold": [
+                    400
+                ]
+            }
+        }
+    },
+    "S_SS+集会所右滑计数": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 3
+                }
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "S_SS+集会所右滑"
+        ]
+    },
+    "重置S_SS+内部节点计数器": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount"
+            }
+        },
+        "next": [
+            "S_SS+确认在主页面",
+            "[JumpBack]back"
+        ]
+    },
+    "S_SS+点击悬赏令页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    8,
+                    70,
+                    1259,
+                    233
+                ],
+                "template": [
+                    "悬赏令.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": {
+            "time": 500,
+            "threshold": 0.8
+        },
+        "next": [
+            "S_SS+点击召令悬赏",
+            "S_SS+点击悬赏令页面"
+        ]
+    },
+    "S_SS+点击召令悬赏": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    34,
+                    263,
+                    1215,
+                    389
+                ],
+                "template": [
+                    "召令悬赏.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "召令悬赏主页面",
+            "S_SS+点击召令悬赏"
+        ]
+    },
+    "召令悬赏主页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    944,
+                    543,
+                    335,
+                    173
+                ],
+                "expected": [
+                    "我的召令悬赏",
+                    "我的召令是赏",
+                    "寻找队伍"
+                ]
+            }
+        },
+        "next": [
+            "召令悬赏已开启标志1",
+            "召令悬赏已开启标志0",
+            "召令悬赏未开启"
+        ]
+    },
+    "召令悬赏未开启": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    296,
+                    215,
+                    672,
+                    284
+                ],
+                "expected": [
+                    "通过召令悬赏等级测试后开启"
+                ]
+            }
+        },
+        "action": {
+            "type": "StopTask"
+        },
+        "focus": "S/SS+任务结束:未开启召令悬赏",
+        "next": [
+            "S_SS+任务完成"
+        ]
+    },
+    "召令悬赏已开启标志0": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    85,
+                    186,
+                    390,
+                    206
+                ],
+                "expected": [
+                    "悬赏"
+                ]
+            }
+        },
+        "next": [
+            "召令悬赏确认已通过等级测试"
+        ]
+    },
+    "召令悬赏已开启标志1": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    333,
+                    239,
+                    644,
+                    263
+                ],
+                "expected": [
+                    "当前没有队伍"
+                ]
+            }
+        },
+        "next": [
+            "召令悬赏确认已通过等级测试"
+        ]
+    },
+    "召令悬赏确认已通过等级测试": {
+        "next": [
+            "[JumpBack]召令悬赏开启所有选项",
+            "召令悬赏确认S选项已开启"
+        ]
+    },
+    "召令悬赏开启所有选项": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    799,
+                    98,
+                    290,
+                    136
+                ],
+                "template": [
+                    "召令悬赏未选择.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 800
+    },
+    "召令悬赏确认S选项已开启": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    810,
+                    100,
+                    140,
+                    140
+                ],
+                "template": [
+                    "召令悬赏已选择.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "召令悬赏确认SS+选项已开启",
+            "召令悬赏确认已通过等级测试"
+        ]
+    },
+    "召令悬赏确认SS+选项已开启": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    920,
+                    100,
+                    140,
+                    140
+                ],
+                "template": [
+                    "召令悬赏已选择.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]召令悬赏处理关闭S选项",
+            "[JumpBack]召令悬赏处理关闭SS+选项",
+            "重置节点召令悬赏处理关闭S选项"
+        ]
+    },
+    "召令悬赏处理关闭S选项": {
+        "enabled": true,
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "召令悬赏需要刷S",
+            "召令悬赏确定要关闭S选项"
+        ]
+    },
+    "召令悬赏处理关闭SS+选项": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "召令悬赏需要刷SS+",
+            "召令悬赏确定要关闭SS+选项"
+        ]
+    },
+    "召令悬赏需要刷S": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "召令悬赏S已满",
+            "召令悬赏S未满"
+        ]
+    },
+    "召令悬赏S已满": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    310,
+                    115,
+                    120,
+                    120
+                ],
+                "template": [
+                    "每日悬赏次数0.png"
+                ],
+                "threshold": [
+                    0.8
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "召令悬赏确定要关闭S选项"
+        ]
+    },
+    "召令悬赏确定要关闭S选项": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "召令悬赏无法关闭选项说明任务完成",
+            "[JumpBack]召令悬赏S选项未关闭",
+            "召令悬赏S选项已关闭"
+        ]
+    },
+    "召令悬赏S未满": {
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "召令悬赏S选项未关闭": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    810,
+                    100,
+                    140,
+                    140
+                ],
+                "template": [
+                    "召令悬赏已选择.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 800
+    },
+    "召令悬赏S选项已关闭": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    810,
+                    100,
+                    140,
+                    140
+                ],
+                "template": [
+                    "召令悬赏未选择.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "召令悬赏需要刷SS+": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "召令悬赏SS+已满",
+            "召令悬赏SS+未满"
+        ]
+    },
+    "召令悬赏SS+已满": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    445,
+                    115,
+                    120,
+                    120
+                ],
+                "template": [
+                    "每日悬赏次数0.png"
+                ],
+                "threshold": [
+                    0.8
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "召令悬赏确定要关闭SS+选项"
+        ]
+    },
+    "召令悬赏确定要关闭SS+选项": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "召令悬赏无法关闭选项说明任务完成",
+            "[JumpBack]召令悬赏SS+选项未关闭",
+            "召令悬赏SS+选项已关闭"
+        ]
+    },
+    "召令悬赏SS+未满": {
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "召令悬赏SS+选项未关闭": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    910,
+                    100,
+                    140,
+                    140
+                ],
+                "template": [
+                    "召令悬赏已选择.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 800
+    },
+    "召令悬赏SS+选项已关闭": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    910,
+                    100,
+                    140,
+                    140
+                ],
+                "template": [
+                    "召令悬赏未选择.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "重置节点召令悬赏处理关闭S选项": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "召令悬赏处理关闭S选项"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "重置节点重置节点召令悬赏处理关闭SS+选项"
+        ]
+    },
+    "重置节点重置节点召令悬赏处理关闭SS+选项": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "召令悬赏处理关闭SS+选项"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "S_SS+开始抢悬赏"
+        ]
+    },
+    "S_SS+已准备": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    952,
+                    562,
+                    328,
+                    154
+                ],
+                "expected": [
+                    "取消准备"
+                ]
+            }
+        },
+        "post_delay": 1000,
+        "next": [
+            "S_SS+等待超时计数",
+            "S_SS+等待超时"
+        ]
+    },
+    "S_SS+悬赏识别到进入了战斗": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 480000,
+        "next": [
+            "[JumpBack]S_SS+悬赏调用fight",
+            "[JumpBack]S_SS+悬赏结算确定",
+            "[JumpBack]S_SS+悬赏点击空白处关闭",
+            "[JumpBack]S_SS+悬赏点到了个人信息",
+            "S_SS+悬赏进入战斗后回到了召令悬赏页面",
+            "S_SS+悬赏进入战斗后回到组队页面"
+        ]
+    },
+    "S_SS+悬赏fight": {
+        "next": [
+            "fight"
+        ]
+    },
+    "S_SS+悬赏点击空白处关闭": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    505,
+                    599,
+                    247,
+                    71
+                ],
+                "expected": [
+                    "点击空白处关闭"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    384,
+                    23,
+                    -126,
+                    17
+                ]
+            }
+        }
+    },
+    "S_SS+悬赏点到了个人信息": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    57,
+                    33,
+                    255,
+                    127
+                ],
+                "expected": [
+                    "个人信息"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1269,
+                    366,
+                    1,
+                    1
+                ]
+            }
+        }
+    },
+    "S_SS+悬赏结算确定": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    521,
+                    408,
+                    246,
+                    309
+                ],
+                "expected": [
+                    "确定|下一页"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "S_SS+悬赏调用fight": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]S_SS+悬赏降低fight识别速度",
+            "S_SS+悬赏fight"
+        ]
+    },
+    "S_SS+悬赏进入战斗后回到了召令悬赏页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    944,
+                    543,
+                    335,
+                    173
+                ],
+                "expected": [
+                    "我的召令悬赏",
+                    "我的召令是赏",
+                    "寻找队伍"
+                ]
+            }
+        },
+        "next": [
+            "召令悬赏主页面"
+        ]
+    },
+    "S_SS+悬赏进入战斗后回到组队页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    973,
+                    615,
+                    290,
+                    92
+                ],
+                "expected": [
+                    "准备",
+                    "取消准备",
+                    "出发",
+                    "至少需要二人",
+                    "队员未准备"
+                ]
+            }
+        },
+        "next": [
+            "S_SS+开始抢悬赏"
+        ]
+    },
+    "S_SS+悬赏降低fight识别速度": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "post_delay": 2000
+    },
+    "召令悬赏无法关闭选项说明任务完成": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    399,
+                    182,
+                    496,
+                    164
+                ],
+                "expected": [
+                    "至少选中一个"
+                ]
+            }
+        },
+        "next": [
+            "S_SS+任务完成"
+        ]
+    },
+    "S_SS+任务完成": {
+        "next": [
+            "S_SS+完成回到了主页面",
+            "[JumpBack]back"
+        ]
+    },
+    "S_SS+悬赏仍在主页中": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    952,
+                    562,
+                    328,
+                    154
+                ],
+                "expected": [
+                    "我的召令悬赏",
+                    "我的召令是赏",
+                    "寻找队伍"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "S_SS+悬赏意外点击到别人个人信息": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    270,
+                    130
+                ],
+                "expected": [
+                    "个人信息"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    200,
+                    33,
+                    1,
+                    1
+                ]
+            }
+        }
+    },
+    "重置节点S_SS+等待超时计数": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "S_SS+等待超时计数"
+                }
+            }
+        },
+        "post_delay": 0
+    },
+    "S_SS+等待超时计数": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 60
+                }
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "S_SS+开始抢悬赏"
+        ]
+    },
+    "S_SS+等待超时": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "重置S_SS+内部节点计数器"
+        ]
+    }
+}

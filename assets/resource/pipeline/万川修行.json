@@ -1,0 +1,889 @@
+{
+    "万川修行_悬赏讨伐失败": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    500,
+                    465,
+                    285,
+                    247
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "万川修行boss列表页": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    12,
+                    521,
+                    347,
+                    128
+                ],
+                "expected": [
+                    "使用体验忍者"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]万川修行意外点击到关卡",
+            "万川修行识别到上次挑战记录",
+            "万川修行已选择体验忍者",
+            "[JumpBack]万川修行点击选择体验忍者"
+        ]
+    },
+    "万川修行entry": {
+        "next": [
+            "[JumpBack]万川修行entry入口",
+            "万川修行任务出错"
+        ]
+    },
+    "万川修行entry入口": {
+        "max_hit": 3,
+        "next": [
+            "重置万川修行内部节点计数器"
+        ]
+    },
+    "万川修行主页": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    865,
+                    3,
+                    412,
+                    140
+                ],
+                "expected": [
+                    "秘闻|商店|排行榜"
+                ]
+            }
+        },
+        "next": [
+            "万川修行点击秘闻"
+        ]
+    },
+    "万川修行任务出错": {
+        "focus": "任务出错：万川修行❌"
+    },
+    "万川修行再次点击秘闻": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    870,
+                    9,
+                    407,
+                    131
+                ],
+                "expected": [
+                    "秘闻"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    0,
+                    -50,
+                    0,
+                    0
+                ]
+            }
+        },
+        "post_delay": 500
+    },
+    "万川修行取消上次挑战记录": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    993,
+                    619,
+                    283,
+                    101
+                ],
+                "expected": [
+                    "剩余重复挑战次数"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    53,
+                    63,
+                    1,
+                    1
+                ]
+            }
+        }
+    },
+    "万川修行完成回到了主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    4,
+                    136,
+                    434,
+                    459
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "StopTask"
+        },
+        "focus": "任务完成：万川修行✅"
+    },
+    "万川修行再次识别boss列表": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    12,
+                    521,
+                    347,
+                    128
+                ],
+                "expected": [
+                    "使用体验忍者"
+                ]
+            }
+        },
+        "timeout": 300000,
+        "next": [
+            "万川修行挑战成功后点击选择卡牌",
+            "万川修行挑战失败后点击返回",
+            "[JumpBack]万川修行挑战失败后点击跳过",
+            "[JumpBack]万川修行确定进入关卡",
+            "[JumpBack]万川修行选择第一关",
+            "[JumpBack]万川修行挑战成功后点击确定",
+            "[JumpBack]万川修行进入了boss"
+        ]
+    },
+    "万川修行已选择体验忍者": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    5,
+                    519,
+                    268,
+                    103
+                ],
+                "template": [
+                    "万川修行已使用体验忍者.png"
+                ],
+                "threshold": [
+                    0.85
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]万川修行挑战失败后点击返回",
+            "[JumpBack]万川修行挑战成功后点击选择卡牌",
+            "万川修行识别到上次挑战记录",
+            "[JumpBack]万川修行再次识别boss列表"
+        ]
+    },
+    "万川修行意外点击到关卡": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    373,
+                    484,
+                    219,
+                    94
+                ],
+                "expected": [
+                    "取消"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "万川修行挑战失败后点击跳过": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    508,
+                    633,
+                    319,
+                    86
+                ],
+                "expected": [
+                    "跳过"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "万川修行挑战失败后点击返回": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    490,
+                    487,
+                    311,
+                    133
+                ],
+                "expected": [
+                    "返回"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "万川修行挑战失败计数",
+            "万川修行挑战失败次数过多停止任务"
+        ]
+    },
+    "万川修行挑战成功后点击确定": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    915,
+                    558,
+                    338,
+                    133
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "万川修行挑战成功后点击选择卡牌": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    231,
+                    518,
+                    850,
+                    117
+                ],
+                "expected": [
+                    "选择"
+                ],
+                "order_by": "Random"
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "重置节点万川修行调用fight一次"
+        ]
+    },
+    "万川修行放弃挑战": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    601,
+                    452,
+                    463,
+                    144
+                ],
+                "expected": [
+                    "放弃挑战"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1500
+    },
+    "万川修行每日任务已完成": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    794,
+                    118,
+                    301,
+                    122
+                ],
+                "expected": [
+                    "已领取"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1180,
+                    179,
+                    75,
+                    79
+                ]
+            }
+        },
+        "next": [
+            "万川修行完成回到了主页面",
+            "[JumpBack]万川修行点击领取确定",
+            "[JumpBack]万川修行集会所返回主页面"
+        ]
+    },
+    "万川修行每日任务未完成": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    794,
+                    118,
+                    301,
+                    122
+                ],
+                "expected": [
+                    "/"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1180,
+                    179,
+                    75,
+                    79
+                ]
+            }
+        },
+        "next": [
+            "万川修行点击凌云峰",
+            "万川修行boss列表页",
+            "万川修行每日任务未完成"
+        ]
+    },
+    "万川修行每日任务页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    519,
+                    33,
+                    252,
+                    138
+                ],
+                "expected": [
+                    "每日任务"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]万川修行放弃挑战",
+            "[JumpBack]万川修行取消上次挑战记录",
+            "[JumpBack]万川修行再次点击秘闻",
+            "万川修行每日任务已完成",
+            "[JumpBack]万川修行点击领取确定",
+            "[JumpBack]万川修行点击领取",
+            "[JumpBack]万川修行每日任务未完成",
+            "万川修行点击万川修行"
+        ]
+    },
+    "万川修行活动介绍点击下一页": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    547,
+                    529,
+                    710,
+                    136
+                ],
+                "expected": [
+                    "下一页|上一页"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    635,
+                    57,
+                    1,
+                    1
+                ]
+            }
+        }
+    },
+    "万川修行点击万川修行": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    8,
+                    70,
+                    1259,
+                    233
+                ],
+                "template": [
+                    "万川修行.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": {
+            "time": 400,
+            "threshold": 0.8
+        },
+        "next": [
+            "[JumpBack]万川修行活动介绍点击下一页",
+            "万川修行主页",
+            "万川修行点击万川修行"
+        ]
+    },
+    "万川修行点击凌云峰": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    18,
+                    140,
+                    1253,
+                    461
+                ],
+                "template": [
+                    "凌云峰.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    74,
+                    -105,
+                    -149,
+                    -8
+                ]
+            }
+        },
+        "post_delay": 1000,
+        "next": [
+            "[JumpBack]万川修行意外点击到关卡",
+            "万川修行boss列表页",
+            "万川修行点击凌云峰"
+        ]
+    },
+    "万川修行点击秘闻": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    870,
+                    9,
+                    407,
+                    131
+                ],
+                "expected": [
+                    "秘闻"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    0,
+                    -50,
+                    0,
+                    0
+                ]
+            }
+        },
+        "post_delay": 500,
+        "next": [
+            "万川修行每日任务页面",
+            "万川修行点击秘闻"
+        ]
+    },
+    "万川修行点击选择体验忍者": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    5,
+                    519,
+                    268,
+                    103
+                ],
+                "template": [
+                    "万川修行未使用体验忍者.png"
+                ],
+                "threshold": [
+                    0.85
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000
+    },
+    "万川修行点击领取": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    792,
+                    117,
+                    311,
+                    132
+                ],
+                "expected": [
+                    "领取"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "万川修行点击领取确定": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    505,
+                    565,
+                    303,
+                    154
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "万川修行确定进入关卡": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    695,
+                    484,
+                    233,
+                    89
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "万川修行确认在主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    500,
+                    712
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "next": [
+            "万川修行进入集会所"
+        ]
+    },
+    "万川修行识别到上次挑战记录": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1008,
+                    619,
+                    259,
+                    101
+                ],
+                "expected": [
+                    "剩余重复挑战次数"
+                ]
+            }
+        }
+    },
+    "万川修行调用fight一次": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        },
+        "next": [
+            "fight"
+        ]
+    },
+    "万川修行进入了boss": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    999,
+                    0,
+                    280,
+                    100
+                ],
+                "expected": [
+                    "\\d\\d\\d"
+                ]
+            }
+        },
+        "next": [
+            "万川修行调用fight一次",
+            "万川修行错误识别进入boss"
+        ]
+    },
+    "万川修行进入集会所": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    646,
+                    362,
+                    631,
+                    355
+                ],
+                "template": [
+                    "集会所.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    67,
+                    -20,
+                    -17,
+                    -2
+                ]
+            }
+        },
+        "post_wait_freezes": {
+            "time": 400,
+            "threshold": 0.8
+        },
+        "next": [
+            "万川修行集会所主页",
+            "[JumpBack]万川修行_悬赏讨伐失败",
+            "万川修行进入集会所"
+        ]
+    },
+    "万川修行选择第一关": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    11,
+                    311,
+                    500,
+                    178
+                ],
+                "expected": [
+                    "修行关卡|选择一个秘技"
+                ],
+                "order_by": "Random"
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "万川修行错误识别进入boss": {},
+    "万川修行集会所主页": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    21,
+                    3,
+                    379,
+                    132
+                ],
+                "template": [
+                    "集会所主页.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "万川修行点击万川修行",
+            "[JumpBack]万川修行集会所右滑计数"
+        ]
+    },
+    "万川修行集会所右滑": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    21,
+                    3,
+                    379,
+                    132
+                ],
+                "template": [
+                    "集会所主页.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    1260,
+                    400,
+                    1,
+                    1
+                ],
+                "end": [
+                    [
+                        700,
+                        400,
+                        1,
+                        1
+                    ]
+                ],
+                "end_hold": [
+                    400
+                ]
+            }
+        }
+    },
+    "万川修行集会所右滑计数": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 3
+                }
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "万川修行集会所右滑"
+        ]
+    },
+    "万川修行集会所返回主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    125,
+                    100
+                ],
+                "template": [
+                    "返回按钮.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 2000
+    },
+    "重置万川修行内部节点计数器": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount"
+            }
+        },
+        "next": [
+            "万川修行确认在主页面",
+            "[JumpBack]back"
+        ]
+    },
+    "重置节点万川修行调用fight一次": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "万川修行调用fight一次"
+                }
+            }
+        }
+    },
+    "万川修行挑战失败计数": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 2
+                }
+            }
+        },
+        "next": [
+            "重置节点万川修行调用fight一次"
+        ]
+    },
+    "万川修行挑战失败次数过多停止任务": {
+        "action": {
+            "type": "StopTask"
+        },
+        "focus": "彩蛋：万川修行挑战失败次数过多停止任务(不应该啊)"
+    }
+}

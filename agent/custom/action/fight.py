@@ -10,19 +10,19 @@ from utils import logger
 
 
 def _coerce_fight_mode(value: Any) -> int:
-    """0/1/2；缺省或非法时返回 0。"""
+    """解析 mode，合法值为 0–3；缺省或非法时返回 0。"""
     if value is None:
         return 0
     if isinstance(value, bool):
         return 0
     if isinstance(value, int):
-        if value in (0, 1, 2):
+        if value in (0, 1, 2, 3):
             return value
         logger.warning(f"fight: mode 非法 ({value})，使用 0")
         return 0
     if isinstance(value, str):
         s = value.strip()
-        if s in ("0", "1", "2"):
+        if s in ("0", "1", "2", "3"):
             return int(s)
         if s == "":
             return 0
@@ -40,17 +40,18 @@ class fight(CustomAction):
         argv: CustomAction.RunArg,
     ) -> CustomAction.RunResult:
         """
-        fight 点击动作。
+        战斗开大连点。
 
-        custom_action_param（可选，JSON 字符串或对象）:
-            { "mode": 0 | 1 | 2 }
+        custom_action_param（可选）: { "mode": 0 | 1 | 2 | 3 }
 
-        mode 0 为通用大招
-        mode 1 为小椒大招
-        mode 2 为卫鲤大招
-        未传、空对象或缺省 mode 时视为模式 0（通用大招）。
+        mode:
+            0 - 通用（大招原点 + 小椒 1 式）
+            1 - 其他角色（仅大招原点）
+            2 - 双焰小椒（大招原点 + 小椒 1 式）
+            3 - 剑心/卫鲤（大招原点一次 + 卫鲤 2 式）
 
-
+        每日悬赏等任务会在识别角色后通过 NodeOverride 覆盖 mode；
+        未覆盖或未传参时默认为 0。
         """
         try:
             param = parse_pipeline_json_param(argv.custom_action_param)
@@ -61,13 +62,7 @@ class fight(CustomAction):
                 if delay_ms > 0:
                     time.sleep(delay_ms / 1000)
 
-            # click(80, 360, t) 为大招原点
-            # click(180, 260, t) 为小椒1式
-            # click(210, 350, t) 为卫鲤2式
-            # mode 0 为通用大招
-            # mode 1 为其他角色大招
-            # mode 2 为双椒大招
-            # mode 3 为卫鲤大招
+            # (80, 360) 大招原点；(180, 260) 小椒 1 式；(210, 350) 卫鲤 2 式
             if mode == 0:
                 for _ in range(40):
                     click(80, 360, 100)

@@ -52,6 +52,7 @@
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
     },
+    "markdownlint.configFile": "docs/.markdownlint.yaml",
     "markdownlint.config": {
         "MD028": false
     }

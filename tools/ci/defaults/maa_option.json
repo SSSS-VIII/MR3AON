@@ -1,6 +1,6 @@
 {
     "draw_quality": 85,
-    "logging": true,
+    "logging": false,
     "save_draw": false,
     "save_on_error": false,
     "stdout_level": 2

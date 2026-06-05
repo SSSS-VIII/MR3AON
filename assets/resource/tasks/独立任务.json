@@ -87,6 +87,27 @@
         },{
             "name":"深渊挑战",
             "entry": "深渊挑战entry"
+        },
+        {
+            "name": "万川修行",
+            "entry": "万川修行entry",
+            "option": [
+                "是否使用体验角色"
+            ],
+            "group": [
+                "standalone"
+            ]
+        },
+        {
+            "name": "S/SS+",
+            "entry": "S_SS+entry",
+            "option": [
+                "清S",
+                "清SS+"
+            ],
+            "group": [
+                "standalone"
+            ]
         }
     ],
     "option": {
@@ -445,6 +466,111 @@
                             "enabled": false
                         },
                         "识别到全员参战且有进入战场": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "是否使用体验角色": {
+            "type": "switch",
+            "label": "是否使用体验角色",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "开启",
+                    "pipeline_override": {
+                        "万川修行已选择体验忍者": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "万川修行已使用体验忍者.png"
+                                    ]
+                                }
+                            }
+                        },
+                        "万川修行点击选择体验忍者": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "万川修行未使用体验忍者.png"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "label": "关闭",
+                    "pipeline_override": {
+                        "万川修行已选择体验忍者": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "万川修行未使用体验忍者.png"
+                                    ]
+                                }
+                            }
+                        },
+                        "万川修行点击选择体验忍者": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "万川修行已使用体验忍者.png"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "清S": {
+            "type": "switch",
+            "label": "清S",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "开启",
+                    "pipeline_override": {
+                        "召令悬赏需要刷S": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "label": "关闭",
+                    "pipeline_override": {
+                        "召令悬赏需要刷S": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "清SS+": {
+            "type": "switch",
+            "label": "清SS+",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "开启",
+                    "pipeline_override": {
+                        "召令悬赏需要刷SS+": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "label": "关闭",
+                    "pipeline_override": {
+                        "召令悬赏需要刷SS+": {
                             "enabled": false
                         }
                     }

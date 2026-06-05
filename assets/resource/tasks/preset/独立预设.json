@@ -26,6 +26,14 @@
                 {
                     "name": "家族战",
                     "enabled": false
+                },
+                {
+                    "name": "万川修行",
+                    "enabled": false
+                },
+                {
+                    "name": "S/SS+",
+                    "enabled": false
                 }
             ]
         }

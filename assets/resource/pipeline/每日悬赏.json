@@ -216,9 +216,9 @@
             "param": {
                 "custom_action": "NodeOverride",
                 "custom_action_param": {
-                    "fight": {
+                    "每日悬赏fight": {
                         "next": [
-                            "fight_common"
+                            "fight"
                         ]
                     }
                 }
@@ -232,6 +232,11 @@
         "next": [
             "[JumpBack]每日悬赏入口",
             "每日悬赏任务出错"
+        ]
+    },
+    "每日悬赏fight": {
+        "next": [
+            "fight"
         ]
     },
     "每日悬赏主页面": {
@@ -1135,7 +1140,7 @@
         },
         "next": [
             "[JumpBack]每日悬赏降低fight识别速度",
-            "fight"
+            "每日悬赏fight"
         ]
     },
     "每日悬赏购买叉叉": {
@@ -1652,14 +1657,14 @@
             "param": {
                 "custom_action": "NodeOverride",
                 "custom_action_param": {
-                    "fight": {
-                        "next": [
-                            "fight_better"
-                        ]
-                    },
-                    "fight_better_boss_delay": {
+                    "fight_A_boss_delay": {
                         "next": [
                             "刀疤蝠80delay"
+                        ]
+                    },
+                    "每日悬赏fight": {
+                        "next": [
+                            "fight_A"
                         ]
                     }
                 }
@@ -1777,14 +1782,14 @@
             "param": {
                 "custom_action": "NodeOverride",
                 "custom_action_param": {
-                    "fight": {
-                        "next": [
-                            "fight_better"
-                        ]
-                    },
-                    "fight_better_boss_delay": {
+                    "fight_A_boss_delay": {
                         "next": [
                             "歼灭者V型80delay"
+                        ]
+                    },
+                    "每日悬赏fight": {
+                        "next": [
+                            "fight_A"
                         ]
                     }
                 }
@@ -1816,14 +1821,14 @@
             "param": {
                 "custom_action": "NodeOverride",
                 "custom_action_param": {
-                    "fight": {
-                        "next": [
-                            "fight_better"
-                        ]
-                    },
-                    "fight_better_boss_delay": {
+                    "fight_A_boss_delay": {
                         "next": [
                             "焰纹黑龙80delay"
+                        ]
+                    },
+                    "每日悬赏fight": {
+                        "next": [
+                            "fight_A"
                         ]
                     }
                 }
@@ -1855,14 +1860,14 @@
             "param": {
                 "custom_action": "NodeOverride",
                 "custom_action_param": {
-                    "fight": {
-                        "next": [
-                            "fight_better"
-                        ]
-                    },
-                    "fight_better_boss_delay": {
+                    "fight_A_boss_delay": {
                         "next": [
                             "血影80delay"
+                        ]
+                    },
+                    "每日悬赏fight": {
+                        "next": [
+                            "fight_A"
                         ]
                     }
                 }
@@ -1894,14 +1899,14 @@
             "param": {
                 "custom_action": "NodeOverride",
                 "custom_action_param": {
-                    "fight": {
-                        "next": [
-                            "fight_better"
-                        ]
-                    },
-                    "fight_better_boss_delay": {
+                    "fight_A_boss_delay": {
                         "next": [
                             "青炎剑80delay"
+                        ]
+                    },
+                    "每日悬赏fight": {
+                        "next": [
+                            "fight_A"
                         ]
                     }
                 }
@@ -1933,14 +1938,14 @@
             "param": {
                 "custom_action": "NodeOverride",
                 "custom_action_param": {
-                    "fight": {
-                        "next": [
-                            "fight_better"
-                        ]
-                    },
-                    "fight_better_boss_delay": {
+                    "fight_A_boss_delay": {
                         "next": [
                             "鬼头陀80delay"
+                        ]
+                    },
+                    "每日悬赏fight": {
+                        "next": [
+                            "fight_A"
                         ]
                     }
                 }

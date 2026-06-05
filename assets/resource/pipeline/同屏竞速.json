@@ -1,0 +1,454 @@
+{
+    "同屏竞速entry": {
+        "next": [
+            "同屏竞速主页面",
+            "[JumpBack]周末活动再次点击同屏竞速",
+            "[JumpBack]同屏竞速点击前往活动"
+        ]
+    },
+    "同屏竞速主页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    937,
+                    567,
+                    343,
+                    147
+                ],
+                "expected": [
+                    "可获得积分场次剩余"
+                ]
+            }
+        },
+        "next": [
+            "点击同屏竞速每日任务"
+        ]
+    },
+    "同屏竞速任务已完成": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    775,
+                    100,
+                    355,
+                    104
+                ],
+                "expected": [
+                    "已领取"
+                ]
+            }
+        },
+        "next": [
+            "同屏竞速完成"
+        ]
+    },
+    "同屏竞速多次点击超级起步": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    920,
+                    249,
+                    260,
+                    236
+                ],
+                "expected": [
+                    "超级",
+                    "起步"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 0
+    },
+    "同屏竞速完成": {
+        "next": [
+            "同屏竞速完成回到了主页面",
+            "[JumpBack]back"
+        ]
+    },
+    "同屏竞速完成回到了主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    4,
+                    136,
+                    434,
+                    459
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true
+            }
+        }
+    },
+    "同屏竞速未完成": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    793,
+                    106,
+                    326,
+                    96
+                ],
+                "expected": [
+                    "/"
+                ]
+            }
+        },
+        "next": [
+            "同屏竞速获得一局第一",
+            "同屏竞速进行跑酷"
+        ]
+    },
+    "同屏竞速没识别到超级起步": {},
+    "同屏竞速点击一键领取": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    683,
+                    585,
+                    596,
+                    133
+                ],
+                "expected": [
+                    "键领取"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "同屏竞速点击准备": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    467,
+                    485,
+                    331,
+                    167
+                ],
+                "expected": [
+                    "准备"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "同屏竞速点击前往活动": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    892,
+                    582,
+                    378,
+                    130
+                ],
+                "expected": [
+                    "跃跃|交给我吧|前往活动|确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "同屏竞速点击开始匹配": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    992,
+                    616,
+                    287,
+                    103
+                ],
+                "expected": [
+                    "开始匹配"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "同屏竞速点击超级起步": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    920,
+                    249,
+                    260,
+                    236
+                ],
+                "expected": [
+                    "超级",
+                    "起步"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "[JumpBack]同屏竞速多次点击超级起步",
+            "同屏竞速没识别到超级起步"
+        ]
+    },
+    "同屏竞速点击领取确定": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    486,
+                    566,
+                    311,
+                    152
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 500
+    },
+    "同屏竞速点开了每日任务": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    110,
+                    0,
+                    400,
+                    110
+                ],
+                "expected": [
+                    "每日任务"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]同屏竞速点击领取确定",
+            "[JumpBack]同屏竞速点击一键领取",
+            "同屏竞速任务已完成",
+            "同屏竞速未完成"
+        ]
+    },
+    "同屏竞速结束点击确定": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1003,
+                    603,
+                    275,
+                    114
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "同屏竞速结束点击继续": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    454,
+                    604,
+                    367,
+                    114
+                ],
+                "expected": [
+                    "继续"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "同屏竞速获得一局第一": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    498,
+                    105,
+                    265,
+                    100
+                ],
+                "expected": [
+                    "获得一局第一名"
+                ]
+            }
+        },
+        "next": [
+            "同屏竞速完成"
+        ]
+    },
+    "同屏竞速识别到米字": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1180,
+                    0,
+                    100,
+                    295
+                ],
+                "expected": [
+                    "米"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "同屏竞速点击超级起步",
+            "同屏竞速跑酷点击"
+        ]
+    },
+    "同屏竞速识别到进入了战斗": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 480000,
+        "next": [
+            "[JumpBack]同屏竞速识别到米字",
+            "[JumpBack]同屏竞速结束点击继续",
+            "[JumpBack]同屏竞速结束点击确定",
+            "同屏竞速进入后回到了主页面"
+        ]
+    },
+    "同屏竞速跑酷点击": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "sync_race_parkour",
+                "custom_action_param": {
+                    "skill_phase_chance": 0.8,
+                    "step_delay_ms": 150,
+                    "swipe_duration_ms": 150
+                }
+            }
+        },
+        "repeat": 3,
+        "post_delay": 0
+    },
+    "同屏竞速进入后回到了主页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1009,
+                    630,
+                    243,
+                    84
+                ],
+                "expected": [
+                    "开始匹配"
+                ]
+            }
+        },
+        "next": [
+            "点击同屏竞速每日任务"
+        ]
+    },
+    "同屏竞速进行跑酷": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1191,
+                    237,
+                    82,
+                    89
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]同屏竞速点击准备",
+            "[JumpBack]同屏竞速点击开始匹配",
+            "同屏竞速识别到进入了战斗"
+        ]
+    },
+    "周末活动再次点击同屏竞速": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    1275,
+                    300
+                ],
+                "template": [
+                    "同屏竞速.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "点击同屏竞速每日任务": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    700,
+                    0,
+                    570,
+                    110
+                ],
+                "expected": [
+                    "每日任务"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "同屏竞速点开了每日任务",
+            "点击同屏竞速每日任务"
+        ]
+    }
+}
