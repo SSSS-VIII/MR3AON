@@ -6,7 +6,17 @@ from __future__ import annotations
 import json
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, Callable, Dict, List, Mapping, MutableMapping, Optional, Sequence, Tuple, Union, cast
+from typing import (
+    Any,
+    Dict,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Tuple,
+    Union,
+    cast,
+)
 
 import requests
 from maa.agent.agent_server import AgentServer
@@ -16,67 +26,42 @@ from maa.context import Context
 from custom.pipeline_params import parse_pipeline_json_param
 from utils.logger import logger
 
-# 内置镜像：依次尝试，任一成功即采用响应体（HTTP 2xx + 可解析 JSON）
-_MirrorBuilder = Callable[[str, str, str, str], str]
+# 默认 base URL 列表：相对路径（path / 无协议 url）依次拼接尝试
+DEFAULT_BASE_URLS = [
+    "https://raw.githubusercontent.com/originalsage/MR3A/main/",
+    "https://cdn.jsdelivr.net/gh/originalsage/MR3A@main/",
+    "https://fastly.jsdelivr.net/gh/originalsage/MR3A@main/",
+]
 
-
-def _mirror_jsdelivr_cdn(owner: str, repo: str, ref: str, path: str) -> str:
-    return f"https://cdn.jsdelivr.net/gh/{owner}/{repo}@{ref}/{path}"
-
-
-def _mirror_jsdelivr_fastly(owner: str, repo: str, ref: str, path: str) -> str:
-    return f"https://fastly.jsdelivr.net/gh/{owner}/{repo}@{ref}/{path}"
-
-
-def _mirror_raw_githubusercontent(owner: str, repo: str, ref: str, path: str) -> str:
-    return f"https://raw.githubusercontent.com/{owner}/{repo}/{ref}/{path}"
-
-
-DEFAULT_MIRROR_BUILDERS: Tuple[_MirrorBuilder, ...] = (
-    _mirror_jsdelivr_cdn,
-    _mirror_jsdelivr_fastly,
-    _mirror_raw_githubusercontent,
-)
-
-# 省略 github_repo / repo 时使用（Fork 其它仓库时请显式传 repo）
-DEFAULT_GITHUB_REPO = "originalsage/MR3A"
-# 仅传 overrides、不写 path 时使用的相对路径
 DEFAULT_REMOTE_META_PATH = "assets/remote/game-meta.json"
 
-
-def _effective_github_repo(param: Mapping[str, Any]) -> str:
-    for key in ("github_repo", "repo"):
-        v = param.get(key)
-        if isinstance(v, str) and v.strip():
-            return v.strip()
-    logger.debug(
-        "RemoteJsonOverrideExpected: 未指定 github_repo/repo，使用默认 "
-        f"{DEFAULT_GITHUB_REPO}"
-    )
-    return DEFAULT_GITHUB_REPO
+# 默认 game-meta 完整 URL（仅 overrides、不写 url/path 时使用）
+DEFAULT_GAME_META_URLS = [
+    "https://mr3a.oss-cn-beijing.aliyuncs.com/game-meta.json",
+    # *(f"{b}{DEFAULT_REMOTE_META_PATH}" for b in DEFAULT_BASE_URLS),
+]
 
 
-def _parse_github_repo(repo_spec: str) -> Tuple[str, str]:
-    s = repo_spec.strip().strip("/")
-    if "/" not in s:
-        raise ValueError("github_repo 须为 owner/repo 形式")
-    owner, repo = s.split("/", 1)
-    owner, repo = owner.strip(), repo.strip().strip("/")
-    if not owner or not repo or "/" in repo:
-        raise ValueError("github_repo 须为 owner/repo 形式")
-    return owner, repo
-
-
-def _normalize_resource_path(p: str) -> str:
-    return p.strip().lstrip("/")
+def _get_base_urls(param: Dict[str, Any]) -> List[str]:
+    """解析 base_urls 参数，缺省使用 DEFAULT_BASE_URLS。"""
+    base_urls = param.get("base_urls")
+    if isinstance(base_urls, list) and base_urls:
+        out = []
+        for b in base_urls:
+            if isinstance(b, str) and b.strip():
+                out.append(b.strip().rstrip("/") + "/")
+        if out:
+            return out
+    return list(DEFAULT_BASE_URLS)
 
 
 def _collect_try_urls(param: Dict[str, Any]) -> List[str]:
     """
     解析待尝试的 URL 列表（顺序即尝试顺序）。
 
-    优先级：urls > url（绝对）> path / 无前缀 url > 仅 overrides（默认 path+默认 repo）。
+    优先级：urls > url（绝对）> url（相对，视为 path）> path > 仅 overrides（默认 default_urls）。
     """
+    # 1) urls 数组
     raw_urls = param.get("urls")
     if isinstance(raw_urls, list) and raw_urls:
         out: List[str] = []
@@ -84,83 +69,50 @@ def _collect_try_urls(param: Dict[str, Any]) -> List[str]:
             if not isinstance(u, str) or not u.strip():
                 raise ValueError(f"urls[{i}] 须为非空字符串")
             out.append(u.strip())
+        if not out:
+            raise ValueError("urls 数组不能为空")
         return out
 
+    # 2) url 单字符串
     single = param.get("url")
     if isinstance(single, str) and single.strip():
         s = single.strip()
         if "://" in s:
             return [s]
-        # 无协议：视为仓库内相对 path，github_repo/repo 可省略（默认本仓库）
-        gh = _effective_github_repo(param)
-        return _expand_github_mirrors(gh, param)
+        # 无协议：视为相对 path，拼接到 base_urls
+        bases = _get_base_urls(param)
+        return [f"{b}{s.lstrip('/')}" for b in bases]
 
+    # 3) path 相对路径
     path_only = param.get("path")
     if isinstance(path_only, str) and path_only.strip():
-        gh = _effective_github_repo(param)
-        return _expand_github_mirrors(gh, param)
+        bases = _get_base_urls(param)
+        p = path_only.strip().lstrip("/")
+        return [f"{b}{p}" for b in bases]
 
-    # 最简：只写 overrides，使用默认 upstream 与默认 meta 路径
+    # 4) 仅 overrides：使用 default_urls 或内置默认值
     if param.get("overrides") is not None:
-        gh = _effective_github_repo(param)
-        merged = dict(param)
-        merged.setdefault("path", DEFAULT_REMOTE_META_PATH)
-        return _expand_github_mirrors(gh, merged)
+        default_urls = param.get("default_urls")
+        if isinstance(default_urls, list) and default_urls:
+            out = []
+            for i, u in enumerate(default_urls):
+                if not isinstance(u, str) or not u.strip():
+                    raise ValueError(f"default_urls[{i}] 须为非空字符串")
+                out.append(u.strip())
+            if not out:
+                raise ValueError("default_urls 数组不能为空")
+            return out
+        return list(DEFAULT_GAME_META_URLS)
 
-    raise ValueError(
-        "缺少 url、urls、path，或未写 path 时的 overrides（可用默认 meta 路径）"
-    )
-
-
-def _expand_github_mirrors(github_repo: str, param: Dict[str, Any]) -> List[str]:
-    owner, repo = _parse_github_repo(github_repo)
-    ref_raw = param.get("ref", "main")
-    if not isinstance(ref_raw, str) or not ref_raw.strip():
-        raise ValueError("ref 须为非空字符串")
-    ref = ref_raw.strip()
-
-    rel = param.get("path")
-    if not isinstance(rel, str) or not rel.strip():
-        rel = param.get("url")
-    if not isinstance(rel, str) or not rel.strip():
-        raise ValueError("简写模式下须设置 path（或无前缀的 url）")
-    path = _normalize_resource_path(rel)
-
-    custom = param.get("mirror_builders")
-    builders: Sequence[_MirrorBuilder]
-    if custom is not None:
-        if not isinstance(custom, list) or not custom:
-            raise ValueError("mirror_builders 须为非空字符串数组")
-        # 字符串关键字 -> 内置名
-        name_map: Dict[str, _MirrorBuilder] = {
-            "jsdelivr": _mirror_jsdelivr_cdn,
-            "jsdelivr_cdn": _mirror_jsdelivr_cdn,
-            "fastly": _mirror_jsdelivr_fastly,
-            "jsdelivr_fastly": _mirror_jsdelivr_fastly,
-            "raw": _mirror_raw_githubusercontent,
-            "raw_github": _mirror_raw_githubusercontent,
-        }
-        tmp: List[_MirrorBuilder] = []
-        for i, item in enumerate(custom):
-            if isinstance(item, str) and item in name_map:
-                tmp.append(name_map[item])
-            else:
-                raise ValueError(
-                    f"mirror_builders[{i}] 未知项 {item!r}，"
-                    f"可选: jsdelivr, fastly, raw"
-                )
-        builders = tmp
-    else:
-        builders = DEFAULT_MIRROR_BUILDERS
-
-    return [b(owner, repo, ref, path) for b in builders]
+    raise ValueError("缺少 url、urls、path，或未提供 overrides（可使用默认 meta 路径）")
 
 
 def _get_by_dotted_path(root: Any, path: str) -> Any:
     if not path or not path.strip():
         return root
     cur: Any = root
-    for part in path.strip().split("."):
+    parts = [p for p in path.strip().split(".") if p]
+    for part in parts:
         if not isinstance(cur, MutableMapping) or part not in cur:
             raise KeyError(part)
         cur = cur[part]
@@ -179,9 +131,7 @@ def _parse_set_path(raw: Any, *, default_set: str) -> str:
     return raw.strip()
 
 
-def _normalize_overrides(
-    raw: Any, *, default_set: str
-) -> List[Dict[str, Any]]:
+def _normalize_overrides(raw: Any, *, default_set: str) -> List[Dict[str, Any]]:
     """
     每项: node, json_key, set（写入节点下的点号路径，默认 OCR expected）,
     expected_as_list 可选（仅对 expected 字段生效，缺省用全局参数）。
@@ -230,9 +180,7 @@ def _normalize_overrides(
             elif isinstance(spec, dict):
                 jk = spec.get("json_key")
                 if not isinstance(jk, str) or not jk.strip():
-                    raise ValueError(
-                        f"节点 {node!r} 的对象值须含非空 json_key 字符串"
-                    )
+                    raise ValueError(f"节点 {node!r} 的对象值须含非空 json_key 字符串")
                 st = _parse_set_path(
                     spec.get("set", spec.get("target")),
                     default_set=default_set,
@@ -241,15 +189,13 @@ def _normalize_overrides(
                 if "expected_as_list" in spec:
                     eal = spec["expected_as_list"]
                     if not isinstance(eal, bool):
-                        raise TypeError(
-                            f"节点 {node!r} 的 expected_as_list 须为 bool"
-                        )
+                        raise TypeError(f"节点 {node!r} 的 expected_as_list 须为 bool")
                     entry["expected_as_list"] = eal
                 out.append(entry)
             else:
                 raise TypeError(
                     f"节点 {node!r} 的值须为字符串（远端键名）或对象 "
-                    f"{{ \"json_key\", \"set\"? }}"
+                    f'{{ "json_key", "set"? }}'
                 )
         if not out:
             raise ValueError("overrides 对象不能为空")
@@ -267,9 +213,7 @@ def _value_to_remote_text(val: Any) -> str:
     raise TypeError(f"不支持的 JSON 值类型: {type(val).__name__}")
 
 
-def _build_expected_field(
-    text: str, *, as_list: bool
-) -> Union[str, List[str]]:
+def _build_expected_field(text: str, *, as_list: bool) -> Union[str, List[str]]:
     if as_list:
         return [text]
     return text
@@ -287,11 +231,7 @@ def _subtree_from_dotted_path(dotted: str, leaf: Any) -> Dict[str, Any]:
 
 def _deep_merge_dict(dst: MutableMapping[str, Any], src: Mapping[str, Any]) -> None:
     for k, v in src.items():
-        if (
-            k in dst
-            and isinstance(dst[k], MutableMapping)
-            and isinstance(v, Mapping)
-        ):
+        if k in dst and isinstance(dst[k], MutableMapping) and isinstance(v, Mapping):
             _deep_merge_dict(cast(MutableMapping[str, Any], dst[k]), v)
         else:
             dst[k] = v
@@ -442,9 +382,17 @@ class RemoteJsonOverrideExpected(CustomAction):
     """
     GET/POST 远端 JSON，将键值经 override_pipeline **深度合并**到目标节点字段。
 
-    地址：urls / 绝对 url / path / 仅 overrides（默认 game-meta 路径）——同前。
+    **地址解析**（优先级从高到低）：
+    1. ``urls``：完整 URL 数组，直接使用
+    2. ``url``（含 ``://``）：完整 URL，直接使用
+    3. ``url``（无协议）/ ``path``：相对路径，拼接 ``base_urls``（可配置，默认 GitHub 镜像）
+    4. 仅 ``overrides``：使用 ``default_urls`` 或内置默认（OSS + GitHub 镜像）
 
-    overrides（每项写入节点名 node 下的一条点号路径 set）：
+    **新增参数**：
+    - ``base_urls``：解析相对路径时的 base URL 列表，缺省为 GitHub 镜像
+    - ``default_urls``：仅 overrides 时的完整 URL 列表，缺省为 OSS（优先）+ GitHub 镜像
+
+    **overrides**（每项写入节点名 node 下的一条点号路径 set）：
     - 数组: [{ "node", "json_key", "set"?, "expected_as_list"? }, ...]；set / target 缺省为 OCR expected
       （v2: recognition.param.expected；v1: expected，由 expected_merge_path 决定）。
     - 对象简写:
@@ -453,14 +401,22 @@ class RemoteJsonOverrideExpected(CustomAction):
 
     非 OCR 的 ``set``（如 ``action.param.input_text``）仅支持字符串/数字/布尔等标量（数字会转成字符串）。
 
-    **parallel_mirrors**（可选，默认 ``true``）：存在多个镜像 URL 时默认**并发**请求各镜像，
-    取**最先**返回且 JSON 合法的一条（更快，但同一时刻出站请求更多）；设为 ``false`` 则改为顺序尝试；仅单 URL 时始终顺序。
-    拉取成功不写入 **info**（命中镜像见 **debug**：``顺序拉取成功`` / ``并行竞速成功``）；并行时单条失败亦用 **debug**。
+    **parallel_mirrors**（可选，默认 ``true``）：存在多个 URL 时默认**并发**请求，
+    取**最先**返回且 JSON 合法的一条；设为 ``false`` 则顺序尝试；仅单 URL 时始终顺序。
+    拉取成功不写入 **info**（命中见 **debug**：``顺序拉取成功`` / ``并行竞速成功``）；并行时单条失败亦用 **debug**。
+
+    最简示例（依赖默认 URL）::
+
+        {
+            "overrides": {
+                "检查版本": "版本名称"
+            }
+        }
 
     InputText 示例::
 
         {
-            "path": "assets/remote/game-meta.json",
+            "url": "https://mr3a.oss-cn-beijing.aliyuncs.com/game-meta.json",
             "overrides": {
                 "兑换兑换码": {
                     "json_key": "兑换码",
@@ -468,9 +424,12 @@ class RemoteJsonOverrideExpected(CustomAction):
                 }
             }
         }
-        
+
+    自定义 base_urls 示例::
+
         {
-            "path": "assets/remote/game-meta.json",
+            "path": "data/game-meta.json",
+            "base_urls": ["https://my-cdn.example.com/", "https://mirror.example.org/"],
             "overrides": {
                 "检查版本": "版本名称"
             }
@@ -496,7 +455,9 @@ class RemoteJsonOverrideExpected(CustomAction):
 
         merge_path = str(param.get("expected_merge_path", "v2")).lower()
         if merge_path not in ("v1", "v2"):
-            logger.error("RemoteJsonOverrideExpected: expected_merge_path 仅支持 v1 / v2")
+            logger.error(
+                "RemoteJsonOverrideExpected: expected_merge_path 仅支持 v1 / v2"
+            )
             return CustomAction.RunResult(success=False)
 
         default_set = _default_expected_set_path(merge_path)
@@ -527,7 +488,9 @@ class RemoteJsonOverrideExpected(CustomAction):
             try:
                 timeout = float(timeout_raw)
             except (TypeError, ValueError):
-                logger.error(f"RemoteJsonOverrideExpected: 无效 timeout: {timeout_raw!r}")
+                logger.error(
+                    f"RemoteJsonOverrideExpected: 无效 timeout: {timeout_raw!r}"
+                )
                 return CustomAction.RunResult(success=False)
 
         verify = param.get("verify", True)
@@ -623,9 +586,7 @@ class RemoteJsonOverrideExpected(CustomAction):
             try:
                 subtree = _subtree_from_dotted_path(set_path, leaf)
             except ValueError as e:
-                logger.error(
-                    f"RemoteJsonOverrideExpected: 节点 {node!r} set 无效: {e}"
-                )
+                logger.error(f"RemoteJsonOverrideExpected: 节点 {node!r} set 无效: {e}")
                 return CustomAction.RunResult(success=False)
 
             if node not in patch:
