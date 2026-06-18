@@ -276,8 +276,7 @@
                             "json_key": "每周兑换码",
                             "set": "action.param.input_text"
                         }
-                    },
-                    "path": "assets/remote/game-meta.json"
+                    }
                 }
             }
         },
