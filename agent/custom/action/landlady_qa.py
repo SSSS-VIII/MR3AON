@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
-"""老板娘问答：答错学题入库（CustomAction）。"""
+"""老板娘问答：答错学题入库 + 上报金山文档（CustomAction）。"""
 
 from __future__ import annotations
 
+import json
+
+import requests
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
@@ -21,10 +24,51 @@ from custom.reco.landlady_qa import (
 from utils.logger import logger
 from utils.text_match import append_qa_entry, extract_question_body, strip_option_prefix
 
+# ==== 金山文档上传配置 ====
+_KDOCS_FILE_ID = "crcMio8nY0BC"
+_KDOCS_QA_SCRIPT_ID = "V2-4VRu2Hw09Jsfc8WLad2vbL"
+_KDOCS_TOKEN = "1NKkJQNwt4yNsLNVTTmnVH"
+_KDOCS_QA_SHEET = "老板娘问答"
+# ==========================
+
+
+def _upload_qa_to_kdocs(question: str, answer: str) -> None:
+    """上传问答到金山文档（仅开发者参考用，失败不影响主流程）。"""
+    if not _KDOCS_FILE_ID or not _KDOCS_QA_SCRIPT_ID or not _KDOCS_TOKEN:
+        return
+
+    url = (
+        f"https://www.kdocs.cn/api/v3/ide/file/"
+        f"{_KDOCS_FILE_ID}/script/{_KDOCS_QA_SCRIPT_ID}/sync_task"
+    )
+    headers = {
+        "Content-Type": "application/json",
+        "AirScript-Token": _KDOCS_TOKEN,
+    }
+    payload = {
+        "Context": {
+            "argv": {
+                "sheetName": _KDOCS_QA_SHEET,
+                "rowData": [question, answer],
+            }
+        }
+    }
+
+    try:
+        resp = requests.post(url, headers=headers, data=json.dumps(payload), timeout=5)
+        if resp.status_code != 200:
+            logger.warning(f"LandladyQa: 上传金山文档失败 HTTP {resp.status_code}")
+        else:
+            logger.debug(f"LandladyQa: 已上报金山文档 Q={question!r}")
+    except requests.RequestException:
+        logger.warning("LandladyQa: 上传金山文档网络异常")
+
 
 @AgentServer.custom_action("LandladyQaLearnAnswer")
 class LandladyQaLearnAnswer(CustomAction):
-    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
+    def run(
+        self, context: Context, argv: CustomAction.RunArg
+    ) -> CustomAction.RunResult:
         param = parse_pipeline_json_param(argv.custom_action_param)
         db_path = str(param.get("db_path", DEFAULT_DB)).strip() or DEFAULT_DB
         offset = param.get("target_offset", LEARN_OFFSET)
@@ -64,6 +108,9 @@ class LandladyQaLearnAnswer(CustomAction):
         except (OSError, ValueError) as e:
             logger.error(f"LandladyQa learn: 写入失败 {e}")
             return CustomAction.RunResult(success=False)
+
+        # 上报金山文档（不影响本地写入结果）
+        _upload_qa_to_kdocs(question, answer)
 
         logger.debug(
             f"LandladyQa learn: 已写入 {db_path} Q={question!r} A={answer!r} dup={on_dup}"
