@@ -17,14 +17,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch code from BWiki and update
+      - name: Fetch code from BWiki and update remote file
         run: |
           echo "Current Date and Time: $(date '+%Y-%m-%d %H:%M:%S')"
           python tools/ci/update_codes.py
-        env:
-          KDOCS_FILE_ID: ${{ secrets.KDOCS_FILE_ID }}
-          KDOCS_UPDATE_SCRIPT_ID: ${{ secrets.KDOCS_UPDATE_SCRIPT_ID }}
-          KDOCS_TOKEN: ${{ secrets.KDOCS_TOKEN }}
 
       - name: Commit and push if remote file changed
         run: |
@@ -32,7 +28,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add assets/remote/
-            git commit -m "chore: update weekly codes [skip ci]"
+            git commit -m "chore: update weekly codes"
             git pull origin $(git rev-parse --abbrev-ref HEAD) --rebase
             git push
           else

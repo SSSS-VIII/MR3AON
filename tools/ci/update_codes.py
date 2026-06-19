@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
-"""Fetch the latest weekly code from BWiki SMW API, update local remote file and send to Kingsoft Docs."""
+"""Fetch the latest weekly code from BWiki SMW API and update game-meta.json."""
 
 import json
-import os
 import sys
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
-
-import requests
 
 SMW_URL = "https://wiki.biligame.com/nmd3/api.php?" + urllib.parse.urlencode({
     "action": "ask",
@@ -17,45 +14,6 @@ SMW_URL = "https://wiki.biligame.com/nmd3/api.php?" + urllib.parse.urlencode({
     "format": "json",
 })
 META_PATH = "assets/remote/game-meta.json"
-
-
-def _send_to_kdocs(key: str, value: str) -> bool:
-    """Returns True if env vars not set (skip) or if send succeeds."""
-    file_id = os.environ.get("KDOCS_FILE_ID")
-    if not file_id:
-        print("KDocs: env not configured, skip")
-        return True
-
-    script_id = os.environ["KDOCS_UPDATE_SCRIPT_ID"]
-    token = os.environ["KDOCS_TOKEN"]
-    sheet = os.environ.get("KDOCS_SHEET_NAME", "GameMeta")
-
-    url = (
-        f"https://www.kdocs.cn/api/v3/ide/file/"
-        f"{file_id}/script/{script_id}/sync_task"
-    )
-    headers = {
-        "Content-Type": "application/json",
-        "AirScript-Token": token,
-    }
-    payload = {
-        "Context": {
-            "argv": {
-                "sheetName": sheet,
-                "key": key,
-                "value": value,
-            }
-        }
-    }
-
-    resp = requests.post(url, headers=headers, data=json.dumps(payload), timeout=10)
-    if resp.status_code != 200:
-        print(f"ERROR: KDocs API HTTP {resp.status_code}: {resp.text}", file=sys.stderr)
-        return False
-
-    result = resp.json()
-    print(f"KDocs response: {json.dumps(result, ensure_ascii=False)}")
-    return True
 
 
 def main():
@@ -95,7 +53,7 @@ def main():
         print(f"ERROR: Parse failed: {e}", file=sys.stderr)
         return 1
 
-    # Phase 3: Update local remote file
+    # Phase 3: Update game-meta.json
     try:
         with open(META_PATH, "r", encoding="utf-8") as f:
             meta = json.load(f)
@@ -111,16 +69,10 @@ def main():
         with open(META_PATH, "w", encoding="utf-8") as f:
             json.dump(meta, f, ensure_ascii=False, indent=2)
             f.write("\n")
-        print(f"Updated remote file: {old!r} -> {code!r}")
+        print(f"Updated: {old!r} -> {code!r}")
     else:
-        print(f"Remote file unchanged (current: {code})")
+        print(f"No change (current: {code})")
 
-    # Phase 4: Send to Kingsoft Docs (optional, skipped if env not configured)
-    if not _send_to_kdocs("每周兑换码", code):
-        print("ERROR: Send to Kingsoft Docs failed", file=sys.stderr)
-        return 1
-
-    print(f"Done: 每周兑换码 = {code}")
     return 0
 
 

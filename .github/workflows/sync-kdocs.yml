@@ -1,0 +1,24 @@
+name: Sync game-meta to Kingsoft Docs
+
+on:
+  push:
+    paths:
+      - 'assets/remote/game-meta.json'   # 手动修改 remote 触发
+  workflow_run:
+    workflows: ["Sync weekly codes"]      # CI 自动更新后触发
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync blackboard to Kingsoft Docs
+        run: python tools/ci/sync_kdocs.py
+        env:
+          KDOCS_FILE_ID: ${{ secrets.KDOCS_FILE_ID }}
+          KDOCS_UPDATE_SCRIPT_ID: ${{ secrets.KDOCS_UPDATE_SCRIPT_ID }}
+          KDOCS_TOKEN: ${{ secrets.KDOCS_TOKEN }}
