@@ -540,18 +540,18 @@
             "default_case": "困难",
             "cases": [
                 {
-                    "name": "简单",
+                    "name": "困难",
                     "pipeline_override": {
                         "幽狱永镇识别目标类型": {
                             "expected": [
-                                "简单"
+                                "困难"
                             ]
                         },
                         "幽狱永镇检测目标难度匹配": {
                             "recognition": {
                                 "param": {
                                     "template": [
-                                        "幽狱永镇简单模式.png"
+                                        "幽狱永镇困难模式.png"
                                     ]
                                 }
                             }
@@ -578,18 +578,18 @@
                     }
                 },
                 {
-                    "name": "困难",
+                    "name": "简单",
                     "pipeline_override": {
                         "幽狱永镇识别目标类型": {
                             "expected": [
-                                "困难"
+                                "简单"
                             ]
                         },
                         "幽狱永镇检测目标难度匹配": {
                             "recognition": {
                                 "param": {
                                     "template": [
-                                        "幽狱永镇困难模式.png"
+                                        "幽狱永镇简单模式.png"
                                     ]
                                 }
                             }
