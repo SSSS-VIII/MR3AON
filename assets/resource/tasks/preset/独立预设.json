@@ -36,6 +36,10 @@
                     "enabled": false
                 },
                 {
+                    "name": "地区首领",
+                    "enabled": false
+                },
+                {
                     "name": "S/SS+",
                     "enabled": false
                 }

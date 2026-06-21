@@ -1,0 +1,685 @@
+{
+    "地区首领entry": {
+        "next": [
+            "[JumpBack]地区首领entry入口",
+            "地区首领任务出错"
+        ]
+    },
+    "地区首领entry入口": {
+        "max_hit": 3,
+        "next": [
+            "重置地区首领内部节点计数器"
+        ]
+    },
+    "地区首领任务出错": {
+        "focus": "任务出错：地区首领❌"
+    },
+    "地区首领再次点击准备如果卡了的话": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    1045,
+                    634,
+                    132,
+                    65
+                ],
+                "template": [
+                    "准备.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000
+    },
+    "地区首领地区页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    774,
+                    192,
+                    143,
+                    57
+                ],
+                "expected": [
+                    "筛选"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]地区首领筛选关闭3v3",
+            "[JumpBack]地区首领筛选关闭活动玩法",
+            "地区首领地区首领页面"
+        ]
+    },
+    "地区首领地区首领页面": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 20000,
+        "rate_limit": 101,
+        "next": [
+            "[JumpBack]地区首领点击悬赏令聊天消息",
+            "地区首领识别到加入队伍",
+            "进入了地区首领",
+            "地区首领识别并点击聊天"
+        ],
+        "on_error": [
+            "地区首领返回主页面"
+        ]
+    },
+    "地区首领完成回到了主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    4,
+                    136,
+                    434,
+                    459
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true,
+                "threshold": [
+                    0.78
+                ]
+            }
+        },
+        "action": {
+            "type": "StopTask"
+        },
+        "focus": "任务完成：地区首领✅"
+    },
+    "地区首领展开筛选": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    700,
+                    159,
+                    143,
+                    130
+                ],
+                "template": [
+                    "地区筛选图标.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": {
+            "time": 300,
+            "target": [
+                741,
+                225,
+                519,
+                471
+            ],
+            "threshold": 0.8
+        },
+        "next": [
+            "地区首领地区页面",
+            "地区首领展开筛选"
+        ]
+    },
+    "地区首领忽略目标类型悬赏": {
+        "enabled": false,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "地区首领识别到加入队伍",
+                "roi_offset": [
+                    -196,
+                    -165,
+                    57,
+                    33
+                ],
+                "expected": [
+                    "LLS"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "rate_limit": 101,
+        "next": [
+            "地区首领地区首领页面"
+        ]
+    },
+    "地区首领有文字": {
+        "enabled": false,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "地区首领识别到加入队伍",
+                "roi_offset": [
+                    -178,
+                    -75,
+                    46,
+                    37
+                ],
+                "expected": [
+                    ".*"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "rate_limit": 101,
+        "next": [
+            "地区首领地区首领页面"
+        ]
+    },
+    "地区首领点击准备": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": "进入了地区首领"
+            }
+        },
+        "post_delay": 800,
+        "timeout": 40000,
+        "rate_limit": 101,
+        "next": [
+            "地区首领识别到进入了战斗",
+            "[JumpBack]点击太快点到了邀请好友",
+            "[JumpBack]地区首领再次点击准备如果卡了的话",
+            "地区首领识别并点击聊天"
+        ],
+        "on_error": [
+            "地区首领返回主页面"
+        ]
+    },
+    "地区首领点击地区": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    15,
+                    14,
+                    133,
+                    59
+                ],
+                "expected": [
+                    "私聊"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    528,
+                    -7,
+                    37,
+                    10
+                ]
+            }
+        },
+        "next": [
+            "地区首领地区页面",
+            "地区首领展开筛选",
+            "地区首领点击地区"
+        ]
+    },
+    "地区首领点击悬赏令聊天消息": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    70,
+                    601,
+                    300,
+                    54
+                ],
+                "expected": [
+                    "悬赏令",
+                    "表情",
+                    "组队",
+                    "首领",
+                    "邀请"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    150,
+                    0,
+                    0,
+                    0
+                ]
+            }
+        },
+        "post_delay": 0,
+        "rate_limit": 101
+    },
+    "地区首领确认在主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    500,
+                    712
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true,
+                "threshold": [
+                    0.78
+                ]
+            }
+        },
+        "next": [
+            "开始刷地区首领"
+        ]
+    },
+    "地区首领筛选关闭3v3": {
+        "max_hit": 1,
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    738,
+                    300,
+                    216,
+                    56
+                ],
+                "template": [
+                    "筛选按钮开.png"
+                ],
+                "threshold": [
+                    0.9
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "地区首领筛选关闭活动玩法": {
+        "max_hit": 1,
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    730,
+                    355,
+                    224,
+                    54
+                ],
+                "template": [
+                    "筛选按钮开.png"
+                ],
+                "threshold": [
+                    0.9
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "地区首领识别到加入队伍": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    429,
+                    249,
+                    151,
+                    400
+                ],
+                "expected": [
+                    "加入队伍"
+                ],
+                "index": -1
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "rate_limit": 101,
+        "next": [
+            "地区首领有文字",
+            "地区首领忽略目标类型悬赏",
+            "点击加入队伍"
+        ]
+    },
+    "地区首领识别并点击聊天": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    149,
+                    400,
+                    449
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true,
+                "threshold": [
+                    0.78
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "地区首领点击地区",
+            "地区首领识别并点击聊天"
+        ]
+    },
+    "开始刷地区首领": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "地区首领识别并点击聊天",
+            "[JumpBack]back"
+        ]
+    },
+    "点击加入队伍": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": "地区首领识别到加入队伍"
+            }
+        },
+        "post_delay": 0,
+        "rate_limit": 101,
+        "next": [
+            "进入了地区首领",
+            "地区首领地区首领页面"
+        ]
+    },
+    "点击太快点到了邀请好友": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    805,
+                    8,
+                    154,
+                    98
+                ],
+                "expected": [
+                    "好友"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    646,
+                    495,
+                    1,
+                    1
+                ]
+            }
+        }
+    },
+    "地区首领点击空白处关闭": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    505,
+                    599,
+                    247,
+                    71
+                ],
+                "expected": [
+                    "点击空白处关闭"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    384,
+                    23,
+                    -126,
+                    17
+                ]
+            }
+        }
+    },
+    "地区首领点到了个人信息": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    57,
+                    33,
+                    255,
+                    127
+                ],
+                "expected": [
+                    "个人信息"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1269,
+                    366,
+                    1,
+                    1
+                ]
+            }
+        }
+    },
+    "地区首领结算确定": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    521,
+                    408,
+                    246,
+                    309
+                ],
+                "expected": [
+                    "确定|下一页"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "识别到地区首领次数已满": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    498,
+                    65,
+                    461,
+                    76
+                ],
+                "expected": [
+                    "次数上限"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "rate_limit": 101,
+        "next": [
+            "进入后发现是低级悬赏",
+            "地区首领点击准备",
+            "[JumpBack]点击太快点到了邀请好友"
+        ]
+    },
+    "地区首领识别到进入了战斗": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 480000,
+        "next": [
+            "[JumpBack]地区首领调用fight",
+            "[JumpBack]地区首领结算确定",
+            "[JumpBack]地区首领点击空白处关闭",
+            "[JumpBack]地区首领点到了个人信息",
+            "地区首领进入战斗后回到主页面"
+        ]
+    },
+    "地区首领调用fight": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]地区首领降低fight识别速度",
+            "fight"
+        ]
+    },
+    "地区首领返回主页面": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "开始刷地区首领"
+        ]
+    },
+    "进入了地区首领": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    1045,
+                    634,
+                    132,
+                    65
+                ],
+                "template": [
+                    "准备.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "rate_limit": 101,
+        "next": [
+            "识别到地区首领次数已满",
+            "地区首领点击准备",
+            "[JumpBack]点击太快点到了邀请好友"
+        ]
+    },
+    "进入后发现是低级悬赏": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    405,
+                    65,
+                    219,
+                    68
+                ],
+                "expected": [
+                    "A|B|C|D|SS"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "rate_limit": 101,
+        "next": [
+            "[JumpBack]点击太快点到了邀请好友"
+        ]
+    },
+    "地区首领进入战斗后回到主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    149,
+                    400,
+                    449
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true,
+                "threshold": [
+                    0.78
+                ]
+            }
+        },
+        "next": [
+            "开始刷地区首领"
+        ]
+    },
+    "重置地区首领内部节点计数器": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount"
+            }
+        },
+        "next": [
+            "地区首领确认在主页面",
+            "[JumpBack]back"
+        ]
+    },
+    "地区首领降低fight识别速度": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "post_delay": 2000
+    }
+}
