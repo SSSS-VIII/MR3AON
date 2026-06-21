@@ -617,6 +617,9 @@
                         "忍币召唤结束标志": {
                             "enable": true,
                             "expected": "4000|8000"
+                        },
+                        "免费召唤不使用钥匙召唤": {
+                            "enable": true
                         }
                     }
                 },
@@ -626,6 +629,9 @@
                         "忍币召唤结束标志": {
                             "enable": true,
                             "expected": "8000"
+                        },
+                        "免费召唤不使用钥匙召唤": {
+                            "enable": false
                         }
                     }
                 },
@@ -633,6 +639,9 @@
                     "name": "花费8000忍币",
                     "pipeline_override": {
                         "忍币召唤结束标志": {
+                            "enable": false
+                        },
+                        "免费召唤不使用钥匙召唤": {
                             "enable": false
                         }
                     }
