@@ -124,6 +124,9 @@
         {
             "name": "关闭游戏",
             "entry": "关闭游戏entry",
+            "option": [
+                "关闭方式"
+            ],
             "group": [
                 "daily"
             ],
@@ -911,6 +914,29 @@
                 },
                 {
                     "name": "No"
+                }
+            ]
+        },
+        "关闭方式": {
+            "type": "select",
+            "label": "关闭方式",
+            "default_case": "取消屏蔽邀请后关闭游戏",
+            "cases": [
+                {
+                    "name": "取消屏蔽邀请后关闭游戏",
+                    "pipeline_override": {
+                        "关闭游戏直接关闭游戏": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "直接关闭游戏",
+                    "pipeline_override": {
+                        "关闭游戏直接关闭游戏": {
+                            "enabled": true
+                        }
+                    }
                 }
             ]
         }
