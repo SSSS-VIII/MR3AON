@@ -85,6 +85,12 @@ Powered by [MaaFramework](https://github.com/MaaXYZ/MaaFramework) & [MFAAvalonia
 - [MaaFramework](https://github.com/MaaXYZ/MaaFramework) — 基于图像识别的自动化框架
 - [MFAAvalonia](https://github.com/MaaXYZ/MFAAvalonia) — Maa 通用 GUI
 
+### 贡献者
+
+感谢以下开发者对本项目的贡献:
+
+[![Contributors](https://contrib.rocks/image?repo=originalsage/MR3A&max=1000)](https://github.com/originalsage/MR3A/graphs/contributors)
+
 ---
 
 <a id="user-qq-group"></a>
