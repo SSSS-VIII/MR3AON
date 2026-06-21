@@ -62,6 +62,25 @@ body = """
 
 # 尾部
 footer = """
+{%- macro remote_url() -%}
+  https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}
+{%- endmacro -%}
+
+{%- set latest_version = "" -%}
+{%- for release in releases -%}
+  {%- if release.version and latest_version == "" -%}
+    {%- set_global latest_version = release.version -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{% if latest_version -%}
+**Windows 下载 [MR3A-win-x86_64-{{ latest_version }}.zip]({{ self::remote_url() }}/releases/download/{{ latest_version }}/MR3A-win-x86_64-{{ latest_version }}.zip)**
+{%- else -%}
+**Windows 下载 MR3A-win-x86_64-vx.x.x.zip，没找到的请点 Show all assets**
+{%- endif %}
+
+> 其他架构（ARM64 / Linux / macOS）请在下方 Assets 中查找对应文件。
+"""
 """
 
 [git]
