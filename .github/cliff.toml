@@ -81,7 +81,6 @@ footer = """
 
 > 其他架构（ARM64 / Linux / macOS）请在下方 Assets 中查找对应文件。
 """
-"""
 
 [git]
 # 过滤提交
