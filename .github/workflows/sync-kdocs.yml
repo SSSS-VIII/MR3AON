@@ -4,11 +4,9 @@ on:
   push:
     paths:
       - 'assets/remote/game-meta.json'   # 手动修改 remote 触发
-  workflow_run:
-    workflows: ["Sync weekly codes"]      # CI 自动更新后触发
-    types:
-      - completed
-  workflow_dispatch:
+  repository_dispatch:
+    types: [game-meta-updated]            # CI 自动更新后触发
+  workflow_dispatch:                      # 手动触发
 
 jobs:
   sync:
