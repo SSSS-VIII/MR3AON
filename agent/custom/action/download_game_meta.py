@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-from pathlib import Path
 from typing import Any, Dict
 
 import requests
@@ -14,6 +13,7 @@ from maa.custom_action import CustomAction
 from maa.context import Context
 
 from utils.logger import logger
+from utils.runtime_paths import get_runtime_paths
 
 # ==== 金山文档配置 ====
 _FILE_ID = "crcMio8nY0BC"
@@ -22,8 +22,7 @@ _AIRSCRIPT_TOKEN = "1NKkJQNwt4yNsLNVTTmnVH"
 _SHEET_NAME = "GameMeta"
 # ======================
 
-_PROJECT_ROOT = Path(__file__).resolve().parents[3]  # agent/custom/acetion → 项目根
-_DATA_DIR = _PROJECT_ROOT / "assets" / "resource" / "data"
+_DATA_DIR = get_runtime_paths().resource_dir / "data"
 _FILE_NAME = "game-meta.json"
 _LOCAL_PATH = str(_DATA_DIR / _FILE_NAME)
 
@@ -126,7 +125,7 @@ class DownloadGameMeta(CustomAction):
 
         if remote is not None:
             if _save_local(remote):
-                logger.info(
+                logger.debug(
                     f"DownloadGameMeta: 已更新本地 {_LOCAL_PATH} " f"({len(remote)} 条)"
                 )
                 return CustomAction.RunResult(success=True)

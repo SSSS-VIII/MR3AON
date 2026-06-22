@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 from typing import Any, Dict, List, Mapping, MutableMapping, Union, cast
 
-from pathlib import Path
-
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
@@ -165,8 +163,9 @@ def _deep_merge_dict(dst: MutableMapping[str, Any], src: Mapping[str, Any]) -> N
             dst[k] = v
 
 
-_PROJECT_ROOT = Path(__file__).resolve().parents[3]
-_LOCAL_PATH = str(_PROJECT_ROOT / "assets" / "resource" / "data" / "game-meta.json")
+from utils.runtime_paths import get_runtime_paths
+
+_LOCAL_PATH = str(get_runtime_paths().resource_dir / "data" / "game-meta.json")
 
 
 @AgentServer.custom_action("LoadGameMetaOverride")
