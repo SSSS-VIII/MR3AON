@@ -2,6 +2,8 @@
     "interface_version": 2,
     "name": "MR3A",
     "icon": "logo.ico",
+    "mirrorchyan_rid": "MR3A",
+    "mirrorchyan_multiplatform": true,
     "description": "这是一个使用 MaaFramework 创建的忍者必须死3脚本项目。",
     "contact": "QQ: 3625720746",
     "license": "MIT",
