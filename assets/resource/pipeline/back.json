@@ -28,6 +28,8 @@
                 "green_mask": true
             }
         },
+        "pre_delay": 0,
+        "post_delay": 0,
         "next": [
             "主页面检测again_back",
             "back"
@@ -48,7 +50,9 @@
                 ],
                 "green_mask": true
             }
-        }
+        },
+        "pre_delay": 0,
+        "post_delay": 0
     },
     "关闭地区聊天": {
         "recognition": {
