@@ -360,7 +360,8 @@
             "[JumpBack]家族战点击正在进行中",
             "[JumpBack]家族战意外点击到了深渊",
             "[JumpBack]家族战切换到右侧页面",
-            "[JumpBack]家族战点击主页家族"
+            "[JumpBack]家族战点击主页家族",
+            "家族战本次未参加家族战"
         ]
     },
     "家族战当前不为周末": {
@@ -513,7 +514,8 @@
                 "expected": [
                     "正在进行中",
                     "对战结束",
-                    "距离开始还有"
+                    "距离开始还有",
+                    "本次未参加家族战"
                 ]
             }
         },
@@ -917,5 +919,48 @@
         "action": {
             "type": "Click"
         }
+    },
+    "家族战本次未参加家族战": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    383,
+                    481,
+                    530,
+                    115
+                ],
+                "expected": [
+                    "本次未参加家族战"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "家族战未报名回到了主页面",
+            "[JumpBack]back"
+        ]
+    },
+    "家族战未报名回到了主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    4,
+                    136,
+                    434,
+                    459
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "StopTask"
+        },
+        "focus": "任务完成：家族战✅"
     }
 }
