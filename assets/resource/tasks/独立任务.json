@@ -110,8 +110,7 @@
             "entry": "地区首领entry",
             "group": [
                 "standalone"
-            ],
-            "description": "<span style=\"color:deepskyblue;font-size:15px\">此任务暂时没编写停止逻辑,会一直挂着</span>"
+            ]
         },
         {
             "name": "S/SS+",
