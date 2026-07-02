@@ -291,6 +291,17 @@
                             "expected": "四服"
                         }
                     }
+                },
+                {
+                    "name": "五区",
+                    "pipeline_override": {
+                        "选择几区": {
+                            "expected": "五服"
+                        },
+                        "是目标区服": {
+                            "expected": "五服"
+                        }
+                    }
                 }
             ]
         },
