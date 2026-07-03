@@ -1,4 +1,47 @@
 {
+    "识别到极刃": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    75,
+                    144,
+                    292,
+                    105
+                ],
+                "expected": [
+                    "极刃"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "开大": {
+                        "action": {
+                            "param": {
+                                "custom_action_param": {
+                                    "mode": 4
+                                }
+                            }
+                        }
+                    },
+                    "用户配置延迟": {
+                        "next": [
+                            "用户配置延迟_其他角色"
+                        ]
+                    }
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "识别角色结束"
+        ]
+    },
     "关闭节点每日悬赏好友组队任务": {
         "pre_delay": 0,
         "action": {
@@ -2137,6 +2180,7 @@
         "next": [
             "识别到双焰",
             "识别到剑心",
+            "识别到极刃",
             "普通角色"
         ]
     },

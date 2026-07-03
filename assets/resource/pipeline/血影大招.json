@@ -1,0 +1,85 @@
+{
+    "一轮极刃血影大招结束": {
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "极刃血影大招狂刃": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "template": [
+                    "极刃血影大招狂刃.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 0,
+        "next": [
+            "极刃血影大招轮斩",
+            "一轮极刃血影大招结束"
+        ]
+    },
+    "极刃血影大招轮斩": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "template": [
+                    "极刃血影大招轮斩.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 0,
+        "next": [
+            "极刃血影大招狂刃",
+            "一轮极刃血影大招结束"
+        ]
+    },
+    "识别到极刃血影大招": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    210,
+                    250,
+                    250
+                ],
+                "template": [
+                    "极刃血影大招.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 0,
+        "next": [
+            "极刃血影大招狂刃",
+            "极刃血影大招轮斩",
+            "一轮极刃血影大招结束"
+        ]
+    }
+}
