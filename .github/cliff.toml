@@ -74,12 +74,14 @@ footer = """
 {%- endfor -%}
 
 {% if latest_version -%}
-**Windows 下载 [MR3A-win-x86_64-{{ latest_version }}.zip]({{ self::remote_url() }}/releases/download/{{ latest_version }}/MR3A-win-x86_64-{{ latest_version }}.zip)**
+**绝大部分用户请下载 [MR3A-win-x86_64-{{ latest_version }}.zip]({{ self::remote_url() }}/releases/download/{{ latest_version }}/MR3A-win-x86_64-{{ latest_version }}.zip)**
 {%- else -%}
-**Windows 下载 MR3A-win-x86_64-vx.x.x.zip，没找到的请点 Show all assets**
+**绝大部分用户请下载 MR3A-win-x86_64-vx.x.x.zip，没找到的请点 Show all assets**
 {%- endif %}
 
 > 其他架构（ARM64 / Linux / macOS）请在下方 Assets 中查找对应文件。
+
+[已有 Mirror酱 CDK？点击前往高速下载](https://mirrorchyan.com/zh/projects?rid=MR3A&source=mr3agh-release)
 """
 
 [git]
