@@ -15,6 +15,7 @@
             }
         },
         "pre_delay": 0,
+        "post_delay": 1500,
         "action": {
             "type": "Click"
         },
