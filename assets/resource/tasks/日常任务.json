@@ -68,7 +68,8 @@
             "name": "每日商店",
             "entry": "每日商店entry",
             "option": [
-                "忍币购买神秘商店"
+                "忍币购买神秘商店",
+                "忍币购买悬赏商店"
             ],
             "group": [
                 "daily"
@@ -612,6 +613,25 @@
                     "label": "关闭",
                     "pipeline_override": {
                         "神秘商店任务": {
+                            "enable": false
+                        }
+                    }
+                }
+            ]
+        },
+        "忍币购买悬赏商店": {
+            "type": "switch",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "开启"
+                },
+                {
+                    "name": "No",
+                    "label": "关闭",
+                    "pipeline_override": {
+                        "悬赏商店任务": {
                             "enable": false
                         }
                     }

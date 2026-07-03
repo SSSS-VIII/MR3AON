@@ -1,4 +1,193 @@
 {
+    "C级悬赏奖册下方是已购买": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "悬赏商店识别到C级悬赏奖册",
+                "roi_offset": [
+                    -40,
+                    420,
+                    20,
+                    50
+                ],
+                "expected": [
+                    "已购买"
+                ]
+            }
+        }
+    },
+    "C级悬赏奖册已购买": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "悬赏商店识别到C级悬赏奖册",
+                    "C级悬赏奖册下方是已购买"
+                ]
+            }
+        }
+    },
+    "点击悬赏商店": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1101,
+                    100,
+                    176,
+                    473
+                ],
+                "expected": [
+                    "悬赏商店",
+                    "赏商店"
+                ]
+            }
+        },
+        "post_wait_freezes": {
+            "time": 400,
+            "target": [
+                5,
+                109,
+                1034,
+                159
+            ],
+            "threshold": 0.9
+        },
+        "post_delay": 0,
+        "next": [
+            "处理悬赏商店任务"
+        ]
+    },
+    "悬赏商店忍币不足": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    427,
+                    73,
+                    400,
+                    144
+                ],
+                "expected": [
+                    "忍币不足"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    560,
+                    27,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 1000
+    },
+    "悬赏商店任务": {
+        "enabled": true,
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        },
+        "next": [
+            "点击限购商店"
+        ]
+    },
+    "点击限购商店": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    18,
+                    633,
+                    1261,
+                    84
+                ],
+                "expected": [
+                    "限购商店"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "点击悬赏商店",
+            "点击限购商店"
+        ]
+    },
+    "再次点击悬赏商店": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1101,
+                    100,
+                    176,
+                    473
+                ],
+                "expected": [
+                    "悬赏商店",
+                    "赏商店"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 100,
+        "next": [
+            "悬赏商店右滑"
+        ]
+    },
+    "悬赏商店右滑": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1101,
+                    100,
+                    176,
+                    473
+                ],
+                "expected": [
+                    "悬赏商店",
+                    "赏商店"
+                ]
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    794,
+                    399,
+                    1,
+                    1
+                ],
+                "end": [
+                    [
+                        529,
+                        399,
+                        1,
+                        1
+                    ]
+                ],
+                "end_hold": [
+                    400
+                ]
+            }
+        }
+    },
     "再次确认是花费忍币并点击购买": {
         "recognition": {
             "type": "TemplateMatch",
@@ -851,6 +1040,7 @@
         "post_wait_freezes": 300,
         "next": [
             "[JumpBack]神秘商店任务",
+            "[JumpBack]悬赏商店任务",
             "退出商店"
         ]
     },
@@ -888,5 +1078,194 @@
             "进入商店",
             "[JumpBack]back"
         ]
+    },
+    "处理悬赏商店任务": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]悬赏商店点击购买确定",
+            "C级悬赏奖册已购买",
+            "悬赏商店忍币不足",
+            "[JumpBack]悬赏商店识别到购买",
+            "[JumpBack]点击D级悬赏奖册忍币图标",
+            "[JumpBack]点击C级悬赏奖册忍币图标",
+            "[JumpBack]再次点击悬赏商店"
+        ]
+    },
+    "悬赏商店识别到购买": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    406,
+                    408,
+                    455,
+                    311
+                ],
+                "expected": [
+                    "^购买$"
+                ]
+            }
+        },
+        "post_delay": 400,
+        "next": [
+            "悬赏商店购买按钮左侧是忍币",
+            "悬赏商店购买按钮左侧不是忍币"
+        ]
+    },
+    "悬赏商店购买按钮左侧是忍币": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": "悬赏商店识别到购买",
+                "roi_offset": [
+                    -210,
+                    -35,
+                    80,
+                    70
+                ],
+                "template": [
+                    "神秘商店忍币1.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "悬赏商店购买按钮左侧不是忍币": {},
+    "悬赏商店识别到D级悬赏奖册": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    2,
+                    106,
+                    1091,
+                    143
+                ],
+                "expected": [
+                    "D级悬赏奖册"
+                ]
+            }
+        }
+    },
+    "悬赏商店识别到C级悬赏奖册": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    2,
+                    106,
+                    1091,
+                    143
+                ],
+                "expected": [
+                    "C级悬赏奖册"
+                ]
+            }
+        }
+    },
+    "D级悬赏奖册下方是忍币图标": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": "悬赏商店识别到D级悬赏奖册",
+                "roi_offset": [
+                    -40,
+                    420,
+                    20,
+                    50
+                ],
+                "template": [
+                    "悬赏商店忍币.png"
+                ]
+            }
+        }
+    },
+    "C级悬赏奖册下方是忍币图标": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": "悬赏商店识别到C级悬赏奖册",
+                "roi_offset": [
+                    -40,
+                    420,
+                    20,
+                    50
+                ],
+                "template": [
+                    "悬赏商店忍币.png"
+                ]
+            }
+        }
+    },
+    "D级悬赏奖册下方是已购买": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "悬赏商店识别到D级悬赏奖册",
+                "roi_offset": [
+                    -40,
+                    420,
+                    20,
+                    50
+                ],
+                "expected": [
+                    "已购买"
+                ]
+            }
+        }
+    },
+    "点击D级悬赏奖册忍币图标": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "悬赏商店识别到D级悬赏奖册",
+                    "D级悬赏奖册下方是忍币图标"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000
+    },
+    "点击C级悬赏奖册忍币图标": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "悬赏商店识别到C级悬赏奖册",
+                    "C级悬赏奖册下方是忍币图标"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000
+    },
+    "悬赏商店点击购买确定": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    468,
+                    539,
+                    325,
+                    174
+                ],
+                "expected": [
+                    "^确定$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
     }
 }
