@@ -106,6 +106,17 @@
             ]
         },
         {
+            "name": "乐斗超级忍",
+            "entry": "乐斗超级忍entry",
+            "option": [
+                "运行模式",
+                "活动未开放时挂机至活动开放"
+            ],
+            "group": [
+                "standalone"
+            ]
+        },
+        {
             "name": "地区首领",
             "entry": "地区首领entry",
             "group": [
@@ -649,6 +660,62 @@
                     "label": "关闭",
                     "pipeline_override": {
                         "召令悬赏需要刷SS+": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "活动未开放时挂机至活动开放": {
+            "type": "switch",
+            "label": "活动未开放时挂机至活动开放",
+            "description": "开启后，若当前不在活动匹配时间内，将挂机等待直至活动开放。",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "开启",
+                    "pipeline_override": {
+                        "乐斗超级忍不在匹配时间内则等待": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "label": "关闭",
+                    "pipeline_override": {
+                        "乐斗超级忍不在匹配时间内则等待": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "运行模式": {
+            "type": "select",
+            "label": "运行模式",
+            "description": "完成每日任务：检测每日任务是否完成，完成后停止；一直刷：跳过每日任务检测，活动开放期间反复刷取，不受每日任务完成状态限制。",
+            "default_case": "完成每日任务",
+            "cases": [
+                {
+                    "name": "完成每日任务",
+                    "pipeline_override": {
+                        "乐斗超级忍检查一次主页面任务": {
+                            "enabled": true
+                        },
+                        "使能节点乐斗超级忍检查一次主页面任务": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "一直刷",
+                    "pipeline_override": {
+                        "乐斗超级忍检查一次主页面任务": {
+                            "enabled": false
+                        },
+                        "使能节点乐斗超级忍检查一次主页面任务": {
                             "enabled": false
                         }
                     }
