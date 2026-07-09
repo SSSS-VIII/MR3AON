@@ -74,10 +74,6 @@ Powered by [MaaFramework](https://github.com/MaaXYZ/MaaFramework) & [MFAAvalonia
 
 更多说明请前往 [MaaFramework](https://github.com/MaaXYZ/MaaFramework) 主仓库查看。
 
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=originalsage/MR3A&type=Date)](https://www.star-history.com/#originalsage/MR3A&Date)
-
 ## 致谢
 
 ### 核心框架
