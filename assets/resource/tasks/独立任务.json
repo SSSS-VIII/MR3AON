@@ -133,6 +133,15 @@
             "group": [
                 "standalone"
             ]
+        },
+        {
+            "name": "逆袭悬赏每周",
+            "entry": "逆袭悬赏每周entry",
+            "option": ["逆袭选择"],
+            "group": [
+                "standalone"
+            ],
+            "description": "临时版本，未编写停止逻辑，后续会更新以下功能：\n每日逆袭任务：刷出逆袭A  清完逆袭A次数  清完自己的逆袭A\n每周逆袭任务：刷逆袭A刷出每周逆袭S  清完每周逆袭S次数  刷逆袭S刷出活动逆袭SS  刷逆袭SS+"
         }
     ],
     "option": {
@@ -717,6 +726,47 @@
                         },
                         "使能节点乐斗超级忍检查一次主页面任务": {
                             "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "逆袭选择": {
+            "type": "select",
+            "label": "选择要打的逆袭boss",
+            "description": "不是选要刷出来的，是选要进入的",
+            "default_case": "仅逆袭S",
+            "cases": [
+                {
+                    "name": "仅逆袭A",
+                    "pipeline_override": {
+                        "逆袭悬赏每周A选项": {
+                            "template": "召令悬赏未选择.png"
+                        },
+                        "逆袭悬赏每周S选项": {
+                            "template": "召令悬赏已选择.png"
+                        }
+                    }
+                },
+                {
+                    "name": "仅逆袭S",
+                    "pipeline_override": {
+                        "逆袭悬赏每周A选项": {
+                            "template": "召令悬赏已选择.png"
+                        },
+                        "逆袭悬赏每周S选项": {
+                            "template": "召令悬赏未选择.png"
+                        }
+                    }
+                },
+                {
+                    "name": "逆袭A和逆袭S",
+                    "pipeline_override": {
+                        "逆袭悬赏每周A选项": {
+                            "template": "召令悬赏未选择.png"
+                        },
+                        "逆袭悬赏每周S选项": {
+                            "template": "召令悬赏未选择.png"
                         }
                     }
                 }

@@ -44,6 +44,10 @@
                     "enabled": false
                 },
                 {
+                    "name": "逆袭悬赏每周",
+                    "enabled": false
+                },
+                {
                     "name": "S/SS+",
                     "enabled": false
                 }
