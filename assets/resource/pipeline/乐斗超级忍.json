@@ -560,7 +560,7 @@
             "param": {
                 "custom_action": "sync_race_parkour",
                 "custom_action_param": {
-                    "skill_phase_chance": 1,
+                    "skill_phase_chance": 0,
                     "step_delay_ms": 100,
                     "swipe_duration_ms": 100
                 }
