@@ -12,7 +12,7 @@
         ]
     },
     "逆袭悬赏每周entry入口": {
-        "max_hit": 3,
+        "max_hit": 5,
         "next": [
             "重置逆袭悬赏每周内部节点计数器"
         ]
@@ -595,7 +595,7 @@
             "param": {
                 "custom_recognition": "Count",
                 "custom_recognition_param": {
-                    "target": 1
+                    "target": 30
                 }
             }
         },
@@ -656,7 +656,6 @@
                 "expected": [
                     "已经开始战斗",
                     "队伍已经解散",
-                    "队伍人数已满",
                     "房间已关闭"
                 ]
             }
