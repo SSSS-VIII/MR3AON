@@ -135,9 +135,9 @@
             ]
         },
         {
-            "name": "逆袭悬赏每周",
-            "entry": "逆袭悬赏每周entry",
-            "option": ["逆袭选择"],
+            "name": "每周逆袭悬赏",
+            "entry": "每周逆袭悬赏entry",
+            "option": ["选择要打的逆袭boss"],
             "group": [
                 "standalone"
             ],
@@ -731,7 +731,7 @@
                 }
             ]
         },
-        "逆袭选择": {
+        "选择要打的逆袭boss": {
             "type": "select",
             "label": "选择要打的逆袭boss",
             "description": "不是选要刷出来的，是选要进入的",
@@ -740,33 +740,60 @@
                 {
                     "name": "仅逆袭A",
                     "pipeline_override": {
-                        "逆袭悬赏每周A选项": {
+                        "每周逆袭悬赏A选项": {
                             "template": "召令悬赏未选择.png"
                         },
-                        "逆袭悬赏每周S选项": {
+                        "每周逆袭悬赏S选项": {
                             "template": "召令悬赏已选择.png"
+                        },
+                        "每周逆袭悬赏需要刷逆袭A": {
+                            "enable": true
+                        },
+                        "每周逆袭悬赏需要刷逆袭S": {
+                            "enable": false
+                        },
+                        "每周逆袭悬赏需要刷逆袭SS+": {
+                            "enable": false
                         }
                     }
                 },
                 {
                     "name": "仅逆袭S",
                     "pipeline_override": {
-                        "逆袭悬赏每周A选项": {
+                        "每周逆袭悬赏A选项": {
                             "template": "召令悬赏已选择.png"
                         },
-                        "逆袭悬赏每周S选项": {
+                        "每周逆袭悬赏S选项": {
                             "template": "召令悬赏未选择.png"
+                        },
+                        "每周逆袭悬赏需要刷逆袭A": {
+                            "enable": false
+                        },
+                        "每周逆袭悬赏需要刷逆袭S": {
+                            "enable": true
+                        },
+                        "每周逆袭悬赏需要刷逆袭SS+": {
+                            "enable": false
                         }
                     }
                 },
                 {
                     "name": "逆袭A和逆袭S",
                     "pipeline_override": {
-                        "逆袭悬赏每周A选项": {
+                        "每周逆袭悬赏A选项": {
                             "template": "召令悬赏未选择.png"
                         },
-                        "逆袭悬赏每周S选项": {
+                        "每周逆袭悬赏S选项": {
                             "template": "召令悬赏未选择.png"
+                        },
+                        "每周逆袭悬赏需要刷逆袭A": {
+                            "enable": true
+                        },
+                        "每周逆袭悬赏需要刷逆袭S": {
+                            "enable": true
+                        },
+                        "每周逆袭悬赏需要刷逆袭SS+": {
+                            "enable": false
                         }
                     }
                 }
