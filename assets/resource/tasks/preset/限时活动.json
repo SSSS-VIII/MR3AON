@@ -1,7 +1,7 @@
 {
     "preset": [
         {
-            "name": "独立任务",
+            "name": "限时活动",
             "task": [
                 {
                     "name": "每日藏宝图",
@@ -20,14 +20,6 @@
                     "enabled": false
                 },
                 {
-                    "name": "周末活动",
-                    "enabled": false
-                },
-                {
-                    "name": "家族战",
-                    "enabled": false
-                },
-                {
                     "name": "万川修行",
                     "enabled": false
                 },
@@ -40,19 +32,11 @@
                     "enabled": false
                 },
                 {
-                    "name": "地区首领",
-                    "enabled": false
-                },
-                {
                     "name": "每日逆袭悬赏",
                     "enabled": false
                 },
                 {
                     "name": "每周逆袭悬赏",
-                    "enabled": false
-                },
-                {
-                    "name": "S/SS+",
                     "enabled": false
                 }
             ]

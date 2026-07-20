@@ -9,7 +9,7 @@
                 "无论满没满都刷（适用于非酋没出神品碎片）"
             ],
             "group": [
-                "standalone"
+                "限时活动"
             ]
         },
         {
@@ -20,7 +20,7 @@
                 "只刷神品不刷传颂"
             ],
             "group": [
-                "standalone"
+                "限时活动"
             ],
             "pipeline_override": {
                 "识别藏宝图是否满了": {
@@ -50,7 +50,7 @@
                 "完成镜界百器每日任务"
             ],
             "group": [
-                "standalone"
+                "限时活动"
             ],
             "description": "<span style=\"color:deepskyblue;font-size:15px\"><strong>清体力</strong>：建议有<strong>一勾以上忍宗</strong>运行此任务，避免影响其他玩家；<br/><br/><strong>每日任务</strong>：会<strong><span style=\"color:tomato\">重置秘境</span></strong>。若连续多次未完成，脚本将跳过该子任务；通常开局有大招即可正常完成。</span>"
         },
@@ -61,29 +61,9 @@
                 "祈福类型"
             ],
             "group": [
-                "standalone"
+                "限时活动"
             ],
             "description": "<span style=\"color:deepskyblue;font-size:15px\">请在祈TA宠爱页面运行此任务</span>"
-        },
-        {
-            "name": "周末活动",
-            "entry": "周末活动entry",
-            "group": [
-                "standalone"
-            ],
-            "description": "<span style=\"color:deepskyblue;font-size:15px\">系统会先判断当前是否为<strong>周六、周日</strong>，非周末将<strong>直接跳过</strong>。<br/><br/>此外无法识别的活动会自动跳过。目前已支持：<strong>光影忍法帖</strong>、<strong>忍界乱斗</strong>。</span>"
-        },
-        {
-            "name": "家族战",
-            "entry": "家族战entry",
-            "option": [
-                "挂机直到族战开启",
-                "混团本"
-            ],
-            "group": [
-                "standalone"
-            ],
-            "description": "<span style=\"color:deepskyblue;font-size:15px\">系统会先判断当前是否为<strong>周六、周日</strong>，非周末将<strong>直接跳过</strong>。</span>"
         },
         {
             "name": "万川修行",
@@ -92,7 +72,7 @@
                 "是否使用体验角色"
             ],
             "group": [
-                "standalone"
+                "限时活动"
             ]
         },
         {
@@ -102,7 +82,7 @@
                 "难度选择"
             ],
             "group": [
-                "standalone"
+                "限时活动"
             ]
         },
         {
@@ -113,25 +93,7 @@
                 "活动未开放时挂机至活动开放"
             ],
             "group": [
-                "standalone"
-            ]
-        },
-        {
-            "name": "地区首领",
-            "entry": "地区首领entry",
-            "group": [
-                "standalone"
-            ]
-        },
-        {
-            "name": "S/SS+",
-            "entry": "S_SS+entry",
-            "option": [
-                "清S",
-                "清SS+"
-            ],
-            "group": [
-                "standalone"
+                "限时活动"
             ]
         },
         {
@@ -143,7 +105,7 @@
                 "清空每日逆袭A次数"
             ],
             "group": [
-                "standalone"
+                "限时活动"
             ]
         },
         {
@@ -151,7 +113,7 @@
             "entry": "每周逆袭悬赏entry",
             "option": ["选择要打的逆袭boss"],
             "group": [
-                "standalone"
+                "限时活动"
             ],
             "description": "未编写停止逻辑，请刷取够后自行停止"
         }
@@ -457,67 +419,6 @@
                 }
             ]
         },
-        "挂机直到族战开启": {
-            "type": "switch",
-            "label": "挂机直到族战开启",
-            "description": "开启后，若当前时间早于 20:00，将挂机等待直至家族战开启；关闭则不等待。",
-            "default_case": "Yes",
-            "cases": [
-                {
-                    "name": "Yes",
-                    "label": "开启",
-                    "pipeline_override": {
-                        "停止家族战任务": {
-                            "enabled": false
-                        }
-                    }
-                },
-                {
-                    "name": "No",
-                    "label": "关闭",
-                    "pipeline_override": {
-                        "停止家族战任务": {
-                            "enabled": true
-                        },
-                        "家族战等待提示": {
-                            "focus": ""
-                        }
-                    }
-                }
-            ]
-        },
-        "混团本": {
-            "type": "switch",
-            "label": "混团本",
-            "description": "开启后家族战期间会参加团本；关闭则不会参加团本。",
-            "default_case": "Yes",
-            "cases": [
-                {
-                    "name": "Yes",
-                    "label": "开启",
-                    "pipeline_override": {
-                        "团队战点击加入战斗": {
-                            "enabled": true
-                        },
-                        "识别到全员参战且有进入战场": {
-                            "enabled": true
-                        }
-                    }
-                },
-                {
-                    "name": "No",
-                    "label": "关闭",
-                    "pipeline_override": {
-                        "团队战点击加入战斗": {
-                            "enabled": false
-                        },
-                        "识别到全员参战且有进入战场": {
-                            "enabled": false
-                        }
-                    }
-                }
-            ]
-        },
         "是否使用体验角色": {
             "type": "switch",
             "label": "是否使用体验角色",
@@ -632,56 +533,6 @@
                                     ]
                                 }
                             }
-                        }
-                    }
-                }
-            ]
-        },
-        "清S": {
-            "type": "switch",
-            "label": "清S",
-            "default_case": "Yes",
-            "cases": [
-                {
-                    "name": "Yes",
-                    "label": "开启",
-                    "pipeline_override": {
-                        "召令悬赏需要刷S": {
-                            "enabled": true
-                        }
-                    }
-                },
-                {
-                    "name": "No",
-                    "label": "关闭",
-                    "pipeline_override": {
-                        "召令悬赏需要刷S": {
-                            "enabled": false
-                        }
-                    }
-                }
-            ]
-        },
-        "清SS+": {
-            "type": "switch",
-            "label": "清SS+",
-            "default_case": "Yes",
-            "cases": [
-                {
-                    "name": "Yes",
-                    "label": "开启",
-                    "pipeline_override": {
-                        "召令悬赏需要刷SS+": {
-                            "enabled": true
-                        }
-                    }
-                },
-                {
-                    "name": "No",
-                    "label": "关闭",
-                    "pipeline_override": {
-                        "召令悬赏需要刷SS+": {
-                            "enabled": false
                         }
                     }
                 }
