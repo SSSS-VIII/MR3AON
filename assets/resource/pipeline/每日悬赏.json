@@ -876,7 +876,7 @@
         "action": {
             "type": "Click"
         },
-        "post_delay": 800,
+        "post_delay": 1200,
         "next": [
             "每日悬赏展开了邀请页面",
             "每日悬赏点击邀请好友",
@@ -949,22 +949,17 @@
     },
     "每日悬赏组队点开了聊天": {
         "recognition": {
-            "type": "ColorMatch",
+            "type": "OCR",
             "param": {
                 "roi": [
-                    1131,
-                    39,
-                    131,
-                    45
+                    858,
+                    506,
+                    381,
+                    167
                 ],
-                "method": 6,
-                "lower": [
-                    88
-                ],
-                "upper": [
-                    160
-                ],
-                "count": 2000
+                "expected": [
+                    "$发送消息^"
+                ]
             }
         },
         "next": [
