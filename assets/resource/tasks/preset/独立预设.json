@@ -44,6 +44,10 @@
                     "enabled": false
                 },
                 {
+                    "name": "每日逆袭悬赏",
+                    "enabled": false
+                },
+                {
                     "name": "每周逆袭悬赏",
                     "enabled": false
                 },

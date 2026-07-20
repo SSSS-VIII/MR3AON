@@ -135,13 +135,25 @@
             ]
         },
         {
+            "name": "每日逆袭悬赏",
+            "entry": "每日逆袭悬赏entry",
+            "option": [
+                "刷出每日一张的逆袭A",
+                "清空自己的逆袭A",
+                "清空每日逆袭A次数"
+            ],
+            "group": [
+                "standalone"
+            ]
+        },
+        {
             "name": "每周逆袭悬赏",
             "entry": "每周逆袭悬赏entry",
             "option": ["选择要打的逆袭boss"],
             "group": [
                 "standalone"
             ],
-            "description": "临时版本，未编写停止逻辑，后续会更新以下功能：\n每日逆袭任务：刷出逆袭A  清完逆袭A次数  清完自己的逆袭A\n每周逆袭任务：刷逆袭A刷出每周逆袭S  清完每周逆袭S次数  刷逆袭S刷出活动逆袭SS  刷逆袭SS+"
+            "description": "未编写停止逻辑，请刷取够后自行停止"
         }
     ],
     "option": {
@@ -726,6 +738,99 @@
                         },
                         "使能节点乐斗超级忍检查一次主页面任务": {
                             "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "刷出每日一张的逆袭A": {
+            "type": "switch",
+            "label": "刷出每日一张的逆袭A",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "开启",
+                    "pipeline_override": {
+                        "每日逆袭悬赏刷出逆袭A": {
+                            "enabled": true
+                        },
+                        "每日逆袭悬赏刷出逆袭A不需要完成": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "label": "关闭",
+                    "pipeline_override": {
+                        "每日逆袭悬赏刷出逆袭A": {
+                            "enabled": false
+                        },
+                        "每日逆袭悬赏刷出逆袭A不需要完成": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "清空自己的逆袭A": {
+            "type": "switch",
+            "label": "清空自己的逆袭A",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "开启",
+                    "pipeline_override": {
+                        "每日逆袭悬赏清自己的逆袭A": {
+                            "enabled": true
+                        },
+                        "每日逆袭悬赏清自己的逆袭A不需要完成": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "label": "关闭",
+                    "pipeline_override": {
+                        "每日逆袭悬赏清自己的逆袭A": {
+                            "enabled": false
+                        },
+                        "每日逆袭悬赏清自己的逆袭A不需要完成": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "清空每日逆袭A次数": {
+            "type": "switch",
+            "label": "清空每日逆袭A次数",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "开启",
+                    "pipeline_override": {
+                        "每日逆袭悬赏清每日逆袭A次数": {
+                            "enabled": true
+                        },
+                        "每日逆袭悬赏清每日逆袭A次数不需要完成": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "label": "关闭",
+                    "pipeline_override": {
+                        "每日逆袭悬赏清每日逆袭A次数": {
+                            "enabled": false
+                        },
+                        "每日逆袭悬赏清每日逆袭A次数不需要完成": {
+                            "enabled": true
                         }
                     }
                 }
