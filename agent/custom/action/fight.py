@@ -10,19 +10,19 @@ from utils import logger
 
 
 def _coerce_fight_mode(value: Any) -> int:
-    """解析 mode，合法值为 0–3；缺省或非法时返回 0。"""
+    """解析 mode，合法值为 0–4；缺省或非法时返回 0。"""
     if value is None:
         return 0
     if isinstance(value, bool):
         return 0
     if isinstance(value, int):
-        if value in (0, 1, 2, 3):
+        if value in (0, 1, 2, 3, 4):
             return value
         logger.warning(f"fight: mode 非法 ({value})，使用 0")
         return 0
     if isinstance(value, str):
         s = value.strip()
-        if s in ("0", "1", "2", "3"):
+        if s in ("0", "1", "2", "3", "4"):
             return int(s)
         if s == "":
             return 0
@@ -42,13 +42,14 @@ class fight(CustomAction):
         """
         战斗开大连点。
 
-        custom_action_param（可选）: { "mode": 0 | 1 | 2 | 3 }
+        custom_action_param（可选）: { "mode": 0 | 1 | 2 | 3 | 4 }
 
         mode:
             0 - 通用（大招原点 + 小椒 1 式）
             1 - 其他角色（仅大招原点）
             2 - 双焰小椒（大招原点 + 小椒 1 式）
             3 - 剑心/卫鲤（大招原点一次 + 卫鲤 2 式）
+            4 - 极刃血影（N轮截图依次识别三个大招节点，命中即点）
 
         每日悬赏等任务会在识别角色后通过 NodeOverride 覆盖 mode；
         未覆盖或未传参时默认为 0。
@@ -78,6 +79,27 @@ class fight(CustomAction):
                 click(80, 360, 200)
                 for _ in range(25):
                     click(210, 350, 200)
+            elif mode == 4:
+                # 极刃血影：N轮截图依次识别三个大招节点，命中即点
+                rounds: int = param.get("rounds", 16)
+
+                for _ in range(rounds):
+                    img = context.tasker.controller.post_screencap().wait().get()
+                    if img is None:
+                        time.sleep(0.01)
+                        continue
+
+                    for node in (
+                        "识别到极刃血影大招",
+                        "极刃血影大招狂刃",
+                        "极刃血影大招轮斩",
+                    ):
+                        detail = context.run_recognition(node, img)
+                        if detail and detail.hit:
+                            box = list(detail.box)
+                            x = box[0] + box[2] // 2
+                            y = box[1] + box[3] // 2
+                            click(x, y, 50)
 
             return CustomAction.RunResult(success=True)
         except Exception as e:

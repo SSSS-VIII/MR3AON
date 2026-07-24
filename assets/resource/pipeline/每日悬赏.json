@@ -63,6 +63,26 @@
             "关闭节点每日悬赏家族组队任务"
         ]
     },
+    "再次识别角色取消退出组队": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    335,
+                    464,
+                    272,
+                    122
+                ],
+                "expected": [
+                    "取消"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 400
+    },
     "好友组队每日任务页面": {
         "recognition": {
             "type": "OCR",
@@ -856,10 +876,11 @@
         "action": {
             "type": "Click"
         },
-        "post_delay": 800,
+        "post_delay": 1200,
         "next": [
             "每日悬赏展开了邀请页面",
-            "每日悬赏点击邀请好友"
+            "每日悬赏点击邀请好友",
+            "[JumpBack]再次识别角色取消退出组队"
         ]
     },
     "每日悬赏点到了个人信息": {
@@ -928,22 +949,17 @@
     },
     "每日悬赏组队点开了聊天": {
         "recognition": {
-            "type": "ColorMatch",
+            "type": "OCR",
             "param": {
                 "roi": [
-                    1131,
-                    39,
-                    131,
-                    45
+                    858,
+                    506,
+                    381,
+                    167
                 ],
-                "method": 6,
-                "lower": [
-                    88
-                ],
-                "upper": [
-                    160
-                ],
-                "count": 2000
+                "expected": [
+                    "^发送消息$"
+                ]
             }
         },
         "next": [
@@ -1269,6 +1285,7 @@
         "post_delay": 0,
         "next": [
             "[JumpBack]每日悬赏点击出发（气笑了）",
+            "[JumpBack]再次识别角色取消退出组队",
             "每日悬赏点击邀请好友",
             "每日悬赏识别到进入了战斗"
         ]
@@ -1566,7 +1583,7 @@
         "action": {
             "type": "Click"
         },
-        "post_delay": 400
+        "post_delay": 600
     },
     "点击命格": {
         "recognition": {
@@ -1598,13 +1615,21 @@
                     128
                 ],
                 "expected": [
-                    "战斗部署|者"
+                    "战斗部署|者|剑|客"
                 ]
             }
         },
         "pre_delay": 0,
         "action": {
-            "type": "Click"
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    -40,
+                    0,
+                    0,
+                    0
+                ]
+            }
         },
         "post_delay": 300
     },
@@ -1751,6 +1776,49 @@
                     "用户配置延迟": {
                         "next": [
                             "用户配置延迟_双焰小椒"
+                        ]
+                    }
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "识别角色结束"
+        ]
+    },
+    "识别到极刃": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    75,
+                    144,
+                    292,
+                    105
+                ],
+                "expected": [
+                    "极刃"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "开大": {
+                        "action": {
+                            "param": {
+                                "custom_action_param": {
+                                    "mode": 4
+                                }
+                            }
+                        }
+                    },
+                    "用户配置延迟": {
+                        "next": [
+                            "用户配置延迟_其他角色"
                         ]
                     }
                 }
@@ -2107,6 +2175,7 @@
         "next": [
             "识别到双焰",
             "识别到剑心",
+            "识别到极刃",
             "普通角色"
         ]
     },

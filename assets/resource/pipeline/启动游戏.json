@@ -1,4 +1,120 @@
 {
+    "切换区左滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    500,
+                    360,
+                    1,
+                    1
+                ],
+                "end": [
+                    [
+                        900,
+                        365,
+                        1,
+                        1
+                    ]
+                ],
+                "end_hold": [
+                    400
+                ]
+            }
+        },
+        "post_delay": 600,
+        "next": [
+            "使能节点切换区右滑"
+        ]
+    },
+    "使能节点切换区左滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "切换区左滑"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "关闭节点切换区右滑"
+        ]
+    },
+    "使能节点切换区右滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "切换区右滑"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "关闭节点切换区左滑"
+        ]
+    },
+    "关闭节点切换区右滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "切换区右滑"
+                }
+            }
+        },
+        "post_delay": 0
+    },
+    "关闭节点切换区左滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "切换区左滑"
+                }
+            }
+        },
+        "post_delay": 0
+    },
+    "切换区右滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    900,
+                    365,
+                    1,
+                    1
+                ],
+                "end": [
+                    [
+                        500,
+                        360,
+                        1,
+                        1
+                    ]
+                ],
+                "end_hold": [
+                    400
+                ]
+            }
+        },
+        "post_delay": 600,
+        "next": [
+            "使能节点切换区左滑"
+        ]
+    },
     "上层没有勾勾则点左上角": {
         "action": {
             "type": "Click",
@@ -483,7 +599,7 @@
                     94
                 ],
                 "expected": [
-                    "二区"
+                    "二服"
                 ]
             }
         },
@@ -539,7 +655,7 @@
             "上层没有勾勾则点左上角"
         ]
     },
-    "此节点用于计数多次没进入主页面则关闭可能的签到": {
+    "此节点用于计数多次未进入主页面则关闭可能的签到": {
         "recognition": {
             "type": "Custom",
             "param": {
@@ -582,7 +698,7 @@
             }
         },
         "next": [
-            "此节点用于计数多次没进入主页面则关闭可能的签到",
+            "此节点用于计数多次未进入主页面则关闭可能的签到",
             "点击空白处关闭未知签到"
         ]
     },
@@ -597,7 +713,7 @@
             }
         },
         "next": [
-            "此节点用于计数多次没进入主页面则关闭可能的签到",
+            "此节点用于计数多次未进入主页面则关闭可能的签到",
             "点击空白处关闭未知签到"
         ]
     },
@@ -698,10 +814,11 @@
                 ]
             }
         },
+        "pre_delay": 0,
         "action": {
             "type": "Click"
         },
-        "post_wait_freezes": 500
+        "post_delay": 1500
     },
     "点击登录": {
         "recognition": {
@@ -755,7 +872,7 @@
             }
         },
         "next": [
-            "重置节点此节点用于计数多次没进入主页面则关闭可能的签到"
+            "重置节点此节点用于计数多次未进入主页面则关闭可能的签到"
         ]
     },
     "等待更新完成": {
@@ -890,7 +1007,8 @@
             "跳过切换区",
             "是目标区服",
             "[JumpBack]选择几区",
-            "[JumpBack]点击区切换按钮"
+            "[JumpBack]点击区切换按钮",
+            "[JumpBack]切换区时未识别到目标区"
         ]
     },
     "跳过切换区": {
@@ -927,16 +1045,6 @@
                     -2
                 ]
             }
-        },
-        "post_wait_freezes": {
-            "time": 500,
-            "target": [
-                475,
-                413,
-                349,
-                39
-            ],
-            "threshold": 0.8
         }
     },
     "重新识别确保启动阶段弹窗处理结束": {
@@ -951,7 +1059,7 @@
         },
         "pre_delay": 0
     },
-    "重置节点此节点用于计数多次没进入主页面则关闭可能的签到": {
+    "重置节点此节点用于计数多次未进入主页面则关闭可能的签到": {
         "action": {
             "type": "Custom",
             "param": {
@@ -980,6 +1088,26 @@
         "next": [
             "点击确认更新的确定按钮",
             "没有确认更新的确定按钮"
+        ]
+    },
+    "切换区时未识别到目标区": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    479,
+                    163,
+                    305,
+                    136
+                ],
+                "expected": [
+                    "选择区服"
+                ]
+            }
+        },
+        "next": [
+            "切换区右滑",
+            "切换区左滑"
         ]
     }
 }

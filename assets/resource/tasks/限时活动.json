@@ -9,7 +9,7 @@
                 "无论满没满都刷（适用于非酋没出神品碎片）"
             ],
             "group": [
-                "standalone"
+                "限时活动"
             ]
         },
         {
@@ -20,7 +20,7 @@
                 "只刷神品不刷传颂"
             ],
             "group": [
-                "standalone"
+                "限时活动"
             ],
             "pipeline_override": {
                 "识别藏宝图是否满了": {
@@ -50,7 +50,7 @@
                 "完成镜界百器每日任务"
             ],
             "group": [
-                "standalone"
+                "限时活动"
             ],
             "description": "<span style=\"color:deepskyblue;font-size:15px\"><strong>清体力</strong>：建议有<strong>一勾以上忍宗</strong>运行此任务，避免影响其他玩家；<br/><br/><strong>每日任务</strong>：会<strong><span style=\"color:tomato\">重置秘境</span></strong>。若连续多次未完成，脚本将跳过该子任务；通常开局有大招即可正常完成。</span>"
         },
@@ -61,31 +61,12 @@
                 "祈福类型"
             ],
             "group": [
-                "standalone"
+                "限时活动"
             ],
             "description": "<span style=\"color:deepskyblue;font-size:15px\">请在祈TA宠爱页面运行此任务</span>"
         },
         {
-            "name": "周末活动",
-            "entry": "周末活动entry",
-            "group": [
-                "standalone"
-            ],
-            "description": "<span style=\"color:deepskyblue;font-size:15px\">系统会先判断当前是否为<strong>周六、周日</strong>，非周末将<strong>直接跳过</strong>。<br/><br/>此外无法识别的活动会自动跳过。目前已支持：<strong>光影忍法帖</strong>、<strong>忍界乱斗</strong>。</span>"
-        },
-        {
-            "name": "家族战",
-            "entry": "家族战entry",
-            "option": [
-                "挂机直到族战开启",
-                "混团本"
-            ],
-            "group": [
-                "standalone"
-            ],
-            "description": "<span style=\"color:deepskyblue;font-size:15px\">系统会先判断当前是否为<strong>周六、周日</strong>，非周末将<strong>直接跳过</strong>。</span>"
-        },{
-            "name":"深渊挑战",
+            "name": "深渊挑战",
             "entry": "深渊挑战entry"
         },
         {
@@ -95,19 +76,50 @@
                 "是否使用体验角色"
             ],
             "group": [
-                "standalone"
+                "限时活动"
             ]
         },
         {
-            "name": "S/SS+",
-            "entry": "S_SS+entry",
+            "name": "幽狱永镇",
+            "entry": "幽狱永镇entry",
             "option": [
-                "清S",
-                "清SS+"
+                "难度选择"
             ],
             "group": [
-                "standalone"
+                "限时活动"
             ]
+        },
+        {
+            "name": "乐斗超级忍",
+            "entry": "乐斗超级忍entry",
+            "option": [
+                "运行模式",
+                "活动未开放时挂机至活动开放"
+            ],
+            "group": [
+                "限时活动"
+            ]
+        },
+        {
+            "name": "每日逆袭悬赏",
+            "entry": "每日逆袭悬赏entry",
+            "option": [
+                "刷出每日一张的逆袭A",
+                "清空自己的逆袭A",
+                "清空每日逆袭A次数"
+            ],
+            "group": [
+                "限时活动"
+            ]
+        },
+        {
+            "name": "每周逆袭悬赏",
+            "entry": "每周逆袭悬赏entry",
+            "option": ["选择要打的逆袭boss"],
+            "group": [
+                "限时活动"
+            ],
+            "description": "未编写停止逻辑，请刷取够后自行停止"
         }
     ],
     "option": {
@@ -411,67 +423,6 @@
                 }
             ]
         },
-        "挂机直到族战开启": {
-            "type": "switch",
-            "label": "挂机直到族战开启",
-            "description": "开启后，若当前时间早于 20:00，将挂机等待直至家族战开启；关闭则不等待。",
-            "default_case": "Yes",
-            "cases": [
-                {
-                    "name": "Yes",
-                    "label": "开启",
-                    "pipeline_override": {
-                        "停止家族战任务": {
-                            "enabled": false
-                        }
-                    }
-                },
-                {
-                    "name": "No",
-                    "label": "关闭",
-                    "pipeline_override": {
-                        "停止家族战任务": {
-                            "enabled": true
-                        },
-                        "家族战等待提示": {
-                            "focus": ""
-                        }
-                    }
-                }
-            ]
-        },
-        "混团本": {
-            "type": "switch",
-            "label": "混团本",
-            "description": "开启后家族战期间会参加团本；关闭则不会参加团本。",
-            "default_case": "Yes",
-            "cases": [
-                {
-                    "name": "Yes",
-                    "label": "开启",
-                    "pipeline_override": {
-                        "团队战点击加入战斗": {
-                            "enabled": true
-                        },
-                        "识别到全员参战且有进入战场": {
-                            "enabled": true
-                        }
-                    }
-                },
-                {
-                    "name": "No",
-                    "label": "关闭",
-                    "pipeline_override": {
-                        "团队战点击加入战斗": {
-                            "enabled": false
-                        },
-                        "识别到全员参战且有进入战场": {
-                            "enabled": false
-                        }
-                    }
-                }
-            ]
-        },
         "是否使用体验角色": {
             "type": "switch",
             "label": "是否使用体验角色",
@@ -527,16 +478,81 @@
                 }
             ]
         },
-        "清S": {
+        "难度选择": {
+            "type": "select",
+            "label": "难度选择",
+            "default_case": "困难",
+            "cases": [
+                {
+                    "name": "困难",
+                    "pipeline_override": {
+                        "幽狱永镇识别目标类型": {
+                            "expected": [
+                                "困难"
+                            ]
+                        },
+                        "幽狱永镇检测目标难度匹配": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "幽狱永镇困难模式.png"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "标准",
+                    "pipeline_override": {
+                        "幽狱永镇识别目标类型": {
+                            "expected": [
+                                "标准"
+                            ]
+                        },
+                        "幽狱永镇检测目标难度匹配": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "幽狱永镇标准模式.png"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "简单",
+                    "pipeline_override": {
+                        "幽狱永镇识别目标类型": {
+                            "expected": [
+                                "简单"
+                            ]
+                        },
+                        "幽狱永镇检测目标难度匹配": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "幽狱永镇简单模式.png"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "活动未开放时挂机至活动开放": {
             "type": "switch",
-            "label": "清S",
-            "default_case": "Yes",
+            "label": "活动未开放时挂机至活动开放",
+            "description": "开启后，若当前不在活动匹配时间内，将挂机等待直至活动开放。",
+            "default_case": "No",
             "cases": [
                 {
                     "name": "Yes",
                     "label": "开启",
                     "pipeline_override": {
-                        "召令悬赏需要刷S": {
+                        "乐斗超级忍不在匹配时间内则等待": {
                             "enabled": true
                         }
                     }
@@ -545,24 +561,57 @@
                     "name": "No",
                     "label": "关闭",
                     "pipeline_override": {
-                        "召令悬赏需要刷S": {
+                        "乐斗超级忍不在匹配时间内则等待": {
                             "enabled": false
                         }
                     }
                 }
             ]
         },
-        "清SS+": {
+        "运行模式": {
+            "type": "select",
+            "label": "运行模式",
+            "description": "完成每日任务：检测每日任务是否完成，完成后停止；一直刷：跳过每日任务检测，活动开放期间反复刷取，不受每日任务完成状态限制。",
+            "default_case": "完成每日任务",
+            "cases": [
+                {
+                    "name": "完成每日任务",
+                    "pipeline_override": {
+                        "乐斗超级忍检查一次主页面任务": {
+                            "enabled": true
+                        },
+                        "使能节点乐斗超级忍检查一次主页面任务": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "一直刷",
+                    "pipeline_override": {
+                        "乐斗超级忍检查一次主页面任务": {
+                            "enabled": false
+                        },
+                        "使能节点乐斗超级忍检查一次主页面任务": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "刷出每日一张的逆袭A": {
             "type": "switch",
-            "label": "清SS+",
+            "label": "刷出每日一张的逆袭A",
             "default_case": "Yes",
             "cases": [
                 {
                     "name": "Yes",
                     "label": "开启",
                     "pipeline_override": {
-                        "召令悬赏需要刷SS+": {
+                        "每日逆袭悬赏刷出逆袭A": {
                             "enabled": true
+                        },
+                        "每日逆袭悬赏刷出逆袭A不需要完成": {
+                            "enabled": false
                         }
                     }
                 },
@@ -570,8 +619,141 @@
                     "name": "No",
                     "label": "关闭",
                     "pipeline_override": {
-                        "召令悬赏需要刷SS+": {
+                        "每日逆袭悬赏刷出逆袭A": {
                             "enabled": false
+                        },
+                        "每日逆袭悬赏刷出逆袭A不需要完成": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "清空自己的逆袭A": {
+            "type": "switch",
+            "label": "清空自己的逆袭A",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "开启",
+                    "pipeline_override": {
+                        "每日逆袭悬赏清自己的逆袭A": {
+                            "enabled": true
+                        },
+                        "每日逆袭悬赏清自己的逆袭A不需要完成": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "label": "关闭",
+                    "pipeline_override": {
+                        "每日逆袭悬赏清自己的逆袭A": {
+                            "enabled": false
+                        },
+                        "每日逆袭悬赏清自己的逆袭A不需要完成": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "清空每日逆袭A次数": {
+            "type": "switch",
+            "label": "清空每日逆袭A次数",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "开启",
+                    "pipeline_override": {
+                        "每日逆袭悬赏清每日逆袭A次数": {
+                            "enabled": true
+                        },
+                        "每日逆袭悬赏清每日逆袭A次数不需要完成": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "label": "关闭",
+                    "pipeline_override": {
+                        "每日逆袭悬赏清每日逆袭A次数": {
+                            "enabled": false
+                        },
+                        "每日逆袭悬赏清每日逆袭A次数不需要完成": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "选择要打的逆袭boss": {
+            "type": "select",
+            "label": "选择要打的逆袭boss",
+            "description": "不是选要刷出来的，是选要进入的",
+            "default_case": "仅逆袭S",
+            "cases": [
+                {
+                    "name": "仅逆袭A",
+                    "pipeline_override": {
+                        "每周逆袭悬赏A选项": {
+                            "template": "召令悬赏未选择.png"
+                        },
+                        "每周逆袭悬赏S选项": {
+                            "template": "召令悬赏已选择.png"
+                        },
+                        "每周逆袭悬赏需要刷逆袭A": {
+                            "enable": true
+                        },
+                        "每周逆袭悬赏需要刷逆袭S": {
+                            "enable": false
+                        },
+                        "每周逆袭悬赏需要刷逆袭SS+": {
+                            "enable": false
+                        }
+                    }
+                },
+                {
+                    "name": "仅逆袭S",
+                    "pipeline_override": {
+                        "每周逆袭悬赏A选项": {
+                            "template": "召令悬赏已选择.png"
+                        },
+                        "每周逆袭悬赏S选项": {
+                            "template": "召令悬赏未选择.png"
+                        },
+                        "每周逆袭悬赏需要刷逆袭A": {
+                            "enable": false
+                        },
+                        "每周逆袭悬赏需要刷逆袭S": {
+                            "enable": true
+                        },
+                        "每周逆袭悬赏需要刷逆袭SS+": {
+                            "enable": false
+                        }
+                    }
+                },
+                {
+                    "name": "逆袭A和逆袭S",
+                    "pipeline_override": {
+                        "每周逆袭悬赏A选项": {
+                            "template": "召令悬赏未选择.png"
+                        },
+                        "每周逆袭悬赏S选项": {
+                            "template": "召令悬赏未选择.png"
+                        },
+                        "每周逆袭悬赏需要刷逆袭A": {
+                            "enable": true
+                        },
+                        "每周逆袭悬赏需要刷逆袭S": {
+                            "enable": true
+                        },
+                        "每周逆袭悬赏需要刷逆袭SS+": {
+                            "enable": false
                         }
                     }
                 }

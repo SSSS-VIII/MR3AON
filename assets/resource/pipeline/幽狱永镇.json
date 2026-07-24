@@ -1,0 +1,1023 @@
+{
+    "幽狱永镇_悬赏讨伐失败": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    500,
+                    465,
+                    285,
+                    247
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "幽狱永镇entry": {
+        "next": [
+            "[JumpBack]幽狱永镇entry入口",
+            "幽狱永镇任务出错"
+        ]
+    },
+    "幽狱永镇entry入口": {
+        "max_hit": 3,
+        "next": [
+            "重置幽狱永镇内部节点计数器"
+        ]
+    },
+    "幽狱永镇主页": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    865,
+                    3,
+                    412,
+                    116
+                ],
+                "expected": [
+                    "活动商店|排行榜"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]幽狱永镇上次结算确定",
+            "幽狱永镇点一下普通模式"
+        ]
+    },
+    "幽狱永镇任务出错": {
+        "focus": "任务出错：幽狱永镇❌"
+    },
+    "幽狱永镇关闭错误点击个人信息": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    270,
+                    120
+                ],
+                "expected": [
+                    "个人信息"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1250,
+                    75,
+                    20,
+                    20
+                ]
+            }
+        }
+    },
+    "幽狱永镇关闭错误点击好友": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    818,
+                    7,
+                    301,
+                    88
+                ],
+                "expected": [
+                    "好友"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    238,
+                    295,
+                    150,
+                    150
+                ]
+            }
+        }
+    },
+    "幽狱永镇再次发现boss": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    600,
+                    0,
+                    150,
+                    78
+                ],
+                "expected": [
+                    "\\d\\d"
+                ]
+            }
+        },
+        "next": [
+            "bossfight"
+        ]
+    },
+    "幽狱永镇再次检测是否还有没有能量": {
+        "post_delay": 1000,
+        "next": [
+            "幽狱永镇还有能量",
+            "幽狱永镇没能量了"
+        ]
+    },
+    "幽狱永镇再次检测目标难度匹配": {
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "next": [
+            "幽狱永镇检测目标难度匹配",
+            "幽狱永镇目标难度不匹配或没有准备按钮"
+        ]
+    },
+    "幽狱永镇地区筛选按钮": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    662,
+                    124,
+                    299,
+                    278
+                ],
+                "template": [
+                    "地区筛选图标.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "幽狱永镇地区筛选文字": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    662,
+                    124,
+                    299,
+                    278
+                ],
+                "expected": [
+                    "筛选",
+                    "3v3",
+                    "活动玩法",
+                    "悬赏令"
+                ]
+            }
+        },
+        "next": [
+            "幽狱永镇筛选模块"
+        ]
+    },
+    "幽狱永镇完成回到了主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    4,
+                    136,
+                    434,
+                    459
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "StopTask"
+        },
+        "focus": "任务完成：幽狱永镇✅"
+    },
+    "幽狱永镇意外出现能量不足": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    531,
+                    154,
+                    223,
+                    148
+                ],
+                "expected": [
+                    "能量不足",
+                    "当前能量"
+                ]
+            }
+        },
+        "next": [
+            "幽狱永镇没能量了"
+        ]
+    },
+    "幽狱永镇意外回到主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    500,
+                    642
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true,
+                "threshold": [
+                    0.78
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "幽狱永镇挑战"
+        ]
+    },
+    "幽狱永镇意外回到幽狱永镇页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    54,
+                    189,
+                    135,
+                    165
+                ],
+                "expected": [
+                    "普通模式",
+                    "挑战模式"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "幽狱永镇主页"
+        ]
+    },
+    "幽狱永镇挑战": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "幽狱永镇挑战确认在主页面",
+            "[JumpBack]back"
+        ]
+    },
+    "幽狱永镇挑战点击聊天": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    500,
+                    712
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true,
+                "threshold": [
+                    0.78
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 600
+    },
+    "幽狱永镇挑战确认在主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    500,
+                    712
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true,
+                "threshold": [
+                    0.78
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]幽狱永镇挑战点击聊天",
+            "幽狱永镇点击省市区"
+        ]
+    },
+    "幽狱永镇目标类型下未识别到加入队伍": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "rate_limit": 0
+    },
+    "幽狱永镇检测目标难度匹配": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    102,
+                    3,
+                    358,
+                    135
+                ],
+                "template": [
+                    "幽狱永镇困难模式.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "幽狱永镇点击准备",
+            "幽狱永镇目标难度不匹配或没有准备按钮"
+        ]
+    },
+    "幽狱永镇目标难度不匹配或没有准备按钮": {
+        "next": [
+            "重置幽狱永镇内部节点计数器"
+        ]
+    },
+    "幽狱永镇没能量了": {
+        "next": [
+            "幽狱永镇完成回到了主页面",
+            "[JumpBack]back"
+        ]
+    },
+    "幽狱永镇点一下普通模式": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    3,
+                    174,
+                    205,
+                    200
+                ],
+                "expected": [
+                    "普通模式"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "幽狱永镇还有能量",
+            "幽狱永镇再次检测是否还有没有能量"
+        ]
+    },
+    "幽狱永镇点击下方消息": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    104,
+                    603,
+                    239,
+                    45
+                ],
+                "expected": [
+                    "邀请",
+                    "悬赏令",
+                    "组队",
+                    "表情"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 0
+    },
+    "幽狱永镇点击准备": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    968,
+                    601,
+                    295,
+                    111
+                ],
+                "expected": [
+                    "^准备$"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 0,
+        "next": [
+            "幽狱永镇核心节点"
+        ]
+    },
+    "幽狱永镇点击幽狱永镇": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    8,
+                    70,
+                    1259,
+                    233
+                ],
+                "template": [
+                    "幽狱永镇.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": {
+            "time": 400,
+            "threshold": 0.8
+        },
+        "next": [
+            "[JumpBack]幽狱永镇上次结算确定",
+            "幽狱永镇主页"
+        ]
+    },
+    "幽狱永镇点击目标类型下的加入队伍": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "幽狱永镇识别目标类型",
+                "roi_offset": [
+                    120,
+                    93,
+                    45,
+                    100
+                ],
+                "expected": [
+                    "加入队伍"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 0,
+        "rate_limit": 0
+    },
+    "幽狱永镇点击省市区": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    735,
+                    77
+                ],
+                "expected": [
+                    "^.+[省市区]$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "[JumpBack]幽狱永镇地区筛选按钮",
+            "幽狱永镇地区筛选文字",
+            "幽狱永镇点击省市区"
+        ]
+    },
+    "幽狱永镇点击确定不选卡": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    698,
+                    466,
+                    303,
+                    141
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000
+    },
+    "幽狱永镇确认在主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    500,
+                    712
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "next": [
+            "幽狱永镇进入集会所"
+        ]
+    },
+    "幽狱永镇核心节点": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 60000,
+        "rate_limit": 0,
+        "next": [
+            "[JumpBack]幽狱永镇点击下方消息",
+            "[JumpBack]幽狱永镇识别目标类型",
+            "[JumpBack]幽狱永镇点击确定不选卡",
+            "幽狱永镇识别到准备",
+            "[JumpBack]幽狱永镇关闭错误点击好友",
+            "[JumpBack]幽狱永镇关闭错误点击个人信息",
+            "幽狱永镇意外回到主页面",
+            "幽狱永镇识别到进入了战斗",
+            "幽狱永镇意外出现能量不足",
+            "幽狱永镇意外回到幽狱永镇页面"
+        ],
+        "on_error": [
+            "幽狱永镇挑战"
+        ]
+    },
+    "幽狱永镇筛选3v3已关闭": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    715,
+                    210,
+                    100,
+                    100
+                ],
+                "template": [
+                    "筛选按钮关.png"
+                ]
+            }
+        },
+        "next": [
+            "幽狱永镇筛选活动玩法已开启",
+            "[JumpBack]幽狱永镇筛选点击活动玩法"
+        ]
+    },
+    "幽狱永镇筛选模块": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]幽狱永镇筛选点击关闭3v3",
+            "幽狱永镇筛选3v3已关闭"
+        ]
+    },
+    "幽狱永镇筛选活动玩法已开启": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    715,
+                    290,
+                    100,
+                    100
+                ],
+                "template": [
+                    "筛选按钮开.png"
+                ]
+            }
+        },
+        "next": [
+            "幽狱永镇确认在地区"
+        ]
+    },
+    "幽狱永镇筛选点击关闭3v3": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    715,
+                    210,
+                    100,
+                    100
+                ],
+                "template": [
+                    "筛选按钮开.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 600
+    },
+    "幽狱永镇筛选点击活动玩法": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    715,
+                    290,
+                    100,
+                    100
+                ],
+                "template": [
+                    "筛选按钮关.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 600
+    },
+    "幽狱永镇结算确定": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    415,
+                    447,
+                    811,
+                    250
+                ],
+                "expected": [
+                    "确定|下一页"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000
+    },
+    "幽狱永镇识别到准备": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    968,
+                    601,
+                    295,
+                    111
+                ],
+                "expected": [
+                    "^准备$"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "幽狱永镇检测目标难度匹配",
+            "幽狱永镇再次检测目标难度匹配"
+        ]
+    },
+    "幽狱永镇识别到进入了战斗": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 600000,
+        "rate_limit": 2000,
+        "next": [
+            "[JumpBack]幽狱永镇调用fight",
+            "[JumpBack]幽狱永镇结算确定",
+            "幽狱永镇进入战斗后回到幽狱永镇页面",
+            "[JumpBack]幽狱永镇再次发现boss",
+            "幽狱永镇失败后回到队伍页面"
+        ]
+    },
+    "幽狱永镇识别目标类型": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    99,
+                    122,
+                    628,
+                    519
+                ],
+                "expected": [
+                    "困难"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "rate_limit": 0,
+        "next": [
+            "幽狱永镇点击目标类型下的加入队伍",
+            "幽狱永镇目标类型下未识别到加入队伍"
+        ]
+    },
+    "幽狱永镇调用fight": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]幽狱永镇降低fight识别速度",
+            "fight"
+        ]
+    },
+    "幽狱永镇还有能量": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    1015,
+                    548,
+                    244,
+                    143
+                ],
+                "template": [
+                    "幽狱永镇能量.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "next": [
+            "幽狱永镇挑战"
+        ]
+    },
+    "幽狱永镇进入战斗后回到幽狱永镇页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    54,
+                    189,
+                    135,
+                    165
+                ],
+                "expected": [
+                    "普通模式",
+                    "挑战模式"
+                ]
+            }
+        },
+        "next": [
+            "幽狱永镇主页"
+        ]
+    },
+    "幽狱永镇进入集会所": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    646,
+                    362,
+                    631,
+                    355
+                ],
+                "template": [
+                    "集会所.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    67,
+                    -20,
+                    -17,
+                    -2
+                ]
+            }
+        },
+        "post_wait_freezes": {
+            "time": 400,
+            "threshold": 0.8
+        },
+        "next": [
+            "幽狱永镇集会所主页",
+            "[JumpBack]幽狱永镇_悬赏讨伐失败",
+            "幽狱永镇进入集会所"
+        ]
+    },
+    "幽狱永镇降低fight识别速度": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "post_delay": 2000
+    },
+    "幽狱永镇集会所主页": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    21,
+                    3,
+                    379,
+                    132
+                ],
+                "template": [
+                    "集会所主页.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "next": [
+            "幽狱永镇点击幽狱永镇",
+            "[JumpBack]幽狱永镇集会所右滑计数"
+        ]
+    },
+    "幽狱永镇集会所右滑": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    21,
+                    3,
+                    379,
+                    132
+                ],
+                "template": [
+                    "集会所主页.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    1260,
+                    400,
+                    1,
+                    1
+                ],
+                "end": [
+                    [
+                        700,
+                        400,
+                        1,
+                        1
+                    ]
+                ],
+                "end_hold": [
+                    400
+                ]
+            }
+        }
+    },
+    "幽狱永镇集会所右滑计数": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 3
+                }
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "幽狱永镇集会所右滑"
+        ]
+    },
+    "重置幽狱永镇内部节点计数器": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount"
+            }
+        },
+        "next": [
+            "幽狱永镇确认在主页面",
+            "[JumpBack]back"
+        ]
+    },
+    "幽狱永镇失败后回到队伍页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    843,
+                    608,
+                    437,
+                    108
+                ],
+                "expected": [
+                    "队伍至少需要",
+                    "卡组",
+                    "准备"
+                ]
+            }
+        },
+        "next": [
+            "重置幽狱永镇内部节点计数器"
+        ]
+    },
+    "幽狱永镇上次结算确定": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    415,
+                    447,
+                    811,
+                    250
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "幽狱永镇确认在地区": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    662,
+                    124,
+                    299,
+                    278
+                ],
+                "expected": [
+                    "筛选",
+                    "3v3",
+                    "活动玩法",
+                    "悬赏令"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "幽狱永镇核心节点"
+        ]
+    }
+}

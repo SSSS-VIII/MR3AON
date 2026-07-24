@@ -100,8 +100,36 @@
             "活动奖励完成"
         ]
     },
+    "活动奖励下载GameMeta": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DownloadGameMeta"
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "获取版本信息"
+        ],
+        "on_error": [
+            "获取版本信息失败"
+        ]
+    },
     "活动奖励任务出错": {
         "focus": "任务出错：活动奖励❌"
+    },
+    "活动奖励任务完成": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "活动奖励入口"
+                }
+            }
+        },
+        "focus": "任务完成：活动奖励✅"
     },
     "活动奖励入口": {
         "max_hit": 3,
@@ -109,6 +137,36 @@
             "重置活动奖励内部节点计数器"
         ]
     },
+    "活动奖励回到了主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    4,
+                    136,
+                    434,
+                    459
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "活动奖励任务出错"
+                }
+            }
+        },
+        "next": [
+            "活动奖励任务完成"
+        ]
+    },
+    "活动奖励完成": {},
     "活动奖励检查主页面": {
         "recognition": {
             "type": "TemplateMatch",
@@ -126,7 +184,7 @@
             }
         },
         "next": [
-            "获取版本信息"
+            "活动奖励下载GameMeta"
         ]
     },
     "点击当前版本": {
@@ -333,12 +391,11 @@
         "action": {
             "type": "Custom",
             "param": {
-                "custom_action": "RemoteJsonOverrideExpected",
+                "custom_action": "LoadGameMetaOverride",
                 "custom_action_param": {
                     "overrides": {
                         "点击当前版本": "版本名称"
-                    },
-                    "path": "assets/remote/game-meta.json"
+                    }
                 }
             }
         },
@@ -358,12 +415,11 @@
         "action": {
             "type": "Custom",
             "param": {
-                "custom_action": "RemoteJsonOverrideExpected",
+                "custom_action": "LoadGameMetaOverride",
                 "custom_action_param": {
                     "overrides": {
                         "点击累充活动": "累充活动"
-                    },
-                    "path": "assets/remote/game-meta.json"
+                    }
                 }
             }
         },
@@ -409,7 +465,7 @@
                     126
                 ],
                 "expected": [
-                    "累计购买5日获得限定头像"
+                    "累计购买\\d日获得限定头像"
                 ]
             }
         },
@@ -492,47 +548,5 @@
             "type": "Click"
         },
         "post_delay": 500
-    },
-    "活动奖励回到了主页面": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "roi": [
-                    4,
-                    136,
-                    434,
-                    459
-                ],
-                "template": [
-                    "主页面.png"
-                ],
-                "green_mask": true
-            }
-        },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "DisableNode",
-                "custom_action_param": {
-                    "node_name": "活动奖励任务出错"
-                }
-            }
-        },
-        "next": [
-            "活动奖励任务完成"
-        ]
-    },
-    "活动奖励任务完成": {
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "DisableNode",
-                "custom_action_param": {
-                    "node_name": "活动奖励入口"
-                }
-            }
-        },
-        "focus": "任务完成：活动奖励✅"
-    },
-    "活动奖励完成": {}
+    }
 }

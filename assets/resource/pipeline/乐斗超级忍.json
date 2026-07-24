@@ -1,0 +1,783 @@
+{
+    "乐斗超级忍不在匹配时间内则等待": {
+        "pre_delay": 0,
+        "post_delay": 20000,
+        "next": [
+            "乐斗超级忍核心节点"
+        ]
+    },
+    "乐斗超级忍点击确定领取奖励": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    400,
+                    571,
+                    471,
+                    144
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000
+    },
+    "乐斗超级忍每日任务已完成": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    809,
+                    160,
+                    276,
+                    200
+                ],
+                "expected": [
+                    "已领取"
+                ]
+            }
+        },
+        "next": [
+            "乐斗超级忍完成"
+        ]
+    },
+    "乐斗超级忍点击开始匹配": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    418,
+                    468,
+                    435,
+                    209
+                ],
+                "expected": [
+                    "开始匹配"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "乐斗超级忍核心节点"
+        ]
+    },
+    "乐斗超级忍检查一次主页面任务": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "关闭节点乐斗超级忍检查一次主页面任务"
+        ]
+    },
+    "关闭节点乐斗超级忍检查一次主页面任务": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "乐斗超级忍检查一次主页面任务"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "乐斗超级忍点击任务"
+        ]
+    },
+    "使能节点乐斗超级忍检查一次主页面任务": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "乐斗超级忍检查一次主页面任务"
+                }
+            }
+        }
+    },
+    "不使能节点乐斗超级忍检查一次主页面任务": {},
+    "乐斗超级忍entry": {
+        "next": [
+            "[JumpBack]乐斗超级忍入口",
+            "乐斗超级忍任务出错"
+        ]
+    },
+    "乐斗超级忍任务出错": {
+        "focus": "任务出错：乐斗超级忍❌"
+    },
+    "乐斗超级忍入口": {
+        "max_hit": 3,
+        "next": [
+            "重置乐斗超级忍内部节点计数器"
+        ]
+    },
+    "乐斗超级忍点击悬赏令页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    8,
+                    70,
+                    1259,
+                    233
+                ],
+                "template": [
+                    "乐斗超级忍.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": {
+            "time": 400,
+            "threshold": 0.8
+        },
+        "next": [
+            "[JumpBack]乐斗超级忍玩法介绍",
+            "乐斗超级忍主页面",
+            "乐斗超级忍点击悬赏令页面"
+        ]
+    },
+    "乐斗超级忍确认在主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    500,
+                    712
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "next": [
+            "乐斗超级忍进入集会所"
+        ]
+    },
+    "乐斗超级忍进入集会所": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    646,
+                    362,
+                    631,
+                    355
+                ],
+                "template": [
+                    "集会所.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    67,
+                    -20,
+                    -17,
+                    -2
+                ]
+            }
+        },
+        "post_wait_freezes": {
+            "time": 400,
+            "threshold": 0.8
+        },
+        "next": [
+            "乐斗超级忍集会所主页",
+            "[JumpBack]乐斗超级忍悬赏讨伐失败",
+            "乐斗超级忍进入集会所"
+        ]
+    },
+    "乐斗超级忍集会所主页": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    21,
+                    3,
+                    379,
+                    132
+                ],
+                "template": [
+                    "集会所主页.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 10000,
+        "next": [
+            "乐斗超级忍点击悬赏令页面",
+            "[JumpBack]乐斗超级忍集会所右滑计数"
+        ]
+    },
+    "乐斗超级忍集会所右滑": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    21,
+                    3,
+                    379,
+                    132
+                ],
+                "template": [
+                    "集会所主页.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    1260,
+                    400,
+                    1,
+                    1
+                ],
+                "end": [
+                    [
+                        700,
+                        400,
+                        1,
+                        1
+                    ]
+                ],
+                "end_hold": [
+                    400
+                ]
+            }
+        }
+    },
+    "乐斗超级忍集会所右滑计数": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 10
+                }
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "乐斗超级忍集会所右滑"
+        ]
+    },
+    "乐斗超级忍悬赏讨伐失败": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    500,
+                    465,
+                    285,
+                    247
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "重置乐斗超级忍内部节点计数器": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount"
+            }
+        },
+        "next": [
+            "乐斗超级忍确认在主页面",
+            "[JumpBack]back"
+        ]
+    },
+    "乐斗超级忍主页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    606,
+                    21,
+                    658,
+                    94
+                ],
+                "expected": [
+                    "固定角色",
+                    "战斗卡牌",
+                    "个人数据"
+                ]
+            }
+        },
+        "next": [
+            "乐斗超级忍核心节点"
+        ]
+    },
+    "乐斗超级忍玩法介绍": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    513,
+                    103,
+                    243,
+                    97
+                ],
+                "expected": [
+                    "玩法介绍"
+                ]
+            }
+        },
+        "next": [
+            "乐斗超级忍关闭玩法介绍",
+            "乐斗超级忍未识别到下一页"
+        ]
+    },
+    "乐斗超级忍关闭玩法介绍": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    973,
+                    540,
+                    206,
+                    116
+                ],
+                "expected": [
+                    "下一页"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    330,
+                    35,
+                    144,
+                    56
+                ]
+            }
+        }
+    },
+    "乐斗超级忍未识别到下一页": {},
+    "乐斗超级忍核心节点": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 100000,
+        "next": [
+            "乐斗超级忍不在匹配时间内",
+            "乐斗超级忍识别到开始匹配",
+            "[JumpBack]乐斗超级忍匹配中",
+            "[JumpBack]乐斗超级忍点击准备完成",
+            "[JumpBack]乐斗超级忍决策时间",
+            "[JumpBack]乐斗超级忍识别到进入了战斗",
+            "[JumpBack]乐斗超级忍识别到跑图中",
+            "[JumpBack]乐斗超级忍点击复活",
+            "[JumpBack]乐斗超级忍点击战斗结束",
+            "[JumpBack]乐斗超级忍识别到boss"
+        ]
+    },
+    "乐斗超级忍识别到开始匹配": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    418,
+                    468,
+                    435,
+                    209
+                ],
+                "expected": [
+                    "开始匹配"
+                ]
+            }
+        },
+        "next": [
+            "乐斗超级忍检查一次主页面任务",
+            "乐斗超级忍点击开始匹配"
+        ]
+    },
+    "乐斗超级忍不在匹配时间内": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    389,
+                    113,
+                    520,
+                    247
+                ],
+                "expected": [
+                    "不在匹配时间内"
+                ]
+            }
+        },
+        "focus": "乐斗超级忍不在匹配时间内，等待直至开启",
+        "next": [
+            "乐斗超级忍不在匹配时间内则等待",
+            "乐斗超级忍完成"
+        ]
+    },
+    "乐斗超级忍匹配中": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    418,
+                    468,
+                    435,
+                    209
+                ],
+                "expected": [
+                    "取消匹配",
+                    "匹配中"
+                ]
+            }
+        },
+        "post_delay": 1000
+    },
+    "乐斗超级忍点击准备完成": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    830,
+                    565,
+                    409,
+                    151
+                ],
+                "expected": [
+                    "完成"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "使能节点乐斗超级忍检查一次主页面任务",
+            "不使能节点乐斗超级忍检查一次主页面任务"
+        ]
+    },
+    "乐斗超级忍决策时间": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    523,
+                    13,
+                    228,
+                    122
+                ],
+                "expected": [
+                    "决策时间"
+                ]
+            }
+        },
+        "post_delay": 1000
+    },
+    "乐斗超级忍识别到进入了战斗": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    598,
+                    162,
+                    120
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "post_delay": 1500
+    },
+    "乐斗超级忍识别到跑图中": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    970,
+                    0,
+                    300,
+                    80
+                ],
+                "template": [
+                    "乐斗超级忍渔币.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "乐斗超级忍跑图中",
+            "乐斗超级忍未再次识别到跑图中"
+        ]
+    },
+    "乐斗超级忍未再次识别到跑图中": {},
+    "乐斗超级忍跑图中": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    970,
+                    0,
+                    300,
+                    80
+                ],
+                "template": [
+                    "乐斗超级忍渔币.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "sync_race_parkour",
+                "custom_action_param": {
+                    "skill_phase_chance": 0,
+                    "step_delay_ms": 100,
+                    "swipe_duration_ms": 100
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "乐斗超级忍跑图中",
+            "乐斗超级忍确定识别到boss",
+            "乐斗超级忍未再次识别到跑图中"
+        ]
+    },
+    "乐斗超级忍点击战斗结束": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    507,
+                    337,
+                    265,
+                    131
+                ],
+                "expected": [
+                    "战斗结束"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "乐斗超级忍点击复活": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    495,
+                    350,
+                    300,
+                    170
+                ],
+                "expected": [
+                    "秒后复活"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "乐斗超级忍识别到boss": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    780,
+                    43,
+                    112,
+                    55
+                ],
+                "expected": [
+                    "×\\d",
+                    "x\\d",
+                    "X\\d"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "乐斗超级忍确定识别到boss"
+        ]
+    },
+    "乐斗超级忍确定识别到boss": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    780,
+                    43,
+                    112,
+                    55
+                ],
+                "expected": [
+                    "×\\d",
+                    "x\\d",
+                    "X\\d"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "bossfight"
+        ]
+    },
+    "乐斗超级忍点击任务": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    559,
+                    0,
+                    599,
+                    120
+                ],
+                "expected": [
+                    "^任务$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 2000,
+        "next": [
+            "乐斗超级忍展开了每日任务",
+            "乐斗超级忍点击任务"
+        ]
+    },
+    "乐斗超级忍展开了每日任务": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    507,
+                    22,
+                    312,
+                    147
+                ],
+                "expected": [
+                    "每日任务"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]乐斗超级忍点击确定领取奖励",
+            "[JumpBack]乐斗超级忍点击领取奖励",
+            "乐斗超级忍每日任务未完成",
+            "乐斗超级忍每日任务已完成"
+        ]
+    },
+    "乐斗超级忍点击领取奖励": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    811,
+                    165,
+                    235,
+                    454
+                ],
+                "expected": [
+                    "领取奖励"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000
+    },
+    "乐斗超级忍每日任务未完成": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    809,
+                    160,
+                    276,
+                    200
+                ],
+                "expected": [
+                    "/\\d"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1185,
+                    262,
+                    76,
+                    136
+                ]
+            }
+        },
+        "next": [
+            "乐斗超级忍核心节点"
+        ]
+    },
+    "乐斗超级忍完成回到了主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    4,
+                    136,
+                    434,
+                    459
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "StopTask"
+        },
+        "focus": "任务完成：乐斗超级忍✅"
+    },
+    "乐斗超级忍完成": {
+        "next": [
+            "乐斗超级忍完成回到了主页面",
+            "[JumpBack]back"
+        ]
+    }
+}

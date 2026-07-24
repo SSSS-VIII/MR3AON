@@ -2,6 +2,8 @@
     "interface_version": 2,
     "name": "MR3A",
     "icon": "logo.ico",
+    "mirrorchyan_rid": "MR3A",
+    "mirrorchyan_multiplatform": true,
     "description": "这是一个使用 MaaFramework 创建的忍者必须死3脚本项目。",
     "contact": "QQ: 3625720746",
     "license": "MIT",
@@ -33,16 +35,22 @@
             "label": "日常任务"
         },
         {
-            "name": "standalone",
-            "label": "独立任务"
+            "name": "常驻任务",
+            "label": "常驻任务"
+        },
+        {
+            "name": "限时活动",
+            "label": "限时活动"
         }
     ],
     "task": [],
     "import": [
         "resource/tasks/preset/日常预设.json",
-        "resource/tasks/preset/独立预设.json",
+        "resource/tasks/preset/常驻任务.json",
+        "resource/tasks/preset/限时活动.json",
         "resource/tasks/日常任务.json",
-        "resource/tasks/独立任务.json"
+        "resource/tasks/常驻任务.json",
+        "resource/tasks/限时活动.json"
     ],
     "option": {}
 }

@@ -1,0 +1,25 @@
+{
+    "preset": [
+        {
+            "name": "常驻任务",
+            "task": [
+                {
+                    "name": "周末活动",
+                    "enabled": false
+                },
+                {
+                    "name": "家族战",
+                    "enabled": false
+                },
+                {
+                    "name": "地区首领",
+                    "enabled": false
+                },
+                {
+                    "name": "S/SS+",
+                    "enabled": false
+                }
+            ]
+        }
+    ]
+}

@@ -1,5 +1,11 @@
 {
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
   "devDependencies": {
-    "prettier-plugin-multiline-arrays": "^3.0.6"
+    "prettier-plugin-multiline-arrays": "^3.0.6",
+    "vitepress": "^1.6.4"
   }
 }

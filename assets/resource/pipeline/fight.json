@@ -4,7 +4,7 @@
         "post_delay": 0,
         "rate_limit": 100,
         "next": [
-            "boss存活_cm",
+            "[JumpBack]boss存活_cm",
             "未发现boss存活"
         ]
     },
@@ -30,6 +30,10 @@
         "next": [
             "boss存活点击大招0"
         ]
+    },
+    "boss存活没有识别到极刃血影大招": {
+        "pre_delay": 0,
+        "post_delay": 0
     },
     "boss存活点击大招0": {
         "pre_delay": 0,
@@ -82,7 +86,8 @@
         },
         "post_delay": 0,
         "next": [
-            "bossfight"
+            "识别到极刃血影大招",
+            "boss存活没有识别到极刃血影大招"
         ]
     },
     "boss存活点击技能1": {
@@ -180,7 +185,7 @@
         "pre_delay": 0,
         "post_delay": 400,
         "next": [
-            "boss存活_cm",
+            "重新识别到boss存活_cm",
             "boss死了或者自己死了"
         ]
     },
@@ -188,7 +193,7 @@
         "pre_delay": 0,
         "post_delay": 800,
         "next": [
-            "boss存活_cm",
+            "重新识别到boss存活_cm",
             "再再次未发现boss存活"
         ]
     },
@@ -501,7 +506,7 @@
         "pre_delay": 0,
         "post_delay": 1200,
         "next": [
-            "boss存活_cm",
+            "重新识别到boss存活_cm",
             "再次未发现boss存活"
         ]
     },
@@ -613,6 +618,29 @@
         "post_delay": 8600,
         "next": [
             "用户配置延迟"
+        ]
+    },
+    "重新识别到boss存活_cm": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    780,
+                    43,
+                    112,
+                    55
+                ],
+                "expected": [
+                    "×\\d",
+                    "x\\d",
+                    "X\\d"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "bossfight"
         ]
     }
 }

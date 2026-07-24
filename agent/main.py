@@ -4,7 +4,6 @@ import os
 import sys
 import json
 import subprocess
-from pathlib import Path
 
 # utf-8
 sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
@@ -24,9 +23,12 @@ if current_script_dir not in sys.path:
     sys.path.insert(0, current_script_dir)
 
 from utils import logger
+from utils.runtime_paths import configure_runtime_paths, get_runtime_paths
+
+configure_runtime_paths(project_root=project_root_dir, work_root=project_root_dir)
 
 VENV_NAME = ".venv"  # 虚拟环境目录的名称
-VENV_DIR = Path(project_root_dir) / VENV_NAME
+VENV_DIR = get_runtime_paths().project_root / VENV_NAME
 
 # -----
 # region 虚拟环境
@@ -139,7 +141,7 @@ def read_config(config_name: str, default_config: dict) -> dict:
     Returns:
         配置字典
     """
-    config_dir = Path("./config")
+    config_dir = get_runtime_paths().config_dir
     config_dir.mkdir(exist_ok=True)
     config_path = config_dir / f"{config_name}.json"
 
@@ -160,8 +162,9 @@ def read_config(config_name: str, default_config: dict) -> dict:
 
 
 def read_interface_version(interface_file_name="./interface.json") -> str:
-    interface_path = Path(project_root_dir) / interface_file_name
-    assets_interface_path = Path(project_root_dir) / "assets" / interface_file_name
+    paths = get_runtime_paths()
+    interface_path = paths.project_root / interface_file_name
+    assets_interface_path = paths.assets_dir / interface_file_name
 
     target_path = None
     if interface_path.exists():
@@ -198,8 +201,7 @@ def read_pip_config() -> dict:
 
 def find_local_wheels_dir():
     """查找本地deps目录中的whl文件"""
-    project_root = Path(project_root_dir)
-    deps_dir = project_root / "deps"
+    deps_dir = get_runtime_paths().deps_dir
 
     if deps_dir.exists() and any(deps_dir.glob("*.whl")):
         whl_count = len(list(deps_dir.glob("*.whl")))
@@ -260,7 +262,7 @@ def _run_pip_command(cmd_args: list, operation_name: str) -> bool:
 def install_requirements(
     req_file="requirements.txt", pip_config: dict | None = None
 ) -> bool:
-    req_path = Path(project_root_dir) / req_file  # 确保相对于项目根目录
+    req_path = get_runtime_paths().project_root / req_file
     if not req_path.exists():
         logger.error(f"{req_file} 文件不存在于 {req_path.resolve()}")
         return False
@@ -365,10 +367,12 @@ def check_and_install_dependencies():
 def agent(is_dev_mode=False):
     try:
         from maa.agent.agent_server import AgentServer
+        from maa.tasker import Tasker
         from maa.toolkit import Toolkit
 
         import custom
 
+        Tasker.set_log_dir("./debug")
         Toolkit.init_option("./")
 
         if len(sys.argv) < 2:
@@ -404,7 +408,11 @@ def main():
     check_and_install_dependencies()
 
     if is_dev_mode:
-        os.chdir(Path("./assets"))
+        paths = configure_runtime_paths(
+            project_root=project_root_dir,
+            work_root=get_runtime_paths().assets_dir,
+        )
+        os.chdir(str(paths.work_root))
         logger.info(f"set cwd: {os.getcwd()}")
 
     agent(is_dev_mode=is_dev_mode)

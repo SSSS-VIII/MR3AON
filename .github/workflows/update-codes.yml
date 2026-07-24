@@ -1,0 +1,58 @@
+name: Sync weekly codes
+
+on:
+  schedule:
+    - cron: '49 */5 * * *'      # 北京时间每 5 小时 49 分
+      timezone: 'Asia/Shanghai'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch code from BWiki and update remote file
+        run: |
+          echo "Current Date and Time: $(date '+%Y-%m-%d %H:%M:%S')"
+          python tools/ci/update_codes.py
+
+      - name: Check if remote files changed
+        id: check
+        run: |
+          if [[ -n "$(git status --porcelain assets/remote/)" ]]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes to commit"
+          fi
+
+      - name: Commit and push
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/remote/
+          git commit -m "chore: update weekly codes"
+          git pull origin $(git rev-parse --abbrev-ref HEAD) --rebase
+          git push
+
+      - name: Notify game-meta sync if changed
+        if: steps.check.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -q 'assets/remote/game-meta.json'; then
+            gh api "repos/${{ github.repository }}/dispatches" \
+              --method POST \
+              -f event_type='game-meta-updated'
+            echo "Dispatched game-meta-updated event"
+          else
+            echo "game-meta.json unchanged, skip"
+          fi
