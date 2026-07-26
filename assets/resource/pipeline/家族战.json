@@ -365,6 +365,9 @@
         ]
     },
     "家族战当前不为周末": {
+        "action": {
+            "type": "StopTask"
+        },
         "focus": "家族战：非周末，跳过此任务"
     },
     "家族战当前为星期六": {
@@ -480,7 +483,50 @@
             "type": "Click"
         }
     },
+    "家族战未报名回到了主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    4,
+                    136,
+                    434,
+                    459
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "StopTask"
+        },
+        "focus": "任务完成：家族战✅"
+    },
     "家族战未结束": {},
+    "家族战本次未参加家族战": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    383,
+                    481,
+                    530,
+                    115
+                ],
+                "expected": [
+                    "本次未参加家族战"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "家族战未报名回到了主页面",
+            "[JumpBack]back"
+        ]
+    },
     "家族战点击主页家族": {
         "recognition": {
             "type": "TemplateMatch",
@@ -919,48 +965,5 @@
         "action": {
             "type": "Click"
         }
-    },
-    "家族战本次未参加家族战": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "roi": [
-                    383,
-                    481,
-                    530,
-                    115
-                ],
-                "expected": [
-                    "本次未参加家族战"
-                ]
-            }
-        },
-        "pre_delay": 0,
-        "post_delay": 0,
-        "next": [
-            "家族战未报名回到了主页面",
-            "[JumpBack]back"
-        ]
-    },
-    "家族战未报名回到了主页面": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "roi": [
-                    4,
-                    136,
-                    434,
-                    459
-                ],
-                "template": [
-                    "主页面.png"
-                ],
-                "green_mask": true
-            }
-        },
-        "action": {
-            "type": "StopTask"
-        },
-        "focus": "任务完成：家族战✅"
     }
 }
