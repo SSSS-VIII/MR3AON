@@ -91,9 +91,9 @@ Powered by [MaaFramework](https://github.com/MaaXYZ/MaaFramework) & [MFAAvalonia
 
 <a href="https://www.star-history.com/?repos=originalsage%2FMR3A&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=originalsage/MR3A&type=date&theme=dark&legend=top-left&sealed_token=Xny28Y1Pj377N4wi0uiQaTVLYia5KVnmCRZPt9WYnxNwMrdM_4P4c7-ApQqB1xj1QiO3_h5JPcrmCNDf24nY60qNQph0NR6UuX8NNJ_1VuXopEJRSIkRFV0mTEJtsrmkAYswcA3AXus7I9XwJ-yUfpJ2EPfedKm9tYG9us3ltRSblDqVJfFpaLcPrFVB" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=originalsage/MR3A&type=date&legend=top-left&sealed_token=Xny28Y1Pj377N4wi0uiQaTVLYia5KVnmCRZPt9WYnxNwMrdM_4P4c7-ApQqB1xj1QiO3_h5JPcrmCNDf24nY60qNQph0NR6UuX8NNJ_1VuXopEJRSIkRFV0mTEJtsrmkAYswcA3AXus7I9XwJ-yUfpJ2EPfedKm9tYG9us3ltRSblDqVJfFpaLcPrFVB" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=originalsage/MR3A&type=date&legend=top-left&sealed_token=Xny28Y1Pj377N4wi0uiQaTVLYia5KVnmCRZPt9WYnxNwMrdM_4P4c7-ApQqB1xj1QiO3_h5JPcrmCNDf24nY60qNQph0NR6UuX8NNJ_1VuXopEJRSIkRFV0mTEJtsrmkAYswcA3AXus7I9XwJ-yUfpJ2EPfedKm9tYG9us3ltRSblDqVJfFpaLcPrFVB" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=originalsage/MR3A&type=date&theme=dark&legend=top-left&sealed_token=6ndcRocJekpnM7IWch5wBulkGU0gucRUXK09jImopG5P_lqOY1C8Y2IPerlRDbOO4YVOFwc0DMZJp7kBZReqnnZZvWDXx6XXrm9EgJ-O_saY0pOuBhl-KQ" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=originalsage/MR3A&type=date&legend=top-left&sealed_token=6ndcRocJekpnM7IWch5wBulkGU0gucRUXK09jImopG5P_lqOY1C8Y2IPerlRDbOO4YVOFwc0DMZJp7kBZReqnnZZvWDXx6XXrm9EgJ-O_saY0pOuBhl-KQ" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=originalsage/MR3A&type=date&legend=top-left&sealed_token=6ndcRocJekpnM7IWch5wBulkGU0gucRUXK09jImopG5P_lqOY1C8Y2IPerlRDbOO4YVOFwc0DMZJp7kBZReqnnZZvWDXx6XXrm9EgJ-O_saY0pOuBhl-KQ" />
  </picture>
 </a>
 
