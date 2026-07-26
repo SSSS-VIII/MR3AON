@@ -87,6 +87,10 @@ Powered by [MaaFramework](https://github.com/MaaXYZ/MaaFramework) & [MFAAvalonia
 
 [![Contributors](https://contrib.rocks/image?repo=originalsage/MR3A&max=1000)](https://github.com/originalsage/MR3A/graphs/contributors)
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=originalsage%2Fmr3a&type=Date)](https://star-history.com/#originalsage/MR3A&Date)
+
 ---
 
 <a id="user-qq-group"></a>
