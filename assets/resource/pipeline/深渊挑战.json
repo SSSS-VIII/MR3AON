@@ -154,6 +154,23 @@
             "退出深渊选卡"
         ]
     },
+    "深渊挑战领取卡牌": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    299,
+                    503,
+                    208,
+                    81
+                ],
+                "expected": [
+                    "领取"
+                ],
+                "only_rec": true
+            }
+        }
+    },
     "本周深渊挑战已结束": {
         "recognition": {
             "type": "OCR",
@@ -193,6 +210,7 @@
             "深渊冒险主页没有深渊挑战按钮"
         ]
     },
+    "深渊冒险主页没有深渊挑战按钮": {},
     "深渊卡选卡点击装备": {
         "recognition": {
             "type": "OCR",
@@ -238,6 +256,109 @@
             "[JumpBack]深渊卡选卡点击装备",
             "[JumpBack]识别到未选择的卡牌槽",
             "[JumpBack]退出深渊选卡"
+        ]
+    },
+    "深渊卡选卡页面出现结算确定弹窗": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    456,
+                    576,
+                    370,
+                    143
+                ],
+                "expected": [
+                    "继续|确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "深渊挑战entry": {
+        "next": [
+            "[JumpBack]深渊挑战入口",
+            "深渊挑战任务出错"
+        ]
+    },
+    "深渊挑战主页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    568,
+                    270,
+                    151
+                ],
+                "expected": [
+                    "刷新队伍"
+                ]
+            }
+        }
+    },
+    "深渊挑战主页面尝试拒绝好友弹窗": {
+        "next": [
+            "深渊挑战主页面拒绝好友弹窗",
+            "深渊挑战主页面没有好友弹窗"
+        ]
+    },
+    "深渊挑战主页面拒绝好友弹窗": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    365,
+                    465,
+                    210,
+                    120
+                ],
+                "expected": [
+                    "拒绝"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "深渊挑战主页面没有好友弹窗": {},
+    "深渊挑战从家族进入冒险页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    953,
+                    601,
+                    327,
+                    117
+                ],
+                "expected": [
+                    "家族换装|家族荣誉"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1162,
+                    345,
+                    30,
+                    50
+                ]
+            }
+        }
+    },
+    "深渊挑战任务出错": {
+        "focus": "任务出错：深渊挑战❌"
+    },
+    "深渊挑战入口": {
+        "max_hit": 3,
+        "next": [
+            "重置深渊挑战内部节点计数器"
         ]
     },
     "深渊挑战准备加入队伍": {
@@ -318,11 +439,42 @@
             "关闭节点深渊挑战寻找队伍左滑"
         ]
     },
-    "深渊挑战时间未结束": {
-        "pre_delay": 0,
-        "post_delay": 0,
+    "深渊挑战已经在挑战页面了": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    568,
+                    270,
+                    151
+                ],
+                "expected": [
+                    "刷新队伍"
+                ]
+            }
+        },
         "next": [
-            "深渊挑战主页面尝试拒绝好友弹窗"
+            "深渊挑战核心节点"
+        ]
+    },
+    "深渊挑战已经在队伍页面了": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    982,
+                    582,
+                    292,
+                    136
+                ],
+                "expected": [
+                    "取消准备|返回观战|未就绪|出发"
+                ]
+            }
+        },
+        "next": [
+            "深渊挑战核心节点"
         ]
     },
     "深渊挑战时间大于21点结束": {
@@ -337,6 +489,13 @@
         },
         "next": [
             "使能节点深渊挑战结束"
+        ]
+    },
+    "深渊挑战时间未结束": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "深渊挑战主页面尝试拒绝好友弹窗"
         ]
     },
     "深渊挑战核心节点": {
@@ -400,6 +559,27 @@
         },
         "next": [
             "深渊挑战主页面尝试拒绝好友弹窗"
+        ]
+    },
+    "深渊挑战确认在主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    500,
+                    712
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "next": [
+            "主页点击深渊冒险",
+            "尝试进入深渊挑战主页"
         ]
     },
     "深渊挑战等待队伍开启": {
@@ -517,6 +697,26 @@
             }
         }
     },
+    "深渊挑战进入家族": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    747,
+                    73,
+                    419,
+                    645
+                ],
+                "template": [
+                    "家族.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
     "深渊挑战降低fight识别速度": {
         "recognition": {
             "type": "TemplateMatch",
@@ -626,25 +826,6 @@
         ]
     },
     "识别到深渊卡后未识别到准备和取消准备": {},
-    "识别到深渊卡后识别到准备或未就绪": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "roi": [
-                    982,
-                    582,
-                    292,
-                    136
-                ],
-                "expected": [
-                    "准备|未就绪"
-                ]
-            }
-        },
-        "next": [
-            "识别到深渊卡后识别到准备则点击深渊卡"
-        ]
-    },
     "识别到深渊卡后识别到准备则点击深渊卡": {
         "recognition": {
             "type": "OCR",
@@ -663,6 +844,25 @@
         "action": {
             "type": "Click"
         }
+    },
+    "识别到深渊卡后识别到准备或未就绪": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    982,
+                    582,
+                    292,
+                    136
+                ],
+                "expected": [
+                    "准备|未就绪"
+                ]
+            }
+        },
+        "next": [
+            "识别到深渊卡后识别到准备则点击深渊卡"
+        ]
     },
     "识别到深渊卡后识别到取消准备则等待": {
         "recognition": {
@@ -743,6 +943,14 @@
             "type": "Click"
         }
     },
+    "深渊挑战在目标时间范围开始深渊挑战": {
+        "next": [
+            "深渊挑战已经在挑战页面了",
+            "深渊挑战已经在队伍页面了",
+            "深渊挑战确认在主页面",
+            "[JumpBack]back"
+        ]
+    },
     "队伍内购买卡牌": {
         "recognition": {
             "type": "OCR",
@@ -757,61 +965,6 @@
             }
         }
     },
-    "深渊卡选卡页面出现结算确定弹窗": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "roi": [
-                    456,
-                    576,
-                    370,
-                    143
-                ],
-                "expected": [
-                    "继续|确定"
-                ]
-            }
-        },
-        "action": {
-            "type": "Click"
-        }
-    },
-    "深渊挑战entry": {
-        "next": [
-            "[JumpBack]深渊挑战入口",
-            "深渊挑战任务出错"
-        ]
-    },
-    "深渊挑战任务出错": {
-        "focus": "任务出错：深渊挑战❌"
-    },
-    "深渊挑战入口": {
-        "max_hit": 3,
-        "next": [
-            "重置深渊挑战内部节点计数器"
-        ]
-    },
-    "深渊挑战确认在主页面": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "roi": [
-                    0,
-                    0,
-                    500,
-                    712
-                ],
-                "template": [
-                    "主页面.png"
-                ],
-                "green_mask": true
-            }
-        },
-        "next": [
-            "主页点击深渊冒险",
-            "尝试进入深渊挑战主页"
-        ]
-    },
     "重置深渊挑战内部节点计数器": {
         "action": {
             "type": "Custom",
@@ -820,155 +973,87 @@
             }
         },
         "next": [
-            "深渊挑战已经在挑战页面了",
-            "深渊挑战已经在队伍页面了",
-            "深渊挑战确认在主页面",
-            "[JumpBack]back"
+            "深渊挑战当前为周五",
+            "深渊挑战当前不为周五"
         ]
     },
-    "深渊挑战已经在队伍页面了": {
+    "不停止深渊挑战任务": {},
+    "停止深渊挑战任务": {
+        "enabled": false,
+        "action": {
+            "type": "StopTask"
+        },
+        "focus": "任务完成：深渊挑战✅"
+    },
+    "深渊挑战当前不为周五": {
+        "action": {
+            "type": "StopTask"
+        },
+        "focus": "深渊挑战：非周五，跳过此任务"
+    },
+    "深渊挑战当前为周五": {
         "recognition": {
-            "type": "OCR",
+            "type": "Custom",
             "param": {
-                "roi": [
-                    982,
-                    582,
-                    292,
-                    136
-                ],
-                "expected": [
-                    "取消准备|返回观战|未就绪|出发"
-                ]
+                "custom_recognition": "IsTargetWeekday",
+                "custom_recognition_param": {
+                    "weekday": "5"
+                }
             }
         },
         "next": [
-            "深渊挑战核心节点"
+            "深渊挑战当前时间大于21点00",
+            "[JumpBack]深渊挑战当前时间小于20点",
+            "深渊挑战在目标时间范围开始深渊挑战"
         ]
     },
-    "深渊挑战已经在挑战页面了": {
+    "深渊挑战当前时间大于21点00": {
         "recognition": {
-            "type": "OCR",
+            "type": "Custom",
             "param": {
-                "roi": [
-                    0,
-                    568,
-                    270,
-                    151
-                ],
-                "expected": [
-                    "刷新队伍"
-                ]
+                "custom_recognition": "TimeAfter",
+                "custom_recognition_param": {
+                    "time": "21:00"
+                }
+            }
+        },
+        "action": {
+            "type": "StopTask"
+        },
+        "focus": "深渊挑战：当前时间大于21:00，跳过此任务"
+    },
+    "深渊挑战当前时间小于20点": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "TimeBefore",
+                "custom_recognition_param": {
+                    "time": "20:00"
+                }
             }
         },
         "next": [
-            "深渊挑战核心节点"
+            "[JumpBack]深渊挑战等待提示",
+            "深渊挑战等待5秒"
         ]
     },
-    "深渊挑战进入家族": {
+    "深渊挑战等待5秒": {
+        "post_delay": 5000
+    },
+    "深渊挑战等待提示": {
         "recognition": {
-            "type": "TemplateMatch",
+            "type": "Custom",
             "param": {
-                "roi": [
-                    747,
-                    73,
-                    419,
-                    645
-                ],
-                "template": [
-                    "家族.png"
-                ],
-                "green_mask": true
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
             }
         },
-        "action": {
-            "type": "Click"
-        }
-    },
-    "深渊挑战从家族进入冒险页面": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "roi": [
-                    953,
-                    601,
-                    327,
-                    117
-                ],
-                "expected": [
-                    "家族换装|家族荣誉"
-                ]
-            }
-        },
-        "action": {
-            "type": "Click",
-            "param": {
-                "target": [
-                    1162,
-                    345,
-                    30,
-                    50
-                ]
-            }
-        }
-    },
-    "深渊冒险主页没有深渊挑战按钮": {},
-    "深渊挑战主页面": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "roi": [
-                    0,
-                    568,
-                    270,
-                    151
-                ],
-                "expected": [
-                    "刷新队伍"
-                ]
-            }
-        }
-    },
-    "深渊挑战主页面拒绝好友弹窗": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "roi": [
-                    365,
-                    465,
-                    210,
-                    120
-                ],
-                "expected": [
-                    "拒绝"
-                ]
-            }
-        },
-        "action": {
-            "type": "Click"
-        }
-    },
-    "深渊挑战主页面没有好友弹窗": {},
-    "深渊挑战主页面尝试拒绝好友弹窗": {
+        "focus": "挂机等待至20:00深渊挑战开启",
         "next": [
-            "深渊挑战主页面拒绝好友弹窗",
-            "深渊挑战主页面没有好友弹窗"
+            "停止深渊挑战任务",
+            "不停止深渊挑战任务"
         ]
-    },
-    "新建节点13": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "roi": [
-                    299,
-                    503,
-                    208,
-                    81
-                ],
-                "expected": [
-                    "领取"
-                ],
-                "only_rec": true
-            }
-        }
     }
 }

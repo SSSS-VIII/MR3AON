@@ -9,6 +9,16 @@
             "description": "<span style=\"color:deepskyblue;font-size:15px\">系统会先判断当前是否为<strong>周六、周日</strong>，非周末将<strong>直接跳过</strong>。<br/><br/>此外无法识别的活动会自动跳过。目前已支持：<strong>光影忍法帖</strong>、<strong>忍界乱斗</strong>。</span>"
         },
         {
+            "name": "深渊挑战",
+            "entry": "深渊挑战entry",
+            "option": [
+                "挂机等待至深渊挑战开启"
+            ],
+            "group": [
+                "常驻任务"
+            ]
+        },
+        {
             "name": "家族战",
             "entry": "家族战entry",
             "option": [
@@ -40,6 +50,35 @@
         }
     ],
     "option": {
+        "挂机等待至深渊挑战开启": {
+            "type": "switch",
+            "label": "挂机等待至深渊挑战开启",
+            "description": "开启后，若当前时间早于 20:00，将挂机等待直至深渊挑战开启；关闭则不等待。",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "开启",
+                    "pipeline_override": {
+                        "停止深渊挑战任务": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "label": "关闭",
+                    "pipeline_override": {
+                        "停止深渊挑战任务": {
+                            "enabled": true
+                        },
+                        "深渊挑战等待提示": {
+                            "focus": ""
+                        }
+                    }
+                }
+            ]
+        },
         "挂机直到族战开启": {
             "type": "switch",
             "label": "挂机直到族战开启",

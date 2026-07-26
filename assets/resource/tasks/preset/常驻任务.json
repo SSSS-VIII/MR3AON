@@ -8,6 +8,10 @@
                     "enabled": false
                 },
                 {
+                    "name": "深渊挑战",
+                    "enabled": false
+                },
+                {
                     "name": "家族战",
                     "enabled": false
                 },
