@@ -165,7 +165,7 @@ class NodeOverride(CustomAction):
         "node_name": {"被覆盖参数": "覆盖值",...},
         "node_name1": {"被覆盖参数": "覆盖值",...}
     }
-    
+
     {
         "fight": {
             "next": [
@@ -227,6 +227,44 @@ class ResetCount(CustomAction):
         return CustomAction.RunResult(success=True)
 
 
+@AgentServer.custom_action("ClearMaxHit")
+class ClearMaxHit(CustomAction):
+    """
+    清除节点的 max_hit 计数。
+
+    参数格式:
+    {
+        "node_name": String  # 目标节点名称
+    }
+    """
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
+
+        try:
+            param = (
+                json.loads(argv.custom_action_param) if argv.custom_action_param else {}
+            )
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.error(f"ClearMaxHit: 参数解析失败 {e}")
+            return CustomAction.RunResult(success=False)
+
+        node_name = param.get("node_name", None)
+        if not node_name:
+            logger.error("ClearMaxHit: 缺少 node_name")
+            return CustomAction.RunResult(success=False)
+
+        if context.clear_hit_count(node_name):
+            logger.debug(f"ClearMaxHit: 已清除 {node_name}")
+            return CustomAction.RunResult(success=True)
+        else:
+            logger.warning(f"ClearMaxHit: 清除失败或无记录 {node_name}")
+            return CustomAction.RunResult(success=False)
+
+
 @AgentServer.custom_action("AddExpected")
 class AddExpected(CustomAction):
     """
@@ -250,23 +288,27 @@ class AddExpected(CustomAction):
         node_name = param.get("node_name")
         value = param.get("value")
         delimiter = param.get("delimiter", "|")
-        
+
         if not node_name or not value:
             logger.error("缺少必要参数: node_name 或 value")
             return CustomAction.RunResult(success=False)
-        
+
         # 获取目标节点的当前配置
         node_data = context.get_node_data(node_name)
         if not node_data:
             logger.error(f"未找到节点: {node_name}")
             return CustomAction.RunResult(success=False)
-        
+
         # 获取当前的expected值
-        current_expected = node_data.get("recognition", {}).get("param", {}).get("expected", "")
-        
+        current_expected = (
+            node_data.get("recognition", {}).get("param", {}).get("expected", "")
+        )
+
         # 解析当前值并添加新值
         if isinstance(current_expected, str):
-            current_values = current_expected.split(delimiter) if current_expected else []
+            current_values = (
+                current_expected.split(delimiter) if current_expected else []
+            )
         else:
             # 处理列表中的每个元素，检查是否包含分隔符
             current_values = []
@@ -277,30 +319,26 @@ class AddExpected(CustomAction):
                 else:
                     # 否则直接添加
                     current_values.append(item)
-        
+
         # 确保值不重复
         if value not in current_values:
             current_values.append(value)
-        
+
         # 构建新的expected值
         if isinstance(current_expected, str):
             new_expected = delimiter.join(current_values)
         else:
             # 保持列表格式
             new_expected = current_values
-        
+
         # 更新节点配置
-        context.override_pipeline({
-            node_name: {
-                "recognition": {
-                    "param": {
-                        "expected": new_expected
-                    }
-                }
-            }
-        })
-        
-        logger.debug(f"已为节点 {node_name} 添加值: {value}，新的expected: {new_expected}")
+        context.override_pipeline(
+            {node_name: {"recognition": {"param": {"expected": new_expected}}}}
+        )
+
+        logger.debug(
+            f"已为节点 {node_name} 添加值: {value}，新的expected: {new_expected}"
+        )
         return CustomAction.RunResult(success=True)
 
 
@@ -327,23 +365,27 @@ class SubExpected(CustomAction):
         node_name = param.get("node_name")
         value = param.get("value")
         delimiter = param.get("delimiter", "|")
-        
+
         if not node_name or not value:
             logger.error("缺少必要参数: node_name 或 value")
             return CustomAction.RunResult(success=False)
-        
+
         # 获取目标节点的当前配置
         node_data = context.get_node_data(node_name)
         if not node_data:
             logger.error(f"未找到节点: {node_name}")
             return CustomAction.RunResult(success=False)
-        
+
         # 获取当前的expected值
-        current_expected = node_data.get("recognition", {}).get("param", {}).get("expected", "")
-        
+        current_expected = (
+            node_data.get("recognition", {}).get("param", {}).get("expected", "")
+        )
+
         # 解析当前值并移除指定值
         if isinstance(current_expected, str):
-            current_values = current_expected.split(delimiter) if current_expected else []
+            current_values = (
+                current_expected.split(delimiter) if current_expected else []
+            )
         else:
             # 处理列表中的每个元素，检查是否包含分隔符
             current_values = []
@@ -354,30 +396,26 @@ class SubExpected(CustomAction):
                 else:
                     # 否则直接添加
                     current_values.append(item)
-        
+
         # 移除指定值
         if value in current_values:
             current_values.remove(value)
-        
+
         # 构建新的expected值
         if isinstance(current_expected, str):
             new_expected = delimiter.join(current_values)
         else:
             # 保持列表格式
             new_expected = current_values
-        
+
         # 更新节点配置
-        context.override_pipeline({
-            node_name: {
-                "recognition": {
-                    "param": {
-                        "expected": new_expected
-                    }
-                }
-            }
-        })
-        
-        logger.debug(f"已从节点 {node_name} 移除值: {value}，新的expected: {new_expected}")
+        context.override_pipeline(
+            {node_name: {"recognition": {"param": {"expected": new_expected}}}}
+        )
+
+        logger.debug(
+            f"已从节点 {node_name} 移除值: {value}，新的expected: {new_expected}"
+        )
         return CustomAction.RunResult(success=True)
 
 
@@ -449,4 +487,3 @@ class ClickFilteredResults(CustomAction):
 
         logger.debug(f"ClickFilteredResults: 已点击 {clicked} 次 (source={source})")
         return CustomAction.RunResult(success=True)
-
