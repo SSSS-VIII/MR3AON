@@ -1,17 +1,68 @@
 {
-    "寻宝大冒险高级箱子": {
-        "max_hit": 3,
+    "寻宝大冒险识别到进入": {
         "recognition": {
-            "type": "TemplateMatch",
+            "type": "OCR",
             "param": {
                 "roi": [
+                    705,
+                    434,
                     205,
-                    132,
-                    872,
-                    555
+                    127
                 ],
-                "template": [
-                    "寻宝大冒险箱子3.png"
+                "expected": [
+                    "^进入$"
+                ]
+            }
+        },
+        "next": [
+            "寻宝大冒险识别到是否进入下一层",
+            "寻宝大冒险点击进入",
+            "寻宝大冒险None"
+        ]
+    },
+    "寻宝大冒险识别到是否进入下一层": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    309,
+                    254,
+                    658,
+                    285
+                ],
+                "expected": [
+                    "是否进入下一层"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    480,
+                    392,
+                    25,
+                    21
+                ]
+            }
+        },
+        "next": [
+            "寻宝大冒险点击进入",
+            "寻宝大冒险None"
+        ]
+    },
+    "寻宝大冒险点击进入": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    705,
+                    434,
+                    205,
+                    127
+                ],
+                "expected": [
+                    "^进入$"
                 ]
             }
         },
@@ -19,75 +70,10 @@
             "type": "Click"
         }
     },
-    "寻宝大冒险兜底点击下一关": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "roi": [
-                    195,
-                    111,
-                    898,
-                    579
-                ],
-                "template": [
-                    "寻宝大冒险下一关0.png",
-                    "寻宝大冒险下一关1.png",
-                    "寻宝大冒险下一关3.png",
-                    "寻宝大冒险下一关2.png"
-                ]
-            }
-        },
-        "action": {
-            "type": "Click"
-        },
+    "寻宝大冒险None": {
+        "pre_delay": 0,
         "post_delay": 0
     },
-    "重置节点寻宝大冒险下一关次数": {
-        "pre_delay": 0,
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "ClearMaxHit",
-                "custom_action_param": {
-                    "node_name": "寻宝大冒险下一关"
-                }
-            }
-        },
-        "post_delay": 0,
-        "next": [
-            "重置节点寻宝大冒险箱子次数"
-        ]
-    },
-    "重置节点寻宝大冒险箱子次数": {
-        "pre_delay": 0,
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "ClearMaxHit",
-                "custom_action_param": {
-                    "node_name": "寻宝大冒险箱子"
-                }
-            }
-        },
-        "post_delay": 0,
-        "next": [
-            "重置节点寻宝大冒险高级箱子次数"
-        ]
-    },
-    "重置节点寻宝大冒险高级箱子次数": {
-        "pre_delay": 0,
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "ClearMaxHit",
-                "custom_action_param": {
-                    "node_name": "寻宝大冒险高级箱子"
-                }
-            }
-        },
-        "post_delay": 0
-    },
-    "寻宝大冒险None": {},
     "寻宝大冒险entry": {
         "next": [
             "[JumpBack]寻宝大冒险入口",
@@ -485,6 +471,7 @@
             "[JumpBack]寻宝大冒险黄色地砖",
             "[JumpBack]寻宝大冒险蓝色地砖",
             "[JumpBack]寻宝大冒险灰色地砖",
+            "[JumpBack]寻宝大冒险识别到进入",
             "[JumpBack]寻宝大冒险发现结算关",
             "[JumpBack]寻宝大冒险箱子",
             "[JumpBack]寻宝大冒险下一关",
@@ -662,7 +649,12 @@
         },
         "action": {
             "type": "Click"
-        }
+        },
+        "post_delay": 1000,
+        "next": [
+            "寻宝大冒险开始挑战",
+            "寻宝大冒险None"
+        ]
     },
     "寻宝大冒险点击寻宝大冒险": {
         "recognition": {
@@ -1123,7 +1115,7 @@
         ]
     },
     "寻宝大冒险箱子": {
-        "max_hit": 8,
+        "max_hit": 3,
         "recognition": {
             "type": "TemplateMatch",
             "param": {
@@ -1135,7 +1127,6 @@
                 ],
                 "template": [
                     "寻宝大冒险箱子3.png",
-                    "寻宝大冒险箱子2.png",
                     "寻宝大冒险箱子1.png"
                 ],
                 "order_by": "Random"
@@ -1330,7 +1321,12 @@
         },
         "action": {
             "type": "Click"
-        }
+        },
+        "post_delay": 1000,
+        "next": [
+            "寻宝大冒险开始挑战",
+            "寻宝大冒险None"
+        ]
     },
     "寻宝大冒险识别并点击门边上的boss": {
         "recognition": {
@@ -1587,5 +1583,94 @@
             "寻宝大冒险确认在主页面",
             "[JumpBack]back"
         ]
+    },
+    "寻宝大冒险高级箱子": {
+        "max_hit": 5,
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    205,
+                    132,
+                    872,
+                    555
+                ],
+                "template": [
+                    "寻宝大冒险箱子3.png",
+                    "寻宝大冒险箱子1.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险兜底点击下一关": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    195,
+                    111,
+                    898,
+                    579
+                ],
+                "template": [
+                    "寻宝大冒险下一关0.png",
+                    "寻宝大冒险下一关1.png",
+                    "寻宝大冒险下一关3.png",
+                    "寻宝大冒险下一关2.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 0
+    },
+    "重置节点寻宝大冒险下一关次数": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ClearMaxHit",
+                "custom_action_param": {
+                    "node_name": "寻宝大冒险下一关"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "重置节点寻宝大冒险箱子次数"
+        ]
+    },
+    "重置节点寻宝大冒险箱子次数": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ClearMaxHit",
+                "custom_action_param": {
+                    "node_name": "寻宝大冒险箱子"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "重置节点寻宝大冒险高级箱子次数"
+        ]
+    },
+    "重置节点寻宝大冒险高级箱子次数": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ClearMaxHit",
+                "custom_action_param": {
+                    "node_name": "寻宝大冒险高级箱子"
+                }
+            }
+        },
+        "post_delay": 0
     }
 }
