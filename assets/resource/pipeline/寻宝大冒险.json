@@ -712,7 +712,8 @@
         },
         "action": {
             "type": "Click"
-        }
+        },
+        "post_delay": 666
     },
     "寻宝大冒险点击活动任务": {
         "recognition": {
@@ -731,7 +732,8 @@
         },
         "action": {
             "type": "Click"
-        }
+        },
+        "post_delay": 666
     },
     "寻宝大冒险点击激活": {
         "recognition": {
