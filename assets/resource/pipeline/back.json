@@ -107,7 +107,7 @@
             "type": "Click"
         },
         "post_wait_freezes": {
-            "time": 300,
+            "time": 500,
             "threshold": 0.8
         },
         "rate_limit": 100,
@@ -155,7 +155,11 @@
                     311
                 ],
                 "expected": [
-                    "确定|返回|继续|放弃挑战"
+                    "^确定$",
+                    "^返回$",
+                    "^继续$",
+                    "^放弃挑战$",
+                    "^暂时离开$"
                 ],
                 "order_by": "Random"
             }
@@ -196,7 +200,7 @@
             "type": "Click"
         },
         "post_wait_freezes": {
-            "time": 300,
+            "time": 500,
             "threshold": 0.8
         },
         "rate_limit": 100,
