@@ -1,0 +1,1514 @@
+{
+    "寻宝大冒险None": {},
+    "寻宝大冒险entry": {
+        "next": [
+            "[JumpBack]寻宝大冒险入口",
+            "寻宝大冒险任务出错"
+        ]
+    },
+    "寻宝大冒险一直刷": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "寻宝大冒险主页点击选择"
+        ]
+    },
+    "寻宝大冒险一键售出": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    998,
+                    606,
+                    255,
+                    113
+                ],
+                "expected": [
+                    "一键售出|继续|返回"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险下一关": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    195,
+                    111,
+                    898,
+                    579
+                ],
+                "template": [
+                    "寻宝大冒险下一关0.png",
+                    "寻宝大冒险下一关1.png",
+                    "寻宝大冒险下一关3.png",
+                    "寻宝大冒险下一关2.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 0
+    },
+    "寻宝大冒险主页点击选择": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    249,
+                    501,
+                    276,
+                    100
+                ],
+                "expected": [
+                    "^选择$"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 0
+    },
+    "寻宝大冒险主页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    216,
+                    478,
+                    339,
+                    151
+                ],
+                "expected": [
+                    "^选择$"
+                ]
+            }
+        },
+        "next": [
+            "寻宝大冒险核心节点"
+        ]
+    },
+    "寻宝大冒险仅完成每日任务": {
+        "enabled": false,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]寻宝大冒险点击活动任务",
+            "寻宝大冒险点开了每日任务"
+        ]
+    },
+    "寻宝大冒险任务出错": {
+        "focus": "任务出错：寻宝大冒险❌"
+    },
+    "寻宝大冒险入口": {
+        "max_hit": 3,
+        "next": [
+            "重置寻宝大冒险内部节点计数器"
+        ]
+    },
+    "寻宝大冒险关闭fight上翻": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "转绳上_cm": {
+                        "action": {
+                            "type": "DoNothing"
+                        }
+                    }
+                }
+            }
+        },
+        "next": [
+            "fight"
+        ]
+    },
+    "寻宝大冒险关闭下一页": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    951,
+                    524,
+                    259,
+                    122
+                ],
+                "expected": [
+                    "下一页"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    0,
+                    80,
+                    0,
+                    0
+                ]
+            }
+        }
+    },
+    "寻宝大冒险关闭收藏品后回到活动主页": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    249,
+                    501,
+                    276,
+                    100
+                ],
+                "expected": [
+                    "^选择$"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "寻宝大冒险仅完成每日任务",
+            "寻宝大冒险一直刷"
+        ]
+    },
+    "寻宝大冒险关闭每日任务后回到活动主页": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    249,
+                    501,
+                    276,
+                    100
+                ],
+                "expected": [
+                    "^选择$"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "寻宝大冒险主页点击选择"
+        ]
+    },
+    "寻宝大冒险发现结算关": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    195,
+                    111,
+                    898,
+                    579
+                ],
+                "template": [
+                    "寻宝大冒险EXIT.png"
+                ]
+            }
+        },
+        "next": [
+            "寻宝大冒险箱子",
+            "寻宝大冒险安全撤离",
+            "寻宝大冒险点击结算关",
+            "寻宝大冒险None"
+        ]
+    },
+    "寻宝大冒险右上角有一堆数字": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1065,
+                    1,
+                    206,
+                    58
+                ],
+                "expected": [
+                    "\\d\\d\\d\\d"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    52,
+                    315,
+                    61,
+                    58
+                ]
+            }
+        },
+        "next": [
+            "寻宝大冒险识别到进入关卡",
+            "bossfight",
+            "寻宝大冒险None"
+        ]
+    },
+    "寻宝大冒险回到了主页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    249,
+                    501,
+                    276,
+                    100
+                ],
+                "expected": [
+                    "^选择$"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]寻宝大冒险点击收藏品",
+            "寻宝大冒险点开了收藏品",
+            "寻宝大冒险没有找到收藏品页面"
+        ]
+    },
+    "寻宝大冒险安全撤离": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    633,
+                    401,
+                    360,
+                    187
+                ],
+                "expected": [
+                    "安全撤离"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险完成回到了主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    4,
+                    136,
+                    434,
+                    459
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true,
+                "threshold": [
+                    0.8
+                ]
+            }
+        },
+        "action": {
+            "type": "StopTask"
+        },
+        "focus": "任务完成：寻宝大冒险✅"
+    },
+    "寻宝大冒险已激活": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    136,
+                    133,
+                    493,
+                    148
+                ],
+                "expected": [
+                    "未激活",
+                    "已激活",
+                    "己激活",
+                    "巳激活"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1233,
+                    284,
+                    35,
+                    127
+                ]
+            }
+        }
+    },
+    "寻宝大冒险开始挑战": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    719,
+                    549,
+                    287,
+                    125
+                ],
+                "expected": [
+                    "开始挑战"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险悬赏讨伐失败": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    500,
+                    465,
+                    285,
+                    247
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险核心节点": {
+        "timeout": 30000,
+        "next": [
+            "[JumpBack]寻宝大冒险右上角有一堆数字",
+            "[JumpBack]寻宝大冒险点击拳头",
+            "[JumpBack]寻宝大冒险绿色地砖",
+            "[JumpBack]寻宝大冒险黄色地砖",
+            "[JumpBack]寻宝大冒险蓝色地砖",
+            "[JumpBack]寻宝大冒险灰色地砖",
+            "[JumpBack]寻宝大冒险发现结算关",
+            "[JumpBack]寻宝大冒险箱子",
+            "[JumpBack]寻宝大冒险下一关",
+            "[JumpBack]寻宝大冒险识别并点击上锁的门边上的boss",
+            "[JumpBack]寻宝大冒险点击快速放入",
+            "[JumpBack]寻宝大冒险开始挑战",
+            "[JumpBack]寻宝大冒险点击boss",
+            "[JumpBack]寻宝大冒险继续",
+            "[JumpBack]寻宝大冒险进入了战斗",
+            "[JumpBack]寻宝大冒险安全撤离",
+            "[JumpBack]寻宝大冒险点击空白处继续",
+            "[JumpBack]寻宝大冒险一键售出",
+            "[JumpBack]寻宝大冒险结算返回",
+            "[JumpBack]寻宝大冒险识别到进入关卡",
+            "[JumpBack]寻宝大冒险回到了主页面"
+        ],
+        "on_error": [
+            "寻宝大冒险识别超时"
+        ]
+    },
+    "寻宝大冒险每日任务已完成": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    862,
+                    140,
+                    244,
+                    126
+                ],
+                "expected": [
+                    "已领取"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1220,
+                    306,
+                    44,
+                    127
+                ]
+            }
+        },
+        "next": [
+            "寻宝大冒险完成回到了主页面",
+            "[JumpBack]back"
+        ]
+    },
+    "寻宝大冒险每日任务未完成": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    978,
+                    163,
+                    120,
+                    191
+                ],
+                "expected": [
+                    "\\d/\\d"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1218,
+                    298,
+                    49,
+                    113
+                ]
+            }
+        }
+    },
+    "寻宝大冒险每日任务点击确定": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    495,
+                    569,
+                    298,
+                    136
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险每日任务点击领取奖励": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    886,
+                    153,
+                    210,
+                    211
+                ],
+                "expected": [
+                    "^领取奖励$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000
+    },
+    "寻宝大冒险没有找到收藏品页面": {},
+    "寻宝大冒险灰色地砖": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "roi": [
+                    195,
+                    109,
+                    898,
+                    588
+                ],
+                "lower": [
+                    [
+                        160,
+                        145,
+                        130
+                    ]
+                ],
+                "upper": [
+                    [
+                        195,
+                        180,
+                        165
+                    ]
+                ],
+                "connected": true,
+                "count": 4444
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]寻宝大冒险点击灰色地砖",
+            "寻宝大冒险高级箱子",
+            "寻宝大冒险下一关",
+            "寻宝大冒险识别并点击上锁的门边上的boss",
+            "寻宝大冒险None"
+        ]
+    },
+    "寻宝大冒险点击boss": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    191,
+                    106,
+                    875,
+                    574
+                ],
+                "expected": [
+                    ".万",
+                    "\\d.万",
+                    "竹"
+                ],
+                "order_by": "Vertical"
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险点击寻宝大冒险": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    8,
+                    70,
+                    1259,
+                    233
+                ],
+                "template": [
+                    "寻宝大冒险.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": {
+            "time": 400,
+            "threshold": 0.8
+        },
+        "next": [
+            "寻宝大冒险主页面",
+            "[JumpBack]寻宝大冒险关闭下一页",
+            "寻宝大冒险识别到上一把未结束",
+            "寻宝大冒险点击寻宝大冒险"
+        ]
+    },
+    "寻宝大冒险点击导入": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    785,
+                    587,
+                    466,
+                    132
+                ],
+                "expected": [
+                    "导入上局"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "寻宝大冒险金币不足",
+            "寻宝大冒险点击进入战斗"
+        ]
+    },
+    "寻宝大冒险点击快速放入": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    583,
+                    339,
+                    151,
+                    101
+                ],
+                "expected": [
+                    "快速放入"
+                ]
+            }
+        },
+        "pre_delay": 4000,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 500,
+        "next": [
+            "寻宝大冒险点完快速放入后叉掉",
+            "寻宝大冒险None"
+        ]
+    },
+    "寻宝大冒险点击拳头": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    195,
+                    111,
+                    898,
+                    579
+                ],
+                "template": [
+                    "寻宝大冒险拳头.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 2000,
+        "next": [
+            "寻宝大冒险点击拳头后点开始挑战",
+            "寻宝大冒险None"
+        ]
+    },
+    "寻宝大冒险点击拳头后点开始挑战": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    719,
+                    549,
+                    287,
+                    125
+                ],
+                "expected": [
+                    "开始挑战"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险点击收藏品": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    719,
+                    0,
+                    549,
+                    132
+                ],
+                "template": [
+                    "寻宝大冒险收藏品.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险点击活动任务": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    719,
+                    0,
+                    549,
+                    132
+                ],
+                "template": [
+                    "寻宝大冒险活动任务.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险点击激活": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    136,
+                    133,
+                    493,
+                    148
+                ],
+                "expected": [
+                    "点击激活"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险点击灰色地砖": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "roi": [
+                    195,
+                    109,
+                    898,
+                    588
+                ],
+                "lower": [
+                    [
+                        160,
+                        145,
+                        130
+                    ]
+                ],
+                "upper": [
+                    [
+                        195,
+                        180,
+                        165
+                    ]
+                ],
+                "connected": true,
+                "count": 4444
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险点击空白处继续": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    492,
+                    642,
+                    282,
+                    76
+                ],
+                "expected": [
+                    "点击空白处继续"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险点击结算关": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    195,
+                    111,
+                    898,
+                    579
+                ],
+                "template": [
+                    "寻宝大冒险EXIT.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险点击绿色地砖": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "roi": [
+                    195,
+                    109,
+                    898,
+                    588
+                ],
+                "lower": [
+                    [
+                        135,
+                        155,
+                        65
+                    ]
+                ],
+                "upper": [
+                    [
+                        165,
+                        185,
+                        95
+                    ]
+                ],
+                "connected": true,
+                "count": 4444
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险点击蓝色地砖": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "roi": [
+                    195,
+                    109,
+                    898,
+                    588
+                ],
+                "lower": [
+                    [
+                        133,
+                        183,
+                        197
+                    ]
+                ],
+                "upper": [
+                    [
+                        214,
+                        251,
+                        233
+                    ]
+                ],
+                "connected": true,
+                "count": 4444
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险点击进入战斗": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    785,
+                    587,
+                    466,
+                    132
+                ],
+                "expected": [
+                    "进入战斗"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险点击黄色地砖": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "roi": [
+                    195,
+                    109,
+                    898,
+                    588
+                ],
+                "lower": [
+                    [
+                        220,
+                        185,
+                        75
+                    ]
+                ],
+                "upper": [
+                    [
+                        250,
+                        215,
+                        105
+                    ]
+                ],
+                "connected": true,
+                "count": 4444
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险点完快速放入后叉掉": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    1171,
+                    0,
+                    108,
+                    108
+                ],
+                "template": [
+                    "叉叉6.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险点开了收藏品": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    516,
+                    18,
+                    252,
+                    117
+                ],
+                "expected": [
+                    "收藏品"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]寻宝大冒险点击激活",
+            "[JumpBack]寻宝大冒险已激活",
+            "寻宝大冒险关闭收藏品后回到活动主页"
+        ]
+    },
+    "寻宝大冒险点开了每日任务": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    495,
+                    55,
+                    279,
+                    137
+                ],
+                "expected": [
+                    "每日任务"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]寻宝大冒险每日任务点击确定",
+            "[JumpBack]寻宝大冒险每日任务点击领取奖励",
+            "[JumpBack]寻宝大冒险每日任务未完成",
+            "寻宝大冒险每日任务已完成",
+            "寻宝大冒险关闭每日任务后回到活动主页"
+        ]
+    },
+    "寻宝大冒险确认在主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    500,
+                    712
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "next": [
+            "寻宝大冒险进入集会所"
+        ]
+    },
+    "寻宝大冒险箱子": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    205,
+                    132,
+                    872,
+                    555
+                ],
+                "template": [
+                    "寻宝大冒险箱子3.png",
+                    "寻宝大冒险箱子2.png",
+                    "寻宝大冒险箱子1.png"
+                ],
+                "order_by": "Random"
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险结算返回": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    479,
+                    555,
+                    373,
+                    151
+                ],
+                "expected": [
+                    "返回"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险继续": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    730,
+                    553,
+                    273,
+                    106
+                ],
+                "expected": [
+                    "继续"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险绿色地砖": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "roi": [
+                    195,
+                    109,
+                    898,
+                    588
+                ],
+                "lower": [
+                    [
+                        135,
+                        155,
+                        65
+                    ]
+                ],
+                "upper": [
+                    [
+                        165,
+                        185,
+                        95
+                    ]
+                ],
+                "connected": true,
+                "count": 4444
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]寻宝大冒险点击绿色地砖",
+            "寻宝大冒险高级箱子",
+            "寻宝大冒险下一关",
+            "寻宝大冒险识别并点击上锁的门边上的boss",
+            "寻宝大冒险None"
+        ]
+    },
+    "寻宝大冒险蓝色地砖": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "roi": [
+                    195,
+                    109,
+                    898,
+                    588
+                ],
+                "lower": [
+                    [
+                        133,
+                        183,
+                        197
+                    ]
+                ],
+                "upper": [
+                    [
+                        214,
+                        251,
+                        233
+                    ]
+                ],
+                "connected": true,
+                "count": 4444
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]寻宝大冒险点击蓝色地砖",
+            "寻宝大冒险高级箱子",
+            "寻宝大冒险下一关",
+            "寻宝大冒险识别并点击上锁的门边上的boss",
+            "寻宝大冒险None"
+        ]
+    },
+    "寻宝大冒险识别到上一把未结束": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1119,
+                    365,
+                    133,
+                    343
+                ],
+                "expected": [
+                    "^聊天$",
+                    "^背包$",
+                    "^消耗品$"
+                ]
+            }
+        },
+        "next": [
+            "寻宝大冒险核心节点"
+        ]
+    },
+    "寻宝大冒险识别到上锁的门": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    195,
+                    111,
+                    898,
+                    579
+                ],
+                "template": [
+                    "寻宝大冒险上锁的门.png"
+                ]
+            }
+        }
+    },
+    "寻宝大冒险识别到进入关卡": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    785,
+                    587,
+                    466,
+                    132
+                ],
+                "expected": [
+                    "进入战斗"
+                ]
+            }
+        },
+        "next": [
+            "寻宝大冒险点击导入",
+            "寻宝大冒险点击进入战斗",
+            "寻宝大冒险None"
+        ]
+    },
+    "寻宝大冒险识别并点击上锁的门边上的boss": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "寻宝大冒险识别到上锁的门",
+                    "寻宝大冒险识别并点击门边上的boss"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "寻宝大冒险识别并点击门边上的boss": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "寻宝大冒险识别到上锁的门",
+                "roi_offset": [
+                    -129,
+                    -131,
+                    254,
+                    243
+                ],
+                "expected": [
+                    ".万",
+                    "\\d万",
+                    "竹"
+                ]
+            }
+        }
+    },
+    "寻宝大冒险识别超时": {
+        "next": [
+            "寻宝大冒险识别超时尝试关闭弹窗",
+            "寻宝大冒险识别超时返回核心节点"
+        ]
+    },
+    "寻宝大冒险识别超时尝试关闭弹窗": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    568,
+                    2,
+                    151,
+                    71
+                ],
+                "expected": [
+                    "第|层"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "寻宝大冒险识别超时返回核心节点"
+        ]
+    },
+    "寻宝大冒险识别超时返回核心节点": {
+        "next": [
+            "寻宝大冒险核心节点"
+        ]
+    },
+    "寻宝大冒险进入了战斗": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    513,
+                    11,
+                    346,
+                    108
+                ],
+                "expected": [
+                    "战场效果"
+                ]
+            }
+        },
+        "next": [
+            "寻宝大冒险关闭fight上翻"
+        ]
+    },
+    "寻宝大冒险进入集会所": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    646,
+                    362,
+                    631,
+                    355
+                ],
+                "template": [
+                    "集会所.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    67,
+                    -20,
+                    -17,
+                    -2
+                ]
+            }
+        },
+        "post_wait_freezes": {
+            "time": 400,
+            "threshold": 0.8
+        },
+        "next": [
+            "寻宝大冒险集会所主页",
+            "[JumpBack]寻宝大冒险悬赏讨伐失败",
+            "寻宝大冒险进入集会所"
+        ]
+    },
+    "寻宝大冒险金币不足": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    463,
+                    184,
+                    346,
+                    130
+                ],
+                "expected": [
+                    "金币不足"
+                ]
+            }
+        },
+        "action": {
+            "type": "StopTask"
+        },
+        "focus": "任务停止：寻宝大冒险金币不足⚠️"
+    },
+    "寻宝大冒险集会所主页": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    21,
+                    3,
+                    379,
+                    132
+                ],
+                "template": [
+                    "集会所主页.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 500,
+        "next": [
+            "寻宝大冒险点击寻宝大冒险",
+            "[JumpBack]寻宝大冒险集会所右滑计数"
+        ]
+    },
+    "寻宝大冒险集会所右滑": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    21,
+                    3,
+                    379,
+                    132
+                ],
+                "template": [
+                    "集会所主页.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    1260,
+                    400,
+                    1,
+                    1
+                ],
+                "end": [
+                    [
+                        700,
+                        400,
+                        1,
+                        1
+                    ]
+                ],
+                "end_hold": [
+                    400
+                ]
+            }
+        }
+    },
+    "寻宝大冒险集会所右滑计数": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 3
+                }
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "寻宝大冒险集会所右滑"
+        ]
+    },
+    "寻宝大冒险黄色地砖": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "roi": [
+                    195,
+                    109,
+                    898,
+                    588
+                ],
+                "lower": [
+                    [
+                        220,
+                        185,
+                        75
+                    ]
+                ],
+                "upper": [
+                    [
+                        250,
+                        215,
+                        105
+                    ]
+                ],
+                "connected": true,
+                "count": 4444
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]寻宝大冒险点击黄色地砖",
+            "寻宝大冒险高级箱子",
+            "寻宝大冒险下一关",
+            "寻宝大冒险识别并点击上锁的门边上的boss",
+            "寻宝大冒险None"
+        ]
+    },
+    "重置寻宝大冒险内部节点计数器": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount"
+            }
+        },
+        "next": [
+            "寻宝大冒险确认在主页面",
+            "[JumpBack]back"
+        ]
+    },
+    "寻宝大冒险高级箱子": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    205,
+                    132,
+                    872,
+                    555
+                ],
+                "template": [
+                    "寻宝大冒险箱子3.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    }
+}

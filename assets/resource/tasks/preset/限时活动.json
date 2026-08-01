@@ -38,6 +38,10 @@
                 {
                     "name": "每周逆袭悬赏",
                     "enabled": false
+                },
+                {
+                    "name": "寻宝大冒险",
+                    "enabled": false
                 }
             ]
         }

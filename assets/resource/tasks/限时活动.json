@@ -116,6 +116,17 @@
                 "限时活动"
             ],
             "description": "未编写停止逻辑，请刷取够后自行停止"
+        },
+        {
+            "name": "寻宝大冒险",
+            "entry": "寻宝大冒险entry",
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">● 至少游玩过一把<br/>● 至少有一把<strong>金色以上武器</strong><br/>● 运行前请尽量拉满上轮装备，可以选好装备点<strong>暂时离开</strong>后，运行任务</span>",
+            "option": [
+                "运行方式"
+            ],
+            "group": [
+                "限时活动"
+            ]
         }
     ],
     "option": {
@@ -750,6 +761,29 @@
                         },
                         "每周逆袭悬赏需要刷逆袭SS+": {
                             "enable": false
+                        }
+                    }
+                }
+            ]
+        },
+        "运行方式": {
+            "type": "select",
+            "label": "运行方式",
+            "default_case": "完成每日任务",
+            "cases": [
+                {
+                    "name": "完成每日任务",
+                    "pipeline_override": {
+                        "寻宝大冒险仅完成每日任务": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "一直刷",
+                    "pipeline_override": {
+                        "寻宝大冒险仅完成每日任务": {
+                            "enabled": false
                         }
                     }
                 }
