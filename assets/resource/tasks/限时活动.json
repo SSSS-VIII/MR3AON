@@ -120,7 +120,7 @@
         {
             "name": "寻宝大冒险",
             "entry": "寻宝大冒险entry",
-            "description": "<span style=\"color:deepskyblue;font-size:15px\">● 至少游玩过一把<br/>● 至少有一把<strong>金色以上武器</strong><br/>● 运行前请尽量拉满上轮装备，可以选好装备点<strong>暂时离开</strong>后，运行任务</span>",
+            "description": "<span style=\"color:deepskyblue;font-size:14px\">● 至少游玩过一把<br/>● 至少有一把<strong>金色以上武器</strong><br/>● 运行前请尽量拉满上轮装备，可以选好装备后点进入战斗，再运行任务<br/>● 第10层和第15层撤退需要高配置，带上明王法珠更稳定<br/>● 并非高层数刷分和刷宝物效率高</span>",
             "option": [
                 "运行方式"
             ],
@@ -776,14 +776,112 @@
                     "pipeline_override": {
                         "寻宝大冒险仅完成每日任务": {
                             "enabled": true
+                        },
+                        "寻宝大冒险下一关": {
+                            "max_hit": 10
+                        },
+                        "寻宝大冒险兜底点击下一关": {
+                            "next": []
                         }
                     }
                 },
                 {
                     "name": "一直刷",
+                    "option": ["撤退层数"],
                     "pipeline_override": {
                         "寻宝大冒险仅完成每日任务": {
                             "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "撤退层数": {
+            "type": "select",
+            "label": "撤退层数",
+            "default_case": "十五层撤退",
+            "cases": [
+                {
+                    "name": "五层撤退",
+                    "pipeline_override": {
+                        "寻宝大冒险是目标层数": {
+                            "expected": [
+                                "第5层",
+                                "第10层",
+                                "第15层",
+                                "第20层",
+                                "第25层",
+                                "第30层"
+                            ]
+                        },
+                        "寻宝大冒险箱子": {
+                            "template": [
+                                "寻宝大冒险箱子3.png",
+                                "寻宝大冒险箱子1.png"
+                            ]
+                        },
+                        "寻宝大冒险高级箱子": {
+                            "template": [
+                                "寻宝大冒险箱子3.png",
+                                "寻宝大冒险箱子1.png"
+                            ]
+                        },
+                        "寻宝大冒险下一关": {
+                            "max_hit": 22
+                        }
+                    }
+                },
+                {
+                    "name": "十层撤退",
+                    "pipeline_override": {
+                        "寻宝大冒险是目标层数": {
+                            "expected": [
+                                "第10层",
+                                "第15层",
+                                "第20层",
+                                "第25层",
+                                "第30层"
+                            ]
+                        },
+                        "寻宝大冒险箱子": {
+                            "template": [
+                                "寻宝大冒险箱子3.png"
+                            ]
+                        },
+                        "寻宝大冒险高级箱子": {
+                            "template": [
+                                "寻宝大冒险箱子3.png",
+                                "寻宝大冒险箱子1.png"
+                            ]
+                        },
+                        "寻宝大冒险下一关": {
+                            "max_hit": 22
+                        }
+                    }
+                },
+                {
+                    "name": "十五层撤退",
+                    "pipeline_override": {
+                        "寻宝大冒险是目标层数": {
+                            "expected": [
+                                "第15层",
+                                "第20层",
+                                "第25层",
+                                "第30层"
+                            ]
+                        },
+                        "寻宝大冒险箱子": {
+                            "template": [
+                                "寻宝大冒险箱子3.png"
+                            ]
+                        },
+                        "寻宝大冒险高级箱子": {
+                            "template": [
+                                "寻宝大冒险箱子3.png"
+                            ]
+                        },
+                        "寻宝大冒险下一关": {
+                            "max_hit": 22
                         }
                     }
                 }
