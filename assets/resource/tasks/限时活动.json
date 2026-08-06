@@ -1,48 +1,6 @@
 {
     "task": [
         {
-            "name": "每日藏宝图",
-            "entry": "每日藏宝图entry",
-            "option": [
-                "选择藏宝图属性",
-                "是否刷自己的藏宝图",
-                "无论满没满都刷（适用于非酋没出神品碎片）"
-            ],
-            "group": [
-                "限时活动"
-            ]
-        },
-        {
-            "name": "神品传颂藏宝图",
-            "entry": "每日藏宝图entry",
-            "option": [
-                "选择藏宝图属性",
-                "只刷神品不刷传颂"
-            ],
-            "group": [
-                "限时活动"
-            ],
-            "pipeline_override": {
-                "识别藏宝图是否满了": {
-                    "enabled": false
-                },
-                "满了": {
-                    "enabled": false
-                },
-                "识别藏宝图品质": {
-                    "next": [
-                        {
-                            "jump_back": true,
-                            "name": "识别并点击藏宝图加入队伍"
-                        },
-                        "没有加入队伍",
-                        "已进入队伍"
-
-                    ]
-                }
-            }
-        },
-        {
             "name": "镜界百器",
             "entry": "镜界百器entry",
             "option": [
@@ -127,172 +85,20 @@
             "group": [
                 "限时活动"
             ]
+        },
+        {
+            "name": "藏宝图",
+            "entry": "藏宝图entry",
+            "option": [
+                "藏宝图品质",
+                "藏宝图属性"
+            ],
+            "group": [
+                "限时活动"
+            ]
         }
     ],
     "option": {
-        "选择藏宝图属性": {
-            "type": "select",
-            "default_case": "任意属性",
-            "cases": [
-                {
-                    "name": "任意属性",
-                    "pipeline_override": {
-                        "识别藏宝图属性": {
-                            "expected": [
-                                "神炎国|海之国|云之国|雷王山|藏宝图"
-                            ]
-                        },
-                        "识别属性self藏宝图": {
-                            "expected": [
-                                ".*"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "神炎国",
-                    "pipeline_override": {
-                        "识别藏宝图属性": {
-                            "expected": [
-                                "神炎国"
-                            ]
-                        },
-                        "识别属性self藏宝图": {
-                            "expected": [
-                                "神炎国"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "海之国",
-                    "pipeline_override": {
-                        "识别藏宝图属性": {
-                            "expected": [
-                                "海之国"
-                            ]
-                        },
-                        "识别属性self藏宝图": {
-                            "expected": [
-                                "海之国"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "雷王山",
-                    "pipeline_override": {
-                        "识别藏宝图属性": {
-                            "expected": [
-                                "雷王山"
-                            ]
-                        },
-                        "识别属性self藏宝图": {
-                            "expected": [
-                                "雷王山"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "云之国",
-                    "pipeline_override": {
-                        "识别藏宝图属性": {
-                            "expected": [
-                                "云之国"
-                            ]
-                        },
-                        "识别属性self藏宝图": {
-                            "expected": [
-                                "云之国"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        "是否刷自己的藏宝图": {
-            "type": "switch",
-            "label": "是否刷自己的藏宝图",
-            "default_case": "Yes",
-            "cases": [
-                {
-                    "name": "Yes",
-                    "label": "开启",
-                    "pipeline_override": {
-                        "刷自己的藏宝图": {
-                            "enable": true
-                        }
-                    }
-                },
-                {
-                    "name": "No",
-                    "label": "关闭",
-                    "pipeline_override": {
-                        "刷自己的藏宝图": {
-                            "enable": false
-                        }
-                    }
-                }
-            ]
-        },
-        "无论满没满都刷（适用于非酋没出神品碎片）": {
-            "type": "switch",
-            "label": "无论满没满都刷（适用于非酋没出神品碎片）",
-            "default_case": "No",
-            "cases": [
-                {
-                    "name": "Yes",
-                    "label": "开启",
-                    "pipeline_override": {
-                        "满了": {
-                            "enable": false
-                        },
-                        "识别藏宝图是否满了": {
-                            "enable": false
-                        }
-                    }
-                },
-                {
-                    "name": "No",
-                    "label": "关闭",
-                    "pipeline_override": {
-                        "满了": {
-                            "enable": true
-                        }
-                    }
-                }
-            ]
-        },
-        "只刷神品不刷传颂": {
-            "type": "switch",
-            "label": "不刷传颂",
-            "default_case": "No",
-            "cases": [
-                {
-                    "name": "Yes",
-                    "label": "开启",
-                    "pipeline_override": {
-                        "识别藏宝图品质": {
-                            "expected": [
-                                "神品"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "No",
-                    "label": "关闭",
-                    "pipeline_override": {
-                        "识别藏宝图品质": {
-                            "expected": [
-                                "神品|传颂"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
         "清镜界百器体力": {
             "type": "switch",
             "label": "清体力",
@@ -882,6 +688,112 @@
                         },
                         "寻宝大冒险下一关": {
                             "max_hit": 22
+                        }
+                    }
+                }
+            ]
+        },
+        "藏宝图品质": {
+            "type": "select",
+            "label": "藏宝图品质",
+            "description": "选择要刷的藏宝图品质",
+            "default_case": "神品",
+            "cases": [
+                {
+                    "name": "神品",
+                    "pipeline_override": {
+                        "藏宝图品质": {
+                            "attach": {
+                                "quality": "神品"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "绝品",
+                    "pipeline_override": {
+                        "藏宝图品质": {
+                            "attach": {
+                                "quality": "绝品"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "珍品",
+                    "pipeline_override": {
+                        "藏宝图品质": {
+                            "attach": {
+                                "quality": "珍品"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "凡品",
+                    "pipeline_override": {
+                        "藏宝图品质": {
+                            "attach": {
+                                "quality": "凡品"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "藏宝图属性": {
+            "type": "select",
+            "label": "藏宝图属性",
+            "description": "选择要刷的藏宝图属性（全部属性将匹配任意属性）",
+            "default_case": "全部属性",
+            "cases": [
+                {
+                    "name": "全部属性",
+                    "pipeline_override": {
+                        "藏宝图属性": {
+                            "attach": {
+                                "attribute": "全部属性"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "云之国",
+                    "pipeline_override": {
+                        "藏宝图属性": {
+                            "attach": {
+                                "attribute": "云之国"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "海之国",
+                    "pipeline_override": {
+                        "藏宝图属性": {
+                            "attach": {
+                                "attribute": "海之国"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "神炎国",
+                    "pipeline_override": {
+                        "藏宝图属性": {
+                            "attach": {
+                                "attribute": "神炎国"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "雷王山",
+                    "pipeline_override": {
+                        "藏宝图属性": {
+                            "attach": {
+                                "attribute": "雷王山"
+                            }
                         }
                     }
                 }

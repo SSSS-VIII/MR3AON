@@ -1,0 +1,936 @@
+{
+    "藏宝图卡牌商店卡牌1": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    509,
+                    5,
+                    257,
+                    97
+                ],
+                "expected": [
+                    "卡片商店"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    454,
+                    284,
+                    75,
+                    29
+                ]
+            }
+        },
+        "next": [
+            "藏宝图卡牌商店卡牌2",
+            "藏宝图卡牌商店无卡牌"
+        ]
+    },
+    "藏宝图卡牌商店卡牌2": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    509,
+                    5,
+                    257,
+                    97
+                ],
+                "expected": [
+                    "卡片商店"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    678,
+                    282,
+                    76,
+                    35
+                ]
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "藏宝图卡牌商店卡牌3",
+            "藏宝图卡牌商店无卡牌"
+        ]
+    },
+    "藏宝图卡牌商店卡牌3": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    911,
+                    280,
+                    77,
+                    33
+                ],
+                "expected": [
+                    "卡片商店"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    911,
+                    280,
+                    75,
+                    30
+                ]
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "藏宝图卡牌商店无卡牌"
+        ]
+    },
+    "藏宝图卡牌商店无卡牌": {
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "藏宝图entry": {
+        "next": [
+            "藏宝图品质"
+        ]
+    },
+    "藏宝图retry": {
+        "post_delay": 0,
+        "rate_limit": 0,
+        "next": [
+            "藏宝图任意位置开始任务"
+        ]
+    },
+    "藏宝图上层无加入队伍按钮": {
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "藏宝图上层点击加入队伍": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "藏宝图上层识别到目标藏宝图",
+                "roi_offset": [
+                    94,
+                    118,
+                    49,
+                    53
+                ],
+                "expected": [
+                    "加入队伍"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 0
+    },
+    "藏宝图上层识别到目标藏宝图": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    220,
+                    124,
+                    899,
+                    83
+                ],
+                "expected": [
+                    "神品.*",
+                    "绝品云之国"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]藏宝图上层点击加入队伍",
+            "藏宝图上层无加入队伍按钮"
+        ]
+    },
+    "藏宝图下层无加入队伍按钮": {
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "藏宝图下层点击加入队伍": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "藏宝图下层识别到目标藏宝图",
+                "roi_offset": [
+                    94,
+                    118,
+                    49,
+                    53
+                ],
+                "expected": [
+                    "加入队伍"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "repeat": 4,
+        "repeat_delay": 80,
+        "post_delay": 0
+    },
+    "藏宝图下层识别到目标藏宝图": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    215,
+                    353,
+                    902,
+                    82
+                ],
+                "expected": [
+                    "神品.*"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]藏宝图下层点击加入队伍",
+            "藏宝图下层无加入队伍按钮"
+        ]
+    },
+    "藏宝图主页或寻宝助力页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1022,
+                    616,
+                    242,
+                    93
+                ],
+                "expected": [
+                    "^助力次数"
+                ]
+            }
+        },
+        "next": [
+            "藏宝图主页点击一下寻宝助力",
+            "藏宝图核心节点"
+        ]
+    },
+    "藏宝图主页点击一下寻宝助力": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1130,
+                    210,
+                    140,
+                    260
+                ],
+                "expected": [
+                    "宝"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000,
+        "next": [
+            "藏宝图核心节点"
+        ]
+    },
+    "藏宝图主页点击寻宝助力": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1130,
+                    210,
+                    140,
+                    260
+                ],
+                "expected": [
+                    "宝"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 500
+    },
+    "藏宝图仍在寻宝助力页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    820,
+                    606,
+                    221,
+                    113
+                ],
+                "expected": [
+                    "刷新",
+                    "\\ds",
+                    "\\dS"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "藏宝图任务出错": {
+        "focus": "任务出错：藏宝图❌"
+    },
+    "藏宝图任意位置开始任务": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "藏宝图确认在主页面",
+            "藏宝图主页或寻宝助力页面",
+            "[JumpBack]back"
+        ]
+    },
+    "藏宝图入口": {
+        "max_hit": 300,
+        "next": [
+            "重置藏宝图内部节点计数器"
+        ]
+    },
+    "藏宝图关闭个人信息": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    283,
+                    51,
+                    193,
+                    73
+                ],
+                "expected": [
+                    "搭配"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    181,
+                    26,
+                    92,
+                    16
+                ]
+            }
+        },
+        "post_delay": 600
+    },
+    "藏宝图关闭邀请好友": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    810,
+                    12,
+                    303,
+                    82
+                ],
+                "expected": [
+                    "好友"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    181,
+                    26,
+                    92,
+                    16
+                ]
+            }
+        },
+        "post_delay": 600
+    },
+    "藏宝图再次发现boss": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    600,
+                    0,
+                    150,
+                    78
+                ],
+                "expected": [
+                    "\\d\\d"
+                ]
+            }
+        },
+        "next": [
+            "bossfight"
+        ]
+    },
+    "藏宝图取消准备按钮": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    987,
+                    607,
+                    271,
+                    106
+                ],
+                "expected": [
+                    "^取消准备$"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 1000
+    },
+    "藏宝图品质": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "attach": {
+            "quality": "神品"
+        },
+        "next": [
+            "藏宝图属性"
+        ]
+    },
+    "藏宝图属性": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "attach": {
+            "attribute": "全部属性"
+        },
+        "next": [
+            "藏宝图读取配置并修改节点"
+        ]
+    },
+    "藏宝图悬赏讨伐失败残留": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    500,
+                    465,
+                    285,
+                    247
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "藏宝图核心节点": {
+        "timeout": 60000,
+        "rate_limit": 0,
+        "next": [
+            "[JumpBack]藏宝图点击刷新",
+            "[JumpBack]藏宝图上层识别到目标藏宝图",
+            "[JumpBack]藏宝图下层识别到目标藏宝图",
+            "[JumpBack]藏宝图仍在寻宝助力页面",
+            "藏宝图识别到准备按钮",
+            "[JumpBack]藏宝图关闭个人信息",
+            "[JumpBack]藏宝图关闭邀请好友",
+            "[JumpBack]藏宝图主页点击寻宝助力"
+        ]
+    },
+    "藏宝图检查品质": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    79,
+                    14,
+                    217,
+                    72
+                ],
+                "expected": [
+                    "神品",
+                    "绝品",
+                    "珍品",
+                    "凡品"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "藏宝图检查属性",
+            "藏宝图retry"
+        ]
+    },
+    "藏宝图检查属性": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    79,
+                    14,
+                    217,
+                    72
+                ],
+                "expected": [
+                    "云之国",
+                    "海之国",
+                    "雷王山",
+                    "神炎国"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "藏宝图点击准备按钮",
+            "藏宝图retry"
+        ]
+    },
+    "藏宝图点击准备按钮": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    987,
+                    607,
+                    271,
+                    106
+                ],
+                "expected": [
+                    "^准备$"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000,
+        "timeout": 40000,
+        "next": [
+            "[JumpBack]藏宝图再次点击准备按钮",
+            "藏宝图识别到进入了战斗",
+            "藏宝图主页点击寻宝助力"
+        ],
+        "on_error": [
+            "藏宝图retry"
+        ]
+    },
+    "藏宝图点击刷新": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    874,
+                    623,
+                    159,
+                    87
+                ],
+                "expected": [
+                    "刷新"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 300
+    },
+    "藏宝图点击集会所中藏宝图页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    8,
+                    70,
+                    1259,
+                    233
+                ],
+                "template": [
+                    "藏宝图.png",
+                    "藏宝图1.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": {
+            "time": 400,
+            "threshold": 0.8
+        },
+        "next": [
+            "藏宝图主页或寻宝助力页面",
+            "藏宝图点击集会所中藏宝图页面"
+        ]
+    },
+    "藏宝图确认在主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    500,
+                    712
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true,
+                "threshold": [
+                    0.8
+                ]
+            }
+        },
+        "next": [
+            "藏宝图进入集会所"
+        ]
+    },
+    "藏宝图结算确定": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    415,
+                    447,
+                    811,
+                    250
+                ],
+                "expected": [
+                    "确定|下一页"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000
+    },
+    "藏宝图识别到准备按钮": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    987,
+                    607,
+                    271,
+                    106
+                ],
+                "expected": [
+                    "^准备$"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "藏宝图检查品质",
+            "藏宝图retry"
+        ]
+    },
+    "藏宝图识别到进入了战斗": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 600000,
+        "rate_limit": 2000,
+        "next": [
+            "[JumpBack]藏宝图调用fight",
+            "[JumpBack]藏宝图结算确定",
+            "[JumpBack]藏宝图卡牌商店卡牌0",
+            "藏宝图进入战斗后回到藏宝图页面",
+            "[JumpBack]藏宝图再次发现boss"
+        ]
+    },
+    "藏宝图读取配置并修改节点": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ApplyTreasureMapConfig"
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "藏宝图配置完成"
+        ]
+    },
+    "藏宝图调用fight": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]藏宝图降低fight识别速度",
+            "fight"
+        ]
+    },
+    "藏宝图进入战斗后回到藏宝图页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1022,
+                    616,
+                    242,
+                    93
+                ],
+                "expected": [
+                    "^助力次数"
+                ]
+            }
+        }
+    },
+    "藏宝图进入集会所": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    646,
+                    362,
+                    631,
+                    355
+                ],
+                "template": [
+                    "集会所.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    67,
+                    -20,
+                    -17,
+                    -2
+                ]
+            }
+        },
+        "post_wait_freezes": {
+            "time": 400,
+            "threshold": 0.8
+        },
+        "next": [
+            "藏宝图集会所主页",
+            "[JumpBack]藏宝图悬赏讨伐失败残留",
+            "藏宝图进入集会所"
+        ]
+    },
+    "藏宝图配置完成": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]藏宝图入口",
+            "藏宝图任务出错"
+        ]
+    },
+    "藏宝图降低fight识别速度": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "post_delay": 2000
+    },
+    "藏宝图集会所主页": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    21,
+                    3,
+                    379,
+                    132
+                ],
+                "template": [
+                    "集会所主页.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "藏宝图点击集会所中藏宝图页面",
+            "[JumpBack]藏宝图集会所右滑计数"
+        ]
+    },
+    "藏宝图集会所右滑": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    21,
+                    3,
+                    379,
+                    132
+                ],
+                "template": [
+                    "集会所主页.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    1260,
+                    400,
+                    1,
+                    1
+                ],
+                "end": [
+                    [
+                        700,
+                        400,
+                        1,
+                        1
+                    ]
+                ],
+                "end_hold": [
+                    400
+                ]
+            }
+        }
+    },
+    "藏宝图集会所右滑计数": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 3
+                }
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "藏宝图集会所右滑"
+        ]
+    },
+    "重置藏宝图内部节点计数器": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount"
+            }
+        },
+        "next": [
+            "藏宝图任意位置开始任务"
+        ]
+    },
+    "藏宝图卡牌商店卡牌0": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    509,
+                    5,
+                    257,
+                    97
+                ],
+                "expected": [
+                    "卡片商店"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    240,
+                    287,
+                    101,
+                    36
+                ]
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "藏宝图卡牌商店卡牌1",
+            "藏宝图卡牌商店无卡牌"
+        ]
+    },
+    "藏宝图再次点击准备按钮": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    987,
+                    607,
+                    271,
+                    106
+                ],
+                "expected": [
+                    "^准备$"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 2000
+    }
+}

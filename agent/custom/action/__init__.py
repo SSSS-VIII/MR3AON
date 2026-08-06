@@ -5,6 +5,7 @@ from .load_game_meta_override import LoadGameMetaOverride
 from .loop_deadline import *
 from .my_3v3_kn_an_p1 import *
 from .sync_race_parkour import sync_race_parkour
+from .treasure_map_config import ApplyTreasureMapConfig
 
 __all__ = [
     "DownloadGameMeta",
@@ -19,6 +20,7 @@ __all__ = [
     "AddExpected",
     "SubExpected",
     "ClickFilteredResults",
+    "ApplyTreasureMapConfig",
     "fight",
     "my_3v3_kn_an_p1",
     "my_3v3_kn_an_p2",
