@@ -5,11 +5,7 @@
             "task": [
                 {
                     "name": "藏宝图",
-                    "enabled": false,
-                    "option": {
-                        "藏宝图品质": "神品",
-                        "藏宝图属性": "全部属性"
-                    }
+                    "enabled": false
                 },
                 {
                     "name": "镜界百器",

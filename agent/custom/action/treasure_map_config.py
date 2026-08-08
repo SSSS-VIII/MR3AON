@@ -8,18 +8,19 @@ from utils import logger
 @AgentServer.custom_action("ApplyTreasureMapConfig")
 class ApplyTreasureMapConfig(CustomAction):
     """
-    读取藏宝图配置节点（藏宝图品质 / 藏宝图属性）的 attach 字段，
-    动态修改目标 OCR 节点的 expected。
+    读取藏宝图配置节点 attach 字段（由 UI checkbox 合并写入），
+    动态修改第一层 OCR 节点的 expected，实现品质+属性组合过滤。
 
-    目标节点：
-      - 藏宝图下层识别到目标藏宝图  →  品质 + 属性 组合
-      - 藏宝图上层识别到目标藏宝图  →  同上
-      - 藏宝图检查品质             →  仅品质
-      - 藏宝图检查类型             →  仅属性
+    attach key 格式: "{品质}{属性}"，如 "神品云之国"、"珍品海之国"。
+    多个 checkbox 勾选会通过 dict merge 合并到同一个 attach 中。
+
+    目标节点:
+      - 藏宝图上层识别到目标藏宝图  →  品质+属性 组合 regex
+      - 藏宝图下层识别到目标藏宝图  →  同上
     """
 
-    ALL_ATTRIBUTES = ["云之国", "海之国", "神炎国", "雷王山"]
-    ALL_QUALITIES = ["神品", "绝品", "珍品", "凡品"]
+    QUALITIES = ["神品", "绝品", "珍品", "凡品"]
+    ATTRIBUTES = ["云之国", "海之国", "神炎国", "雷王山"]
 
     def run(
         self,
@@ -27,55 +28,49 @@ class ApplyTreasureMapConfig(CustomAction):
         argv: CustomAction.RunArg,
     ) -> CustomAction.RunResult:
         # ── 读取配置 ──────────────────────────────────────────
-        quality = "神品"
-        attribute = "全部属性"
+        config_node = context.get_node_data("藏宝图配置节点")
+        attach = config_node.get("attach", {}) if config_node else {}
 
-        quality_node = context.get_node_data("藏宝图品质")
-        if quality_node is not None:
-            quality = quality_node.get("attach", {}).get("quality", "神品")
+        if not attach:
+            logger.info("未选择藏宝图，任务结束")
+            return CustomAction.RunResult(success=False)
 
-        attribute_node = context.get_node_data("藏宝图属性")
-        if attribute_node is not None:
-            attribute = attribute_node.get("attach", {}).get("attribute", "全部属性")
+        # ── 从 attach key 解析品质+属性组合 ───────────────────
+        map_expected = []
+        parsed = []
+        for key in attach:
+            # key 格式: "{品质}{属性}"，如 "神品云之国"
+            matched_quality = None
+            matched_attr = None
+            for q in self.QUALITIES:
+                if key.startswith(q):
+                    matched_quality = q
+                    matched_attr = key[len(q) :]
+                    break
+            if matched_quality and matched_attr in self.ATTRIBUTES:
+                parsed.append((matched_quality, matched_attr))
+            else:
+                logger.warning(f"藏宝图配置: 无法解析 attach key {key!r}，已跳过")
 
-        # 兜底：非法值回退默认
-        if quality not in self.ALL_QUALITIES:
-            logger.warning(f"藏宝图配置: 非法品质值 {quality!r}，回退为 神品")
-            quality = "神品"
+        if not parsed:
+            logger.error("藏宝图配置: attach 中无有效的品质+属性组合")
+            return CustomAction.RunResult(success=False)
 
-        is_all_attr = attribute == "全部属性"
-        if not is_all_attr and attribute not in self.ALL_ATTRIBUTES:
-            logger.warning(f"藏宝图配置: 非法属性值 {attribute!r}，回退为 全部属性")
-            attribute = "全部属性"
-            is_all_attr = True
-
-        # ── 计算 expected ─────────────────────────────────────
-        # 1) 藏宝图检查品质：仅品质
-        check_quality_expected = [quality]
-
-        # 2) 藏宝图检查类型：仅属性
-        check_type_expected = self.ALL_ATTRIBUTES if is_all_attr else [attribute]
-
-        # 3) 藏宝图下层/上层识别到目标藏宝图：品质 + 属性组合
-        if is_all_attr:
-            # 全部属性 → 正则 {quality}.* 匹配品质后跟任意属性
-            map_expected = [f"{quality}.*"]
-        else:
-            # 指定属性 → 精确匹配 {quality}{attribute}
-            map_expected = [f"{quality}{attribute}"]
+        # ── 按品质→属性排序，保证顺序稳定 ──────────────────────
+        parsed.sort(
+            key=lambda x: (
+                self.QUALITIES.index(x[0]),
+                self.ATTRIBUTES.index(x[1]),
+            )
+        )
+        map_expected = [f"{q}{a}" for q, a in parsed]
 
         # ── 应用 override ─────────────────────────────────────
         override = {
-            "藏宝图检查品质": {
-                "recognition": {"param": {"expected": check_quality_expected}}
-            },
-            "藏宝图检查类型": {
-                "recognition": {"param": {"expected": check_type_expected}}
-            },
-            "藏宝图下层识别到目标藏宝图": {
+            "藏宝图上层识别到目标藏宝图": {
                 "recognition": {"param": {"expected": map_expected}}
             },
-            "藏宝图上层识别到目标藏宝图": {
+            "藏宝图下层识别到目标藏宝图": {
                 "recognition": {"param": {"expected": map_expected}}
             },
         }
@@ -84,10 +79,5 @@ class ApplyTreasureMapConfig(CustomAction):
             logger.error("ApplyTreasureMapConfig: override_pipeline 失败")
             return CustomAction.RunResult(success=False)
 
-        logger.debug(
-            f"藏宝图配置已应用: 品质={quality}, 属性={attribute}, "
-            f"品质expected={check_quality_expected}, "
-            f"属性expected={check_type_expected}, "
-            f"地图expected={map_expected}"
-        )
+        logger.info(f"藏宝图已选择: {len(parsed)} 个组合, " f"{map_expected}")
         return CustomAction.RunResult(success=True)

@@ -89,9 +89,12 @@
         {
             "name": "藏宝图",
             "entry": "藏宝图entry",
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">藏宝图每日任务正在制作中QWQ</span>",
             "option": [
-                "藏宝图品质",
-                "藏宝图属性"
+                "神品藏宝图",
+                "绝品藏宝图",
+                "珍品藏宝图",
+                "凡品藏宝图"
             ],
             "group": [
                 "限时活动"
@@ -693,106 +696,280 @@
                 }
             ]
         },
-        "藏宝图品质": {
-            "type": "select",
-            "label": "藏宝图品质",
-            "description": "选择要刷的藏宝图品质",
-            "default_case": "神品",
+        "神品藏宝图": {
+            "type": "switch",
+            "label": "神品藏宝图",
+            "description": "选择要刷取神品品质的藏宝图",
+            "default_case": "No",
             "cases": [
                 {
-                    "name": "神品",
-                    "pipeline_override": {
-                        "藏宝图品质": {
-                            "attach": {
-                                "quality": "神品"
-                            }
-                        }
-                    }
+                    "name": "Yes",
+                    "label": "开启",
+                    "option": [
+                        "神品属性选择"
+                    ]
                 },
                 {
-                    "name": "绝品",
-                    "pipeline_override": {
-                        "藏宝图品质": {
-                            "attach": {
-                                "quality": "绝品"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "珍品",
-                    "pipeline_override": {
-                        "藏宝图品质": {
-                            "attach": {
-                                "quality": "珍品"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "凡品",
-                    "pipeline_override": {
-                        "藏宝图品质": {
-                            "attach": {
-                                "quality": "凡品"
-                            }
-                        }
-                    }
+                    "name": "No",
+                    "label": "关闭"
                 }
             ]
         },
-        "藏宝图属性": {
-            "type": "select",
-            "label": "藏宝图属性",
-            "description": "选择要刷的藏宝图属性（全部属性将匹配任意属性）",
-            "default_case": "全部属性",
+        "神品属性选择": {
+            "type": "checkbox",
+            "label": "神品属性",
+            "default_case": [],
             "cases": [
                 {
-                    "name": "全部属性",
-                    "pipeline_override": {
-                        "藏宝图属性": {
-                            "attach": {
-                                "attribute": "全部属性"
-                            }
-                        }
-                    }
-                },
-                {
                     "name": "云之国",
+                    "label": "云之国",
                     "pipeline_override": {
-                        "藏宝图属性": {
+                        "藏宝图配置节点": {
                             "attach": {
-                                "attribute": "云之国"
+                                "神品云之国": true
                             }
                         }
                     }
                 },
                 {
                     "name": "海之国",
+                    "label": "海之国",
                     "pipeline_override": {
-                        "藏宝图属性": {
+                        "藏宝图配置节点": {
                             "attach": {
-                                "attribute": "海之国"
+                                "神品海之国": true
                             }
                         }
                     }
                 },
                 {
                     "name": "神炎国",
+                    "label": "神炎国",
                     "pipeline_override": {
-                        "藏宝图属性": {
+                        "藏宝图配置节点": {
                             "attach": {
-                                "attribute": "神炎国"
+                                "神品神炎国": true
                             }
                         }
                     }
                 },
                 {
                     "name": "雷王山",
+                    "label": "雷王山",
                     "pipeline_override": {
-                        "藏宝图属性": {
+                        "藏宝图配置节点": {
                             "attach": {
-                                "attribute": "雷王山"
+                                "神品雷王山": true
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "绝品藏宝图": {
+            "type": "switch",
+            "label": "绝品藏宝图",
+            "description": "选择要刷取绝品品质的藏宝图",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "开启",
+                    "option": [
+                        "绝品属性选择"
+                    ]
+                },
+                {
+                    "name": "No",
+                    "label": "关闭"
+                }
+            ]
+        },
+        "绝品属性选择": {
+            "type": "checkbox",
+            "label": "绝品属性",
+            "default_case": [],
+            "cases": [
+                {
+                    "name": "云之国",
+                    "label": "云之国",
+                    "pipeline_override": {
+                        "藏宝图配置节点": {
+                            "attach": {
+                                "绝品云之国": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "海之国",
+                    "label": "海之国",
+                    "pipeline_override": {
+                        "藏宝图配置节点": {
+                            "attach": {
+                                "绝品海之国": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "神炎国",
+                    "label": "神炎国",
+                    "pipeline_override": {
+                        "藏宝图配置节点": {
+                            "attach": {
+                                "绝品神炎国": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "雷王山",
+                    "label": "雷王山",
+                    "pipeline_override": {
+                        "藏宝图配置节点": {
+                            "attach": {
+                                "绝品雷王山": true
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "珍品藏宝图": {
+            "type": "switch",
+            "label": "珍品藏宝图",
+            "description": "选择要刷取珍品品质的藏宝图",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "开启",
+                    "option": [
+                        "珍品属性选择"
+                    ]
+                },
+                {
+                    "name": "No",
+                    "label": "关闭"
+                }
+            ]
+        },
+        "珍品属性选择": {
+            "type": "checkbox",
+            "label": "珍品属性",
+            "default_case": [],
+            "cases": [
+                {
+                    "name": "云之国",
+                    "label": "云之国",
+                    "pipeline_override": {
+                        "藏宝图配置节点": {
+                            "attach": {
+                                "珍品云之国": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "海之国",
+                    "label": "海之国",
+                    "pipeline_override": {
+                        "藏宝图配置节点": {
+                            "attach": {
+                                "珍品海之国": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "神炎国",
+                    "label": "神炎国",
+                    "pipeline_override": {
+                        "藏宝图配置节点": {
+                            "attach": {
+                                "珍品神炎国": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "雷王山",
+                    "label": "雷王山",
+                    "pipeline_override": {
+                        "藏宝图配置节点": {
+                            "attach": {
+                                "珍品雷王山": true
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "凡品藏宝图": {
+            "type": "switch",
+            "label": "凡品藏宝图",
+            "description": "选择要刷取凡品品质的藏宝图",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "开启",
+                    "option": [
+                        "凡品属性选择"
+                    ]
+                },
+                {
+                    "name": "No",
+                    "label": "关闭"
+                }
+            ]
+        },
+        "凡品属性选择": {
+            "type": "checkbox",
+            "label": "凡品属性",
+            "default_case": [],
+            "cases": [
+                {
+                    "name": "云之国",
+                    "label": "云之国",
+                    "pipeline_override": {
+                        "藏宝图配置节点": {
+                            "attach": {
+                                "凡品云之国": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "海之国",
+                    "label": "海之国",
+                    "pipeline_override": {
+                        "藏宝图配置节点": {
+                            "attach": {
+                                "凡品海之国": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "神炎国",
+                    "label": "神炎国",
+                    "pipeline_override": {
+                        "藏宝图配置节点": {
+                            "attach": {
+                                "凡品神炎国": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "雷王山",
+                    "label": "雷王山",
+                    "pipeline_override": {
+                        "藏宝图配置节点": {
+                            "attach": {
+                                "凡品雷王山": true
                             }
                         }
                     }
