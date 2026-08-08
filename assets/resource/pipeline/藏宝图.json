@@ -35,6 +35,8 @@
         "action": {
             "type": "Click"
         },
+        "repeat": 4,
+        "repeat_delay": 80,
         "post_delay": 0
     },
     "藏宝图上层识别到目标藏宝图": {
@@ -53,6 +55,11 @@
             }
         },
         "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "repeat": 4,
+        "repeat_delay": 80,
         "post_delay": 0,
         "next": [
             "[JumpBack]藏宝图上层点击加入队伍",
@@ -103,6 +110,11 @@
             }
         },
         "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "repeat": 4,
+        "repeat_delay": 80,
         "post_delay": 0,
         "next": [
             "[JumpBack]藏宝图下层点击加入队伍",
@@ -578,7 +590,7 @@
         "action": {
             "type": "Click"
         },
-        "post_delay": 300
+        "post_delay": 200
     },
     "藏宝图点击集会所中藏宝图页面": {
         "recognition": {
