@@ -1,11 +1,977 @@
 {
+    "任意位置开始清自己的藏宝图": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "清自己藏宝图确认在主页面",
+            "[JumpBack]back"
+        ]
+    },
+    "刷别人的藏宝图": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "attach": {},
+        "next": [
+            "藏宝图读取配置并修改节点"
+        ]
+    },
+    "每日藏宝图entry": {
+        "next": [
+            "[JumpBack]清自己藏宝图",
+            "[JumpBack]藏宝图entry",
+            "每日藏宝图完成"
+        ]
+    },
+    "每日藏宝图完成": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "每日藏宝图完成回到了主页面",
+            "[JumpBack]back"
+        ]
+    },
+    "每日藏宝图完成回到了主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    4,
+                    136,
+                    434,
+                    459
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true,
+                "threshold": [
+                    0.75
+                ],
+                "order_by": "Horizontal"
+            }
+        },
+        "action": {
+            "type": "StopTask"
+        },
+        "focus": "任务完成：每日藏宝图✅"
+    },
+    "清自己藏宝图": {
+        "max_hit": 3,
+        "attach": {},
+        "next": [
+            "清自己藏宝图读取配置"
+        ]
+    },
+    "清自己藏宝图fight": {
+        "next": [
+            "fight"
+        ]
+    },
+    "清自己藏宝图关闭寻宝助力页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    824,
+                    597,
+                    211,
+                    117
+                ],
+                "expected": [
+                    "刷新"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    -144,
+                    0,
+                    0,
+                    0
+                ]
+            }
+        },
+        "post_delay": 1000
+    },
+    "清自己藏宝图关闭邀请页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    736,
+                    11,
+                    544,
+                    92
+                ],
+                "expected": [
+                    "聊天"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    703,
+                    44,
+                    1,
+                    1
+                ]
+            }
+        },
+        "timeout": 56000,
+        "rate_limit": 300,
+        "next": [
+            "[JumpBack]清自己藏宝图清A点击出发",
+            "清自己藏宝图识别到进入了战斗"
+        ],
+        "on_error": [
+            "清自己藏宝图组队超时或挑战失败退出组队"
+        ]
+    },
+    "清自己藏宝图再次发现boss": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    600,
+                    0,
+                    150,
+                    78
+                ],
+                "expected": [
+                    "\\d\\d"
+                ]
+            }
+        },
+        "next": [
+            "bossfight"
+        ]
+    },
+    "清自己藏宝图卡牌商店卡牌0": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    509,
+                    5,
+                    257,
+                    97
+                ],
+                "expected": [
+                    "卡片商店"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    240,
+                    287,
+                    101,
+                    36
+                ]
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "清自己藏宝图卡牌商店卡牌1",
+            "清自己藏宝图卡牌商店无卡牌"
+        ]
+    },
+    "清自己藏宝图卡牌商店卡牌1": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    509,
+                    5,
+                    257,
+                    97
+                ],
+                "expected": [
+                    "卡片商店"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    454,
+                    284,
+                    75,
+                    29
+                ]
+            }
+        },
+        "next": [
+            "清自己藏宝图卡牌商店卡牌2",
+            "清自己藏宝图卡牌商店无卡牌"
+        ]
+    },
+    "清自己藏宝图卡牌商店卡牌2": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    509,
+                    5,
+                    257,
+                    97
+                ],
+                "expected": [
+                    "卡片商店"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    678,
+                    282,
+                    76,
+                    35
+                ]
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "清自己藏宝图卡牌商店卡牌3",
+            "清自己藏宝图卡牌商店无卡牌"
+        ]
+    },
+    "清自己藏宝图卡牌商店卡牌3": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    911,
+                    280,
+                    77,
+                    33
+                ],
+                "expected": [
+                    "卡片商店"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    911,
+                    280,
+                    75,
+                    30
+                ]
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "清自己藏宝图卡牌商店无卡牌"
+        ]
+    },
+    "清自己藏宝图卡牌商店无卡牌": {
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "清自己藏宝图向左滑": {
+        "max_hit": 3,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1022,
+                    616,
+                    242,
+                    93
+                ],
+                "expected": [
+                    "^助力次数"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    1014,
+                    400,
+                    50,
+                    50
+                ],
+                "end": [
+                    [
+                        460,
+                        400,
+                        50,
+                        50
+                    ]
+                ],
+                "end_hold": [
+                    400
+                ]
+            }
+        },
+        "next": [
+            "清自己藏宝图在藏宝图主页"
+        ]
+    },
+    "清自己藏宝图在藏宝图主页": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1130,
+                    210,
+                    140,
+                    260
+                ],
+                "expected": [
+                    "宝"
+                ]
+            }
+        },
+        "next": [
+            "清自己藏宝图点击目标藏宝图",
+            "清自己藏宝图未识别到目标藏宝图"
+        ]
+    },
+    "清自己藏宝图在藏宝图主页或寻宝助力页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1022,
+                    616,
+                    242,
+                    93
+                ],
+                "expected": [
+                    "^助力次数"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]清自己藏宝图关闭寻宝助力页面",
+            "清自己藏宝图在藏宝图主页"
+        ]
+    },
+    "清自己藏宝图展开了邀请页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    736,
+                    11,
+                    544,
+                    92
+                ],
+                "expected": [
+                    "聊天"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]清自己藏宝图等待可以再次发送消息",
+            "清自己藏宝图点击发送消息",
+            "清自己藏宝图展开了邀请页面"
+        ]
+    },
+    "清自己藏宝图悬赏讨伐失败残留": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    500,
+                    465,
+                    285,
+                    247
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "清自己藏宝图未识别到目标藏宝图": {
+        "next": [
+            "清自己藏宝图点击目标藏宝图",
+            "清自己藏宝图真未识别到目标藏宝图"
+        ]
+    },
+    "清自己藏宝图检查藏宝图品质和属性均符合": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "TreasureMapQualityAttributeCheck",
+                "custom_recognition_param": {
+                    "node_name": "清自己藏宝图"
+                }
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "清自己藏宝图点击点击邀请好友"
+        ]
+    },
+    "清自己藏宝图清A点击出发": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1024,
+                    631,
+                    184,
+                    63
+                ],
+                "expected": [
+                    "出发"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 0
+    },
+    "清自己藏宝图滑动次数不足任务结束": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "清自己藏宝图"
+                }
+            }
+        },
+        "post_delay": 0
+    },
+    "清自己藏宝图点击发送消息": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    858,
+                    514,
+                    400,
+                    154
+                ],
+                "expected": [
+                    "发送消息"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "清自己藏宝图关闭邀请页面"
+        ]
+    },
+    "清自己藏宝图点击点击邀请好友": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    77,
+                    133,
+                    695,
+                    450
+                ],
+                "expected": [
+                    "点击邀请好友"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1500,
+        "next": [
+            "清自己藏宝图展开了邀请页面",
+            "清自己藏宝图点击点击邀请好友"
+        ]
+    },
+    "清自己藏宝图点击目标藏宝图": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    337,
+                    251,
+                    817,
+                    155
+                ],
+                "expected": [
+                    "绝品"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000,
+        "next": [
+            "清自己藏宝图进入了队伍页面",
+            "清自己藏宝图点击目标藏宝图"
+        ]
+    },
+    "清自己藏宝图点击集会所中藏宝图页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    8,
+                    70,
+                    1259,
+                    233
+                ],
+                "template": [
+                    "藏宝图.png",
+                    "藏宝图1.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": {
+            "time": 400,
+            "threshold": 0.8
+        },
+        "next": [
+            "清自己藏宝图在藏宝图主页或寻宝助力页面",
+            "清自己藏宝图点击集会所中藏宝图页面"
+        ]
+    },
+    "清自己藏宝图点到了个人信息": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    57,
+                    33,
+                    255,
+                    127
+                ],
+                "expected": [
+                    "个人信息"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1269,
+                    366,
+                    1,
+                    1
+                ]
+            }
+        }
+    },
+    "清自己藏宝图真未识别到目标藏宝图": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "清自己藏宝图识别到右侧还有的图标",
+            "清自己藏宝图向左滑",
+            "清自己藏宝图滑动次数不足任务结束"
+        ]
+    },
+    "清自己藏宝图确认在主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    500,
+                    712
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true,
+                "threshold": [
+                    0.8
+                ]
+            }
+        },
+        "next": [
+            "清自己藏宝图进入集会所"
+        ]
+    },
+    "清自己藏宝图等待可以再次发送消息": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    858,
+                    514,
+                    400,
+                    154
+                ],
+                "expected": [
+                    "可以再次发送消息"
+                ]
+            }
+        },
+        "post_delay": 1000
+    },
+    "清自己藏宝图组队超时或挑战失败退出组队": {
+        "next": [
+            "任意位置开始清自己的藏宝图"
+        ]
+    },
+    "清自己藏宝图结算确定": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    521,
+                    408,
+                    246,
+                    309
+                ],
+                "expected": [
+                    "确定|下一页"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000
+    },
+    "清自己藏宝图识别到右侧还有的图标": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    1132,
+                    361,
+                    76,
+                    97
+                ],
+                "template": [
+                    "藏宝图右侧还有.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ClearMaxHit",
+                "custom_action_param": {
+                    "node_name": "清自己藏宝图向左滑"
+                }
+            }
+        },
+        "next": [
+            "清自己藏宝图向左滑"
+        ]
+    },
+    "清自己藏宝图识别到进入了战斗": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 480000,
+        "next": [
+            "[JumpBack]清自己藏宝图调用fight",
+            "[JumpBack]清自己藏宝图结算确定",
+            "[JumpBack]清自己藏宝图卡牌商店卡牌0",
+            "[JumpBack]清自己藏宝图点到了个人信息",
+            "清自己藏宝图进入战斗后回到藏宝图页面",
+            "[JumpBack]清自己藏宝图再次发现boss",
+            "清自己藏宝图进入战斗后回到组队页面"
+        ]
+    },
+    "清自己藏宝图读取配置": {
+        "max_hit": 1,
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ApplyTreasureMapConfig",
+                "custom_action_param": {
+                    "source": "清自己藏宝图",
+                    "targets": [
+                        "清自己藏宝图点击目标藏宝图"
+                    ]
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "重置清自己藏宝图内部节点计数器"
+        ],
+        "on_error": [
+            "清自己藏宝图配置有误停止任务"
+        ]
+    },
+    "清自己藏宝图调用fight": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]清自己藏宝图降低fight识别速度",
+            "清自己藏宝图fight"
+        ]
+    },
+    "清自己藏宝图进入了队伍页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    77,
+                    133,
+                    695,
+                    450
+                ],
+                "expected": [
+                    "点击邀请好友"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "清自己藏宝图检查藏宝图品质和属性均符合"
+        ]
+    },
+    "清自己藏宝图进入战斗后回到组队页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    973,
+                    615,
+                    290,
+                    92
+                ],
+                "expected": [
+                    "至少需要二人|队员未准备|出发"
+                ]
+            }
+        },
+        "next": [
+            "清自己藏宝图组队超时或挑战失败退出组队"
+        ]
+    },
+    "清自己藏宝图进入战斗后回到藏宝图页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1022,
+                    616,
+                    242,
+                    93
+                ],
+                "expected": [
+                    "^助力次数"
+                ]
+            }
+        },
+        "next": [
+            "清自己藏宝图在藏宝图主页或寻宝助力页面"
+        ]
+    },
+    "清自己藏宝图进入集会所": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    646,
+                    362,
+                    631,
+                    355
+                ],
+                "template": [
+                    "集会所.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    67,
+                    -20,
+                    -17,
+                    -2
+                ]
+            }
+        },
+        "post_wait_freezes": {
+            "time": 600,
+            "threshold": 0.8
+        },
+        "next": [
+            "清自己藏宝图集会所主页",
+            "[JumpBack]清自己藏宝图悬赏讨伐失败残留",
+            "清自己藏宝图进入集会所"
+        ]
+    },
+    "清自己藏宝图配置有误停止任务": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "清自己藏宝图"
+                }
+            }
+        }
+    },
+    "清自己藏宝图降低fight识别速度": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "post_delay": 2000
+    },
+    "清自己藏宝图集会所主页": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    21,
+                    3,
+                    379,
+                    132
+                ],
+                "template": [
+                    "集会所主页.png"
+                ]
+            }
+        },
+        "next": [
+            "清自己藏宝图点击集会所中藏宝图页面",
+            "[JumpBack]清自己藏宝图集会所右滑计数"
+        ]
+    },
+    "清自己藏宝图集会所右滑": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    21,
+                    3,
+                    379,
+                    132
+                ],
+                "template": [
+                    "集会所主页.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    1260,
+                    400,
+                    1,
+                    1
+                ],
+                "end": [
+                    [
+                        700,
+                        400,
+                        1,
+                        1
+                    ]
+                ],
+                "end_hold": [
+                    400
+                ]
+            }
+        }
+    },
+    "清自己藏宝图集会所右滑计数": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 3
+                }
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "清自己藏宝图集会所右滑"
+        ]
+    },
     "藏宝图None": {
         "pre_delay": 0,
         "post_delay": 0
     },
     "藏宝图entry": {
+        "max_hit": 1,
         "next": [
-            "藏宝图配置节点"
+            "刷别人的藏宝图"
         ]
     },
     "藏宝图retry": {
@@ -149,8 +1115,8 @@
             }
         },
         "next": [
-            "藏宝图主页点击一下寻宝助力",
-            "藏宝图核心节点"
+            "藏宝图检查每日次数开关",
+            "藏宝图检查每日次数结束"
         ]
     },
     "藏宝图主页点击一下寻宝助力": {
@@ -461,7 +1427,10 @@
         "recognition": {
             "type": "Custom",
             "param": {
-                "custom_recognition": "TreasureMapQualityAttributeCheck"
+                "custom_recognition": "TreasureMapQualityAttributeCheck",
+                "custom_recognition_param": {
+                    "node_name": "刷别人的藏宝图"
+                }
             }
         },
         "pre_delay": 0,
@@ -470,6 +1439,26 @@
             "藏宝图点击准备按钮",
             "[JumpBack]藏宝图关闭个人信息",
             "[JumpBack]藏宝图关闭邀请好友"
+        ]
+    },
+    "藏宝图展开了助力次数": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1048,
+                    357,
+                    187,
+                    135
+                ],
+                "expected": [
+                    "今日",
+                    "品"
+                ]
+            }
+        },
+        "next": [
+            "藏宝图每日次数识别到凡品"
         ]
     },
     "藏宝图开始": {
@@ -555,6 +1544,241 @@
         "pre_delay": 0,
         "post_delay": 0
     },
+    "藏宝图检查每日次数开关": {
+        "enabled": false,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "藏宝图每日点击助力次数"
+        ]
+    },
+    "藏宝图检查每日次数结束": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "藏宝图主页点击一下寻宝助力",
+            "藏宝图核心节点"
+        ]
+    },
+    "藏宝图每日次数识别到凡品": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    1046,
+                    347,
+                    187,
+                    301
+                ],
+                "template": [
+                    "藏宝图次数凡.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "藏宝图每日次数识别到凡品次数为0",
+            "藏宝图每日次数识别到珍品"
+        ]
+    },
+    "藏宝图每日次数识别到凡品次数为0": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": "藏宝图每日次数识别到凡品",
+                "roi_offset": [
+                    105,
+                    -10,
+                    20,
+                    20
+                ],
+                "template": [
+                    "藏宝图次数0.png"
+                ],
+                "threshold": [
+                    0.8
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "RemoveQualityFromAttach",
+                "custom_action_param": {
+                    "node_name": "刷别人的藏宝图",
+                    "quality": "凡品"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "藏宝图每日次数识别到珍品"
+        ]
+    },
+    "藏宝图每日次数识别到珍品": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    1046,
+                    347,
+                    187,
+                    301
+                ],
+                "template": [
+                    "藏宝图次数珍.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "藏宝图每日次数识别到珍品次数为0",
+            "藏宝图每日次数识别到绝品"
+        ]
+    },
+    "藏宝图每日次数识别到珍品次数为0": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": "藏宝图每日次数识别到珍品",
+                "roi_offset": [
+                    105,
+                    -10,
+                    20,
+                    20
+                ],
+                "template": [
+                    "藏宝图次数0.png"
+                ],
+                "threshold": [
+                    0.8
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "RemoveQualityFromAttach",
+                "custom_action_param": {
+                    "node_name": "刷别人的藏宝图",
+                    "quality": "珍品"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "藏宝图每日次数识别到绝品"
+        ]
+    },
+    "藏宝图每日次数识别到绝品": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    1046,
+                    347,
+                    187,
+                    301
+                ],
+                "template": [
+                    "藏宝图次数绝.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "藏宝图每日次数识别到绝品次数为0",
+            "藏宝图每日次数重新读取配置并修改节点"
+        ]
+    },
+    "藏宝图每日次数识别到绝品次数为0": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": "藏宝图每日次数识别到绝品",
+                "roi_offset": [
+                    105,
+                    -10,
+                    20,
+                    20
+                ],
+                "template": [
+                    "藏宝图次数0.png"
+                ],
+                "threshold": [
+                    0.8
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "RemoveQualityFromAttach",
+                "custom_action_param": {
+                    "check_all_cleared": true,
+                    "node_name": "刷别人的藏宝图",
+                    "quality": "绝品"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "藏宝图每日次数重新读取配置并修改节点"
+        ],
+        "on_error": [
+            "每日藏宝图完成"
+        ]
+    },
+    "藏宝图每日次数重新读取配置并修改节点": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ApplyTreasureMapConfig",
+                "custom_action_param": {
+                    "source": "刷别人的藏宝图",
+                    "targets": [
+                        "藏宝图上层识别到目标藏宝图",
+                        "藏宝图下层识别到目标藏宝图"
+                    ]
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "藏宝图检查每日次数结束"
+        ]
+    },
+    "藏宝图每日点击助力次数": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1022,
+                    616,
+                    242,
+                    93
+                ],
+                "expected": [
+                    "^助力次数"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1500,
+        "next": [
+            "藏宝图展开了助力次数",
+            "藏宝图每日点击助力次数"
+        ]
+    },
     "藏宝图点击准备按钮": {
         "recognition": {
             "type": "OCR",
@@ -625,7 +1849,8 @@
                 "template": [
                     "藏宝图.png",
                     "藏宝图1.png"
-                ]
+                ],
+                "green_mask": true
             }
         },
         "pre_delay": 0,
@@ -740,7 +1965,14 @@
         "action": {
             "type": "Custom",
             "param": {
-                "custom_action": "ApplyTreasureMapConfig"
+                "custom_action": "ApplyTreasureMapConfig",
+                "custom_action_param": {
+                    "source": "刷别人的藏宝图",
+                    "targets": [
+                        "藏宝图上层识别到目标藏宝图",
+                        "藏宝图下层识别到目标藏宝图"
+                    ]
+                }
             }
         },
         "post_delay": 0,
@@ -785,7 +2017,10 @@
                     "^助力次数"
                 ]
             }
-        }
+        },
+        "next": [
+            "藏宝图任意位置开始任务"
+        ]
     },
     "藏宝图进入集会所": {
         "recognition": {
@@ -833,14 +2068,6 @@
             "藏宝图任务出错"
         ]
     },
-    "藏宝图配置节点": {
-        "pre_delay": 0,
-        "post_delay": 0,
-        "attach": {},
-        "next": [
-            "藏宝图读取配置并修改节点"
-        ]
-    },
     "藏宝图降低fight识别速度": {
         "recognition": {
             "type": "TemplateMatch",
@@ -874,7 +2101,6 @@
             }
         },
         "pre_delay": 0,
-        "post_delay": 0,
         "next": [
             "藏宝图点击集会所中藏宝图页面",
             "[JumpBack]藏宝图集会所右滑计数"
@@ -933,6 +2159,17 @@
         "post_delay": 0,
         "next": [
             "藏宝图集会所右滑"
+        ]
+    },
+    "重置清自己藏宝图内部节点计数器": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount"
+            }
+        },
+        "next": [
+            "任意位置开始清自己的藏宝图"
         ]
     },
     "重置藏宝图内部节点计数器": {

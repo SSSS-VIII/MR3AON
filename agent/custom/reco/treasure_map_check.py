@@ -1,3 +1,4 @@
+import json
 from typing import Optional, Union
 
 from maa.agent.agent_server import AgentServer
@@ -13,7 +14,10 @@ class TreasureMapQualityAttributeCheck(CustomRecognition):
     """
     藏宝图第二层检查：在准备页面校验品质和属性是否同时匹配用户选择的组合。
 
-    读取 藏宝图配置节点.attach 中已选组合（如 {"神品云之国": true}），
+    参数 (custom_recognition_param, JSON 字符串或 dict):
+        node_name (str): 读取 attach 的来源节点名，默认 "刷别人的藏宝图"
+
+    读取目标节点.attach 中已选组合（如 {"神品云之国": true}），
     截图一次，分别用 TemplateMatch 在品质 ROI 和属性 ROI 做匹配，
     仅当 (best_quality + best_attribute) 组合在 attach 中存在时才命中。
 
@@ -29,18 +33,32 @@ class TreasureMapQualityAttributeCheck(CustomRecognition):
     ATTRIBUTE_ROI = [159, 14, 147, 72]
     THRESHOLD = 0.75
 
+    DEFAULT_NODE = "刷别人的藏宝图"
+
     def analyze(
         self,
         context: Context,
         argv: CustomRecognition.AnalyzeArg,
     ) -> Union[CustomRecognition.AnalyzeResult, Optional[RectType]]:
         try:
+            # ── 解析参数 ──────────────────────────────────────
+            node_name = self.DEFAULT_NODE
+            if argv.custom_recognition_param:
+                if isinstance(argv.custom_recognition_param, dict):
+                    param = argv.custom_recognition_param
+                else:
+                    try:
+                        param = json.loads(argv.custom_recognition_param)
+                    except (json.JSONDecodeError, TypeError):
+                        param = {}
+                node_name = param.get("node_name", self.DEFAULT_NODE)
+
             # ── 读取用户配置 ──────────────────────────────────
-            config_node = context.get_node_data("藏宝图配置节点")
+            config_node = context.get_node_data(node_name)
             attach = config_node.get("attach", {}) if config_node else {}
 
             if not attach:
-                logger.warning("藏宝图品质和属性均符合: attach 为空，无任何组合可选")
+                logger.warning(f"品质属性检查: {node_name}.attach 为空，无任何组合可选")
                 return None
 
             # ── 截图 ──────────────────────────────────────────
@@ -102,13 +120,9 @@ class TreasureMapQualityAttributeCheck(CustomRecognition):
 
             # ── 校验组合是否在 attach 中 ───────────────────────
             combined = f"{best_quality}{best_attr}"
-            logger.info(
-                f"已进入藏宝图:  {combined}"
-                f"（品质={best_quality} ,"
-                f" 属性={best_attr}）"
-            )
+            logger.info(f"已进入藏宝图:  {combined}")
             if combined in attach:
-                logger.info(f"藏宝图: {combined} 在选择的组合中")
+                logger.info(f"{combined} 在选择的组合中")
                 return CustomRecognition.AnalyzeResult(
                     box=[0, 0, 0, 0],
                     detail={
