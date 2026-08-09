@@ -89,7 +89,7 @@
         {
             "name": "藏宝图",
             "entry": "藏宝图entry",
-            "description": "<span style=\"color:deepskyblue;font-size:15px\">藏宝图每日任务正在制作中QWQ</span>",
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">未编写停止逻辑，请刷取够后自行停止</span>",
             "option": [
                 "神品藏宝图",
                 "绝品藏宝图",
@@ -103,6 +103,7 @@
         {
             "name": "每日藏宝图",
             "entry": "每日藏宝图entry",
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">任务 <strong>清完每日次数<strong> 是刷别人的，需要至少勾选一个绝品，一个珍品，一个凡品</span>",
             "option": [
                 "每日清自己的藏宝图",
                 "每日清完每日次数"
