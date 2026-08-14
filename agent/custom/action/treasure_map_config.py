@@ -16,6 +16,8 @@ class ApplyTreasureMapConfig(CustomAction):
         source  (str): 读取 attach 的来源节点名，默认 "刷别人的藏宝图"
         targets (list[str]): 写入 expected 的目标节点名列表,
                              默认 ["藏宝图上层识别到目标藏宝图", "藏宝图下层识别到目标藏宝图"]
+        space_between_quality_attr (bool): 为 True 时，expected 同时包含带空格与不带空格两种形式；
+                             日志始终打印不带空格形式；默认 False（仅不带空格）
 
     attach key 格式: "{品质}{属性}"，如 "神品云之国"。
     多个 checkbox 勾选会通过 dict merge 合并到同一个 attach 中。
@@ -38,6 +40,7 @@ class ApplyTreasureMapConfig(CustomAction):
         # ── 解析参数 ──────────────────────────────────────────
         source = self.DEFAULT_SOURCE
         targets = self.DEFAULT_TARGETS
+        space_between_quality_attr = False
 
         if argv.custom_action_param:
             if isinstance(argv.custom_action_param, dict):
@@ -51,6 +54,9 @@ class ApplyTreasureMapConfig(CustomAction):
             if param:
                 source = param.get("source", self.DEFAULT_SOURCE)
                 targets = param.get("targets", self.DEFAULT_TARGETS)
+                space_between_quality_attr = param.get(
+                    "space_between_quality_attr", False
+                )
 
         # ── 读取来源节点 ─────────────────────────────────────
         config_node = context.get_node_data(source)
@@ -88,7 +94,13 @@ class ApplyTreasureMapConfig(CustomAction):
                 self.ATTRIBUTES.index(x[1]),
             )
         )
-        map_expected = [f"{q}{a}" for q, a in parsed]
+        plain_expected = [f"{q}{a}" for q, a in parsed]
+        spaced_expected = [f"{q} {a}" for q, a in parsed]
+        map_expected = (
+            plain_expected + spaced_expected
+            if space_between_quality_attr
+            else plain_expected
+        )
 
         # ── 写入各目标节点 expected ────────────────────────────
         override = {}
@@ -99,7 +111,7 @@ class ApplyTreasureMapConfig(CustomAction):
             logger.error(f"override_pipeline 失败 ({source})")
             return CustomAction.RunResult(success=False)
 
-        logger.info(f"{source}: {len(parsed)} 个组合 {map_expected}")
+        logger.info(f"{source}: {len(parsed)} 个组合 {plain_expected}")
         return CustomAction.RunResult(success=True)
 
 

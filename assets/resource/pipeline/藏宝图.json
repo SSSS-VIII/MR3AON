@@ -732,7 +732,8 @@
                     "source": "清自己藏宝图",
                     "targets": [
                         "清自己藏宝图点击目标藏宝图"
-                    ]
+                    ],
+                    "space_between_quality_attr": true
                 }
             }
         },
