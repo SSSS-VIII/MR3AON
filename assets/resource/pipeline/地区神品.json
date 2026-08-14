@@ -1,0 +1,979 @@
+{
+    "地区神品entry": {
+        "next": [
+            "[JumpBack]地区神品entry入口",
+            "地区神品任务出错"
+        ]
+    },
+    "地区神品entry入口": {
+        "max_hit": 3,
+        "next": [
+            "重置地区神品内部节点计数器"
+        ]
+    },
+    "地区神品任务出错": {
+        "focus": "任务出错：地区神品❌"
+    },
+    "地区神品地区神品页面": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 20000,
+        "rate_limit": 0,
+        "next": [
+            "[JumpBack]地区神品识别到神品",
+            "[JumpBack]地区神品仍在聊天页",
+            "地区神品识别到准备",
+            "[JumpBack]地区神品关闭个人信息",
+            "[JumpBack]地区神品关闭邀请好友",
+            "[JumpBack]地区神品误入小队",
+            "[JumpBack]地区神品误入剑忍",
+            "[JumpBack]地区神品误入武器",
+            "[JumpBack]地区神品点击底部悬赏令聊天消息"
+        ],
+        "on_error": [
+            "任意位置开始刷地区神品"
+        ]
+    },
+    "地区神品地区页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    774,
+                    192,
+                    143,
+                    57
+                ],
+                "expected": [
+                    "筛选"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]地区神品筛选关闭3v3",
+            "[JumpBack]地区神品筛选打开活动玩法",
+            "地区神品地区神品页面"
+        ]
+    },
+    "地区神品展开筛选": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    700,
+                    159,
+                    143,
+                    130
+                ],
+                "template": [
+                    "地区筛选图标.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": {
+            "time": 300,
+            "target": [
+                741,
+                225,
+                519,
+                471
+            ],
+            "threshold": 0.8
+        },
+        "next": [
+            "地区神品地区页面",
+            "地区神品展开筛选"
+        ]
+    },
+    "地区神品点击地区": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    15,
+                    14,
+                    133,
+                    59
+                ],
+                "expected": [
+                    "私聊"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    528,
+                    -7,
+                    37,
+                    10
+                ]
+            }
+        },
+        "next": [
+            "地区神品地区页面",
+            "地区神品展开筛选",
+            "地区神品点击地区"
+        ]
+    },
+    "地区神品点到了个人信息": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    57,
+                    33,
+                    255,
+                    127
+                ],
+                "expected": [
+                    "个人信息"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1269,
+                    366,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 1000
+    },
+    "地区神品确认在主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    500,
+                    712
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true,
+                "threshold": [
+                    0.78
+                ]
+            }
+        },
+        "next": [
+            "任意位置开始刷地区神品"
+        ]
+    },
+    "地区神品筛选关闭3v3": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    698,
+                    209,
+                    120,
+                    90
+                ],
+                "template": [
+                    "筛选按钮开.png"
+                ],
+                "threshold": [
+                    0.8
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 600
+    },
+    "地区神品识别并点击聊天": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    149,
+                    400,
+                    449
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true,
+                "threshold": [
+                    0.78
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "地区神品点击地区",
+            "地区神品识别并点击聊天"
+        ]
+    },
+    "任意位置开始刷地区神品": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "地区神品识别并点击聊天",
+            "[JumpBack]back"
+        ]
+    },
+    "重置地区神品内部节点计数器": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount"
+            }
+        },
+        "next": [
+            "地区神品确认在主页面",
+            "[JumpBack]back"
+        ]
+    },
+    "地区神品筛选打开活动玩法": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    708,
+                    288,
+                    115,
+                    94
+                ],
+                "template": [
+                    "筛选按钮关.png"
+                ],
+                "threshold": [
+                    0.8
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 600
+    },
+    "地区神品识别到神品": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    444,
+                    121,
+                    180,
+                    388
+                ],
+                "expected": [
+                    "^神品"
+                ],
+                "order_by": "Vertical",
+                "index": -1
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    -28,
+                    144,
+                    0,
+                    0
+                ]
+            }
+        },
+        "repeat": 2,
+        "repeat_delay": 80,
+        "post_delay": 0,
+        "next": [
+            "地区神品点击神品下方的加入队伍",
+            "地区神品神品下方无加入队伍"
+        ]
+    },
+    "地区神品误入小队": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1033,
+                    631,
+                    213,
+                    86
+                ],
+                "expected": [
+                    "^一键上阵$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    36,
+                    29,
+                    24,
+                    20
+                ]
+            }
+        },
+        "post_delay": 1000
+    },
+    "地区神品点击神品下方的加入队伍": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "地区神品识别到神品",
+                "roi_offset": [
+                    -52,
+                    117,
+                    94,
+                    60
+                ],
+                "expected": [
+                    "加入队伍"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "repeat": 4,
+        "repeat_delay": 80,
+        "post_delay": 0
+    },
+    "地区神品误入武器": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    925,
+                    2,
+                    343,
+                    123
+                ],
+                "expected": [
+                    "^图鉴$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    36,
+                    29,
+                    24,
+                    20
+                ]
+            }
+        },
+        "post_delay": 1000
+    },
+    "地区神品误入剑忍": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    11,
+                    568,
+                    314,
+                    144
+                ],
+                "expected": [
+                    "^查看支援忍者$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    36,
+                    29,
+                    24,
+                    20
+                ]
+            }
+        },
+        "post_delay": 1000
+    },
+    "地区神品识别到准备": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    980,
+                    584,
+                    280,
+                    131
+                ],
+                "template": [
+                    "准备.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]地区神品关闭个人信息",
+            "[JumpBack]地区神品关闭邀请好友",
+            "地区神品藏宝图检查品质",
+            "地区神品检查神品未识别到神品"
+        ]
+    },
+    "地区神品点击底部悬赏令聊天消息": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    70,
+                    601,
+                    300,
+                    54
+                ],
+                "expected": [
+                    "悬赏令",
+                    "表情",
+                    "组队",
+                    "首领",
+                    "邀请"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    150,
+                    0,
+                    0,
+                    0
+                ]
+            }
+        }
+    },
+    "地区神品藏宝图检查品质": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    77,
+                    14,
+                    87,
+                    72
+                ],
+                "template": [
+                    "藏宝图神品.png"
+                ],
+                "threshold": [
+                    0.75
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "focus": "地区神品：已进入神品藏宝图",
+        "next": [
+            "地区神品点击准备按钮",
+            "地区神品点击准备按钮后"
+        ]
+    },
+    "地区神品检查神品未识别到神品": {
+        "next": [
+            "[JumpBack]地区神品关闭个人信息",
+            "[JumpBack]地区神品关闭邀请好友",
+            "地区神品藏宝图检查品质",
+            "地区神品retry"
+        ]
+    },
+    "地区神品retry": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "任意位置开始刷地区神品"
+        ]
+    },
+    "地区神品关闭个人信息": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    283,
+                    51,
+                    193,
+                    73
+                ],
+                "expected": [
+                    "搭配"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    181,
+                    26,
+                    92,
+                    16
+                ]
+            }
+        },
+        "post_delay": 800
+    },
+    "地区神品关闭邀请好友": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    810,
+                    12,
+                    303,
+                    82
+                ],
+                "expected": [
+                    "好友"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    181,
+                    26,
+                    92,
+                    16
+                ]
+            }
+        },
+        "post_delay": 800
+    },
+    "地区神品点击准备按钮": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    987,
+                    607,
+                    271,
+                    106
+                ],
+                "expected": [
+                    "^准备$"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000,
+        "timeout": 120000,
+        "next": [
+            "地区神品点击准备按钮后"
+        ]
+    },
+    "地区神品再次发现boss": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    600,
+                    0,
+                    150,
+                    78
+                ],
+                "expected": [
+                    "\\d\\d"
+                ]
+            }
+        },
+        "next": [
+            "bossfight"
+        ]
+    },
+    "地区神品再次点击准备按钮": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    987,
+                    607,
+                    271,
+                    106
+                ],
+                "expected": [
+                    "^准备$"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 2000
+    },
+    "地区神品卡牌商店卡牌0": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    509,
+                    5,
+                    257,
+                    97
+                ],
+                "expected": [
+                    "卡片商店"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    240,
+                    287,
+                    101,
+                    36
+                ]
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "地区神品卡牌商店卡牌1",
+            "地区神品卡牌商店无卡牌"
+        ]
+    },
+    "地区神品卡牌商店卡牌1": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    509,
+                    5,
+                    257,
+                    97
+                ],
+                "expected": [
+                    "卡片商店"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    454,
+                    284,
+                    75,
+                    29
+                ]
+            }
+        },
+        "next": [
+            "地区神品卡牌商店卡牌2",
+            "地区神品卡牌商店无卡牌"
+        ]
+    },
+    "地区神品卡牌商店卡牌2": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    509,
+                    5,
+                    257,
+                    97
+                ],
+                "expected": [
+                    "卡片商店"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    678,
+                    282,
+                    76,
+                    35
+                ]
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "地区神品卡牌商店卡牌3",
+            "地区神品卡牌商店无卡牌"
+        ]
+    },
+    "地区神品卡牌商店卡牌3": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    911,
+                    280,
+                    77,
+                    33
+                ],
+                "expected": [
+                    "卡片商店"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    911,
+                    280,
+                    75,
+                    30
+                ]
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "地区神品卡牌商店无卡牌"
+        ]
+    },
+    "地区神品卡牌商店无卡牌": {
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "地区神品点击准备按钮后": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 120000,
+        "next": [
+            "[JumpBack]地区神品再次点击准备按钮",
+            "地区神品识别到进入了战斗",
+            "地区神品进入战斗后回到藏宝图页面"
+        ]
+    },
+    "地区神品结算确定": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    415,
+                    447,
+                    811,
+                    250
+                ],
+                "expected": [
+                    "确定|下一页"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000
+    },
+    "地区神品识别到进入了战斗": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 600000,
+        "next": [
+            "[JumpBack]地区神品调用fight",
+            "[JumpBack]地区神品结算确定",
+            "[JumpBack]地区神品卡牌商店卡牌0",
+            "[JumpBack]地区神品点到了个人信息",
+            "地区神品进入战斗后回到藏宝图页面",
+            "[JumpBack]地区神品再次发现boss",
+            "地区神品进入战斗后回到队伍页面",
+            "地区神品进入战斗后回到了主页面"
+        ]
+    },
+    "地区神品调用fight": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]地区神品降低fight识别速度",
+            "fight"
+        ]
+    },
+    "地区神品进入战斗后回到藏宝图页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1022,
+                    616,
+                    242,
+                    93
+                ],
+                "expected": [
+                    "^助力次数"
+                ]
+            }
+        },
+        "next": [
+            "任意位置开始刷地区神品"
+        ]
+    },
+    "地区神品降低fight识别速度": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "post_delay": 2000
+    },
+    "地区神品仍在聊天页": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    532,
+                    644,
+                    194,
+                    72
+                ],
+                "expected": [
+                    "^发送$"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "地区神品识别到神品",
+            "地区神品神秘优化0"
+        ]
+    },
+    "地区神品神秘优化0": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "地区神品识别到神品",
+            "地区神品神秘优化1"
+        ]
+    },
+    "地区神品神品下方无加入队伍": {
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "地区神品神秘优化1": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "地区神品识别到神品",
+            "地区神品神秘优化2"
+        ]
+    },
+    "地区神品神秘优化2": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "地区神品神秘优化3",
+            "地区神品识别到神品"
+        ]
+    },
+    "地区神品神秘优化3": {
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "地区神品进入战斗后回到队伍页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    987,
+                    607,
+                    271,
+                    106
+                ],
+                "expected": [
+                    "^准备$"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 2000
+    },
+    "地区神品进入战斗后回到了主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    500,
+                    712
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true,
+                "threshold": [
+                    0.82
+                ]
+            }
+        },
+        "next": [
+            "任意位置开始刷地区神品"
+        ]
+    }
+}

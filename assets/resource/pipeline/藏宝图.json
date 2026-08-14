@@ -1,4 +1,10 @@
 {
+    "地区神品特化": {
+        "enabled": false,
+        "next": [
+            "地区神品entry"
+        ]
+    },
     "任意位置开始清自己的藏宝图": {
         "pre_delay": 0,
         "post_delay": 0,
@@ -730,10 +736,10 @@
                 "custom_action": "ApplyTreasureMapConfig",
                 "custom_action_param": {
                     "source": "清自己藏宝图",
+                    "space_between_quality_attr": true,
                     "targets": [
                         "清自己藏宝图点击目标藏宝图"
-                    ],
-                    "space_between_quality_attr": true
+                    ]
                 }
             }
         },
@@ -972,6 +978,7 @@
     "藏宝图entry": {
         "max_hit": 1,
         "next": [
+            "地区神品特化",
             "刷别人的藏宝图"
         ]
     },

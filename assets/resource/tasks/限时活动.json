@@ -91,10 +91,7 @@
             "entry": "藏宝图entry",
             "description": "<span style=\"color:deepskyblue;font-size:15px\">未编写停止逻辑，请刷取够后自行停止</span>",
             "option": [
-                "神品藏宝图",
-                "绝品藏宝图",
-                "珍品藏宝图",
-                "凡品藏宝图"
+                "刷取位置"
             ],
             "group": [
                 "限时活动"
@@ -703,6 +700,36 @@
                         },
                         "寻宝大冒险下一关": {
                             "max_hit": 22
+                        }
+                    }
+                }
+            ]
+        },
+        "刷取位置": {
+            "type": "select",
+            "label": "刷取位置",
+            "default_case": "寻宝助力页面",
+            "cases": [
+                {
+                    "name": "寻宝助力页面",
+                    "option": [
+                        "神品藏宝图",
+                        "绝品藏宝图",
+                        "珍品藏宝图",
+                        "凡品藏宝图"
+                    ],
+                    "pipeline_override": {
+                        "地区神品特化": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "地区页面",
+                    "description": "仅能刷神品",
+                    "pipeline_override": {
+                        "地区神品特化": {
+                            "enabled": true
                         }
                     }
                 }
