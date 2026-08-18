@@ -97,6 +97,13 @@
             ]
         },
         {
+            "name": "决胜狭路",
+            "entry": "决胜狭路entry",
+            "group": [
+                "daily"
+            ]
+        },
+        {
             "name": "3v3（仅支持困难图）",
             "entry": "3v3entry",
             "group": [
