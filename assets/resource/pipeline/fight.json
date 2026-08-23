@@ -153,7 +153,7 @@
         ]
     },
     "fight": {
-        "timeout": 120000,
+        "timeout": 40000,
         "rate_limit": 200,
         "next": [
             "发现下滑按钮_cm",
@@ -606,20 +606,6 @@
             "fight_A_boss_delay"
         ]
     },
-    "青炎剑80delay": {
-        "pre_delay": 0,
-        "post_delay": 3700,
-        "next": [
-            "用户配置延迟"
-        ]
-    },
-    "鬼头陀80delay": {
-        "pre_delay": 0,
-        "post_delay": 8600,
-        "next": [
-            "用户配置延迟"
-        ]
-    },
     "重新识别到boss存活_cm": {
         "recognition": {
             "type": "OCR",
@@ -641,6 +627,20 @@
         "post_delay": 0,
         "next": [
             "bossfight"
+        ]
+    },
+    "青炎剑80delay": {
+        "pre_delay": 0,
+        "post_delay": 3700,
+        "next": [
+            "用户配置延迟"
+        ]
+    },
+    "鬼头陀80delay": {
+        "pre_delay": 0,
+        "post_delay": 8600,
+        "next": [
+            "用户配置延迟"
         ]
     }
 }
