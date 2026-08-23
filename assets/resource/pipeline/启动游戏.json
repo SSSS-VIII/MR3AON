@@ -1,120 +1,4 @@
 {
-    "切换区左滑": {
-        "pre_delay": 0,
-        "action": {
-            "type": "Swipe",
-            "param": {
-                "begin": [
-                    500,
-                    360,
-                    1,
-                    1
-                ],
-                "end": [
-                    [
-                        900,
-                        365,
-                        1,
-                        1
-                    ]
-                ],
-                "end_hold": [
-                    400
-                ]
-            }
-        },
-        "post_delay": 600,
-        "next": [
-            "使能节点切换区右滑"
-        ]
-    },
-    "使能节点切换区左滑": {
-        "pre_delay": 0,
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "EnableNode",
-                "custom_action_param": {
-                    "node_name": "切换区左滑"
-                }
-            }
-        },
-        "post_delay": 0,
-        "next": [
-            "关闭节点切换区右滑"
-        ]
-    },
-    "使能节点切换区右滑": {
-        "pre_delay": 0,
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "EnableNode",
-                "custom_action_param": {
-                    "node_name": "切换区右滑"
-                }
-            }
-        },
-        "post_delay": 0,
-        "next": [
-            "关闭节点切换区左滑"
-        ]
-    },
-    "关闭节点切换区右滑": {
-        "pre_delay": 0,
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "DisableNode",
-                "custom_action_param": {
-                    "node_name": "切换区右滑"
-                }
-            }
-        },
-        "post_delay": 0
-    },
-    "关闭节点切换区左滑": {
-        "pre_delay": 0,
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "DisableNode",
-                "custom_action_param": {
-                    "node_name": "切换区左滑"
-                }
-            }
-        },
-        "post_delay": 0
-    },
-    "切换区右滑": {
-        "pre_delay": 0,
-        "action": {
-            "type": "Swipe",
-            "param": {
-                "begin": [
-                    900,
-                    365,
-                    1,
-                    1
-                ],
-                "end": [
-                    [
-                        500,
-                        360,
-                        1,
-                        1
-                    ]
-                ],
-                "end_hold": [
-                    400
-                ]
-            }
-        },
-        "post_delay": 600,
-        "next": [
-            "使能节点切换区左滑"
-        ]
-    },
     "上层没有勾勾则点左上角": {
         "action": {
             "type": "Click",
@@ -152,6 +36,38 @@
             }
         }
     },
+    "使能节点切换区右滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "切换区右滑"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "关闭节点切换区左滑"
+        ]
+    },
+    "使能节点切换区左滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "切换区左滑"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "关闭节点切换区右滑"
+        ]
+    },
     "关闭启动应用节点": {
         "pre_delay": 0,
         "action": {
@@ -160,6 +76,32 @@
                 "custom_action": "DisableNode",
                 "custom_action_param": {
                     "node_name": "启动应用"
+                }
+            }
+        },
+        "post_delay": 0
+    },
+    "关闭节点切换区右滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "切换区右滑"
+                }
+            }
+        },
+        "post_delay": 0
+    },
+    "关闭节点切换区左滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "切换区左滑"
                 }
             }
         },
@@ -240,6 +182,84 @@
             }
         }
     },
+    "切换区右滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    900,
+                    365,
+                    1,
+                    1
+                ],
+                "end": [
+                    [
+                        500,
+                        360,
+                        1,
+                        1
+                    ]
+                ],
+                "end_hold": [
+                    400
+                ]
+            }
+        },
+        "post_delay": 600,
+        "next": [
+            "使能节点切换区左滑"
+        ]
+    },
+    "切换区左滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    500,
+                    360,
+                    1,
+                    1
+                ],
+                "end": [
+                    [
+                        900,
+                        365,
+                        1,
+                        1
+                    ]
+                ],
+                "end_hold": [
+                    400
+                ]
+            }
+        },
+        "post_delay": 600,
+        "next": [
+            "使能节点切换区右滑"
+        ]
+    },
+    "切换区时未识别到目标区": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    479,
+                    163,
+                    305,
+                    136
+                ],
+                "expected": [
+                    "选择区服"
+                ]
+            }
+        },
+        "next": [
+            "切换区右滑",
+            "切换区左滑"
+        ]
+    },
     "勾选屏蔽": {
         "recognition": {
             "type": "OCR",
@@ -301,9 +321,10 @@
             "关闭启动应用节点"
         ]
     },
-    "启动成功": {},
     "启动流程": {
-        "timeout": 90000,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 360000,
         "next": [
             "启动应用",
             "识别登录",
@@ -320,12 +341,14 @@
             "处理登录活动弹窗",
             "启动游戏点击主页设置",
             "启动游戏识别到主页设置"
+        ],
+        "on_error": [
+            "启动游戏失败"
         ]
     },
     "启动游戏entry": {
         "next": [
-            "[JumpBack]启动流程",
-            "启动成功"
+            "[JumpBack]启动流程"
         ]
     },
     "启动游戏到了主页面": {
@@ -1090,24 +1113,39 @@
             "没有确认更新的确定按钮"
         ]
     },
-    "切换区时未识别到目标区": {
-        "recognition": {
-            "type": "OCR",
+    "启动游戏失败": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
             "param": {
-                "roi": [
-                    479,
-                    163,
-                    305,
-                    136
-                ],
-                "expected": [
-                    "选择区服"
-                ]
+                "custom_action": "ClearMaxHit",
+                "custom_action_param": {
+                    "node_name": "启动游戏失败调用关闭游戏"
+                }
             }
         },
+        "post_delay": 0,
+        "focus": "6分钟内启动游戏失败，尝试关闭游戏",
         "next": [
-            "切换区右滑",
-            "切换区左滑"
+            "[JumpBack]启动游戏失败调用关闭游戏",
+            "启动流程"
+        ]
+    },
+    "启动游戏失败调用关闭游戏": {
+        "max_hit": 1,
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "启动应用"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "启动游戏失败时关闭游戏"
         ]
     }
 }

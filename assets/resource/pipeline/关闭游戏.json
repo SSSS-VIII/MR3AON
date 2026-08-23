@@ -1,38 +1,138 @@
 {
-    "关闭游戏直接关闭游戏": {
-        "enabled": false,
+    "启动游戏失败时关闭游戏": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "next": [
-            "开始关闭游戏"
+            "使能关闭vivo服"
         ]
     },
-    "关闭游戏返回主页面": {
-        "recognition": {
-            "type": "TemplateMatch",
+    "使能关闭4399服": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
             "param": {
-                "roi": [
-                    0,
-                    0,
-                    500,
-                    712
-                ],
-                "template": [
-                    "主页面.png"
-                ],
-                "green_mask": true
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "关闭4399服"
+                }
             }
         },
+        "post_delay": 0,
+        "next": [
+            "使能关闭官服"
+        ]
+    },
+    "使能关闭9游服": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "关闭9游服"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "使能关闭华为服"
+        ]
+    },
+    "使能关闭b服": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "关闭b服"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "使能关闭oppo服"
+        ]
+    },
+    "使能关闭oppo服": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "关闭oppo服"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "使能关闭9游服"
+        ]
+    },
+    "使能关闭vivo服": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "关闭vivo服"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "使能关闭b服"
+        ]
+    },
+    "使能关闭华为服": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "关闭华为服"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "使能关闭小米服"
+        ]
+    },
+    "使能关闭官服": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "关闭官服"
+                }
+            }
+        },
+        "post_delay": 0,
         "next": [
             "开始关闭游戏"
         ]
     },
-    "关闭游戏取消屏蔽成功": {
+    "使能关闭小米服": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "关闭小米服"
+                }
+            }
+        },
+        "post_delay": 0,
         "next": [
-            "关闭游戏返回主页面",
-            "[JumpBack]back"
+            "使能关闭4399服"
         ]
-    },
-    "关闭游戏完成": {
-        "focus": "任务完成：关闭游戏✅"
     },
     "关闭4399服": {
         "pre_delay": 0,
@@ -242,11 +342,26 @@
         },
         "post_delay": 0
     },
+    "关闭游戏entry": {
+        "next": [
+            "关闭游戏直接关闭游戏",
+            "关闭游戏处理取消屏蔽邀请"
+        ]
+    },
+    "关闭游戏取消屏蔽成功": {
+        "next": [
+            "关闭游戏返回主页面",
+            "[JumpBack]back"
+        ]
+    },
     "关闭游戏处理取消屏蔽邀请": {
         "next": [
             "关闭游戏检查主页面",
             "[JumpBack]back"
         ]
+    },
+    "关闭游戏完成": {
+        "focus": "任务完成：关闭游戏✅"
     },
     "关闭游戏屏蔽所有组队邀请": {
         "recognition": {
@@ -314,6 +429,12 @@
             "[JumpBack]关闭游戏打开设置"
         ]
     },
+    "关闭游戏直接关闭游戏": {
+        "enabled": false,
+        "next": [
+            "开始关闭游戏"
+        ]
+    },
     "关闭游戏设置页面上滑": {
         "recognition": {
             "type": "OCR",
@@ -348,6 +469,26 @@
                 ]
             }
         }
+    },
+    "关闭游戏返回主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    500,
+                    712
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "next": [
+            "开始关闭游戏"
+        ]
     },
     "开始关闭游戏": {
         "pre_delay": 0,
@@ -385,11 +526,5 @@
             "type": "Click"
         },
         "post_wait_freezes": 500
-    },
-    "关闭游戏entry": {
-        "next": [
-            "关闭游戏直接关闭游戏",
-            "关闭游戏处理取消屏蔽邀请"
-        ]
     }
 }
