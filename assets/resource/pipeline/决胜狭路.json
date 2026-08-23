@@ -208,7 +208,8 @@
                 ],
                 "expected": [
                     "开始挑战",
-                    "活动开始时间"
+                    "活动开始时间",
+                    "选择初始天赋"
                 ]
             }
         },
@@ -236,9 +237,12 @@
             "[JumpBack]决胜狭路点击选择卡牌",
             "[JumpBack]决胜狭路等待进入战斗",
             "[JumpBack]决胜狭路点击确定",
+            "[JumpBack]决胜狭路识别到开始挑战_副本1",
             "[JumpBack]决胜狭路识别到开始挑战",
             "决胜狭路不在活动时间内",
-            "[JumpBack]决胜狭路识别到进入战斗"
+            "[JumpBack]决胜狭路识别到进入战斗",
+            "[JumpBack]决胜狭路战斗结束点击跳过",
+            "[JumpBack]决胜狭路战斗结束等待对方结束中"
         ]
     },
     "决胜狭路识别到开始挑战": {
@@ -259,23 +263,24 @@
         "pre_delay": 0,
         "post_delay": 0,
         "next": [
+            "[JumpBack]决胜狭路点击选择卡牌",
             "决胜狭路点开了任务0",
-            "[JumpBack]决胜狭路点击任务",
-            "决胜狭路点开了任务1"
+            "决胜狭路点开了任务1",
+            "[JumpBack]决胜狭路点击任务"
         ]
     },
     "决胜狭路点击任务": {
         "recognition": {
-            "type": "OCR",
+            "type": "TemplateMatch",
             "param": {
                 "roi": [
                     740,
-                    3,
+                    0,
                     525,
                     111
                 ],
-                "expected": [
-                    "^任务$"
+                "template": [
+                    "决胜狭路任务.png"
                 ]
             }
         },
@@ -334,8 +339,7 @@
                     176
                 ],
                 "template": [
-                    "决胜狭路亮色宝箱.png",
-                    "决胜狭路暗色宝箱.png"
+                    "决胜狭路亮色宝箱.png"
                 ]
             }
         },
@@ -344,7 +348,7 @@
             "param": {
                 "custom_action": "ClickFilteredResults",
                 "custom_action_param": {
-                    "delay_ms": 200
+                    "delay_ms": 800
                 }
             }
         },
@@ -389,8 +393,7 @@
                     176
                 ],
                 "template": [
-                    "决胜狭路亮色宝箱.png",
-                    "决胜狭路暗色宝箱.png"
+                    "决胜狭路亮色宝箱.png"
                 ]
             }
         },
@@ -399,7 +402,7 @@
             "param": {
                 "custom_action": "ClickFilteredResults",
                 "custom_action_param": {
-                    "delay_ms": 200
+                    "delay_ms": 800
                 }
             }
         },
@@ -580,7 +583,8 @@
                 ],
                 "expected": [
                     "继续",
-                    "确定"
+                    "确定",
+                    "下一步"
                 ]
             }
         },
@@ -590,22 +594,22 @@
     },
     "决胜狭路识别到进入战斗": {
         "recognition": {
-            "type": "OCR",
+            "type": "TemplateMatch",
             "param": {
                 "roi": [
-                    164,
+                    374,
                     238,
-                    980,
+                    500,
                     300
                 ],
-                "expected": [
-                    "\\d%"
+                "template": [
+                    "决胜狭路对决.png"
                 ]
             }
         },
-        "timeout": 120000,
         "next": [
-            "决胜狭路发现boss_cm"
+            "[JumpBack]决胜狭路识别到进入战斗降低fight识别速度",
+            "fight"
         ]
     },
     "决胜狭路不在活动时间内": {
@@ -634,10 +638,10 @@
             "type": "OCR",
             "param": {
                 "roi": [
-                    132,
-                    216,
-                    1101,
-                    332
+                    70,
+                    173,
+                    1122,
+                    452
                 ],
                 "expected": [
                     "^选择$"
@@ -649,39 +653,80 @@
             "type": "Click"
         }
     },
-    "决胜狭路发现boss_cm": {
+    "决胜狭路识别到开始挑战_副本1": {
         "recognition": {
             "type": "OCR",
             "param": {
                 "roi": [
-                    780,
-                    43,
-                    112,
-                    55
+                    995,
+                    549,
+                    280,
+                    164
                 ],
                 "expected": [
-                    "×\\d",
-                    "x\\d",
-                    "X\\d"
+                    "选择初始天赋"
                 ]
             }
         },
-        "pre_delay": 0,
         "action": {
-            "type": "Click",
+            "type": "Click"
+        }
+    },
+    "决胜狭路识别到进入战斗降低fight识别速度": {
+        "recognition": {
+            "type": "TemplateMatch",
             "param": {
-                "target": [
-                    52,
-                    315,
-                    61,
-                    58
+                "roi": [
+                    374,
+                    238,
+                    500,
+                    300
+                ],
+                "template": [
+                    "决胜狭路对决.png"
                 ]
             }
         },
-        "post_delay": 0,
-        "rate_limit": 100,
-        "next": [
-            "bossfight"
-        ]
+        "post_delay": 2000
+    },
+    "决胜狭路战斗结束点击跳过": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    487,
+                    613,
+                    301,
+                    108
+                ],
+                "expected": [
+                    "^跳过$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 400
+    },
+    "决胜狭路战斗结束等待对方结束中": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    395,
+                    552,
+                    492,
+                    167
+                ],
+                "expected": [
+                    "等待对方结束中"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 2000
     }
 }
