@@ -45,7 +45,7 @@
     ],
     "task": [],
     "import": [
-        "resource/tasks/preset/日常预设.json",
+        "resource/tasks/preset/日常任务.json",
         "resource/tasks/preset/常驻任务.json",
         "resource/tasks/preset/限时活动.json",
         "resource/tasks/日常任务.json",
