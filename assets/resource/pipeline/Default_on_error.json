@@ -1,3 +1,7 @@
 {
-    "Default_on_error": {}
+    "Default_on_error": {
+        "next": [
+            "back"
+        ]
+    }
 }

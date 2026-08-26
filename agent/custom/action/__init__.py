@@ -17,6 +17,8 @@ __all__ = [
     "LoopDeadlineReset",
     "DisableNode",
     "EnableNode",
+    "RestartGame",
+    "RetryCurrentTaskAtHome",
     "NodeOverride",
     "LandladyQaLearnAnswer",
     "ResetCount",

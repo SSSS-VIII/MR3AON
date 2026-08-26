@@ -58,6 +58,44 @@ def _run_set_node_enabled(
     return CustomAction.RunResult(success=True)
 
 
+def _get_start_app_package(context: Context) -> Optional[str]:
+    """读取启动游戏节点在当前任务配置下最终生效的包名。"""
+    node_data = context.get_node_data("启动应用")
+    if not isinstance(node_data, dict):
+        return None
+
+    action = node_data.get("action")
+    if not isinstance(action, dict):
+        return None
+
+    param = action.get("param")
+    if isinstance(param, dict):
+        package = param.get("package")
+        if isinstance(package, str) and package.strip():
+            return package.strip()
+
+    package = action.get("package")
+    if isinstance(package, str) and package.strip():
+        return package.strip()
+    return None
+
+
+def _is_global_error_back_path(context: Context) -> bool:
+    """判断当前 back 调用是否来自默认错误处理，而不是普通 JumpBack。"""
+    try:
+        detail = context.get_task_job().get()
+        names = [node.name for node in detail.nodes]
+    except (AttributeError, RuntimeError, ValueError):
+        return False
+
+    try:
+        last_back = max(index for index, name in enumerate(names) if name == "back")
+    except ValueError:
+        return False
+
+    return last_back > 0 and names[last_back - 1] == "Default_on_error"
+
+
 def _box_to_center(box: object) -> Optional[Tuple[int, int]]:
     """将 box 转为中心点坐标；部分路径下 box 为 list / dict 而非 Rect。"""
     if box is None:
@@ -153,6 +191,71 @@ class EnableNode(CustomAction):
         argv: CustomAction.RunArg,
     ) -> CustomAction.RunResult:
         return _run_set_node_enabled(context, argv, True)
+
+
+@AgentServer.custom_action("RestartGame")
+class RestartGame(CustomAction):
+    """重启当前任务配置选择的游戏，并重新进入启动流程。"""
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
+        package = _get_start_app_package(context)
+        if not package:
+            logger.error("RestartGame: 无法读取启动应用的 package")
+            return CustomAction.RunResult(success=False)
+
+        controller = context.tasker.controller
+        try:
+            stop_job = controller.post_stop_app(package)
+            stop_job.wait()
+            if not stop_job.succeeded:
+                logger.warning(
+                    f"RestartGame: StopApp 未成功 (package={package!r})，继续尝试启动"
+                )
+
+            start_job = controller.post_start_app(package)
+            start_job.wait()
+            if not start_job.succeeded:
+                logger.error(f"RestartGame: StartApp 失败 (package={package!r})")
+                return CustomAction.RunResult(success=False)
+        except Exception as exc:
+            logger.exception(f"RestartGame: 执行失败 (package={package!r}): {exc}")
+            return CustomAction.RunResult(success=False)
+
+        logger.info(f"RestartGame: 已重启 {package!r}")
+        return CustomAction.RunResult(success=True)
+
+
+@AgentServer.custom_action("RetryCurrentTaskAtHome")
+class RetryCurrentTaskAtHome(CustomAction):
+    """全局错误回到主页后，接回当前 task 的入口重试。"""
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
+        if not _is_global_error_back_path(context):
+            return CustomAction.RunResult(success=True)
+
+        entry = argv.task_detail.entry
+        if not isinstance(entry, str) or not entry.strip():
+            logger.error("RetryCurrentTaskAtHome: 当前 task 没有有效入口")
+            return CustomAction.RunResult(success=False)
+
+        entry = entry.strip()
+        if not context.override_next("主页面检测_back", [entry]):
+            logger.error(
+                f"RetryCurrentTaskAtHome: 设置当前 task 入口失败 "
+                f"(entry={entry!r})"
+            )
+            return CustomAction.RunResult(success=False)
+
+        logger.info(f"RetryCurrentTaskAtHome: 回到当前 task 入口 {entry!r}")
+        return CustomAction.RunResult(success=True)
 
 
 @AgentServer.custom_action("NodeOverride")
