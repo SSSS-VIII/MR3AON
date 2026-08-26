@@ -23,10 +23,10 @@
         }
     ],
     "agent": {
-        "child_exec": "python",
+        "child_exec": "/home/linn/MR3A/.venv/bin/python",
         "child_args": [
             "-u",
-            "./../agent/main.py"
+            "../../agent/main.py"
         ]
     },
     "group": [

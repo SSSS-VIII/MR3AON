@@ -51,8 +51,7 @@
             }
         },
         "next": [
-            "点击请输入兑换码",
-            "没有输入兑换码选项"
+            "清空兑换码输入框"
         ]
     },
     "兑换码点击确定": {
@@ -246,9 +245,15 @@
             "兑换码点击设置"
         ]
     },
-    "没有输入兑换码选项": {
+    "清空兑换码输入框": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ClearInputTextCompat"
+            }
+        },
         "next": [
-            "兑换码点击确定"
+            "每周兑换码下载GameMeta"
         ]
     },
     "点击兑换码": {
@@ -285,28 +290,6 @@
             "点击兑换码"
         ]
     },
-    "点击请输入兑换码": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "roi": [
-                    422,
-                    285,
-                    474,
-                    116
-                ],
-                "expected": [
-                    "请输入兑换码"
-                ]
-            }
-        },
-        "action": {
-            "type": "Click"
-        },
-        "next": [
-            "每周兑换码下载GameMeta"
-        ]
-    },
     "获取兑换码": {
         "action": {
             "type": "Custom",
@@ -316,7 +299,7 @@
                     "overrides": {
                         "输入兑换码": {
                             "json_key": "每周兑换码",
-                            "set": "action.param.input_text"
+                            "set": "action.param.custom_action_param"
                         }
                     }
                 }
@@ -334,9 +317,10 @@
     },
     "输入兑换码": {
         "action": {
-            "type": "InputText",
+            "type": "Custom",
             "param": {
-                "input_text": ""
+                "custom_action": "InputTextCompat",
+                "custom_action_param": ""
             }
         },
         "next": [

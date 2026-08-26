@@ -6,10 +6,13 @@ from .loop_deadline import *
 from .my_3v3_kn_an_p1 import *
 from .sync_race_parkour import sync_race_parkour
 from .treasure_map_config import ApplyTreasureMapConfig, RemoveQualityFromAttach
+from .input_text_compat import ClearInputTextCompat, InputTextCompat
 
 __all__ = [
     "DownloadGameMeta",
     "LoadGameMetaOverride",
+    "InputTextCompat",
+    "ClearInputTextCompat",
     "LoopDeadlineArm",
     "LoopDeadlineReset",
     "DisableNode",
