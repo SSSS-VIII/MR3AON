@@ -766,8 +766,28 @@
                 ]
             }
         },
+        "rate_limit": 2000,
         "next": [
-            "[JumpBack]清自己藏宝图降低fight识别速度",
+            "清自己藏宝图等待进入战斗图标消失"
+        ]
+    },
+    "清自己藏宝图等待进入战斗图标消失": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "inverse": true,
+        "next": [
             "清自己藏宝图fight"
         ]
     },
@@ -878,23 +898,6 @@
                 }
             }
         }
-    },
-    "清自己藏宝图降低fight识别速度": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "roi": [
-                    10,
-                    560,
-                    162,
-                    159
-                ],
-                "template": [
-                    "进入战斗中.png"
-                ]
-            }
-        },
-        "post_delay": 2000
     },
     "清自己藏宝图集会所主页": {
         "recognition": {
@@ -2006,8 +2009,28 @@
                 ]
             }
         },
+        "rate_limit": 2000,
         "next": [
-            "[JumpBack]藏宝图降低fight识别速度",
+            "藏宝图等待进入战斗图标消失"
+        ]
+    },
+    "藏宝图等待进入战斗图标消失": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    10,
+                    560,
+                    162,
+                    159
+                ],
+                "template": [
+                    "进入战斗中.png"
+                ]
+            }
+        },
+        "inverse": true,
+        "next": [
             "fight"
         ]
     },
@@ -2075,23 +2098,6 @@
             "[JumpBack]藏宝图开始",
             "藏宝图任务出错"
         ]
-    },
-    "藏宝图降低fight识别速度": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "roi": [
-                    10,
-                    560,
-                    162,
-                    159
-                ],
-                "template": [
-                    "进入战斗中.png"
-                ]
-            }
-        },
-        "post_delay": 2000
     },
     "藏宝图集会所主页": {
         "recognition": {

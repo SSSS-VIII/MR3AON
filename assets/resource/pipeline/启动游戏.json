@@ -321,12 +321,29 @@
             "关闭启动应用节点"
         ]
     },
+    "记录启动应用包名": {
+        "max_hit": 1,
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "RememberGamePackage"
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "启动应用"
+        ],
+        "on_error": [
+            "终止任务队列"
+        ]
+    },
     "启动流程": {
         "pre_delay": 0,
         "post_delay": 0,
         "timeout": 360000,
         "next": [
-            "启动应用",
+            "记录启动应用包名",
             "识别登录",
             "关闭选择区服页面交给上层处理",
             "需要更新",

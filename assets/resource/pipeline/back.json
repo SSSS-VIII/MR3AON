@@ -6,17 +6,47 @@
                 "custom_action": "RestartGame"
             }
         },
-        "post_delay": 1500,
+        "post_delay": 0,
         "next": [
             "启动流程"
         ],
+        "on_error": [
+            "终止任务队列"
+        ]
+    },
+    "终止任务队列": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "AbortTasker"
+            }
+        },
+        "post_delay": 0,
+        "next": [],
         "on_error": []
+    },
+    "全局错误恢复": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 30000,
+        "rate_limit": 250,
+        "next": [
+            "[JumpBack]处理叉叉弹窗",
+            "全局恢复点击左上角退出",
+            "全局恢复点击一些返回按钮",
+            "[JumpBack]关闭地区聊天",
+            "全局恢复主页面检测"
+        ],
+        "on_error": [
+            "重启游戏"
+        ]
     },
     "back": {
         "pre_delay": 0,
         "post_delay": 0,
-        "timeout": 480000,
-        "rate_limit": 100,
+        "timeout": 30000,
+        "rate_limit": 250,
         "next": [
             "[JumpBack]处理叉叉弹窗",
             "点击左上角退出",
@@ -25,7 +55,7 @@
             "主页面检测_back"
         ],
         "on_error": [
-            "重启游戏"
+            "全局错误恢复"
         ]
     },
     "主页面检测_back": {
@@ -46,6 +76,55 @@
         },
         "pre_delay": 0,
         "post_delay": 0,
+        "next": [
+            "主页面检测again_back",
+            "back"
+        ]
+    },
+    "全局恢复主页面检测": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    9,
+                    143,
+                    411,
+                    459
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "全局恢复主页面确认",
+            "全局错误恢复"
+        ],
+        "on_error": [
+            "重启游戏"
+        ]
+    },
+    "全局恢复主页面确认": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    27,
+                    580,
+                    841,
+                    128
+                ],
+                "template": [
+                    "商店.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
         "action": {
             "type": "Custom",
             "param": {
@@ -53,8 +132,7 @@
             }
         },
         "next": [
-            "主页面检测again_back",
-            "back"
+            "全局错误恢复"
         ],
         "on_error": [
             "重启游戏"
@@ -109,6 +187,80 @@
             "time": 400,
             "threshold": 0.8
         }
+    },
+    "全局恢复点击一些返回按钮": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    245,
+                    400,
+                    1025,
+                    311
+                ],
+                "expected": [
+                    "^确定$",
+                    "^返回$",
+                    "继续$",
+                    "^拒绝$",
+                    "^选择$",
+                    "^下一$",
+                    "^放弃挑战$",
+                    "^暂时离开$"
+                ],
+                "order_by": "Random"
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": {
+            "time": 300,
+            "threshold": 0.8
+        },
+        "post_delay": 0,
+        "next": [
+            "全局错误恢复"
+        ],
+        "on_error": [
+            "重启游戏"
+        ]
+    },
+    "全局恢复点击左上角退出": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    5,
+                    5,
+                    243,
+                    200
+                ],
+                "template": [
+                    "返回按钮.png",
+                    "家族返回按钮.png",
+                    "退出召唤按钮.png"
+                ],
+                "threshold": [
+                    0.80
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": {
+            "time": 500,
+            "threshold": 0.8
+        },
+        "post_delay": 200,
+        "next": [
+            "全局错误恢复"
+        ],
+        "on_error": [
+            "重启游戏"
+        ]
     },
     "再次点击左上角退出": {
         "recognition": {
@@ -189,7 +341,7 @@
                     "继续$",
                     "^拒绝$",
                     "^选择$",
-                    "^下一步$",
+                    "^下一$",
                     "^放弃挑战$",
                     "^暂时离开$"
                 ],

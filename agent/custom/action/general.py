@@ -1,5 +1,6 @@
 import os
 import json
+import threading
 import time
 from datetime import datetime
 from typing import Iterator, Optional, Tuple
@@ -18,6 +19,12 @@ from maa.define import (
 from utils import logger
 from custom.reco import Count
 from custom.pipeline_params import parse_pipeline_json_param
+
+
+_recovery_state_lock = threading.Lock()
+_remembered_game_package: Optional[str] = None
+_home_retry_task_ids: set[int] = set()
+_restart_attempted_task_ids: set[int] = set()
 
 
 def _run_set_node_enabled(
@@ -80,20 +87,33 @@ def _get_start_app_package(context: Context) -> Optional[str]:
     return None
 
 
-def _is_global_error_back_path(context: Context) -> bool:
-    """判断当前 back 调用是否来自默认错误处理，而不是普通 JumpBack。"""
-    try:
-        detail = context.get_task_job().get()
-        names = [node.name for node in detail.nodes]
-    except (AttributeError, RuntimeError, ValueError):
-        return False
+def _remember_game_package(package: str) -> None:
+    global _remembered_game_package
+    with _recovery_state_lock:
+        _remembered_game_package = package
 
-    try:
-        last_back = max(index for index, name in enumerate(names) if name == "back")
-    except ValueError:
-        return False
 
-    return last_back > 0 and names[last_back - 1] == "Default_on_error"
+def _get_remembered_game_package() -> Optional[str]:
+    with _recovery_state_lock:
+        return _remembered_game_package
+
+
+def _claim_home_retry(task_id: int) -> bool:
+    """每个 Maa task 只允许从主页回入口重试一次。"""
+    with _recovery_state_lock:
+        if task_id in _home_retry_task_ids:
+            return False
+        _home_retry_task_ids.add(task_id)
+        return True
+
+
+def _claim_restart(task_id: int) -> bool:
+    """每个 Maa task 只允许重启游戏一次。"""
+    with _recovery_state_lock:
+        if task_id in _restart_attempted_task_ids:
+            return False
+        _restart_attempted_task_ids.add(task_id)
+        return True
 
 
 def _box_to_center(box: object) -> Optional[Tuple[int, int]]:
@@ -195,17 +215,30 @@ class EnableNode(CustomAction):
 
 @AgentServer.custom_action("RestartGame")
 class RestartGame(CustomAction):
-    """重启当前任务配置选择的游戏，并重新进入启动流程。"""
+    """使用启动任务记录的包名重启游戏，并配置恢复后的任务入口。"""
 
     def run(
         self,
         context: Context,
         argv: CustomAction.RunArg,
     ) -> CustomAction.RunResult:
-        package = _get_start_app_package(context)
-        if not package:
-            logger.error("RestartGame: 无法读取启动应用的 package")
+        task_id = argv.task_detail.task_id
+        if not _claim_restart(task_id):
+            logger.error(
+                f"RestartGame: task_id={task_id} 已尝试过重启，拒绝重复重启"
+            )
             return CustomAction.RunResult(success=False)
+
+        package = _get_remembered_game_package()
+        if not package:
+            logger.error("RestartGame: 尚未记录实际启动包名，拒绝使用流水线默认值")
+            return CustomAction.RunResult(success=False)
+
+        entry = argv.task_detail.entry
+        if not isinstance(entry, str) or not entry.strip():
+            logger.error("RestartGame: 当前 task 没有有效入口")
+            return CustomAction.RunResult(success=False)
+        entry = entry.strip()
 
         controller = context.tasker.controller
         try:
@@ -225,36 +258,117 @@ class RestartGame(CustomAction):
             logger.exception(f"RestartGame: 执行失败 (package={package!r}): {exc}")
             return CustomAction.RunResult(success=False)
 
-        logger.info(f"RestartGame: 已重启 {package!r}")
+        recovery_override = {
+            # RestartGame 已直接启动正确的包；当前业务 task 中的启动应用节点没有
+            # 区服 option override，必须禁用，避免再次启动默认 vivo 包。
+            "启动应用": {"enabled": False},
+            "记录启动应用包名": {"enabled": False},
+            # 恢复启动只给两分钟。失败后进入最终兜底，不再走原来的六分钟启动重试。
+            "启动流程": {
+                "timeout": 120000,
+                "on_error": ["终止任务队列"],
+            },
+            # 启动流程确认回到主页后，接回发生错误的当前 task。
+            "启动游戏到了主页面": {
+                "action": {"type": "DoNothing"},
+                "focus": None,
+                "next": [entry],
+                "on_error": ["终止任务队列"],
+            },
+        }
+        if not context.override_pipeline(recovery_override):
+            logger.error(
+                f"RestartGame: 配置恢复入口失败 (task_id={task_id}, entry={entry!r})"
+            )
+            return CustomAction.RunResult(success=False)
+
+        logger.info(
+            f"RestartGame: 已重启 {package!r}，启动完成后回到 {entry!r}"
+        )
         return CustomAction.RunResult(success=True)
 
 
-@AgentServer.custom_action("RetryCurrentTaskAtHome")
-class RetryCurrentTaskAtHome(CustomAction):
-    """全局错误回到主页后，接回当前 task 的入口重试。"""
+@AgentServer.custom_action("RememberGamePackage")
+class RememberGamePackage(CustomAction):
+    """在启动游戏 task 应用 PI option 后记录实际包名。"""
 
     def run(
         self,
         context: Context,
         argv: CustomAction.RunArg,
     ) -> CustomAction.RunResult:
-        if not _is_global_error_back_path(context):
-            return CustomAction.RunResult(success=True)
+        if argv.task_detail.entry != "启动游戏entry":
+            logger.error(
+                "RememberGamePackage: 只能在启动游戏 task 中记录包名 "
+                f"(entry={argv.task_detail.entry!r})"
+            )
+            return CustomAction.RunResult(success=False)
 
+        package = _get_start_app_package(context)
+        if not package:
+            logger.error("RememberGamePackage: 无法读取启动应用的 package")
+            return CustomAction.RunResult(success=False)
+
+        _remember_game_package(package)
+        logger.info(f"RememberGamePackage: 已记录 {package!r}")
+        return CustomAction.RunResult(success=True)
+
+
+@AgentServer.custom_action("RetryCurrentTaskAtHome")
+class RetryCurrentTaskAtHome(CustomAction):
+    """全局恢复确认回到主页后，最多一次接回当前 task 入口。"""
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
         entry = argv.task_detail.entry
         if not isinstance(entry, str) or not entry.strip():
             logger.error("RetryCurrentTaskAtHome: 当前 task 没有有效入口")
             return CustomAction.RunResult(success=False)
 
         entry = entry.strip()
-        if not context.override_next("主页面检测_back", [entry]):
-            logger.error(
-                f"RetryCurrentTaskAtHome: 设置当前 task 入口失败 "
-                f"(entry={entry!r})"
+        task_id = argv.task_detail.task_id
+        if not _claim_home_retry(task_id):
+            logger.warning(
+                f"RetryCurrentTaskAtHome: task_id={task_id} 已从主页重试过，升级为重启"
             )
             return CustomAction.RunResult(success=False)
 
-        logger.info(f"RetryCurrentTaskAtHome: 回到当前 task 入口 {entry!r}")
+        if not context.override_next(argv.node_name, [entry]):
+            logger.error(
+                f"RetryCurrentTaskAtHome: 设置当前 task 入口失败 "
+                f"(node={argv.node_name!r}, entry={entry!r})"
+            )
+            return CustomAction.RunResult(success=False)
+
+        logger.info(
+            f"RetryCurrentTaskAtHome: task_id={task_id} 回到当前 task 入口 {entry!r}"
+        )
+        return CustomAction.RunResult(success=True)
+
+
+@AgentServer.custom_action("AbortTasker")
+class AbortTasker(CustomAction):
+    """最终恢复失败时停止 Tasker，阻止后续任务在错误页面继续运行。"""
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
+        try:
+            # 不能在当前 CustomAction 回调里 wait；停止完成依赖当前回调先返回。
+            context.tasker.post_stop()
+        except Exception as exc:
+            logger.exception(f"AbortTasker: 请求停止任务队列失败: {exc}")
+            return CustomAction.RunResult(success=False)
+
+        logger.error(
+            f"AbortTasker: 错误恢复已耗尽，停止任务队列 "
+            f"(task_id={argv.task_detail.task_id}, entry={argv.task_detail.entry!r})"
+        )
         return CustomAction.RunResult(success=True)
 
 

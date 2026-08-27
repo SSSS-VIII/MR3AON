@@ -1,7 +1,7 @@
 {
     "Default_on_error": {
         "next": [
-            "back"
+            "全局错误恢复"
         ]
     }
 }

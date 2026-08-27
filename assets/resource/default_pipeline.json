@@ -1,5 +1,6 @@
 {
     "Default": {
+        "timeout": 30000,
         "on_error": "Default_on_error"
     }
 }
