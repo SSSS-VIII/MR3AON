@@ -1,4 +1,10 @@
 from .download_game_meta import DownloadGameMeta
+from .deferred_tasks import (
+    ManagedTaskSchedulerBootstrap,
+    ManagedTaskSchedulerFinalize,
+    ManagedTaskSchedulerWait,
+    ScheduleDeferredTask,
+)
 from .general import *
 from .landlady_qa import LandladyQaLearnAnswer
 from .load_game_meta_override import LoadGameMetaOverride
@@ -10,6 +16,10 @@ from .input_text_compat import ClearInputTextCompat, InputTextCompat
 
 __all__ = [
     "DownloadGameMeta",
+    "ScheduleDeferredTask",
+    "ManagedTaskSchedulerBootstrap",
+    "ManagedTaskSchedulerFinalize",
+    "ManagedTaskSchedulerWait",
     "LoadGameMetaOverride",
     "InputTextCompat",
     "ClearInputTextCompat",

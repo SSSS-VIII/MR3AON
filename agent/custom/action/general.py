@@ -18,6 +18,7 @@ from maa.define import (
 
 from utils import logger
 from custom.reco import Count
+from custom.deferred_tasks import effective_task_entry
 from custom.pipeline_params import parse_pipeline_json_param
 
 
@@ -234,7 +235,7 @@ class RestartGame(CustomAction):
             logger.error("RestartGame: 尚未记录实际启动包名，拒绝使用流水线默认值")
             return CustomAction.RunResult(success=False)
 
-        entry = argv.task_detail.entry
+        entry = effective_task_entry(argv.task_detail.entry)
         if not isinstance(entry, str) or not entry.strip():
             logger.error("RestartGame: 当前 task 没有有效入口")
             return CustomAction.RunResult(success=False)
@@ -297,10 +298,11 @@ class RememberGamePackage(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> CustomAction.RunResult:
-        if argv.task_detail.entry != "启动游戏entry":
+        entry = effective_task_entry(argv.task_detail.entry)
+        if entry != "启动游戏entry":
             logger.error(
                 "RememberGamePackage: 只能在启动游戏 task 中记录包名 "
-                f"(entry={argv.task_detail.entry!r})"
+                f"(entry={entry!r})"
             )
             return CustomAction.RunResult(success=False)
 
@@ -323,7 +325,7 @@ class RetryCurrentTaskAtHome(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> CustomAction.RunResult:
-        entry = argv.task_detail.entry
+        entry = effective_task_entry(argv.task_detail.entry)
         if not isinstance(entry, str) or not entry.strip():
             logger.error("RetryCurrentTaskAtHome: 当前 task 没有有效入口")
             return CustomAction.RunResult(success=False)
@@ -367,7 +369,8 @@ class AbortTasker(CustomAction):
 
         logger.error(
             f"AbortTasker: 错误恢复已耗尽，停止任务队列 "
-            f"(task_id={argv.task_detail.task_id}, entry={argv.task_detail.entry!r})"
+            f"(task_id={argv.task_detail.task_id}, "
+            f"entry={effective_task_entry(argv.task_detail.entry)!r})"
         )
         return CustomAction.RunResult(success=True)
 

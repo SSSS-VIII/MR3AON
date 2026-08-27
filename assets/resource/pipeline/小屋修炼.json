@@ -196,6 +196,18 @@
         },
         "pre_delay": 0,
         "post_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ScheduleDeferredTask",
+                "custom_action_param": {
+                    "key": "小屋修炼",
+                    "entry": "小屋修炼entry",
+                    "grace_seconds": 5,
+                    "reuse_current_override": true
+                }
+            }
+        },
         "next": [
             "小屋返回"
         ]
