@@ -260,6 +260,85 @@ deferred_task_store = DeferredTaskStore()
 managed_task_queue = ManagedTaskQueue()
 
 
+@dataclass
+class _ManagedTaskYieldSignal:
+    task_id: int
+    generation: int
+    ready: bool = False
+    timer: threading.Timer | None = None
+
+
+class ManagedTaskYieldSignalStore:
+    """Agent 向当前业务 task 发出的一次性安全让出信号。"""
+
+    def __init__(
+        self,
+        *,
+        timer_factory: Callable[..., threading.Timer] = threading.Timer,
+    ) -> None:
+        self._timer_factory = timer_factory
+        self._lock = threading.Lock()
+        self._state: _ManagedTaskYieldSignal | None = None
+        self._next_generation = 1
+
+    def arm(self, task_id: int, delay_seconds: float) -> None:
+        if task_id <= 0:
+            raise ValueError("task_id 必须为正数")
+        if delay_seconds < 0:
+            raise ValueError("delay_seconds 不能为负数")
+
+        with self._lock:
+            self._clear_locked()
+            generation = self._next_generation
+            self._next_generation += 1
+            state = _ManagedTaskYieldSignal(
+                task_id=task_id,
+                generation=generation,
+            )
+            timer = self._timer_factory(
+                delay_seconds,
+                self._mark_ready,
+                args=(task_id, generation),
+            )
+            timer.daemon = True
+            state.timer = timer
+            self._state = state
+            timer.start()
+
+    def _mark_ready(self, task_id: int, generation: int) -> None:
+        with self._lock:
+            state = self._state
+            if (
+                state is None
+                or state.task_id != task_id
+                or state.generation != generation
+            ):
+                return
+            state.ready = True
+            state.timer = None
+
+    def consume(self, task_id: int) -> bool:
+        """仅由安全退出节点调用；同一个信号最多返回一次 True。"""
+        with self._lock:
+            state = self._state
+            if state is None or state.task_id != task_id or not state.ready:
+                return False
+            self._state = None
+            return True
+
+    def clear(self) -> None:
+        with self._lock:
+            self._clear_locked()
+
+    def _clear_locked(self) -> None:
+        if self._state is not None and self._state.timer is not None:
+            self._state.timer.cancel()
+        self._state = None
+
+
+managed_task_yield_signal_store = ManagedTaskYieldSignalStore()
+
+
 def effective_task_entry(fallback: str) -> str:
     """返回 Agent 当前顶层包装 task 对应的真实业务入口。"""
     current = managed_task_queue.current()

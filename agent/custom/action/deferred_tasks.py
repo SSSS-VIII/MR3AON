@@ -16,6 +16,7 @@ from custom.deferred_tasks import (
     ManagedTask,
     deferred_task_store,
     managed_task_queue,
+    managed_task_yield_signal_store,
     pipeline_override_for_entry,
 )
 from custom.interruptible import interruptible_sleep
@@ -36,6 +37,9 @@ _WRAPPER_ENTRY = "AgentSchedulerTaskWrapper"
 _SUBTASK_ENTRY = "AgentSchedulerTaskSubtask"
 _FINALIZE_ENTRY = "AgentSchedulerTaskFinalize"
 _WAIT_ENTRY = "AgentSchedulerWait"
+_TIME_SLICE_SECONDS = {
+    "藏宝图entry": 60 * 60,
+}
 
 
 def parse_chinese_duration_seconds(text: str) -> int | None:
@@ -132,6 +136,14 @@ def _post_managed_task(tasker: Any, task: ManagedTask) -> bool:
         logger.error(f"Agent 调度提交返回无效 task_id: entry={task.entry!r}")
         return False
     managed_task_queue.set_current(job.job_id, task)
+    managed_task_yield_signal_store.clear()
+    time_slice_seconds = _TIME_SLICE_SECONDS.get(task.entry)
+    if time_slice_seconds is not None:
+        managed_task_yield_signal_store.arm(job.job_id, time_slice_seconds)
+        logger.info(
+            f"Agent 已设置任务让出信号: task_id={job.job_id}, "
+            f"entry={task.entry!r}, after={time_slice_seconds:g}s"
+        )
     logger.info(
         f"Agent 调度已提交: task_id={job.job_id}, "
         f"name={task.name!r}, entry={task.entry!r}, "
@@ -144,6 +156,7 @@ def dispatch_next(tasker: Any) -> bool:
     if tasker.stopping:
         managed_task_queue.finish()
         deferred_task_store.clear()
+        managed_task_yield_signal_store.clear()
         return False
 
     task = _take_next_task()
@@ -156,6 +169,7 @@ def dispatch_next(tasker: Any) -> bool:
     delay = deferred_task_store.seconds_until_next()
     if delay is None:
         managed_task_queue.finish()
+        managed_task_yield_signal_store.clear()
         logger.info("Agent 管理的任务队列已全部完成")
         return True
 
@@ -371,5 +385,6 @@ class ManagedTaskSchedulerWait(CustomAction):
             if not interruptible_sleep(context, math.ceil(delay * 1000)):
                 managed_task_queue.finish()
                 deferred_task_store.clear()
+                managed_task_yield_signal_store.clear()
                 return CustomAction.RunResult(success=False)
         return CustomAction.RunResult(success=dispatch_next(context.tasker))

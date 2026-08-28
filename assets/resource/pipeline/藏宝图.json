@@ -1126,6 +1126,7 @@
             }
         },
         "next": [
+            "藏宝图检查让出调度信号",
             "藏宝图检查每日次数开关",
             "藏宝图检查每日次数结束"
         ]
@@ -1191,10 +1192,62 @@
             }
         },
         "pre_delay": 0,
-        "post_delay": 0
+        "post_delay": 0,
+        "next": [
+            "藏宝图检查让出调度信号"
+        ]
     },
     "藏宝图任务出错": {
         "focus": "任务出错：藏宝图❌"
+    },
+    "藏宝图检查让出调度信号": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "ManagedTaskYieldRequested"
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ManagedTaskSchedulerYieldCurrent"
+            }
+        },
+        "next": [
+            "藏宝图让出调度返回"
+        ]
+    },
+    "藏宝图让出调度返回": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "藏宝图让出调度已回到主页",
+            "[JumpBack]back"
+        ]
+    },
+    "藏宝图让出调度已回到主页": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    4,
+                    136,
+                    434,
+                    459
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true,
+                "threshold": [
+                    0.75
+                ]
+            }
+        },
+        "action": {
+            "type": "StopTask"
+        },
+        "focus": "任务已运行一小时，藏宝图让出 Agent 调度⏸️"
     },
     "藏宝图任意位置开始任务": {
         "pre_delay": 0,
@@ -1842,6 +1895,7 @@
         },
         "post_delay": 470,
         "next": [
+            "藏宝图检查让出调度信号",
             "藏宝图上层识别到目标藏宝图",
             "藏宝图下层识别到目标藏宝图",
             "藏宝图None"
@@ -2050,6 +2104,7 @@
             }
         },
         "next": [
+            "藏宝图检查让出调度信号",
             "藏宝图任意位置开始任务"
         ]
     },

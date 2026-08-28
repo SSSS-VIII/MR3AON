@@ -52,6 +52,34 @@ class PipelineGuardTest(unittest.TestCase):
         self.assertEqual(shared_fight["rate_limit"], 200)
         self.assertEqual(shared_fight["timeout"], 40_000)
 
+    def test_treasure_map_yields_only_from_safe_page_nodes(self):
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "藏宝图.json").read_text(encoding="utf-8")
+        )
+        signal_node = "藏宝图检查让出调度信号"
+
+        self.assertEqual(
+            pipeline[signal_node]["recognition"]["param"]["custom_recognition"],
+            "ManagedTaskYieldRequested",
+        )
+        self.assertEqual(
+            pipeline[signal_node]["action"]["param"]["custom_action"],
+            "ManagedTaskSchedulerYieldCurrent",
+        )
+        for safe_node in (
+            "藏宝图主页或寻宝助力页面",
+            "藏宝图仍在寻宝助力页面",
+            "藏宝图点击刷新",
+            "藏宝图进入战斗后回到藏宝图页面",
+        ):
+            with self.subTest(safe_node=safe_node):
+                self.assertIn(signal_node, pipeline[safe_node]["next"])
+
+        self.assertEqual(
+            pipeline["藏宝图让出调度已回到主页"]["action"]["type"],
+            "StopTask",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -18,6 +18,7 @@ from custom.action.deferred_tasks import (
     _take_next_task,
 )
 from custom.deferred_tasks import (
+    ManagedTaskYieldSignalStore,
     deferred_task_store,
     managed_task_queue,
     pipeline_override_for_entry,
@@ -42,6 +43,27 @@ class _Tasker:
     def post_task(self, entry: str, pipeline_override: dict):
         self.posts.append((entry, pipeline_override))
         return _PostJob(10_000 + len(self.posts))
+
+
+class _FakeTimer:
+    created: list["_FakeTimer"] = []
+
+    def __init__(self, delay, callback, args=()):
+        self.delay = delay
+        self.callback = callback
+        self.args = args
+        self.daemon = False
+        self.cancelled = False
+        self.__class__.created.append(self)
+
+    def start(self):
+        pass
+
+    def cancel(self):
+        self.cancelled = True
+
+    def fire(self):
+        self.callback(*self.args)
 
 
 def _interface_task_plan(data: dict) -> list[dict]:
@@ -194,6 +216,30 @@ class SchedulerOverrideTest(unittest.TestCase):
         )
         self.assertIn("OnlyA", resumed_override)
         self.assertNotIn("OnlyB", resumed_override)
+
+    def test_managed_yield_signal_is_consumed_only_once(self):
+        _FakeTimer.created.clear()
+        store = ManagedTaskYieldSignalStore(timer_factory=_FakeTimer)
+        store.arm(101, 3600)
+
+        self.assertFalse(store.consume(101))
+        self.assertEqual(_FakeTimer.created[-1].delay, 3600)
+        _FakeTimer.created[-1].fire()
+        self.assertTrue(store.consume(101))
+        self.assertFalse(store.consume(101))
+
+    def test_rearming_yield_signal_invalidates_the_old_timer(self):
+        _FakeTimer.created.clear()
+        store = ManagedTaskYieldSignalStore(timer_factory=_FakeTimer)
+        store.arm(101, 3600)
+        old_timer = _FakeTimer.created[-1]
+        store.arm(102, 3600)
+
+        self.assertTrue(old_timer.cancelled)
+        old_timer.fire()
+        self.assertFalse(store.consume(102))
+        _FakeTimer.created[-1].fire()
+        self.assertTrue(store.consume(102))
 
     def test_fixture_is_accepted_by_real_maapicli_parser(self):
         maapicli = Path(os.environ.get("MAAPICLI_BIN", DEFAULT_MAAPICLI))
