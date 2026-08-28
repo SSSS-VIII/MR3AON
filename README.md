@@ -9,7 +9,7 @@
 《忍者必须死3》自动化助手。图像识别 + 模拟控制，解放双手。  
 Powered by [MaaFramework](https://github.com/MaaXYZ/MaaFramework) & [MFAAvalonia](https://github.com/MaaXYZ/MFAAvalonia)
 
-<a href="https://github.com/originalsage/MR3A" target="_blank"><strong>🔗 本项目 GitHub 仓库</strong></a>
+<a href="https://github.com/originalsage/MR3A" target="_blank"><strong>🔗 源项目 GitHub 仓库</strong></a>
 
 </div>
 
