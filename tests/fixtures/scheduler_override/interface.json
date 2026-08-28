@@ -1,0 +1,117 @@
+{
+    "interface_version": 2,
+    "name": "SchedulerOverrideSelfTest",
+    "label": "Agent 调度 override 自测",
+    "version": "1.0.0",
+    "controller": [
+        {
+            "name": "测试控制器",
+            "type": "Adb"
+        }
+    ],
+    "resource": [
+        {
+            "name": "测试资源",
+            "path": [
+                "resource"
+            ]
+        }
+    ],
+    "task": [
+        {
+            "name": "任务A",
+            "entry": "TaskAEntry",
+            "default_check": true,
+            "pipeline_override": {
+                "TaskAConfig": {
+                    "enabled": true,
+                    "timeout": 111
+                }
+            },
+            "option": [
+                "任务A配置"
+            ]
+        },
+        {
+            "name": "任务B",
+            "entry": "TaskBEntry",
+            "default_check": true,
+            "pipeline_override": {
+                "TaskBConfig": {
+                    "enabled": true,
+                    "timeout": 222
+                }
+            },
+            "option": [
+                "任务B配置"
+            ]
+        },
+        {
+            "name": "启动任务",
+            "entry": "启动游戏entry",
+            "default_check": true,
+            "pipeline_override": {
+                "StartupConfig": {
+                    "enabled": true,
+                    "timeout": 333
+                }
+            },
+            "option": [
+                "启动配置"
+            ]
+        }
+    ],
+    "option": {
+        "任务A配置": {
+            "type": "select",
+            "default_case": "A-red",
+            "cases": [
+                {
+                    "name": "A-red",
+                    "pipeline_override": {
+                        "TaskAConfig": {
+                            "rate_limit": 1111
+                        },
+                        "OnlyA": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "任务B配置": {
+            "type": "select",
+            "default_case": "B-blue",
+            "cases": [
+                {
+                    "name": "B-blue",
+                    "pipeline_override": {
+                        "TaskBConfig": {
+                            "rate_limit": 2222
+                        },
+                        "OnlyB": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "启动配置": {
+            "type": "select",
+            "default_case": "last-login",
+            "cases": [
+                {
+                    "name": "last-login",
+                    "pipeline_override": {
+                        "StartupConfig": {
+                            "rate_limit": 3333
+                        },
+                        "SkipServerSwitch": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

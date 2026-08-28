@@ -12,7 +12,12 @@ from maa.agent.agent_server import AgentServer
 from maa.context import Context
 from maa.custom_action import CustomAction
 
-from custom.deferred_tasks import ManagedTask, deferred_task_store, managed_task_queue
+from custom.deferred_tasks import (
+    ManagedTask,
+    deferred_task_store,
+    managed_task_queue,
+    pipeline_override_for_entry,
+)
 from custom.interruptible import interruptible_sleep
 from custom.pipeline_params import parse_pipeline_json_param
 from utils.logger import logger
@@ -129,7 +134,8 @@ def _post_managed_task(tasker: Any, task: ManagedTask) -> bool:
     managed_task_queue.set_current(job.job_id, task)
     logger.info(
         f"Agent 调度已提交: task_id={job.job_id}, "
-        f"name={task.name!r}, entry={task.entry!r}"
+        f"name={task.name!r}, entry={task.entry!r}, "
+        f"override_nodes={list(task.pipeline_override)!r}"
     )
     return True
 
@@ -202,12 +208,13 @@ class ScheduleDeferredTask(CustomAction):
             logger.error("ScheduleDeferredTask: grace_seconds 非法")
             return CustomAction.RunResult(success=False)
 
+        override_source = "explicit"
         if pipeline_override is None and param.get("reuse_current_override", True):
-            current = managed_task_queue.current()
-            if current is not None:
-                pipeline_override = current.pipeline_override
+            pipeline_override = pipeline_override_for_entry(entry)
+            override_source = f"task:{entry}"
         if pipeline_override is None:
             pipeline_override = {}
+            override_source = "empty"
 
         duration_seconds: int | None = None
         matched_text = ""
@@ -232,7 +239,9 @@ class ScheduleDeferredTask(CustomAction):
         logger.info(
             f"延后任务已登记: key={key!r}, entry={entry!r}, "
             f"ocr={matched_text!r}, delay={delay_seconds:g}s, "
-            f"due={due_time:%Y-%m-%d %H:%M:%S}"
+            f"due={due_time:%Y-%m-%d %H:%M:%S}, "
+            f"override_source={override_source!r}, "
+            f"override_nodes={list(pipeline_override)!r}"
         )
         return CustomAction.RunResult(success=True)
 

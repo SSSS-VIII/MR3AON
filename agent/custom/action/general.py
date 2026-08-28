@@ -2,6 +2,7 @@ import os
 import json
 import threading
 import time
+from copy import deepcopy
 from datetime import datetime
 from typing import Iterator, Optional, Tuple
 
@@ -18,7 +19,7 @@ from maa.define import (
 
 from utils import logger
 from custom.reco import Count
-from custom.deferred_tasks import effective_task_entry
+from custom.deferred_tasks import effective_task_entry, pipeline_override_for_entry
 from custom.pipeline_params import parse_pipeline_json_param
 
 
@@ -26,6 +27,16 @@ _recovery_state_lock = threading.Lock()
 _remembered_game_package: Optional[str] = None
 _home_retry_task_ids: set[int] = set()
 _restart_attempted_task_ids: set[int] = set()
+
+
+def _deep_merge_dict(target: dict, patch: dict) -> None:
+    """原地深合并 pipeline override，保留同一节点下未被覆盖的字段。"""
+    for key, value in patch.items():
+        old = target.get(key)
+        if isinstance(old, dict) and isinstance(value, dict):
+            _deep_merge_dict(old, value)
+        else:
+            target[key] = deepcopy(value)
 
 
 def _run_set_node_enabled(
@@ -259,9 +270,11 @@ class RestartGame(CustomAction):
             logger.exception(f"RestartGame: 执行失败 (package={package!r}): {exc}")
             return CustomAction.RunResult(success=False)
 
-        recovery_override = {
+        startup_override = pipeline_override_for_entry("启动游戏entry")
+        recovery_override = deepcopy(startup_override)
+        recovery_patch = {
             # RestartGame 已直接启动正确的包；当前业务 task 中的启动应用节点没有
-            # 区服 option override，必须禁用，避免再次启动默认 vivo 包。
+            # 启动职责，必须禁用；服务器与区服 option 则从启动任务完整继承。
             "启动应用": {"enabled": False},
             "记录启动应用包名": {"enabled": False},
             # 恢复启动只给两分钟。失败后进入最终兜底，不再走原来的六分钟启动重试。
@@ -277,6 +290,7 @@ class RestartGame(CustomAction):
                 "on_error": ["终止任务队列"],
             },
         }
+        _deep_merge_dict(recovery_override, recovery_patch)
         if not context.override_pipeline(recovery_override):
             logger.error(
                 f"RestartGame: 配置恢复入口失败 (task_id={task_id}, entry={entry!r})"
@@ -284,7 +298,8 @@ class RestartGame(CustomAction):
             return CustomAction.RunResult(success=False)
 
         logger.info(
-            f"RestartGame: 已重启 {package!r}，启动完成后回到 {entry!r}"
+            f"RestartGame: 已重启 {package!r}，已恢复启动选项 "
+            f"{list(startup_override)!r}，启动完成后回到 {entry!r}"
         )
         return CustomAction.RunResult(success=True)
 

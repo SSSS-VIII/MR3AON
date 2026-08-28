@@ -180,13 +180,20 @@ class ManagedTaskQueue:
         self._active = False
         self._current_task_id: int | None = None
         self._current_task: ManagedTask | None = None
+        self._task_templates: dict[str, ManagedTask] = {}
 
     def activate(self, tasks: Iterable[ManagedTask], bootstrap_task_id: int) -> None:
+        task_list = list(tasks)
         with self._lock:
-            self._pending = deque(tasks)
+            self._pending = deque(task_list)
             self._active = True
             self._current_task_id = bootstrap_task_id
             self._current_task = None
+            # MaaPiCli 只提交一次完整计划，Agent 后续插入/重跑任务时
+            # 必须能按目标 entry 找回它自己的 PI option override。
+            self._task_templates = {}
+            for task in task_list:
+                self._task_templates.setdefault(task.entry, deepcopy(task))
 
     def active_for(self, task_id: int) -> bool:
         with self._lock:
@@ -209,12 +216,25 @@ class ManagedTaskQueue:
         with self._lock:
             return self._current_task
 
+    def pipeline_override_for_entry(self, entry: str) -> dict[str, Any]:
+        """返回目标任务的 PI option override。
+
+        自己延后自己时使用当前实例，这样即使同一 entry 在计划中
+        出现多次且配置不同，也不会丢失本次配置。
+        """
+        with self._lock:
+            if self._current_task is not None and self._current_task.entry == entry:
+                return deepcopy(self._current_task.pipeline_override)
+            template = self._task_templates.get(entry)
+            return deepcopy(template.pipeline_override) if template is not None else {}
+
     def finish(self) -> None:
         with self._lock:
             self._pending.clear()
             self._active = False
             self._current_task_id = None
             self._current_task = None
+            self._task_templates = {}
 
     def snapshot(self) -> tuple[bool, list[ManagedTask], int | None]:
         with self._lock:
@@ -229,3 +249,8 @@ def effective_task_entry(fallback: str) -> str:
     """返回 Agent 当前顶层包装 task 对应的真实业务入口。"""
     current = managed_task_queue.current()
     return current.entry if current is not None else fallback
+
+
+def pipeline_override_for_entry(entry: str) -> dict[str, Any]:
+    """返回本轮 MaaPiCli 计划中目标任务的完整选项覆盖。"""
+    return managed_task_queue.pipeline_override_for_entry(entry)
