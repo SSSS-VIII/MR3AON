@@ -1,6 +1,37 @@
 {
     "准备扫荡": {
         "next": [
+            "记录忍村试炼剩余挑战次数",
+            "检查忍村试炼资源"
+        ]
+    },
+    "记录忍村试炼剩余挑战次数": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1035,
+                    570,
+                    245,
+                    70
+                ],
+                "expected": [
+                    "剩余挑战次数.*[0-3]"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "RecordTrialRemainingChallengeMax"
+            }
+        },
+        "next": [
+            "检查忍村试炼资源"
+        ]
+    },
+    "检查忍村试炼资源": {
+        "next": [
             "包子9结束",
             "包子8结束",
             "包子7结束",
@@ -29,7 +60,7 @@
             }
         },
         "next": [
-            "忍村试炼返回"
+            "挂起忍村试炼四小时"
         ]
     },
     "包子6结束": {
@@ -51,7 +82,7 @@
             }
         },
         "next": [
-            "忍村试炼返回"
+            "挂起忍村试炼四小时"
         ]
     },
     "包子7结束": {
@@ -73,7 +104,7 @@
             }
         },
         "next": [
-            "忍村试炼返回"
+            "挂起忍村试炼四小时"
         ]
     },
     "包子8结束": {
@@ -95,7 +126,7 @@
             }
         },
         "next": [
-            "忍村试炼返回"
+            "挂起忍村试炼四小时"
         ]
     },
     "包子9结束": {
@@ -117,7 +148,7 @@
             }
         },
         "next": [
-            "忍村试炼返回"
+            "挂起忍村试炼四小时"
         ]
     },
     "向右滑动找忍村试炼": {
@@ -461,8 +492,20 @@
             "试炼关卡1",
             "试炼关卡2",
             "试炼关卡3",
+            "忍村试炼已确认三次挑战上限",
             "试炼关卡4",
             "试炼关卡5",
+            "忍村试炼返回"
+        ]
+    },
+    "忍村试炼已确认三次挑战上限": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "TrialMaxRemainingReachedThree"
+            }
+        },
+        "next": [
             "忍村试炼返回"
         ]
     },
@@ -908,6 +951,24 @@
             }
         },
         "post_delay": 500,
+        "next": [
+            "挂起忍村试炼四小时"
+        ]
+    },
+    "挂起忍村试炼四小时": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ScheduleDeferredTask",
+                "custom_action_param": {
+                    "key": "忍村试炼",
+                    "entry": "忍村试炼entry",
+                    "fallback_seconds": 14400,
+                    "reuse_current_override": true
+                }
+            }
+        },
         "next": [
             "忍村试炼返回"
         ]

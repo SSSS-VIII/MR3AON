@@ -13,6 +13,7 @@ from .loop_deadline import *
 from .my_3v3_kn_an_p1 import *
 from .sync_race_parkour import sync_race_parkour
 from .treasure_map_config import ApplyTreasureMapConfig, RemoveQualityFromAttach
+from .trial_state import RecordTrialRemainingChallengeMax
 from .input_text_compat import ClearInputTextCompat, InputTextCompat
 
 __all__ = [
@@ -41,6 +42,7 @@ __all__ = [
     "ClickFilteredResults",
     "ApplyTreasureMapConfig",
     "RemoveQualityFromAttach",
+    "RecordTrialRemainingChallengeMax",
     "fight",
     "my_3v3_kn_an_p1",
     "my_3v3_kn_an_p2",
