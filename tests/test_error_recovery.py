@@ -4,6 +4,7 @@ import unittest
 from types import SimpleNamespace
 
 from custom.action import general
+from custom.deferred_tasks import managed_task_queue
 
 
 class _Job:
@@ -79,7 +80,7 @@ class ErrorRecoveryTest(unittest.TestCase):
         with general._recovery_state_lock:
             general._remembered_game_package = None
             general._home_retry_task_ids.clear()
-            general._restart_attempted_task_ids.clear()
+        managed_task_queue.finish()
 
     def test_remember_package_uses_start_task_override(self):
         context = _Context("com.pandadastudio.ninjamustdie3")
@@ -129,15 +130,25 @@ class ErrorRecoveryTest(unittest.TestCase):
             override["启动游戏到了主页面"]["next"],
             ["每日藏宝图entry"],
         )
+        self.assertEqual(override["启动流程"]["on_error"], ["重启游戏"])
 
-    def test_restart_is_limited_to_once_per_task(self):
+    def test_restart_can_repeat_for_same_business_task(self):
         general._remember_game_package("com.pandadastudio.ninjamustdie3")
         context = _Context()
         argv = _argv(44, "每日藏宝图entry", "重启游戏")
 
         self.assertTrue(general.RestartGame().run(context, argv).success)
+        self.assertTrue(general.RestartGame().run(context, argv).success)
+        self.assertEqual(len(context.tasker.controller.started), 2)
+
+    def test_restart_is_disabled_during_startup_task(self):
+        general._remember_game_package("com.pandadastudio.ninjamustdie3")
+        context = _Context()
+        argv = _argv(45, "启动游戏entry", "重启游戏")
+
         self.assertFalse(general.RestartGame().run(context, argv).success)
-        self.assertEqual(len(context.tasker.controller.started), 1)
+        self.assertEqual(context.tasker.controller.stopped, [])
+        self.assertEqual(context.tasker.controller.started, [])
 
     def test_abort_tasker_posts_stop_without_waiting(self):
         context = _Context()

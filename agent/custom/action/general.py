@@ -26,7 +26,6 @@ from custom.pipeline_params import parse_pipeline_json_param
 _recovery_state_lock = threading.Lock()
 _remembered_game_package: Optional[str] = None
 _home_retry_task_ids: set[int] = set()
-_restart_attempted_task_ids: set[int] = set()
 
 
 def _deep_merge_dict(target: dict, patch: dict) -> None:
@@ -116,15 +115,6 @@ def _claim_home_retry(task_id: int) -> bool:
         if task_id in _home_retry_task_ids:
             return False
         _home_retry_task_ids.add(task_id)
-        return True
-
-
-def _claim_restart(task_id: int) -> bool:
-    """每个 Maa task 只允许重启游戏一次。"""
-    with _recovery_state_lock:
-        if task_id in _restart_attempted_task_ids:
-            return False
-        _restart_attempted_task_ids.add(task_id)
         return True
 
 
@@ -235,9 +225,16 @@ class RestartGame(CustomAction):
         argv: CustomAction.RunArg,
     ) -> CustomAction.RunResult:
         task_id = argv.task_detail.task_id
-        if not _claim_restart(task_id):
+
+        entry = effective_task_entry(argv.task_detail.entry)
+        if not isinstance(entry, str) or not entry.strip():
+            logger.error("RestartGame: 当前 task 没有有效入口")
+            return CustomAction.RunResult(success=False)
+        entry = entry.strip()
+        if entry == "启动游戏entry":
             logger.error(
-                f"RestartGame: task_id={task_id} 已尝试过重启，拒绝重复重启"
+                f"RestartGame: 当前仍在启动游戏任务，不进入业务任务重启恢复 "
+                f"(task_id={task_id})"
             )
             return CustomAction.RunResult(success=False)
 
@@ -245,12 +242,6 @@ class RestartGame(CustomAction):
         if not package:
             logger.error("RestartGame: 尚未记录实际启动包名，拒绝使用流水线默认值")
             return CustomAction.RunResult(success=False)
-
-        entry = effective_task_entry(argv.task_detail.entry)
-        if not isinstance(entry, str) or not entry.strip():
-            logger.error("RestartGame: 当前 task 没有有效入口")
-            return CustomAction.RunResult(success=False)
-        entry = entry.strip()
 
         controller = context.tasker.controller
         try:
@@ -277,17 +268,17 @@ class RestartGame(CustomAction):
             # 启动职责，必须禁用；服务器与区服 option 则从启动任务完整继承。
             "启动应用": {"enabled": False},
             "记录启动应用包名": {"enabled": False},
-            # 恢复启动只给两分钟。失败后进入最终兜底，不再走原来的六分钟启动重试。
+            # 恢复启动只给两分钟；顶层仍是业务任务，失败可再次重启。
             "启动流程": {
                 "timeout": 120000,
-                "on_error": ["终止任务队列"],
+                "on_error": ["重启游戏"],
             },
             # 启动流程确认回到主页后，接回发生错误的当前 task。
             "启动游戏到了主页面": {
                 "action": {"type": "DoNothing"},
                 "focus": None,
                 "next": [entry],
-                "on_error": ["终止任务队列"],
+                "on_error": ["重启游戏"],
             },
         }
         _deep_merge_dict(recovery_override, recovery_patch)
