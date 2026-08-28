@@ -25,6 +25,7 @@ from utils.logger import logger
 
 
 _DURATION_PART = re.compile(r"(\d+)\s*(天|小时|时|分钟|分|秒)")
+_DAILY_TIME = re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$")
 _DURATION_UNITS = {
     "天": 24 * 60 * 60,
     "小时": 60 * 60,
@@ -47,6 +48,41 @@ def parse_chinese_duration_seconds(text: str) -> int | None:
     if not matches:
         return None
     return sum(int(value) * _DURATION_UNITS[unit] for value, unit in matches)
+
+
+def next_daily_time(
+    raw_times: Any,
+    *,
+    now: datetime | None = None,
+) -> datetime:
+    """计算严格晚于 now 的下一个本地每日时间点。"""
+    if not isinstance(raw_times, list) or not raw_times:
+        raise ValueError("daily_times 必须是非空数组")
+
+    parsed: set[tuple[int, int, int]] = set()
+    for index, raw in enumerate(raw_times):
+        if not isinstance(raw, str) or not _DAILY_TIME.fullmatch(raw):
+            raise ValueError(
+                f"daily_times[{index}] 必须为 HH:MM 或 HH:MM:SS"
+            )
+        parts = [int(part) for part in raw.split(":")]
+        hour, minute = parts[:2]
+        second = parts[2] if len(parts) == 3 else 0
+        parsed.add((hour, minute, second))
+
+    current = now if now is not None else datetime.now()
+    candidates: list[datetime] = []
+    for hour, minute, second in parsed:
+        candidate = current.replace(
+            hour=hour,
+            minute=minute,
+            second=second,
+            microsecond=0,
+        )
+        if candidate <= current:
+            candidate += timedelta(days=1)
+        candidates.append(candidate)
+    return min(candidates)
 
 
 def _recognition_texts(argv: CustomAction.RunArg) -> list[str]:
@@ -212,6 +248,7 @@ class ScheduleDeferredTask(CustomAction):
         entry = param.get("entry")
         grace_seconds = param.get("grace_seconds", 0)
         fallback_seconds = param.get("fallback_seconds")
+        daily_times = param.get("daily_times")
         pipeline_override = param.get("pipeline_override")
         if not isinstance(key, str) or not key or not isinstance(entry, str) or not entry:
             logger.error("ScheduleDeferredTask: key/entry 必须是非空字符串")
@@ -240,18 +277,29 @@ class ScheduleDeferredTask(CustomAction):
 
         duration_seconds: float | None = None
         matched_text = ""
-        for text in _recognition_texts(argv):
-            parsed = parse_chinese_duration_seconds(text)
-            if parsed is not None:
-                duration_seconds = parsed
-                matched_text = text
-                break
-        if duration_seconds is None:
-            if fallback_seconds is None:
-                logger.error("ScheduleDeferredTask: OCR 结果中未找到倒计时")
+        fixed_due_time: datetime | None = None
+        if daily_times is not None:
+            try:
+                now = datetime.now()
+                fixed_due_time = next_daily_time(daily_times, now=now)
+            except ValueError as exc:
+                logger.error(f"ScheduleDeferredTask: {exc}")
                 return CustomAction.RunResult(success=False)
-            duration_seconds = fallback_seconds
-            matched_text = f"fallback_seconds={fallback_seconds:g}"
+            duration_seconds = max(0.0, (fixed_due_time - now).total_seconds())
+            matched_text = f"daily_times={daily_times!r}"
+        else:
+            for text in _recognition_texts(argv):
+                parsed = parse_chinese_duration_seconds(text)
+                if parsed is not None:
+                    duration_seconds = parsed
+                    matched_text = text
+                    break
+            if duration_seconds is None:
+                if fallback_seconds is None:
+                    logger.error("ScheduleDeferredTask: OCR 结果中未找到倒计时")
+                    return CustomAction.RunResult(success=False)
+                duration_seconds = fallback_seconds
+                matched_text = f"fallback_seconds={fallback_seconds:g}"
 
         delay_seconds = duration_seconds + float(grace_seconds)
         deferred_task_store.arm(
@@ -260,7 +308,11 @@ class ScheduleDeferredTask(CustomAction):
             delay_seconds=delay_seconds,
             pipeline_override=pipeline_override,
         )
-        due_time = datetime.now() + timedelta(seconds=delay_seconds)
+        due_time = (
+            fixed_due_time + timedelta(seconds=float(grace_seconds))
+            if fixed_due_time is not None
+            else datetime.now() + timedelta(seconds=delay_seconds)
+        )
         logger.info(
             f"延后任务已登记: key={key!r}, entry={entry!r}, "
             f"ocr={matched_text!r}, delay={delay_seconds:g}s, "

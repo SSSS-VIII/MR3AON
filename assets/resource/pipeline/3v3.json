@@ -1936,6 +1936,21 @@
                 ]
             }
         },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ScheduleDeferredTask",
+                "custom_action_param": {
+                    "key": "3v3等待开放",
+                    "entry": "3v3entry",
+                    "daily_times": [
+                        "13:00",
+                        "20:00"
+                    ],
+                    "reuse_current_override": true
+                }
+            }
+        },
         "next": [
             "3v3返回决斗场"
         ]

@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -16,6 +17,7 @@ from custom.action.deferred_tasks import (
     dispatch_next,
     _post_managed_task,
     _take_next_task,
+    next_daily_time,
 )
 from custom.deferred_tasks import (
     ManagedTaskYieldSignalStore,
@@ -240,6 +242,48 @@ class SchedulerOverrideTest(unittest.TestCase):
         self.assertFalse(store.consume(102))
         _FakeTimer.created[-1].fire()
         self.assertTrue(store.consume(102))
+
+    def test_next_daily_time_uses_fixed_points_and_rolls_to_tomorrow(self):
+        daily_times = ["13:00", "20:00"]
+        cases = (
+            (
+                datetime(2026, 8, 28, 8, 30),
+                datetime(2026, 8, 28, 13, 0),
+            ),
+            (
+                datetime(2026, 8, 28, 13, 0, 1),
+                datetime(2026, 8, 28, 20, 0),
+            ),
+            (
+                datetime(2026, 8, 28, 21, 0),
+                datetime(2026, 8, 29, 13, 0),
+            ),
+        )
+        for now, expected in cases:
+            with self.subTest(now=now):
+                self.assertEqual(
+                    next_daily_time(daily_times, now=now),
+                    expected,
+                )
+
+    def test_daily_times_schedule_does_not_read_ocr(self):
+        argv = SimpleNamespace(
+            custom_action_param={
+                "key": "fixed-time",
+                "entry": "TaskAEntry",
+                "daily_times": ["13:00", "20:00"],
+                "reuse_current_override": False,
+            },
+            reco_detail=None,
+        )
+
+        result = ScheduleDeferredTask().run(None, argv)
+
+        self.assertTrue(result.success)
+        deferred = deferred_task_store.snapshot()
+        self.assertEqual(len(deferred), 1)
+        self.assertEqual(deferred[0][0].key, "fixed-time")
+        self.assertEqual(deferred[0][0].entry, "TaskAEntry")
 
     def test_fixture_is_accepted_by_real_maapicli_parser(self):
         maapicli = Path(os.environ.get("MAAPICLI_BIN", DEFAULT_MAAPICLI))
