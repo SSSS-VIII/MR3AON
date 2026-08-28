@@ -2,6 +2,7 @@ from .download_game_meta import DownloadGameMeta
 from .deferred_tasks import (
     ManagedTaskSchedulerBootstrap,
     ManagedTaskSchedulerFinalize,
+    ManagedTaskSchedulerYieldCurrent,
     ManagedTaskSchedulerWait,
     ScheduleDeferredTask,
 )
@@ -19,6 +20,7 @@ __all__ = [
     "ScheduleDeferredTask",
     "ManagedTaskSchedulerBootstrap",
     "ManagedTaskSchedulerFinalize",
+    "ManagedTaskSchedulerYieldCurrent",
     "ManagedTaskSchedulerWait",
     "LoadGameMetaOverride",
     "InputTextCompat",

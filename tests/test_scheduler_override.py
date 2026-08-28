@@ -11,7 +11,9 @@ from types import SimpleNamespace
 
 from custom.action.deferred_tasks import (
     ManagedTaskSchedulerBootstrap,
+    ManagedTaskSchedulerYieldCurrent,
     ScheduleDeferredTask,
+    dispatch_next,
     _post_managed_task,
     _take_next_task,
 )
@@ -160,6 +162,38 @@ class SchedulerOverrideTest(unittest.TestCase):
         self.assertTrue(startup["SkipServerSwitch"]["enabled"])
         self.assertNotIn("OnlyA", startup)
         self.assertNotIn("OnlyB", startup)
+
+    def test_recovery_yield_runs_ready_task_then_resumes_current_task(self):
+        tasker = self._bootstrap()
+
+        deferred_task_store.arm(
+            key="urgent",
+            entry="UrgentEntry",
+            delay_seconds=0,
+            pipeline_override={"UrgentOnly": {"enabled": True}},
+        )
+        argv = SimpleNamespace(task_detail=SimpleNamespace(task_id=10_001))
+        result = ManagedTaskSchedulerYieldCurrent().run(None, argv)
+        self.assertTrue(result.success)
+
+        # StopTask sink 会调用 dispatch_next：先取到期任务。
+        self.assertTrue(dispatch_next(tasker))
+        urgent_override = tasker.posts[-1][1]
+        self.assertEqual(
+            urgent_override["AgentSchedulerTaskSubtask"]["next"],
+            ["UrgentEntry"],
+        )
+        self.assertIn("UrgentOnly", urgent_override)
+
+        # 到期任务结束后，原 A 任务从队首带原 override 恢复。
+        self.assertTrue(dispatch_next(tasker))
+        resumed_override = tasker.posts[-1][1]
+        self.assertEqual(
+            resumed_override["AgentSchedulerTaskSubtask"]["next"],
+            ["TaskAEntry"],
+        )
+        self.assertIn("OnlyA", resumed_override)
+        self.assertNotIn("OnlyB", resumed_override)
 
     def test_fixture_is_accepted_by_real_maapicli_parser(self):
         maapicli = Path(os.environ.get("MAAPICLI_BIN", DEFAULT_MAAPICLI))

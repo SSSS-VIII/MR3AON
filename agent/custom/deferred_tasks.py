@@ -216,6 +216,21 @@ class ManagedTaskQueue:
         with self._lock:
             return self._current_task
 
+    def requeue_current(self, task_id: int) -> ManagedTask | None:
+        """将当前业务任务放回队首，为到期任务让出调度权。"""
+        with self._lock:
+            if (
+                not self._active
+                or self._current_task_id != task_id
+                or self._current_task is None
+            ):
+                return None
+            task = self._current_task
+            self._pending.appendleft(task)
+            # 立即清空可防止同一节点意外重入时重复入队。
+            self._current_task = None
+            return task
+
     def pipeline_override_for_entry(self, entry: str) -> dict[str, Any]:
         """返回目标任务的 PI option override。
 

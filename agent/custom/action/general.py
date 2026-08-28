@@ -273,12 +273,24 @@ class RestartGame(CustomAction):
                 "timeout": 120000,
                 "on_error": ["重启游戏"],
             },
-            # 启动流程确认回到主页后，接回发生错误的当前 task。
+            # 启动流程确认回到主页后先挂起当前业务任务；随后的 StopTask
+            # 把调度权交还 Agent，使到期任务可插队，否则立即恢复当前任务。
             "启动游戏到了主页面": {
-                "action": {"type": "DoNothing"},
+                "action": {
+                    "type": "Custom",
+                    "param": {
+                        "custom_action": "ManagedTaskSchedulerYieldCurrent",
+                    },
+                },
                 "focus": None,
-                "next": [entry],
+                "next": ["AgentSchedulerRecoveryStop"],
                 "on_error": ["重启游戏"],
+            },
+            "AgentSchedulerRecoveryStop": {
+                "recognition": "DirectHit",
+                "action": "StopTask",
+                "next": [],
+                "on_error": ["终止任务队列"],
             },
         }
         _deep_merge_dict(recovery_override, recovery_patch)
@@ -290,7 +302,8 @@ class RestartGame(CustomAction):
 
         logger.info(
             f"RestartGame: 已重启 {package!r}，已恢复启动选项 "
-            f"{list(startup_override)!r}，启动完成后回到 {entry!r}"
+            f"{list(startup_override)!r}，启动完成后交还 Agent 调度，"
+            f"原任务将从 {entry!r} 恢复"
         )
         return CustomAction.RunResult(success=True)
 

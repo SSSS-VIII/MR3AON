@@ -128,7 +128,17 @@ class ErrorRecoveryTest(unittest.TestCase):
         self.assertFalse(override["启动应用"]["enabled"])
         self.assertEqual(
             override["启动游戏到了主页面"]["next"],
-            ["每日藏宝图entry"],
+            ["AgentSchedulerRecoveryStop"],
+        )
+        self.assertEqual(
+            override["启动游戏到了主页面"]["action"]["param"][
+                "custom_action"
+            ],
+            "ManagedTaskSchedulerYieldCurrent",
+        )
+        self.assertEqual(
+            override["AgentSchedulerRecoveryStop"]["action"],
+            "StopTask",
         )
         self.assertEqual(override["启动流程"]["on_error"], ["重启游戏"])
 

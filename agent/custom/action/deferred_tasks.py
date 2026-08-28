@@ -319,6 +319,31 @@ class ManagedTaskSchedulerFinalize(CustomAction):
         return CustomAction.RunResult(success=dispatch_next(context.tasker))
 
 
+@AgentServer.custom_action("ManagedTaskSchedulerYieldCurrent")
+class ManagedTaskSchedulerYieldCurrent(CustomAction):
+    """将当前业务任务放回队首，由紧随的 StopTask 触发重新调度。"""
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
+        del context
+        task_id = argv.task_detail.task_id
+        task = managed_task_queue.requeue_current(task_id)
+        if task is None:
+            logger.error(
+                f"Agent 调度让出失败: task_id={task_id} 没有可恢复的当前任务"
+            )
+            return CustomAction.RunResult(success=False)
+
+        logger.info(
+            f"Agent 调度已挂起当前任务: task_id={task_id}, "
+            f"name={task.name!r}, entry={task.entry!r}, 等待重新编排"
+        )
+        return CustomAction.RunResult(success=True)
+
+
 @AgentServer.custom_action("ManagedTaskSchedulerWait")
 class ManagedTaskSchedulerWait(CustomAction):
     """保持一个真实 Tasker task 运行，计时结束前提交到期项。"""
