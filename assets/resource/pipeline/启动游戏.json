@@ -343,6 +343,7 @@
         "post_delay": 0,
         "timeout": 360000,
         "next": [
+            "启动游戏总超时已到",
             "记录启动应用包名",
             "识别登录",
             "关闭选择区服页面交给上层处理",
@@ -364,8 +365,42 @@
         ]
     },
     "启动游戏entry": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "启动游戏总超时",
+                    "duration_ms": 360000
+                }
+            }
+        },
         "next": [
             "[JumpBack]启动流程"
+        ]
+    },
+    "启动游戏总超时已到": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "LoopDeadlineExpired",
+                "custom_recognition_param": {
+                    "scope": "启动游戏总超时"
+                }
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "启动游戏总超时",
+                    "duration_ms": 360000
+                }
+            }
+        },
+        "next": [
+            "启动游戏失败"
         ]
     },
     "启动游戏到了主页面": {

@@ -273,6 +273,21 @@ class RestartGame(CustomAction):
                 "timeout": 120000,
                 "on_error": ["重启游戏"],
             },
+            # 启动流程内部不断有节点成功时，框架 timeout 会被重置。
+            # 总时限不受此影响，恢复启动超时后继续走 RestartGame。
+            "启动游戏总超时已到": {
+                "action": {
+                    "type": "Custom",
+                    "param": {
+                        "custom_action": "LoopDeadlineArm",
+                        "custom_action_param": {
+                            "scope": "启动游戏总超时",
+                            "duration_ms": 120000,
+                        },
+                    },
+                },
+                "next": ["重启游戏"],
+            },
             # 启动流程确认回到主页后先挂起当前业务任务；随后的 StopTask
             # 把调度权交还 Agent，使到期任务可插队，否则立即恢复当前任务。
             "启动游戏到了主页面": {

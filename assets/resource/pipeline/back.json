@@ -8,10 +8,25 @@
         },
         "post_delay": 0,
         "next": [
-            "启动流程"
+            "重启游戏准备启动总超时"
         ],
         "on_error": [
             "终止任务队列"
+        ]
+    },
+    "重启游戏准备启动总超时": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "启动游戏总超时",
+                    "duration_ms": 120000
+                }
+            }
+        },
+        "next": [
+            "启动流程"
         ]
     },
     "终止任务队列": {
