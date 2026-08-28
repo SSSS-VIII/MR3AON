@@ -195,6 +195,10 @@
                 ]
             }
         },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 2000,
         "next": [
             "忍阶巡逻完成退出"
         ]
@@ -277,7 +281,7 @@
             "type": "Click"
         },
         "next": [
-            "退出巡逻并任务结束"
+            "登记通灵巡逻预计倒计时"
         ]
     },
     "点击通灵兽": {
@@ -380,6 +384,54 @@
         },
         "next": [
             "忍阶巡逻完成退出"
+        ]
+    },
+    "更新通灵巡逻倒计时": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    874,
+                    619,
+                    339,
+                    95
+                ],
+                "expected": [
+                    "小时|时|分钟|分|秒"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ScheduleDeferredTask",
+                "custom_action_param": {
+                    "key": "通灵巡逻",
+                    "entry": "通灵巡逻entry",
+                    "reuse_current_override": true
+                }
+            }
+        },
+        "next": [
+            "忍阶巡逻完成退出"
+        ]
+    },
+    "登记通灵巡逻预计倒计时": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ScheduleDeferredTask",
+                "custom_action_param": {
+                    "key": "通灵巡逻",
+                    "entry": "通灵巡逻entry",
+                    "fallback_seconds": 7200,
+                    "reuse_current_override": true
+                }
+            }
+        },
+        "next": [
+            "退出巡逻并任务结束"
         ]
     },
     "进入了巡逻详细页面": {
@@ -593,6 +645,7 @@
         "next": [
             "点击巡逻按钮",
             "领取巡逻奖励",
+            "更新通灵巡逻倒计时",
             "还在巡逻"
         ]
     },

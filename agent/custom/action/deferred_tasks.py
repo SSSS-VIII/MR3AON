@@ -197,6 +197,7 @@ class ScheduleDeferredTask(CustomAction):
         key = param.get("key")
         entry = param.get("entry")
         grace_seconds = param.get("grace_seconds", 0)
+        fallback_seconds = param.get("fallback_seconds")
         pipeline_override = param.get("pipeline_override")
         if not isinstance(key, str) or not key or not isinstance(entry, str) or not entry:
             logger.error("ScheduleDeferredTask: key/entry 必须是非空字符串")
@@ -207,6 +208,13 @@ class ScheduleDeferredTask(CustomAction):
         if grace_seconds < 0:
             logger.error("ScheduleDeferredTask: grace_seconds 非法")
             return CustomAction.RunResult(success=False)
+        if fallback_seconds is not None and (
+            not isinstance(fallback_seconds, (int, float))
+            or isinstance(fallback_seconds, bool)
+            or fallback_seconds < 0
+        ):
+            logger.error("ScheduleDeferredTask: fallback_seconds 非法")
+            return CustomAction.RunResult(success=False)
 
         override_source = "explicit"
         if pipeline_override is None and param.get("reuse_current_override", True):
@@ -216,7 +224,7 @@ class ScheduleDeferredTask(CustomAction):
             pipeline_override = {}
             override_source = "empty"
 
-        duration_seconds: int | None = None
+        duration_seconds: float | None = None
         matched_text = ""
         for text in _recognition_texts(argv):
             parsed = parse_chinese_duration_seconds(text)
@@ -225,8 +233,11 @@ class ScheduleDeferredTask(CustomAction):
                 matched_text = text
                 break
         if duration_seconds is None:
-            logger.error("ScheduleDeferredTask: OCR 结果中未找到倒计时")
-            return CustomAction.RunResult(success=False)
+            if fallback_seconds is None:
+                logger.error("ScheduleDeferredTask: OCR 结果中未找到倒计时")
+                return CustomAction.RunResult(success=False)
+            duration_seconds = fallback_seconds
+            matched_text = f"fallback_seconds={fallback_seconds:g}"
 
         delay_seconds = duration_seconds + float(grace_seconds)
         deferred_task_store.arm(
