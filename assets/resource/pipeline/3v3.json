@@ -1944,8 +1944,7 @@
                     "key": "3v3等待开放",
                     "entry": "3v3entry",
                     "daily_times": [
-                        "13:00",
-                        "20:00"
+                        "11:00"
                     ],
                     "reuse_current_override": true
                 }

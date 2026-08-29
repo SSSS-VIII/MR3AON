@@ -21,7 +21,6 @@ from maa.context import Context
 
 _DEFAULT_POLL_MS = 100
 
-
 class TaskStopRequested(Exception):
     """用户在任务运行中请求停止；由可中止 click 包装抛出，run() 捕获后返回 success=False。"""
 
@@ -33,6 +32,29 @@ def is_stopping(context: Context) -> bool:
     except Exception:
         return False
 
+#点击延迟校准 - 只需要校准一次
+def click_delay_calibrate() -> int:
+    return 500
+
+# ADB 点击提交和等待返回的固定耗时估计。
+CLICK_SUBMIT_COST = 38
+
+
+class ClickDelayState:
+    """维护一段连续点击序列尚未偿还的 ADB 耗时。"""
+
+    def __init__(self) -> None:
+        self.debt_ms = 0
+
+    def compensate(self, delay_ms: int) -> int:
+        """扣除本次点击耗时及历史欠账，返回本次实际需要 sleep 的时长。"""
+        remaining_ms = delay_ms - CLICK_SUBMIT_COST - self.debt_ms
+        if remaining_ms >= 0:
+            self.debt_ms = 0
+            return remaining_ms
+
+        self.debt_ms = -remaining_ms
+        return 0
 
 def interruptible_sleep(
     context: Context, delay_ms: int, poll_ms: int = _DEFAULT_POLL_MS
@@ -62,6 +84,7 @@ def interruptible_click(
     y: int,
     delay_ms: int = 0,
     poll_ms: int = _DEFAULT_POLL_MS,
+    delay_state: ClickDelayState | None = None,
 ) -> bool:
     """可中止的"点击 + 延迟"。
 
@@ -73,4 +96,6 @@ def interruptible_click(
     context.tasker.controller.post_click(x, y).wait()
     if is_stopping(context):
         return False
+    if delay_state is not None:
+        delay_ms = delay_state.compensate(delay_ms)
     return interruptible_sleep(context, delay_ms, poll_ms)

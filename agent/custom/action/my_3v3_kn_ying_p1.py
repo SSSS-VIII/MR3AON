@@ -2,7 +2,7 @@ from maa.agent.agent_server import AgentServer
 from maa.context import Context
 from maa.custom_action import CustomAction
 
-from custom.interruptible import interruptible_click, TaskStopRequested
+from custom.interruptible import ClickDelayState, interruptible_click, click_delay_calibrate, TaskStopRequested
 
 @AgentServer.custom_action("my_3v3_kn_ying_p1")
 class my_3v3_kn_ying_p1(CustomAction):
@@ -18,8 +18,10 @@ class my_3v3_kn_ying_p1(CustomAction):
         其中 x,y 是点击坐标，t 是延迟时间（毫秒）
         """
         try:
+            delay_state = ClickDelayState()
+
             def click(x, y, delay_ms=0):
-                if not interruptible_click(context, x, y, delay_ms):
+                if not interruptible_click(context, x, y, delay_ms, delay_state=delay_state):
                     raise TaskStopRequested
 
             # ===================
@@ -27,7 +29,7 @@ class my_3v3_kn_ying_p1(CustomAction):
             # ===================
             # click(200, 620, t) 为下翻
             # click(1100, 620, t) 为跳跃
-            click(1, 1, 2950)
+            click(1, 1, 2950 - click_delay_calibrate())
             click(1100, 620, 320)
             click(1100, 620, 750)
             click(200, 620, 400)
