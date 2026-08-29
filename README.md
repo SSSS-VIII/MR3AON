@@ -21,7 +21,7 @@ Powered by [MaaFramework](https://github.com/MaaXYZ/MaaFramework) & [MFAAvalonia
 
 ## MR3AON
 
-**M**r3a **R**untime for **3**65-day **A**lways-**O**N
+**M**r3a **R**untime for **3**65-day **A**lways-**ON**
 
 该项目是MR3A的fork项目，意在强化Agent调度能力，让MR3A可以365*24h持续运行，自行完成任务而不需要人为重启。
 
