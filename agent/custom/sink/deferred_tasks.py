@@ -47,6 +47,12 @@ class ManagedTaskStopSink(ContextEventSink):
             f"Agent 收到任务结束通知: task_id={detail.task_id}, "
             f"entry={entry!r}, stop_node={detail.name!r}"
         )
+        retained = managed_task_queue.release_recurring_current(detail.task_id)
+        if retained is not None:
+            logger.info(
+                f"Agent 已保留下一周期候选: entry={retained.entry!r}, "
+                f"not_before={retained.not_before.isoformat()!r}"
+            )
         if not dispatch_next(context.tasker):
             logger.error(
                 f"Agent 在 StopTask 前提交下一项失败: "

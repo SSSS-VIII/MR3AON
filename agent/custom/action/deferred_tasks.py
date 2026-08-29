@@ -148,6 +148,7 @@ def _apply_persistent_node_overrides(task: ManagedTask) -> ManagedTask:
         entry=task.entry,
         pipeline_override=effective,
         base_pipeline_override=base,
+        not_before=task.not_before,
     )
 
 
@@ -255,6 +256,9 @@ def dispatch_next(tasker: Any) -> bool:
     if managed_task_queue.has_pending() and not managed_task_queue.has_runnable_pending():
         persistent_delay = persistent_task_state_store.seconds_until_state_change()
         delay = persistent_delay if delay is None else min(delay, persistent_delay)
+        candidate_delay = managed_task_queue.seconds_until_runnable()
+        if candidate_delay is not None:
+            delay = candidate_delay if delay is None else min(delay, candidate_delay)
 
     wait_override = {
         _WAIT_ENTRY: {
@@ -443,6 +447,21 @@ class SetManagedTaskPersistentState(CustomAction):
             f"enabled={enabled}, "
             f"valid_until={valid_until.isoformat() if valid_until else None!r}"
         )
+        if (
+            not enabled
+            and valid_until is not None
+            and current is not None
+            and current.entry == entry
+        ):
+            if not managed_task_queue.retain_current_until(
+                argv.task_detail.task_id,
+                valid_until,
+            ):
+                logger.error(
+                    "Agent 任务下一周期候选登记失败: "
+                    f"task_id={argv.task_detail.task_id}, entry={entry!r}"
+                )
+                return CustomAction.RunResult(success=False)
         return CustomAction.RunResult(success=True)
 
 
@@ -527,10 +546,18 @@ class ManagedTaskSchedulerFinalize(CustomAction):
     ) -> CustomAction.RunResult:
         current = managed_task_queue.current()
         if current is not None:
+            retained = managed_task_queue.release_recurring_current(
+                argv.task_detail.task_id
+            )
             logger.info(
                 f"Agent 调度任务完成: task_id={argv.task_detail.task_id}, "
                 f"entry={current.entry!r}"
             )
+            if retained is not None:
+                logger.info(
+                    f"Agent 已保留下一周期候选: entry={retained.entry!r}, "
+                    f"not_before={retained.not_before.isoformat()!r}"
+                )
         return CustomAction.RunResult(success=dispatch_next(context.tasker))
 
 
@@ -574,6 +601,9 @@ class ManagedTaskSchedulerWait(CustomAction):
         if managed_task_queue.has_pending() and not managed_task_queue.has_runnable_pending():
             persistent_delay = persistent_task_state_store.seconds_until_state_change()
             delay = persistent_delay if delay is None else min(delay, persistent_delay)
+            candidate_delay = managed_task_queue.seconds_until_runnable()
+            if candidate_delay is not None:
+                delay = candidate_delay if delay is None else min(delay, candidate_delay)
         if delay is not None and delay > 0:
             logger.info(f"当前没有可执行任务，等待状态刷新或延后任务: {delay:.1f}s")
             if not interruptible_sleep(context, math.ceil(delay * 1000)):

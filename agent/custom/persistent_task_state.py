@@ -95,7 +95,8 @@ class PersistentTaskStateStore:
         loaded: dict[str, TaskEnableOverride] = {}
         loaded_nodes: dict[str, dict[str, TaskEnableOverride]] = {}
         removed_expired = False
-        if self.path.exists():
+        path_existed = self.path.exists()
+        if path_existed:
             try:
                 raw = json.loads(self.path.read_text(encoding="utf-8"))
                 if not isinstance(raw, dict) or raw.get("version") != _STATE_VERSION:
@@ -164,11 +165,11 @@ class PersistentTaskStateStore:
             self._states = loaded
             self._node_states = loaded_nodes
             self._loaded_cycle = _reset_cycle(now)
-            if removed_expired:
+            if removed_expired or not path_existed:
                 try:
                     self._write_locked(now)
                 except OSError as exc:
-                    logger.error(f"Agent 任务过期状态写回失败: {self.path}: {exc}")
+                    logger.error(f"Agent 任务状态文件初始化/写回失败: {self.path}: {exc}")
         logger.info(
             f"Agent 任务状态已加载: path={str(self.path)!r}, "
             f"tasks={len(loaded)}, nodes={sum(map(len, loaded_nodes.values()))}"
@@ -323,5 +324,5 @@ class PersistentTaskStateStore:
             raise
 
 persistent_task_state_store = PersistentTaskStateStore(
-    get_runtime_paths().config_dir / "agent_task_state.json"
+    get_runtime_paths().project_root / "deps" / "bin" / "config" / "agent_task_state.json"
 )

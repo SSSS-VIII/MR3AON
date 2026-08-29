@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -210,6 +210,31 @@ class SchedulerOverrideTest(unittest.TestCase):
             resumed_override["AgentSchedulerTaskSubtask"]["next"],
             ["TaskAEntry"],
         )
+
+    def test_completed_persistent_task_is_retained_until_next_cycle(self):
+        tasker = self._bootstrap()
+        due = datetime.now().astimezone() + timedelta(hours=1)
+
+        self.assertTrue(managed_task_queue.retain_current_until(10_001, due))
+        retained = managed_task_queue.release_recurring_current(10_001)
+
+        self.assertIsNotNone(retained)
+        assert retained is not None
+        self.assertEqual(retained.entry, "TaskAEntry")
+        self.assertEqual(retained.not_before, due)
+
+        # A 作为下一周期休眠候选保留，不会被立即重新提交。
+        self.assertTrue(dispatch_next(tasker))
+        self.assertEqual(
+            tasker.posts[-1][1]["AgentSchedulerTaskSubtask"]["next"],
+            ["TaskBEntry"],
+        )
+        _, pending, _ = managed_task_queue.snapshot()
+        retained_candidates = [
+            task for task in pending if task.entry == "TaskAEntry"
+        ]
+        self.assertEqual(len(retained_candidates), 1)
+        self.assertEqual(retained_candidates[0].not_before, due)
 
     def test_all_disabled_candidates_enter_wait_instead_of_finishing(self):
         state_store = scheduler_actions.persistent_task_state_store

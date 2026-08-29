@@ -31,6 +31,22 @@ class PersistentTaskStateTest(unittest.TestCase):
             now_factory=self.clock,
         )
 
+    def test_start_creates_an_empty_state_file(self):
+        self.assertFalse(self.path.exists())
+
+        self.store.start()
+
+        self.assertTrue(self.path.exists())
+        self.assertEqual(
+            json.loads(self.path.read_text(encoding="utf-8")),
+            {
+                "version": 1,
+                "updated_at": self.clock.now.isoformat(),
+                "tasks": {},
+                "nodes": {},
+            },
+        )
+
     def tearDown(self):
         self.store.stop()
         self.temp.cleanup()

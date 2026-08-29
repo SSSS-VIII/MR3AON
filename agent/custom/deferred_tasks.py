@@ -11,6 +11,7 @@ import time
 from collections import deque
 from copy import deepcopy
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Callable, Iterable
 
 
@@ -170,6 +171,7 @@ class ManagedTask:
     entry: str
     pipeline_override: Any
     base_pipeline_override: Any | None = None
+    not_before: datetime | None = None
 
 
 class ManagedTaskQueue:
@@ -183,6 +185,7 @@ class ManagedTaskQueue:
         self._current_task: ManagedTask | None = None
         self._task_templates: dict[str, ManagedTask] = {}
         self._disabled_entries: set[str] = set()
+        self._recurring_current: dict[int, datetime] = {}
 
     def activate(
         self,
@@ -198,6 +201,7 @@ class ManagedTaskQueue:
             self._current_task_id = bootstrap_task_id
             self._current_task = None
             self._disabled_entries = set(disabled_entries)
+            self._recurring_current = {}
             # MaaPiCli 只提交一次完整计划，Agent 后续插入/重跑任务时
             # 必须能按目标 entry 找回它自己的 PI option override。
             self._task_templates = {}
@@ -209,10 +213,14 @@ class ManagedTaskQueue:
             return self._active and self._current_task_id == task_id
 
     def pop_pending(self) -> ManagedTask | None:
+        now = datetime.now().astimezone()
         with self._lock:
             for _ in range(len(self._pending)):
                 task = self._pending.popleft()
-                if task.entry not in self._disabled_entries:
+                if (
+                    task.entry not in self._disabled_entries
+                    and (task.not_before is None or task.not_before <= now)
+                ):
                     return task
                 self._pending.append(task)
             return None
@@ -226,10 +234,28 @@ class ManagedTaskQueue:
             return bool(self._pending)
 
     def has_runnable_pending(self) -> bool:
+        now = datetime.now().astimezone()
         with self._lock:
             return any(
-                task.entry not in self._disabled_entries for task in self._pending
+                task.entry not in self._disabled_entries
+                and (task.not_before is None or task.not_before <= now)
+                for task in self._pending
             )
+
+    def seconds_until_runnable(self) -> float | None:
+        """返回候选自身休眠结束前的秒数；entry 禁用由状态存储处理。"""
+        now = datetime.now().astimezone()
+        with self._lock:
+            due_times = [
+                task.not_before
+                for task in self._pending
+                if task.entry not in self._disabled_entries
+                and task.not_before is not None
+                and task.not_before > now
+            ]
+        if not due_times:
+            return None
+        return max(0.0, (min(due_times) - now).total_seconds())
 
     def set_disabled_entries(self, entries: Iterable[str]) -> None:
         with self._lock:
@@ -255,6 +281,42 @@ class ManagedTaskQueue:
         with self._lock:
             self._current_task_id = task_id
             self._current_task = task
+
+    def retain_current_until(self, task_id: int, valid_until: datetime) -> bool:
+        """登记当前实例下一周期的恢复时间；同一实例取最早到期状态。"""
+        with self._lock:
+            if (
+                not self._active
+                or self._current_task_id != task_id
+                or self._current_task is None
+            ):
+                return False
+            previous = self._recurring_current.get(task_id)
+            if previous is None or valid_until < previous:
+                self._recurring_current[task_id] = valid_until
+            return True
+
+    def release_recurring_current(self, task_id: int) -> ManagedTask | None:
+        """任务安全结束时，将已登记实例放回休眠候选队列。"""
+        with self._lock:
+            valid_until = self._recurring_current.pop(task_id, None)
+            if (
+                valid_until is None
+                or not self._active
+                or self._current_task_id != task_id
+                or self._current_task is None
+            ):
+                return None
+            current = self._current_task
+            retained = ManagedTask(
+                name=current.name,
+                entry=current.entry,
+                pipeline_override=deepcopy(current.pipeline_override),
+                base_pipeline_override=deepcopy(current.base_pipeline_override),
+                not_before=valid_until,
+            )
+            self._pending.append(retained)
+            return retained
 
     def current(self) -> ManagedTask | None:
         with self._lock:
@@ -307,6 +369,7 @@ class ManagedTaskQueue:
             self._current_task = None
             self._task_templates = {}
             self._disabled_entries = set()
+            self._recurring_current = {}
 
     def snapshot(self) -> tuple[bool, list[ManagedTask], int | None]:
         with self._lock:
