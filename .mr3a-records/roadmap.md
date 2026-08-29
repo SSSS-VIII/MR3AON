@@ -26,3 +26,5 @@ bootstrap，Agent 将每个业务任务作为独立顶层 task 逐项提交。�
 Agent 启动终端的大块乱码已确认是截图头被 Waydroid `amdgpu.ids` 警告污染后，MaaFramework 将 PNG 二进制作为 Error 输出。不修改框架，本机运行配置关闭框架 stdout，日志仍写文件；Agent 另外禁用 MaaPiCli 子进程中的 ANSI 颜色，并用 `realpath` 修复 build 软链接下的项目根识别。
 
 3v3 跑酷点击时序已增加 ADB 耗时校准：保留首段 500ms 校准，每次点击再扣除 38ms；不足部分作为序列内欠账由后续间隔偿还，避免长点击序列持续累积 ADB 往返耗时。
+
+已实现 Agent 持久化任务启用覆盖框架：PiCli 候选任务在 Agent 加载阶段按 `config/agent_task_state.json` 标记启用状态，禁用候选仍保留在队列中；有效期结束或每日 05:00 后，在下一个 Agent 调度安全点重载并恢复执行，不用后台定时器中断业务任务。顶层任务及子节点均可覆盖；同入口的多个不同配置实例分别保留自己的 PiCli 基础 override，节点状态统一覆盖所有实例。已提供通用状态写入 action，尚未接入具体每日/每周任务。

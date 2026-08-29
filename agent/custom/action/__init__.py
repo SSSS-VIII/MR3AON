@@ -5,6 +5,7 @@ from .deferred_tasks import (
     ManagedTaskSchedulerYieldCurrent,
     ManagedTaskSchedulerWait,
     ScheduleDeferredTask,
+    SetManagedTaskPersistentState,
 )
 from .general import *
 from .landlady_qa import LandladyQaLearnAnswer
@@ -19,6 +20,7 @@ from .input_text_compat import ClearInputTextCompat, InputTextCompat
 __all__ = [
     "DownloadGameMeta",
     "ScheduleDeferredTask",
+    "SetManagedTaskPersistentState",
     "ManagedTaskSchedulerBootstrap",
     "ManagedTaskSchedulerFinalize",
     "ManagedTaskSchedulerYieldCurrent",

@@ -21,6 +21,11 @@ from custom.deferred_tasks import (
 )
 from custom.interruptible import interruptible_sleep
 from custom.pipeline_params import parse_pipeline_json_param
+from custom.persistent_task_state import (
+    next_daily_reset,
+    next_weekly_reset,
+    persistent_task_state_store,
+)
 from utils.logger import logger
 
 
@@ -106,25 +111,61 @@ def _take_next_task() -> ManagedTask | None:
         first, rest = ready[0], ready[1:]
         if rest:
             deferred_task_store.release_ready(rest)
-        return ManagedTask(
-            name=first.key,
-            entry=first.entry,
-            pipeline_override=first.pipeline_override,
+        return _apply_persistent_node_overrides(
+            ManagedTask(
+                name=first.key,
+                entry=first.entry,
+                pipeline_override=first.pipeline_override,
+                base_pipeline_override=deepcopy(first.pipeline_override),
+            )
         )
 
     return managed_task_queue.pop_pending()
 
 
+def _merge_pipeline_override(target: dict[str, Any], patch: dict[str, Any]) -> None:
+    for key, value in patch.items():
+        old = target.get(key)
+        if isinstance(old, dict) and isinstance(value, dict):
+            _merge_pipeline_override(old, value)
+        else:
+            target[key] = deepcopy(value)
+
+
+def _apply_persistent_node_overrides(task: ManagedTask) -> ManagedTask:
+    base = deepcopy(
+        task.base_pipeline_override
+        if task.base_pipeline_override is not None
+        else task.pipeline_override
+    )
+    effective = deepcopy(base)
+    for node, enabled in persistent_task_state_store.node_overrides(
+        task.entry
+    ).items():
+        _merge_pipeline_override(effective, {node: {"enabled": enabled}})
+    return ManagedTask(
+        name=task.name,
+        entry=task.entry,
+        pipeline_override=effective,
+        base_pipeline_override=base,
+    )
+
+
+def _refresh_persistent_candidate_states() -> set[str]:
+    """按已加载的持久化状态刷新候选队列标记，不移除任何任务。"""
+    persistent_task_state_store.refresh_if_needed()
+    disabled = {
+        entry
+        for entry in managed_task_queue.pending_entries()
+        if not persistent_task_state_store.is_enabled(entry)
+    }
+    managed_task_queue.set_disabled_entries(disabled)
+    managed_task_queue.transform_candidates(_apply_persistent_node_overrides)
+    return disabled
+
+
 def _normalize_pipeline_override(raw: Any) -> dict[str, Any]:
     """将 MaaPiCli 任务选项产生的 override 数组按顺序深合并。"""
-    def merge(target: dict[str, Any], patch: dict[str, Any]) -> None:
-        for key, value in patch.items():
-            old = target.get(key)
-            if isinstance(old, dict) and isinstance(value, dict):
-                merge(old, value)
-            else:
-                target[key] = deepcopy(value)
-
     if raw is None:
         return {}
     if isinstance(raw, dict):
@@ -134,7 +175,7 @@ def _normalize_pipeline_override(raw: Any) -> dict[str, Any]:
         for index, item in enumerate(raw):
             if not isinstance(item, dict):
                 raise ValueError(f"pipeline_override[{index}] 非对象")
-            merge(merged, item)
+            _merge_pipeline_override(merged, item)
         return merged
     raise ValueError("pipeline_override 必须是对象或对象数组")
 
@@ -195,6 +236,8 @@ def dispatch_next(tasker: Any) -> bool:
         managed_task_yield_signal_store.clear()
         return False
 
+    _refresh_persistent_candidate_states()
+
     task = _take_next_task()
     if task is not None:
         if _post_managed_task(tasker, task):
@@ -203,11 +246,15 @@ def dispatch_next(tasker: Any) -> bool:
         return False
 
     delay = deferred_task_store.seconds_until_next()
-    if delay is None:
+    if delay is None and not managed_task_queue.has_pending():
         managed_task_queue.finish()
         managed_task_yield_signal_store.clear()
         logger.info("Agent 管理的任务队列已全部完成")
         return True
+
+    if managed_task_queue.has_pending() and not managed_task_queue.has_runnable_pending():
+        persistent_delay = persistent_task_state_store.seconds_until_state_change()
+        delay = persistent_delay if delay is None else min(delay, persistent_delay)
 
     wait_override = {
         _WAIT_ENTRY: {
@@ -323,6 +370,82 @@ class ScheduleDeferredTask(CustomAction):
         return CustomAction.RunResult(success=True)
 
 
+@AgentServer.custom_action("SetManagedTaskPersistentState")
+class SetManagedTaskPersistentState(CustomAction):
+    """写入 Agent 持久化的任务启用覆盖。"""
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
+        del context
+        try:
+            param = parse_pipeline_json_param(argv.custom_action_param)
+        except Exception as exc:
+            logger.error(f"SetManagedTaskPersistentState: 参数解析失败: {exc}")
+            return CustomAction.RunResult(success=False)
+
+        enabled = param.get("enabled")
+        if not isinstance(enabled, bool):
+            logger.error("SetManagedTaskPersistentState: enabled 必须是布尔值")
+            return CustomAction.RunResult(success=False)
+
+        current = managed_task_queue.current()
+        entry = param.get("entry")
+        node = param.get("node")
+        if entry is None and current is not None:
+            entry = current.entry
+        if not isinstance(entry, str) or not entry:
+            logger.error("SetManagedTaskPersistentState: entry 为空且没有当前任务")
+            return CustomAction.RunResult(success=False)
+        if node is not None and (not isinstance(node, str) or not node):
+            logger.error("SetManagedTaskPersistentState: node 必须是非空字符串")
+            return CustomAction.RunResult(success=False)
+
+        now = datetime.now().astimezone()
+        raw_until = param.get("valid_until")
+        try:
+            if raw_until is None:
+                valid_until = None
+            elif raw_until == "next_daily_reset":
+                valid_until = next_daily_reset(now)
+            elif raw_until == "next_weekly_reset":
+                weekday = param.get("weekday", 0)
+                if not isinstance(weekday, int) or isinstance(weekday, bool):
+                    raise ValueError("weekday 必须是 0 到 6 的整数")
+                valid_until = next_weekly_reset(now, weekday)
+            elif isinstance(raw_until, str):
+                valid_until = datetime.fromisoformat(raw_until)
+            else:
+                raise ValueError(
+                    "valid_until 必须是 ISO 时间、next_daily_reset 或 next_weekly_reset"
+                )
+            if node is None:
+                persistent_task_state_store.set(
+                    entry,
+                    enabled=enabled,
+                    valid_until=valid_until,
+                )
+            else:
+                persistent_task_state_store.set_node(
+                    entry,
+                    node,
+                    enabled=enabled,
+                    valid_until=valid_until,
+                )
+        except (OSError, ValueError) as exc:
+            logger.error(f"SetManagedTaskPersistentState: 写入失败: {exc}")
+            return CustomAction.RunResult(success=False)
+
+        logger.info(
+            f"Agent 任务状态已写入: entry={entry!r}, node={node!r}, "
+            f"enabled={enabled}, "
+            f"valid_until={valid_until.isoformat() if valid_until else None!r}"
+        )
+        return CustomAction.RunResult(success=True)
+
+
 @AgentServer.custom_action("ManagedTaskSchedulerBootstrap")
 class ManagedTaskSchedulerBootstrap(CustomAction):
     """接收任务计划，并在 bootstrap 结束前提交第一项。"""
@@ -367,10 +490,25 @@ class ManagedTaskSchedulerBootstrap(CustomAction):
                     name=name,
                     entry=entry,
                     pipeline_override=pipeline_override,
+                    base_pipeline_override=deepcopy(pipeline_override),
                 )
             )
 
-        managed_task_queue.activate(tasks, argv.task_detail.task_id)
+        persistent_task_state_store.start()
+        disabled_entries: set[str] = set()
+        for task in tasks:
+            if not persistent_task_state_store.is_enabled(task.entry):
+                disabled_entries.add(task.entry)
+        managed_task_queue.activate(
+            tasks,
+            argv.task_detail.task_id,
+            disabled_entries=disabled_entries,
+        )
+        if disabled_entries:
+            logger.info(
+                "Agent 持久化状态已暂停候选任务: "
+                f"entries={sorted(disabled_entries)!r}"
+            )
         logger.info(
             f"Agent 已接管任务队列: count={len(tasks)}, "
             f"entries={[task.entry for task in tasks]!r}"
@@ -431,9 +569,13 @@ class ManagedTaskSchedulerWait(CustomAction):
         argv: CustomAction.RunArg,
     ) -> CustomAction.RunResult:
         del argv
+        _refresh_persistent_candidate_states()
         delay = deferred_task_store.seconds_until_next()
+        if managed_task_queue.has_pending() and not managed_task_queue.has_runnable_pending():
+            persistent_delay = persistent_task_state_store.seconds_until_state_change()
+            delay = persistent_delay if delay is None else min(delay, persistent_delay)
         if delay is not None and delay > 0:
-            logger.info(f"普通任务已执行完，等待延后任务到期: {delay:.1f}s")
+            logger.info(f"当前没有可执行任务，等待状态刷新或延后任务: {delay:.1f}s")
             if not interruptible_sleep(context, math.ceil(delay * 1000)):
                 managed_task_queue.finish()
                 deferred_task_store.clear()

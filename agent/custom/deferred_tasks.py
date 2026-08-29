@@ -169,6 +169,7 @@ class ManagedTask:
     name: str
     entry: str
     pipeline_override: Any
+    base_pipeline_override: Any | None = None
 
 
 class ManagedTaskQueue:
@@ -181,14 +182,22 @@ class ManagedTaskQueue:
         self._current_task_id: int | None = None
         self._current_task: ManagedTask | None = None
         self._task_templates: dict[str, ManagedTask] = {}
+        self._disabled_entries: set[str] = set()
 
-    def activate(self, tasks: Iterable[ManagedTask], bootstrap_task_id: int) -> None:
+    def activate(
+        self,
+        tasks: Iterable[ManagedTask],
+        bootstrap_task_id: int,
+        *,
+        disabled_entries: Iterable[str] = (),
+    ) -> None:
         task_list = list(tasks)
         with self._lock:
             self._pending = deque(task_list)
             self._active = True
             self._current_task_id = bootstrap_task_id
             self._current_task = None
+            self._disabled_entries = set(disabled_entries)
             # MaaPiCli 只提交一次完整计划，Agent 后续插入/重跑任务时
             # 必须能按目标 entry 找回它自己的 PI option override。
             self._task_templates = {}
@@ -201,7 +210,42 @@ class ManagedTaskQueue:
 
     def pop_pending(self) -> ManagedTask | None:
         with self._lock:
-            return self._pending.popleft() if self._pending else None
+            for _ in range(len(self._pending)):
+                task = self._pending.popleft()
+                if task.entry not in self._disabled_entries:
+                    return task
+                self._pending.append(task)
+            return None
+
+    def pending_entries(self) -> set[str]:
+        with self._lock:
+            return {task.entry for task in self._pending}
+
+    def has_pending(self) -> bool:
+        with self._lock:
+            return bool(self._pending)
+
+    def has_runnable_pending(self) -> bool:
+        with self._lock:
+            return any(
+                task.entry not in self._disabled_entries for task in self._pending
+            )
+
+    def set_disabled_entries(self, entries: Iterable[str]) -> None:
+        with self._lock:
+            self._disabled_entries = set(entries)
+
+    def transform_candidates(
+        self,
+        transform: Callable[[ManagedTask], ManagedTask],
+    ) -> None:
+        """重建尚未执行的候选及其模板，保留每个实例各自的基础配置。"""
+        with self._lock:
+            self._pending = deque(transform(task) for task in self._pending)
+            self._task_templates = {
+                entry: transform(task)
+                for entry, task in self._task_templates.items()
+            }
 
     def prepend_pending(self, task: ManagedTask) -> None:
         with self._lock:
@@ -239,9 +283,21 @@ class ManagedTaskQueue:
         """
         with self._lock:
             if self._current_task is not None and self._current_task.entry == entry:
-                return deepcopy(self._current_task.pipeline_override)
+                source = (
+                    self._current_task.base_pipeline_override
+                    if self._current_task.base_pipeline_override is not None
+                    else self._current_task.pipeline_override
+                )
+                return deepcopy(source)
             template = self._task_templates.get(entry)
-            return deepcopy(template.pipeline_override) if template is not None else {}
+            if template is None:
+                return {}
+            source = (
+                template.base_pipeline_override
+                if template.base_pipeline_override is not None
+                else template.pipeline_override
+            )
+            return deepcopy(source)
 
     def finish(self) -> None:
         with self._lock:
@@ -250,6 +306,7 @@ class ManagedTaskQueue:
             self._current_task_id = None
             self._current_task = None
             self._task_templates = {}
+            self._disabled_entries = set()
 
     def snapshot(self) -> tuple[bool, list[ManagedTask], int | None]:
         with self._lock:

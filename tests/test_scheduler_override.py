@@ -10,8 +10,10 @@ from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
 
+import custom.action.deferred_tasks as scheduler_actions
 from custom.action.deferred_tasks import (
     ManagedTaskSchedulerBootstrap,
+    ManagedTaskSchedulerWait,
     ManagedTaskSchedulerYieldCurrent,
     ScheduleDeferredTask,
     dispatch_next,
@@ -25,6 +27,7 @@ from custom.deferred_tasks import (
     managed_task_queue,
     pipeline_override_for_entry,
 )
+from custom.persistent_task_state import PersistentTaskStateStore
 
 
 ROOT = Path(__file__).parents[1]
@@ -115,12 +118,22 @@ class SchedulerOverrideTest(unittest.TestCase):
     def setUp(self):
         deferred_task_store.clear()
         managed_task_queue.finish()
+        self._state_temp = tempfile.TemporaryDirectory(
+            prefix="mr3a-persistent-state-"
+        )
+        self._original_state_store = scheduler_actions.persistent_task_state_store
+        scheduler_actions.persistent_task_state_store = PersistentTaskStateStore(
+            Path(self._state_temp.name) / "agent_task_state.json",
+        )
         self.interface = json.loads(INTERFACE.read_text(encoding="utf-8"))
         self.task_plan = _interface_task_plan(self.interface)
 
     def tearDown(self):
         deferred_task_store.clear()
         managed_task_queue.finish()
+        scheduler_actions.persistent_task_state_store.stop()
+        scheduler_actions.persistent_task_state_store = self._original_state_store
+        self._state_temp.cleanup()
 
     def _bootstrap(self) -> _Tasker:
         tasker = _Tasker()
@@ -175,6 +188,87 @@ class SchedulerOverrideTest(unittest.TestCase):
         self.assertEqual(inserted_override["TaskAConfig"]["rate_limit"], 1111)
         self.assertIn("OnlyA", inserted_override)
         self.assertNotIn("OnlyB", inserted_override)
+
+    def test_persistently_disabled_candidate_is_retained_and_can_resume(self):
+        state_store = scheduler_actions.persistent_task_state_store
+        state_store.set("TaskAEntry", enabled=False, valid_until=None)
+
+        tasker = self._bootstrap()
+        first_override = tasker.posts[-1][1]
+        self.assertEqual(
+            first_override["AgentSchedulerTaskSubtask"]["next"],
+            ["TaskBEntry"],
+        )
+        _, pending, _ = managed_task_queue.snapshot()
+        self.assertIn("TaskAEntry", [task.entry for task in pending])
+
+        state_store.set("TaskAEntry", enabled=True, valid_until=None)
+        self.assertTrue(dispatch_next(tasker))
+        self.assertTrue(dispatch_next(tasker))
+        resumed_override = tasker.posts[-1][1]
+        self.assertEqual(
+            resumed_override["AgentSchedulerTaskSubtask"]["next"],
+            ["TaskAEntry"],
+        )
+
+    def test_all_disabled_candidates_enter_wait_instead_of_finishing(self):
+        state_store = scheduler_actions.persistent_task_state_store
+        for task in self.task_plan:
+            state_store.set(task["entry"], enabled=False, valid_until=None)
+
+        tasker = self._bootstrap()
+        self.assertEqual(tasker.posts[-1][0], "AgentSchedulerWait")
+        _, pending, _ = managed_task_queue.snapshot()
+        self.assertEqual(len(pending), len(self.task_plan))
+
+        state_store.set("TaskAEntry", enabled=True, valid_until=None)
+        context = SimpleNamespace(tasker=tasker)
+        result = ManagedTaskSchedulerWait().run(context, SimpleNamespace())
+        self.assertTrue(result.success)
+        self.assertEqual(
+            tasker.posts[-1][1]["AgentSchedulerTaskSubtask"]["next"],
+            ["TaskAEntry"],
+        )
+
+    def test_node_override_applies_to_every_duplicate_without_mixing_base_config(self):
+        first = self.task_plan[0]
+        first["pipeline_override"].append(
+            {
+                "InstanceConfig": {"value": "first"},
+                "SharedRewardNode": {"enabled": True, "source": "first"},
+            }
+        )
+        duplicate = json.loads(json.dumps(first))
+        duplicate["name"] = "任务A第二份"
+        duplicate["pipeline_override"][-1] = {
+            "InstanceConfig": {"value": "second"},
+            "SharedRewardNode": {"enabled": True, "source": "second"},
+        }
+        self.task_plan.append(duplicate)
+        scheduler_actions.persistent_task_state_store.set_node(
+            "TaskAEntry",
+            "SharedRewardNode",
+            enabled=False,
+            valid_until=None,
+        )
+
+        tasker = self._bootstrap()
+        first_override = tasker.posts[-1][1]
+        self.assertEqual(first_override["InstanceConfig"]["value"], "first")
+        self.assertEqual(
+            first_override["SharedRewardNode"],
+            {"enabled": False, "source": "first"},
+        )
+
+        self.assertTrue(dispatch_next(tasker))  # TaskB
+        self.assertTrue(dispatch_next(tasker))  # 启动游戏
+        self.assertTrue(dispatch_next(tasker))  # 第二份 TaskA
+        second_override = tasker.posts[-1][1]
+        self.assertEqual(second_override["InstanceConfig"]["value"], "second")
+        self.assertEqual(
+            second_override["SharedRewardNode"],
+            {"enabled": False, "source": "second"},
+        )
 
     def test_startup_override_comes_from_startup_task_template(self):
         self._bootstrap()
