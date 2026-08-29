@@ -352,7 +352,7 @@ class RememberGamePackage(CustomAction):
 
 @AgentServer.custom_action("RetryCurrentTaskAtHome")
 class RetryCurrentTaskAtHome(CustomAction):
-    """全局恢复确认回到主页后，最多一次接回当前 task 入口。"""
+    """全局恢复回到主页后，在继承 Context 状态的空栈子任务中重试。"""
 
     def run(
         self,
@@ -372,15 +372,53 @@ class RetryCurrentTaskAtHome(CustomAction):
             )
             return CustomAction.RunResult(success=False)
 
-        if not context.override_next(argv.node_name, [entry]):
+        # MaaContextRunTask 会克隆当前 Context：pipeline override 会被复制，
+        # TaskState（max_hit 计数和 anchor）及停止标记则与外层共享；同时新的
+        # PipelineTask 拥有独立的空 JumpBack 栈。这样可以彻底丢弃错误路径中
+        # 遗留的返回栈，又不会把已经执行过的业务分支重新跑一遍。
+        wrapper = "AgentHomeRetryWrapper"
+        subtask = "AgentHomeRetrySubtask"
+        finalize = "AgentHomeRetryFinalize"
+        stop = "AgentHomeRetryStop"
+        recovery_override = {
+            wrapper: {
+                "recognition": "DirectHit",
+                "action": "DoNothing",
+                "next": [f"[JumpBack]{subtask}", finalize],
+            },
+            subtask: {
+                "recognition": "DirectHit",
+                "action": "DoNothing",
+                "max_hit": 1,
+                "next": [entry],
+            },
+            finalize: {
+                "recognition": "DirectHit",
+                "action": {
+                    "type": "Custom",
+                    "param": {"custom_action": "ManagedTaskSchedulerFinalize"},
+                },
+                "next": [stop],
+                "on_error": ["终止任务队列"],
+            },
+            stop: {
+                "recognition": "DirectHit",
+                "action": "StopTask",
+                "next": [],
+                "on_error": ["终止任务队列"],
+            },
+        }
+        detail = context.run_task(wrapper, recovery_override)
+        if detail is None or not detail.status.succeeded:
             logger.error(
-                f"RetryCurrentTaskAtHome: 设置当前 task 入口失败 "
-                f"(node={argv.node_name!r}, entry={entry!r})"
+                f"RetryCurrentTaskAtHome: 空栈子任务执行失败 "
+                f"(task_id={task_id}, entry={entry!r})"
             )
             return CustomAction.RunResult(success=False)
 
         logger.info(
-            f"RetryCurrentTaskAtHome: task_id={task_id} 回到当前 task 入口 {entry!r}"
+            f"RetryCurrentTaskAtHome: task_id={task_id} 已在继承状态的空栈子任务中 "
+            f"完成从入口 {entry!r} 的恢复"
         )
         return CustomAction.RunResult(success=True)
 

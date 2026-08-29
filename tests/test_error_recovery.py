@@ -48,6 +48,7 @@ class _Context:
         self.tasker = _Tasker()
         self.pipeline_overrides: list[dict] = []
         self.next_overrides: list[tuple[str, list[str]]] = []
+        self.run_tasks: list[tuple[str, dict]] = []
 
     def get_node_data(self, name: str):
         if name != "启动应用":
@@ -66,6 +67,10 @@ class _Context:
     def override_next(self, name: str, value: list[str]):
         self.next_overrides.append((name, value))
         return True
+
+    def run_task(self, entry: str, pipeline_override: dict):
+        self.run_tasks.append((entry, pipeline_override))
+        return SimpleNamespace(status=SimpleNamespace(succeeded=True))
 
 
 def _argv(task_id: int, entry: str, node_name: str):
@@ -103,9 +108,16 @@ class ErrorRecoveryTest(unittest.TestCase):
 
         self.assertTrue(first.success)
         self.assertFalse(second.success)
+        self.assertEqual(len(context.run_tasks), 1)
+        wrapper, override = context.run_tasks[0]
+        self.assertEqual(wrapper, "AgentHomeRetryWrapper")
         self.assertEqual(
-            context.next_overrides,
-            [("全局恢复主页面确认", ["藏宝图entry"])],
+            override["AgentHomeRetrySubtask"]["next"],
+            ["藏宝图entry"],
+        )
+        self.assertEqual(
+            override["AgentHomeRetryFinalize"]["next"],
+            ["AgentHomeRetryStop"],
         )
 
     def test_restart_uses_remembered_package_and_restores_current_entry(self):
