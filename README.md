@@ -30,10 +30,12 @@ Powered by [MaaFramework](https://github.com/MaaXYZ/MaaFramework) & [MFAAvalonia
 - 🚧 强化错误处理
 - ✅ Agent 动态调度任务队列
 - ✅ 流水线任务中断
+- ⬜ 重构Agent调度实现 回归原生MaaFramework/MaaPiCli 能力 这样才能发布！
 - ⬜ 自动账号密码登录 不用担心其他设备登陆后需要重新输入密码了
 - ⬜ 持久化任务状态 重新启动时不用再重复任务
 - ⬜ 过夜状态刷新 睡醒之后日常就全都完成了!
 - ⬜ Agent运行时TUI（想要看可爱的开通小人搬砖）
+- ⬜ 🎇REALEASE🎇 真的可以到达这里吗?
 
 <a id="user-qq-group"></a>
 
