@@ -5,18 +5,28 @@ import sys
 import json
 import subprocess
 
-# utf-8
-sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+
+def _configure_text_stream(stream):
+    """Agent 子进程统一使用 UTF-8，避免日志解码污染主终端。"""
+    reconfigure = getattr(stream, "reconfigure", None)
+    if reconfigure is not None:
+        reconfigure(encoding="utf-8", errors="backslashreplace")
+
+
+_configure_text_stream(sys.stdout)
+_configure_text_stream(sys.stderr)
 
 # 获取当前main.py路径并设置上级目录为工作目录
-current_file_path = os.path.abspath(__file__)
+# MaaPiCli 开发构建目录会通过软链接指向 MR3A/agent。
+# 只用 abspath 会把 build/agent 误当成项目目录，导致 interface、
+# requirements 和 .venv 全部从 MaaPiCli/build 下查找。
+current_file_path = os.path.realpath(__file__)
 current_script_dir = os.path.dirname(current_file_path)  # 包含此脚本的目录
 project_root_dir = os.path.dirname(current_script_dir)  # 假定的项目根目录
 
 # 更改CWD到项目根目录
 if os.getcwd() != project_root_dir:
     os.chdir(project_root_dir)
-print(f"set cwd: {os.getcwd()}")
 
 # 将脚本自身的目录添加到sys.path，以便导入utils、maa等模块
 if current_script_dir not in sys.path:
@@ -26,6 +36,7 @@ from utils import logger
 from utils.runtime_paths import configure_runtime_paths, get_runtime_paths
 
 configure_runtime_paths(project_root=project_root_dir, work_root=project_root_dir)
+logger.debug(f"set cwd: {os.getcwd()}")
 
 VENV_NAME = ".venv"  # 虚拟环境目录的名称
 VENV_DIR = get_runtime_paths().project_root / VENV_NAME

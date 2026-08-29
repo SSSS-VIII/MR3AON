@@ -33,7 +33,10 @@ try:
         _logger.add(
             sys.stderr,
             format="<level>{extra[level_short]}</level>:<level>{message}</level>",
-            colorize=True,
+            # MaaPiCli 直接继承 Agent 子进程的 stderr，强制 ANSI
+            # 颜色会把控制序列混入主终端/TUI，显示成大量乱码。
+            # 只在独立交互终端运行 Agent 时保留颜色。
+            colorize=sys.stderr.isatty() and "PI_INTERFACE_VERSION" not in os.environ,
             level=console_level,
             filter=format_level,
         )

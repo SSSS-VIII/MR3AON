@@ -35,3 +35,10 @@
 - Agent 错误恢复单元测试覆盖了空栈 wrapper、业务入口、finalize 和 StopTask 结构。
 - JSON 配置已通过解析检查。
 - 本轮未启动或操作游戏，等待下一次实机长跑确认藏宝图能跨刷新冷却持续运行，以及重启恢复不再继承旧 JumpBack 栈。
+
+## Agent 启动终端乱码
+
+- 最初发现 Agent Loguru 强制输出 ANSI 颜色控制码；已改为 MaaPiCli 子进程模式禁用颜色，并统一 stdout/stderr 的 UTF-8 输出。
+- 实际的大块乱码不是字符编码，而是 Waydroid 的 `adb exec-out screencap -p` 在 PNG 前输出 `/vendor/etc/hwdata/amdgpu.ids: No such file or directory`；MaaFramework 因 PNG 头校验失败，将整张截图作为 Error 文本打到终端。
+- 不修改 MaaFramework，本机运行配置 `deps/bin/config/maa_option.json` 将 `stdout_level` 设为 `0`；框架日志仍完整保存在 `debug/maafw.log`。该运行配置被 Git 忽略，不随提交入库。
+- MaaPiCli build 目录通过软链接使用 MR3A Agent 时，`abspath(__file__)` 会误把 `/home/linn/MaaPiCli/build` 当成项目根，导致 interface、requirements 和 `.venv` 查找错位。已改用 `realpath(__file__)`，确认项目根和虚拟环境分别回到 `/home/linn/MR3A` 与 `/home/linn/MR3A/.venv`。

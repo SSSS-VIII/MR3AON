@@ -22,3 +22,5 @@ bootstrap，Agent 将每个业务任务作为独立顶层 task 逐项提交。�
 全局恢复已改为使用 MaaFramework 原生 `Context.run_task()`：在继承 pipeline override、共享 TaskState 的新 Context 中用空 JumpBack 栈恢复当前业务入口，完成后 finalize 调度并停止外层旧任务，不再依赖框架修改清理 JumpBack。
 
 待下次实机长时运行验证：藏宝图跨刷新冷却持续刷取、重启恢复不再继承错误路径，以及 3v3 到 13:00/20:00 的固定时点重排。
+
+Agent 启动终端的大块乱码已确认是截图头被 Waydroid `amdgpu.ids` 警告污染后，MaaFramework 将 PNG 二进制作为 Error 输出。不修改框架，本机运行配置关闭框架 stdout，日志仍写文件；Agent 另外禁用 MaaPiCli 子进程中的 ANSI 颜色，并用 `realpath` 修复 build 软链接下的项目根识别。
