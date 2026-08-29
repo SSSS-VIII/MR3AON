@@ -369,8 +369,22 @@
         },
         "timeout": 2000,
         "next": [
-            "3v3返回决斗场"
+            "登记3v3每日完成"
         ]
+    },
+    "登记3v3每日完成": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "3v3entry",
+                    "enabled": false,
+                    "valid_until": "next_daily_reset"
+                }
+            }
+        },
+        "next": ["3v3返回决斗场"]
     },
     "3v3点击准备": {
         "recognition": {

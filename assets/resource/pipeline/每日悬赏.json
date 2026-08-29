@@ -490,9 +490,21 @@
             }
         },
         "action": {
-            "type": "StopTask"
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "每日悬赏entry",
+                    "enabled": false,
+                    "valid_until": "next_daily_reset"
+                }
+            }
         },
+        "next": ["每日悬赏完成停止任务"],
         "focus": "任务完成：每日悬赏✅"
+    },
+    "每日悬赏完成停止任务": {
+        "action": {"type": "StopTask"}
     },
     "每日悬赏家族组队任务": {
         "pre_delay": 0,

@@ -671,6 +671,10 @@
                 }
             }
         },
+        "next": ["登记领取奖励_领取战令每日完成"],
         "focus": "任务完成：领取战令✅"
+    },
+    "登记领取奖励_领取战令每日完成": {
+        "action": {"type": "Custom", "param": {"custom_action": "SetManagedTaskPersistentState", "custom_action_param": {"entry": "领取奖励entry", "node": "领取奖励_领取战令", "enabled": false, "valid_until": "next_daily_reset"}}}
     }
 }

@@ -200,13 +200,27 @@
         },
         "post_delay": 2000,
         "next": [
-            "忍阶巡逻完成退出"
+            "登记通灵巡逻每日完成"
         ]
     },
     "没有巡逻任务": {
         "next": [
-            "忍阶巡逻完成退出"
+            "登记通灵巡逻每日完成"
         ]
+    },
+    "登记通灵巡逻每日完成": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "通灵巡逻entry",
+                    "enabled": false,
+                    "valid_until": "next_daily_reset"
+                }
+            }
+        },
+        "next": ["忍阶巡逻完成退出"]
     },
     "没有通灵兽说明还在巡逻": {},
     "没有食物则关闭食物页面": {

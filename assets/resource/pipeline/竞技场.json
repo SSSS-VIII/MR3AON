@@ -426,7 +426,19 @@
             "本周已跑酷标志2"
         ]
     },
-    "每周跑酷和每日老板娘问答结束": {},
+    "每周跑酷和每日老板娘问答结束": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "竞技场entry",
+                    "enabled": false,
+                    "valid_until": "next_daily_reset"
+                }
+            }
+        }
+    },
     "没有任务竞技场跑酷一次": {
         "next": [
             "竞技场任务退出"

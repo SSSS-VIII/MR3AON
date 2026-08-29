@@ -187,7 +187,11 @@
                 }
             }
         },
+        "next": ["登记领取奖励_每周兑换码每周完成"],
         "focus": "任务完成：每周兑换码✅"
+    },
+    "登记领取奖励_每周兑换码每周完成": {
+        "action": {"type": "Custom", "param": {"custom_action": "SetManagedTaskPersistentState", "custom_action_param": {"entry": "领取奖励entry", "node": "领取奖励_每周兑换码", "enabled": false, "valid_until": "next_weekly_reset", "weekday": 2}}}
     },
     "每周兑换码入口": {
         "max_hit": 3,

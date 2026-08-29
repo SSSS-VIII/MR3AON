@@ -129,7 +129,11 @@
                 }
             }
         },
+        "next": ["登记领取奖励_活动奖励每日完成"],
         "focus": "任务完成：活动奖励✅"
+    },
+    "登记领取奖励_活动奖励每日完成": {
+        "action": {"type": "Custom", "param": {"custom_action": "SetManagedTaskPersistentState", "custom_action_param": {"entry": "领取奖励entry", "node": "领取奖励_活动奖励", "enabled": false, "valid_until": "next_daily_reset"}}}
     },
     "活动奖励入口": {
         "max_hit": 3,

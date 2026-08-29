@@ -51,9 +51,21 @@
             }
         },
         "action": {
-            "type": "StopTask"
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "免费召唤entry",
+                    "enabled": false,
+                    "valid_until": "next_daily_reset"
+                }
+            }
         },
+        "next": ["免费召唤完成停止任务"],
         "focus": "任务完成：免费召唤✅"
+    },
+    "免费召唤完成停止任务": {
+        "action": {"type": "StopTask"}
     },
     "免费召唤检查主页面": {
         "recognition": {

@@ -495,7 +495,7 @@
             "忍村试炼已确认三次挑战上限",
             "试炼关卡4",
             "试炼关卡5",
-            "忍村试炼返回"
+            "登记忍村试炼每日完成"
         ]
     },
     "忍村试炼已确认三次挑战上限": {
@@ -506,8 +506,22 @@
             }
         },
         "next": [
-            "忍村试炼返回"
+            "登记忍村试炼每日完成"
         ]
+    },
+    "登记忍村试炼每日完成": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "忍村试炼entry",
+                    "enabled": false,
+                    "valid_until": "next_daily_reset"
+                }
+            }
+        },
+        "next": ["忍村试炼返回"]
     },
     "识别试炼关卡数字-1": {
         "recognition": {
