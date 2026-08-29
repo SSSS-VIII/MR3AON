@@ -136,7 +136,9 @@ class ErrorRecoveryTest(unittest.TestCase):
             context.tasker.controller.started,
             ["com.pandadastudio.ninjamustdie3"],
         )
-        override = context.pipeline_overrides[-1]
+        self.assertEqual(len(context.run_tasks), 1)
+        startup_entry, override = context.run_tasks[0]
+        self.assertEqual(startup_entry, "重启游戏准备启动总超时")
         self.assertFalse(override["启动应用"]["enabled"])
         self.assertEqual(
             override["启动游戏到了主页面"]["next"],
@@ -152,7 +154,16 @@ class ErrorRecoveryTest(unittest.TestCase):
             override["AgentSchedulerRecoveryStop"]["action"],
             "StopTask",
         )
+        self.assertEqual(
+            override["重启游戏"]["next"],
+            ["AgentSchedulerRecoveryStop"],
+        )
         self.assertEqual(override["启动流程"]["on_error"], ["重启游戏"])
+        outer_override = context.pipeline_overrides[-1]
+        self.assertEqual(
+            outer_override["重启游戏"]["next"],
+            ["AgentSchedulerRecoveryStop"],
+        )
 
     def test_restart_can_repeat_for_same_business_task(self):
         general._remember_game_package("com.pandadastudio.ninjamustdie3")

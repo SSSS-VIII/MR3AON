@@ -217,7 +217,7 @@ class EnableNode(CustomAction):
 
 @AgentServer.custom_action("RestartGame")
 class RestartGame(CustomAction):
-    """使用启动任务记录的包名重启游戏，并配置恢复后的任务入口。"""
+    """使用启动任务记录的包名重启，并在独立空栈子任务中完成启动。"""
 
     def run(
         self,
@@ -263,6 +263,7 @@ class RestartGame(CustomAction):
 
         startup_override = pipeline_override_for_entry("启动游戏entry")
         recovery_override = deepcopy(startup_override)
+        recovery_stop = "AgentSchedulerRecoveryStop"
         recovery_patch = {
             # RestartGame 已直接启动正确的包；当前业务 task 中的启动应用节点没有
             # 启动职责，必须禁用；服务器与区服 option 则从启动任务完整继承。
@@ -288,8 +289,8 @@ class RestartGame(CustomAction):
                 },
                 "next": ["重启游戏"],
             },
-            # 启动流程确认回到主页后先挂起当前业务任务；随后的 StopTask
-            # 把调度权交还 Agent，使到期任务可插队，否则立即恢复当前任务。
+            # 启动流程运行在 context.run_task 创建的空 JumpBack 栈中。
+            # 确认主页后先挂起外层业务任务，再停止这个启动子任务。
             "启动游戏到了主页面": {
                 "action": {
                     "type": "Custom",
@@ -298,26 +299,53 @@ class RestartGame(CustomAction):
                     },
                 },
                 "focus": None,
-                "next": ["AgentSchedulerRecoveryStop"],
+                "next": [recovery_stop],
                 "on_error": ["重启游戏"],
             },
-            "AgentSchedulerRecoveryStop": {
+            recovery_stop: {
                 "recognition": "DirectHit",
                 "action": "StopTask",
                 "next": [],
                 "on_error": ["终止任务队列"],
             },
+            # 无论是外层恢复节点还是启动子任务里再次触发的重启，重启动作
+            # 返回后都只能停止当前 PipelineTask，不能继续原有 next 或弹出
+            # 业务流程遗留的 JumpBack 栈。
+            "重启游戏": {
+                "next": [recovery_stop],
+            },
         }
         _deep_merge_dict(recovery_override, recovery_patch)
-        if not context.override_pipeline(recovery_override):
+
+        # MaaContextRunTask 会复制当前 Context 的 override / TaskState，但新建
+        # PipelineTask，因此拥有独立的空 JumpBack 栈。启动流程即使结束，也
+        # 不可能回到 3v3 等业务节点残留的返回栈。
+        detail = context.run_task("重启游戏准备启动总超时", recovery_override)
+        if detail is None or not detail.status.succeeded:
             logger.error(
-                f"RestartGame: 配置恢复入口失败 (task_id={task_id}, entry={entry!r})"
+                f"RestartGame: 空栈启动子任务失败 "
+                f"(task_id={task_id}, entry={entry!r})"
+            )
+            return CustomAction.RunResult(success=False)
+
+        # 启动子任务中的 ManagedTaskSchedulerYieldCurrent 已把当前业务任务
+        # 放回 Agent 队首。外层重启节点返回后立即 StopTask，由 sink 在停止
+        # 前重新调度；绝不能再沿 back.json 的启动 next 继续执行。
+        if not context.override_pipeline(
+            {
+                argv.node_name: {"next": [recovery_stop]},
+                recovery_stop: recovery_patch[recovery_stop],
+            }
+        ):
+            logger.error(
+                f"RestartGame: 配置外层停止节点失败 "
+                f"(task_id={task_id}, entry={entry!r})"
             )
             return CustomAction.RunResult(success=False)
 
         logger.info(
             f"RestartGame: 已重启 {package!r}，已恢复启动选项 "
-            f"{list(startup_override)!r}，启动完成后交还 Agent 调度，"
+            f"{list(startup_override)!r}，已在空栈子任务中完成启动并交还 Agent 调度，"
             f"原任务将从 {entry!r} 恢复"
         )
         return CustomAction.RunResult(success=True)
