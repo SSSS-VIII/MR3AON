@@ -305,10 +305,6 @@
                 }
             }
         },
-        "next": ["登记领取奖励_忍阶任务每日完成"],
         "focus": "任务完成：忍阶任务✅"
-    },
-    "登记领取奖励_忍阶任务每日完成": {
-        "action": {"type": "Custom", "param": {"custom_action": "SetManagedTaskPersistentState", "custom_action_param": {"entry": "领取奖励entry", "node": "领取奖励_忍阶任务", "enabled": false, "valid_until": "next_daily_reset"}}}
     }
 }

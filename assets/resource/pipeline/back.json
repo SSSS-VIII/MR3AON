@@ -8,7 +8,7 @@
         },
         "post_delay": 0,
         "next": [
-            "重启游戏准备启动总超时"
+            "AgentSchedulerRecoveryStop"
         ],
         "on_error": [
             "终止任务队列"
@@ -40,6 +40,14 @@
         "post_delay": 0,
         "next": [],
         "on_error": []
+    },
+    "AgentSchedulerRecoveryStop": {
+        "recognition": "DirectHit",
+        "action": "StopTask",
+        "next": [],
+        "on_error": [
+            "终止任务队列"
+        ]
     },
     "全局错误恢复": {
         "pre_delay": 0,
@@ -147,7 +155,7 @@
             }
         },
         "next": [
-            "全局错误恢复"
+            "AgentSchedulerRecoveryStop"
         ],
         "on_error": [
             "重启游戏"

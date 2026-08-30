@@ -19,23 +19,17 @@ from maa.define import (
 
 from utils import logger
 from custom.reco import Count
-from custom.deferred_tasks import effective_task_entry, pipeline_override_for_entry
+from custom.deferred_tasks import (
+    ManagedTask,
+    effective_task_entry,
+    managed_task_queue,
+    pipeline_override_for_entry,
+)
 from custom.pipeline_params import parse_pipeline_json_param
 
 
 _recovery_state_lock = threading.Lock()
 _remembered_game_package: Optional[str] = None
-_home_retry_task_ids: set[int] = set()
-
-
-def _deep_merge_dict(target: dict, patch: dict) -> None:
-    """原地深合并 pipeline override，保留同一节点下未被覆盖的字段。"""
-    for key, value in patch.items():
-        old = target.get(key)
-        if isinstance(old, dict) and isinstance(value, dict):
-            _deep_merge_dict(old, value)
-        else:
-            target[key] = deepcopy(value)
 
 
 def _run_set_node_enabled(
@@ -107,15 +101,6 @@ def _remember_game_package(package: str) -> None:
 def _get_remembered_game_package() -> Optional[str]:
     with _recovery_state_lock:
         return _remembered_game_package
-
-
-def _claim_home_retry(task_id: int) -> bool:
-    """每个 Maa task 只允许从主页回入口重试一次。"""
-    with _recovery_state_lock:
-        if task_id in _home_retry_task_ids:
-            return False
-        _home_retry_task_ids.add(task_id)
-        return True
 
 
 def _box_to_center(box: object) -> Optional[Tuple[int, int]]:
@@ -217,7 +202,7 @@ class EnableNode(CustomAction):
 
 @AgentServer.custom_action("RestartGame")
 class RestartGame(CustomAction):
-    """使用启动任务记录的包名重启，并在独立空栈子任务中完成启动。"""
+    """停止游戏，并将启动任务和当前业务任务交还 Agent 调度。"""
 
     def run(
         self,
@@ -238,6 +223,13 @@ class RestartGame(CustomAction):
             )
             return CustomAction.RunResult(success=False)
 
+        if not managed_task_queue.active_for(task_id) or managed_task_queue.current() is None:
+            logger.error(
+                f"RestartGame: Agent 没有可恢复的当前任务 "
+                f"(task_id={task_id}, entry={entry!r})"
+            )
+            return CustomAction.RunResult(success=False)
+
         package = _get_remembered_game_package()
         if not package:
             logger.error("RestartGame: 尚未记录实际启动包名，拒绝使用流水线默认值")
@@ -249,104 +241,35 @@ class RestartGame(CustomAction):
             stop_job.wait()
             if not stop_job.succeeded:
                 logger.warning(
-                    f"RestartGame: StopApp 未成功 (package={package!r})，继续尝试启动"
+                    f"RestartGame: StopApp 未成功 (package={package!r})，"
+                    "仍交给启动任务处理"
                 )
-
-            start_job = controller.post_start_app(package)
-            start_job.wait()
-            if not start_job.succeeded:
-                logger.error(f"RestartGame: StartApp 失败 (package={package!r})")
-                return CustomAction.RunResult(success=False)
         except Exception as exc:
             logger.exception(f"RestartGame: 执行失败 (package={package!r}): {exc}")
             return CustomAction.RunResult(success=False)
 
         startup_override = pipeline_override_for_entry("启动游戏entry")
-        recovery_override = deepcopy(startup_override)
-        recovery_stop = "AgentSchedulerRecoveryStop"
-        recovery_patch = {
-            # RestartGame 已直接启动正确的包；当前业务 task 中的启动应用节点没有
-            # 启动职责，必须禁用；服务器与区服 option 则从启动任务完整继承。
-            "启动应用": {"enabled": False},
-            "记录启动应用包名": {"enabled": False},
-            # 恢复启动只给两分钟；顶层仍是业务任务，失败可再次重启。
-            "启动流程": {
-                "timeout": 120000,
-                "on_error": ["重启游戏"],
-            },
-            # 启动流程内部不断有节点成功时，框架 timeout 会被重置。
-            # 总时限不受此影响，恢复启动超时后继续走 RestartGame。
-            "启动游戏总超时已到": {
-                "action": {
-                    "type": "Custom",
-                    "param": {
-                        "custom_action": "LoopDeadlineArm",
-                        "custom_action_param": {
-                            "scope": "启动游戏总超时",
-                            "duration_ms": 120000,
-                        },
-                    },
-                },
-                "next": ["重启游戏"],
-            },
-            # 启动流程运行在 context.run_task 创建的空 JumpBack 栈中。
-            # 确认主页后先挂起外层业务任务，再停止这个启动子任务。
-            "启动游戏到了主页面": {
-                "action": {
-                    "type": "Custom",
-                    "param": {
-                        "custom_action": "ManagedTaskSchedulerYieldCurrent",
-                    },
-                },
-                "focus": None,
-                "next": [recovery_stop],
-                "on_error": ["重启游戏"],
-            },
-            recovery_stop: {
-                "recognition": "DirectHit",
-                "action": "StopTask",
-                "next": [],
-                "on_error": ["终止任务队列"],
-            },
-            # 无论是外层恢复节点还是启动子任务里再次触发的重启，重启动作
-            # 返回后都只能停止当前 PipelineTask，不能继续原有 next 或弹出
-            # 业务流程遗留的 JumpBack 栈。
-            "重启游戏": {
-                "next": [recovery_stop],
-            },
-        }
-        _deep_merge_dict(recovery_override, recovery_patch)
-
-        # MaaContextRunTask 会复制当前 Context 的 override / TaskState，但新建
-        # PipelineTask，因此拥有独立的空 JumpBack 栈。启动流程即使结束，也
-        # 不可能回到 3v3 等业务节点残留的返回栈。
-        detail = context.run_task("重启游戏准备启动总超时", recovery_override)
-        if detail is None or not detail.status.succeeded:
+        current = managed_task_queue.requeue_current(task_id)
+        if current is None:
             logger.error(
-                f"RestartGame: 空栈启动子任务失败 "
+                f"RestartGame: Agent 无法取回当前任务 "
                 f"(task_id={task_id}, entry={entry!r})"
             )
             return CustomAction.RunResult(success=False)
 
-        # 启动子任务中的 ManagedTaskSchedulerYieldCurrent 已把当前业务任务
-        # 放回 Agent 队首。外层重启节点返回后立即 StopTask，由 sink 在停止
-        # 前重新调度；绝不能再沿 back.json 的启动 next 继续执行。
-        if not context.override_pipeline(
-            {
-                argv.node_name: {"next": [recovery_stop]},
-                recovery_stop: recovery_patch[recovery_stop],
-            }
-        ):
-            logger.error(
-                f"RestartGame: 配置外层停止节点失败 "
-                f"(task_id={task_id}, entry={entry!r})"
-            )
-            return CustomAction.RunResult(success=False)
+        startup = ManagedTask(
+            name="异常恢复：启动游戏",
+            entry="启动游戏entry",
+            pipeline_override=deepcopy(startup_override),
+            base_pipeline_override=deepcopy(startup_override),
+        )
+        # requeue_current 已把业务任务放到队首；再前插启动任务即可形成
+        # 启动游戏 -> 恢复业务任务。真正提交发生在紧随其后的 StopTask sink。
+        managed_task_queue.prepend_pending(startup)
 
         logger.info(
-            f"RestartGame: 已重启 {package!r}，已恢复启动选项 "
-            f"{list(startup_override)!r}，已在空栈子任务中完成启动并交还 Agent 调度，"
-            f"原任务将从 {entry!r} 恢复"
+            f"RestartGame: 已停止 {package!r}，Agent 将依次调度 "
+            f"'启动游戏entry' -> {entry!r}，启动选项={list(startup_override)!r}"
         )
         return CustomAction.RunResult(success=True)
 
@@ -380,7 +303,7 @@ class RememberGamePackage(CustomAction):
 
 @AgentServer.custom_action("RetryCurrentTaskAtHome")
 class RetryCurrentTaskAtHome(CustomAction):
-    """全局恢复回到主页后，在继承 Context 状态的空栈子任务中重试。"""
+    """主页上的异常交还 Agent，将当前业务任务重新放到队首。"""
 
     def run(
         self,
@@ -392,61 +315,18 @@ class RetryCurrentTaskAtHome(CustomAction):
             logger.error("RetryCurrentTaskAtHome: 当前 task 没有有效入口")
             return CustomAction.RunResult(success=False)
 
-        entry = entry.strip()
         task_id = argv.task_detail.task_id
-        if not _claim_home_retry(task_id):
-            logger.warning(
-                f"RetryCurrentTaskAtHome: task_id={task_id} 已从主页重试过，升级为重启"
-            )
-            return CustomAction.RunResult(success=False)
-
-        # MaaContextRunTask 会克隆当前 Context：pipeline override 会被复制，
-        # TaskState（max_hit 计数和 anchor）及停止标记则与外层共享；同时新的
-        # PipelineTask 拥有独立的空 JumpBack 栈。这样可以彻底丢弃错误路径中
-        # 遗留的返回栈，又不会把已经执行过的业务分支重新跑一遍。
-        wrapper = "AgentHomeRetryWrapper"
-        subtask = "AgentHomeRetrySubtask"
-        finalize = "AgentHomeRetryFinalize"
-        stop = "AgentHomeRetryStop"
-        recovery_override = {
-            wrapper: {
-                "recognition": "DirectHit",
-                "action": "DoNothing",
-                "next": [f"[JumpBack]{subtask}", finalize],
-            },
-            subtask: {
-                "recognition": "DirectHit",
-                "action": "DoNothing",
-                "max_hit": 1,
-                "next": [entry],
-            },
-            finalize: {
-                "recognition": "DirectHit",
-                "action": {
-                    "type": "Custom",
-                    "param": {"custom_action": "ManagedTaskSchedulerFinalize"},
-                },
-                "next": [stop],
-                "on_error": ["终止任务队列"],
-            },
-            stop: {
-                "recognition": "DirectHit",
-                "action": "StopTask",
-                "next": [],
-                "on_error": ["终止任务队列"],
-            },
-        }
-        detail = context.run_task(wrapper, recovery_override)
-        if detail is None or not detail.status.succeeded:
+        task = managed_task_queue.requeue_current(task_id)
+        if task is None:
             logger.error(
-                f"RetryCurrentTaskAtHome: 空栈子任务执行失败 "
-                f"(task_id={task_id}, entry={entry!r})"
+                f"RetryCurrentTaskAtHome: Agent 无法取回当前任务 "
+                f"(task_id={task_id}, entry={entry.strip()!r})"
             )
             return CustomAction.RunResult(success=False)
 
         logger.info(
-            f"RetryCurrentTaskAtHome: task_id={task_id} 已在继承状态的空栈子任务中 "
-            f"完成从入口 {entry!r} 的恢复"
+            f"RetryCurrentTaskAtHome: task_id={task_id} 已交还 Agent，"
+            f"将从入口 {task.entry!r} 重新调度"
         )
         return CustomAction.RunResult(success=True)
 

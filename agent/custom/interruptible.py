@@ -1,8 +1,8 @@
 """可中止点击/睡眠工具
 
-为长时序的自定义动作（如 my_3v3_kn_*）提供"切片轮询 + deadline 校准"的
-可中止 sleep 与 click，使得用户在 UI 点击停止任务时，正在阻塞的 Python
-点击序列能在一次轮询步长内退出，不再继续后续点击。
+为长时序的自定义动作（如 my_3v3_kn_*）提供可中止的 click 与 sleep，
+使得用户在 UI 点击停止任务时，正在阻塞的 Python 点击序列能在一次
+轮询步长内退出，不再继续后续点击。
 
 设计要点:
 - Python 单线程内无法被外部信号打断 ``time.sleep``，只能轮询。
@@ -18,8 +18,16 @@
 import time
 
 from maa.context import Context
+from utils.logger import logger
 
 _DEFAULT_POLL_MS = 100
+# 原始操作序列的 delay 隐含了作者开发环境中的输入耗时；先补回这一固定
+# 差值，再按当前环境每次真实的 controller.wait 耗时动态校准。
+_CLICK_DELAY_CORRECTION_MS = 60
+
+# ADB 点击命令到游戏响应以及首次识图的延迟，只校准一次。
+_CLICK_DELAY_CALIBRATION = 1000
+
 
 class TaskStopRequested(Exception):
     """用户在任务运行中请求停止；由可中止 click 包装抛出，run() 捕获后返回 success=False。"""
@@ -32,29 +40,46 @@ def is_stopping(context: Context) -> bool:
     except Exception:
         return False
 
-#点击延迟校准 - 只需要校准一次
+# 点击延迟校准 - 只需要校准一次
 def click_delay_calibrate() -> int:
-    return 500
-
-# ADB 点击提交和等待返回的固定耗时估计。
-CLICK_SUBMIT_COST = 38
+    return _CLICK_DELAY_CALIBRATION
 
 
 class ClickDelayState:
-    """维护一段连续点击序列尚未偿还的 ADB 耗时。"""
+    """维护连续点击序列的绝对时间轴。
+
+    每段按 ``delay_ms + 固定修正值`` 推进。controller.wait 的实际耗时
+    从本段剩余时间中动态扣除，某次阻塞过长产生的欠时会由后续间隔偿还。
+    """
 
     def __init__(self) -> None:
-        self.debt_ms = 0
+        self.index = 0
+        self.deadline: float | None = None
 
-    def compensate(self, delay_ms: int) -> int:
-        """扣除本次点击耗时及历史欠账，返回本次实际需要 sleep 的时长。"""
-        remaining_ms = delay_ms - CLICK_SUBMIT_COST - self.debt_ms
-        if remaining_ms >= 0:
-            self.debt_ms = 0
-            return remaining_ms
+    def next_index(self) -> int:
+        self.index += 1
+        return self.index
 
-        self.debt_ms = -remaining_ms
-        return 0
+    def advance(self, click_started: float, delay_ms: int) -> float:
+        if self.deadline is None:
+            self.deadline = click_started
+        corrected_delay_ms = max(delay_ms + _CLICK_DELAY_CORRECTION_MS, 0)
+        self.deadline += corrected_delay_ms / 1000.0
+        return self.deadline
+
+
+def _interruptible_sleep_until(
+    context: Context, deadline: float, poll_ms: int = _DEFAULT_POLL_MS
+) -> bool:
+    step = poll_ms / 1000.0
+    while True:
+        if is_stopping(context):
+            return False
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return not is_stopping(context)
+        time.sleep(remaining if remaining < step else step)
+
 
 def interruptible_sleep(
     context: Context, delay_ms: int, poll_ms: int = _DEFAULT_POLL_MS
@@ -68,14 +93,7 @@ def interruptible_sleep(
         return not is_stopping(context)
 
     deadline = time.monotonic() + delay_ms / 1000.0
-    step = poll_ms / 1000.0
-    while True:
-        if is_stopping(context):
-            return False
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            return not is_stopping(context)
-        time.sleep(remaining if remaining < step else step)
+    return _interruptible_sleep_until(context, deadline, poll_ms)
 
 
 def interruptible_click(
@@ -93,9 +111,26 @@ def interruptible_click(
     """
     if is_stopping(context):
         return False
+    click_started = time.monotonic()
     context.tasker.controller.post_click(x, y).wait()
+    click_finished = time.monotonic()
     if is_stopping(context):
         return False
+
+    submit_ms = (click_finished - click_started) * 1000.0
     if delay_state is not None:
-        delay_ms = delay_state.compensate(delay_ms)
+        deadline = delay_state.advance(click_started, delay_ms)
+        remaining_ms = max(0.0, (deadline - click_finished) * 1000.0)
+        debt_ms = max(0.0, (click_finished - deadline) * 1000.0)
+        logger.info(
+            f"3v3 click#{delay_state.next_index()}=({x},{y}) "
+            f"submit={submit_ms:.1f}ms delay={delay_ms}ms "
+            f"correction=+{_CLICK_DELAY_CORRECTION_MS}ms "
+            f"sleep<={remaining_ms:.1f}ms debt={debt_ms:.1f}ms"
+        )
+        return _interruptible_sleep_until(context, deadline, poll_ms)
+    else:
+        logger.info(
+            f"click=({x},{y}) submit={submit_ms:.1f}ms post_delay={delay_ms}ms"
+        )
     return interruptible_sleep(context, delay_ms, poll_ms)

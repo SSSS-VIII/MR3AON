@@ -4,7 +4,7 @@ import unittest
 from types import SimpleNamespace
 
 from custom.action import general
-from custom.deferred_tasks import managed_task_queue
+from custom.deferred_tasks import ManagedTask, managed_task_queue
 
 
 class _Job:
@@ -84,8 +84,17 @@ class ErrorRecoveryTest(unittest.TestCase):
     def setUp(self):
         with general._recovery_state_lock:
             general._remembered_game_package = None
-            general._home_retry_task_ids.clear()
         managed_task_queue.finish()
+
+    @staticmethod
+    def _managed(name: str, entry: str, override: dict | None = None):
+        value = override or {}
+        return ManagedTask(
+            name=name,
+            entry=entry,
+            pipeline_override=value,
+            base_pipeline_override=value,
+        )
 
     def test_remember_package_uses_start_task_override(self):
         context = _Context("com.pandadastudio.ninjamustdie3")
@@ -99,31 +108,33 @@ class ErrorRecoveryTest(unittest.TestCase):
             "com.pandadastudio.ninjamustdie3",
         )
 
-    def test_home_retry_is_limited_to_once_per_task(self):
+    def test_home_retry_returns_current_task_to_agent_queue(self):
         context = _Context()
         argv = _argv(22, "藏宝图entry", "全局恢复主页面确认")
+        current = self._managed("藏宝图", "藏宝图entry", {"节点": {"enabled": True}})
+        managed_task_queue.activate([], 1)
+        managed_task_queue.set_current(22, current)
 
-        first = general.RetryCurrentTaskAtHome().run(context, argv)
-        second = general.RetryCurrentTaskAtHome().run(context, argv)
+        result = general.RetryCurrentTaskAtHome().run(context, argv)
 
-        self.assertTrue(first.success)
-        self.assertFalse(second.success)
-        self.assertEqual(len(context.run_tasks), 1)
-        wrapper, override = context.run_tasks[0]
-        self.assertEqual(wrapper, "AgentHomeRetryWrapper")
-        self.assertEqual(
-            override["AgentHomeRetrySubtask"]["next"],
-            ["藏宝图entry"],
-        )
-        self.assertEqual(
-            override["AgentHomeRetryFinalize"]["next"],
-            ["AgentHomeRetryStop"],
-        )
+        self.assertTrue(result.success)
+        self.assertEqual(context.run_tasks, [])
+        active, pending, task_id = managed_task_queue.snapshot()
+        self.assertTrue(active)
+        self.assertEqual(task_id, 22)
+        self.assertEqual([task.entry for task in pending], ["藏宝图entry"])
+        self.assertIsNone(managed_task_queue.current())
 
     def test_restart_uses_remembered_package_and_restores_current_entry(self):
         general._remember_game_package("com.pandadastudio.ninjamustdie3")
         context = _Context("com.pandadastudio.ninjamustdie3.vivo")
         argv = _argv(33, "每日藏宝图entry", "重启游戏")
+        startup_override = {"跳过切换区": {"enabled": True}}
+        startup = self._managed("启动游戏", "启动游戏entry", startup_override)
+        current = self._managed("每日藏宝图", "每日藏宝图entry")
+        managed_task_queue.activate([startup], 1)
+        self.assertEqual(managed_task_queue.pop_pending(), startup)
+        managed_task_queue.set_current(33, current)
 
         result = general.RestartGame().run(context, argv)
 
@@ -132,47 +143,28 @@ class ErrorRecoveryTest(unittest.TestCase):
             context.tasker.controller.stopped,
             ["com.pandadastudio.ninjamustdie3"],
         )
+        self.assertEqual(context.tasker.controller.started, [])
+        self.assertEqual(context.run_tasks, [])
+        _, pending, _ = managed_task_queue.snapshot()
         self.assertEqual(
-            context.tasker.controller.started,
-            ["com.pandadastudio.ninjamustdie3"],
+            [task.entry for task in pending],
+            ["启动游戏entry", "每日藏宝图entry"],
         )
-        self.assertEqual(len(context.run_tasks), 1)
-        startup_entry, override = context.run_tasks[0]
-        self.assertEqual(startup_entry, "重启游戏准备启动总超时")
-        self.assertFalse(override["启动应用"]["enabled"])
-        self.assertEqual(
-            override["启动游戏到了主页面"]["next"],
-            ["AgentSchedulerRecoveryStop"],
-        )
-        self.assertEqual(
-            override["启动游戏到了主页面"]["action"]["param"][
-                "custom_action"
-            ],
-            "ManagedTaskSchedulerYieldCurrent",
-        )
-        self.assertEqual(
-            override["AgentSchedulerRecoveryStop"]["action"],
-            "StopTask",
-        )
-        self.assertEqual(
-            override["重启游戏"]["next"],
-            ["AgentSchedulerRecoveryStop"],
-        )
-        self.assertEqual(override["启动流程"]["on_error"], ["重启游戏"])
-        outer_override = context.pipeline_overrides[-1]
-        self.assertEqual(
-            outer_override["重启游戏"]["next"],
-            ["AgentSchedulerRecoveryStop"],
-        )
+        self.assertEqual(pending[0].pipeline_override, startup_override)
 
-    def test_restart_can_repeat_for_same_business_task(self):
+    def test_restart_cannot_enqueue_same_current_task_twice(self):
         general._remember_game_package("com.pandadastudio.ninjamustdie3")
         context = _Context()
         argv = _argv(44, "每日藏宝图entry", "重启游戏")
+        startup = self._managed("启动游戏", "启动游戏entry")
+        current = self._managed("每日藏宝图", "每日藏宝图entry")
+        managed_task_queue.activate([startup], 1)
+        managed_task_queue.pop_pending()
+        managed_task_queue.set_current(44, current)
 
         self.assertTrue(general.RestartGame().run(context, argv).success)
-        self.assertTrue(general.RestartGame().run(context, argv).success)
-        self.assertEqual(len(context.tasker.controller.started), 2)
+        self.assertFalse(general.RestartGame().run(context, argv).success)
+        self.assertEqual(len(context.tasker.controller.stopped), 1)
 
     def test_restart_is_disabled_during_startup_task(self):
         general._remember_game_package("com.pandadastudio.ninjamustdie3")
