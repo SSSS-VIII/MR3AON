@@ -1677,14 +1677,18 @@
         "action": {
             "type": "Custom",
             "param": {
-                "custom_action": "my_3v3_fight"
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "3v3_boss战斗循环",
+                    "duration_ms": 120000
+                }
             }
         },
         "post_delay": 0,
         "timeout": 40000,
         "rate_limit": 50,
         "next": [
-            "打完boss还活着进入kn_ying_p2"
+            "3v3_boss战斗循环_0"
         ]
     },
     "发现3v3_boss_1": {
@@ -1716,14 +1720,18 @@
         "action": {
             "type": "Custom",
             "param": {
-                "custom_action": "my_3v3_fight"
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "3v3_boss战斗循环",
+                    "duration_ms": 120000
+                }
             }
         },
         "post_delay": 0,
         "timeout": 40000,
         "rate_limit": 50,
         "next": [
-            "打完boss还活着进入kn_an_p2"
+            "3v3_boss战斗循环_1"
         ]
     },
     "发现3v3_boss_2": {
@@ -1755,14 +1763,18 @@
         "action": {
             "type": "Custom",
             "param": {
-                "custom_action": "my_3v3_fight"
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "3v3_boss战斗循环",
+                    "duration_ms": 120000
+                }
             }
         },
         "post_delay": 0,
         "timeout": 40000,
         "rate_limit": 50,
         "next": [
-            "打完boss还活着进入kn_ya_p2"
+            "3v3_boss战斗循环_2"
         ]
     },
     "发现3v3_boss_3": {
@@ -1794,14 +1806,74 @@
         "action": {
             "type": "Custom",
             "param": {
-                "custom_action": "my_3v3_fight"
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "3v3_boss战斗循环",
+                    "duration_ms": 120000
+                }
             }
         },
         "post_delay": 0,
         "timeout": 40000,
         "rate_limit": 50,
         "next": [
-            "打完boss还活着进入kn_wu_p2"
+            "3v3_boss战斗循环_3"
+        ]
+    },
+    "3v3_boss战斗循环_0": {
+        "recognition": "DirectHit",
+        "next": [
+            "3v3_boss战斗循环超时",
+            "打完boss还活着进入kn_ying_p2",
+            "[JumpBack]3v3_boss战斗点击单元"
+        ]
+    },
+    "3v3_boss战斗循环_1": {
+        "recognition": "DirectHit",
+        "next": [
+            "3v3_boss战斗循环超时",
+            "打完boss还活着进入kn_an_p2",
+            "[JumpBack]3v3_boss战斗点击单元"
+        ]
+    },
+    "3v3_boss战斗循环_2": {
+        "recognition": "DirectHit",
+        "next": [
+            "3v3_boss战斗循环超时",
+            "打完boss还活着进入kn_ya_p2",
+            "[JumpBack]3v3_boss战斗点击单元"
+        ]
+    },
+    "3v3_boss战斗循环_3": {
+        "recognition": "DirectHit",
+        "next": [
+            "3v3_boss战斗循环超时",
+            "打完boss还活着进入kn_wu_p2",
+            "[JumpBack]3v3_boss战斗点击单元"
+        ]
+    },
+    "3v3_boss战斗点击单元": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "my_3v3_fight"
+            }
+        },
+        "next": []
+    },
+    "3v3_boss战斗循环超时": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "LoopDeadlineExpired",
+                "custom_recognition_param": {
+                    "scope": "3v3_boss战斗循环"
+                }
+            }
+        },
+        "next": [
+            "Default_on_error"
         ]
     },
     "回到了3v3主页面": {
@@ -2020,9 +2092,15 @@
             }
         },
         "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "my_3v3_kn_ying_p1"
+            }
+        },
         "post_delay": 0,
         "next": [
-            "3v3_kn_ying_p1"
+            "p1购卡1_0"
         ]
     },
     "识别到下滑按钮1": {
@@ -2050,9 +2128,15 @@
             }
         },
         "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "my_3v3_kn_an_p1"
+            }
+        },
         "post_delay": 0,
         "next": [
-            "3v3_kn_an_p1"
+            "p1购卡1_1"
         ]
     },
     "识别到下滑按钮2": {
@@ -2080,9 +2164,15 @@
             }
         },
         "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "my_3v3_kn_ya_p1"
+            }
+        },
         "post_delay": 0,
         "next": [
-            "3v3_kn_ya_p1"
+            "p1购卡1_2"
         ]
     },
     "识别到下滑按钮3": {
@@ -2110,9 +2200,15 @@
             }
         },
         "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "my_3v3_kn_wu_p1"
+            }
+        },
         "post_delay": 0,
         "next": [
-            "3v3_kn_wu_p1"
+            "p1购卡1_3"
         ]
     },
     "识别并点击3v3": {

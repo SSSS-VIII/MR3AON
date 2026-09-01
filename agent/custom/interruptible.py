@@ -26,7 +26,7 @@ _DEFAULT_POLL_MS = 100
 _CLICK_DELAY_CORRECTION_MS = 60
 
 # ADB 点击命令到游戏响应以及首次识图的延迟，只校准一次。
-_CLICK_DELAY_CALIBRATION = 1000
+_CLICK_DELAY_CALIBRATION = 350
 
 
 class TaskStopRequested(Exception):
