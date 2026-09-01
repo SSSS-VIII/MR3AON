@@ -2,6 +2,7 @@ from .general import *
 from .landlady_qa import LandladyQaAnswer
 from .loop_deadline import *
 from .managed_task_yield import ManagedTaskYieldRequested
+from .ocr_consistency import OcrConsistency
 from .time_check import *
 from .treasure_map_check import TreasureMapQualityAttributeCheck
 from .trial_state import TrialMaxRemainingReachedThree
@@ -21,4 +22,5 @@ __all__ = [
     "TimeBefore",
     "LandladyQaAnswer",
     "TrialMaxRemainingReachedThree",
+    "OcrConsistency",
 ]
