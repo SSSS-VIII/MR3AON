@@ -41,6 +41,9 @@
                 }
             }
         },
+        "next": [
+            "登记领取奖励_家族祈福每日完成"
+        ],
         "focus": "任务完成：家族祈福✅"
     },
     "家族祈福入口": {
@@ -241,49 +244,6 @@
             "进入家族",
             "[JumpBack]back"
         ]
-    },
-    "家族祈福完成": {},
-    "家族祈福回到了主页面": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "roi": [
-                    4,
-                    136,
-                    434,
-                    459
-                ],
-                "template": [
-                    "主页面.png"
-                ],
-                "green_mask": true
-            }
-        },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "DisableNode",
-                "custom_action_param": {
-                    "node_name": "家族祈福任务出错"
-                }
-            }
-        },
-        "next": [
-            "家族祈福任务完成"
-        ]
-    },
-    "家族祈福任务完成": {
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "DisableNode",
-                "custom_action_param": {
-                    "node_name": "家族祈福入口"
-                }
-            }
-        },
-        "next": ["登记领取奖励_家族祈福每日完成"],
-        "focus": "任务完成：家族祈福✅"
     },
     "登记领取奖励_家族祈福每日完成": {
         "action": {"type": "Custom", "param": {"custom_action": "SetManagedTaskPersistentState", "custom_action_param": {"entry": "领取奖励entry", "node": "领取奖励_家族祈福", "enabled": false, "valid_until": "next_daily_reset"}}}
