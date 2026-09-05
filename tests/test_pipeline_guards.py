@@ -19,6 +19,7 @@ class PipelineGuardTest(unittest.TestCase):
             ("竞技场.json", "每周跑酷和每日老板娘问答结束"): ("竞技场entry", None),
             ("藏宝图.json", "每日藏宝图完成回到了主页面"): ("每日藏宝图entry", None),
             ("通灵巡逻.json", "登记通灵巡逻每日完成"): ("通灵巡逻entry", None),
+            ("领取奖励.json", "领取奖励结束"): ("领取奖励entry", "领取奖励_每日重排标记"),
             ("家族祈福.json", "登记领取奖励_家族祈福每日完成"): ("领取奖励entry", "领取奖励_家族祈福"),
             ("每周兑换码.json", "登记领取奖励_每周兑换码每周完成"): ("领取奖励entry", "领取奖励_每周兑换码"),
             ("活动奖励.json", "登记领取奖励_活动奖励每日完成"): ("领取奖励entry", "领取奖励_活动奖励"),
@@ -38,7 +39,7 @@ class PipelineGuardTest(unittest.TestCase):
                 self.assertFalse(state["enabled"])
                 if node_name == "登记领取奖励_每周兑换码每周完成":
                     self.assertEqual(state["valid_until"], "next_weekly_reset")
-                    self.assertEqual(state["weekday"], 2)
+                    self.assertEqual(state["weekday"], 4)
                 else:
                     self.assertEqual(state["valid_until"], "next_daily_reset")
 

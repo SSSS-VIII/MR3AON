@@ -62,5 +62,19 @@
             "领取奖励结束"
         ]
     },
-    "领取奖励结束": {}
+    "领取奖励结束": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "领取奖励entry",
+                    "node": "领取奖励_每日重排标记",
+                    "enabled": false,
+                    "valid_until": "next_daily_reset"
+                }
+            }
+        }
+    },
+    "领取奖励_每日重排标记": {}
 }
