@@ -135,6 +135,60 @@ class PipelineGuardTest(unittest.TestCase):
             "StopTask",
         )
 
+    def test_spirit_patrol_keeps_both_entry_modes_and_all_deferred_exits(self):
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "通灵巡逻.json").read_text(encoding="utf-8")
+        )
+        tasks = json.loads(
+            (RESOURCE / "tasks" / "日常任务.json").read_text(encoding="utf-8")
+        )
+
+        self.assertEqual(
+            pipeline["通灵巡逻任务"]["next"],
+            ["忍阶任务有才巡逻", "直接去巡逻"],
+        )
+        patrol_switch = tasks["option"]["有忍阶任务才巡逻"]
+        switch_overrides = {
+            case["name"]: case["pipeline_override"]["忍阶任务有才巡逻"][
+                "enabled"
+            ]
+            for case in patrol_switch["cases"]
+        }
+        self.assertEqual(switch_overrides, {"Yes": True, "No": False})
+
+        return_and_finish = "通灵巡逻返回主页面并结束"
+        finish_at_home = "通灵巡逻完成回到主页面"
+        deferred_nodes = {
+            "更新通灵巡逻倒计时": (None, return_and_finish),
+            "登记通灵巡逻预计倒计时": (7200, return_and_finish),
+            "没有通灵兽说明还在巡逻": (7200, finish_at_home),
+        }
+        for node_name, (fallback_seconds, exit_node) in deferred_nodes.items():
+            with self.subTest(node=node_name):
+                node = pipeline[node_name]
+                action = node["action"]["param"]
+                self.assertEqual(action["custom_action"], "ScheduleDeferredTask")
+                param = action["custom_action_param"]
+                self.assertEqual(param["key"], "通灵巡逻")
+                self.assertEqual(param["entry"], "通灵巡逻entry")
+                self.assertTrue(param["reuse_current_override"])
+                self.assertEqual(param.get("fallback_seconds"), fallback_seconds)
+                self.assertEqual(node["next"], [exit_node])
+
+        self.assertEqual(
+            pipeline["还在巡逻"]["next"], ["登记通灵巡逻预计倒计时"]
+        )
+        self.assertEqual(
+            pipeline["巡逻奖励确定"]["next"], ["退出巡逻页面再次运行"]
+        )
+        self.assertEqual(
+            pipeline["退出巡逻页面再次运行"]["next"], ["通灵巡逻任务"]
+        )
+        self.assertEqual(
+            pipeline[return_and_finish]["next"], [finish_at_home]
+        )
+        self.assertEqual(pipeline[finish_at_home]["action"]["type"], "StopTask")
+
 
 if __name__ == "__main__":
     unittest.main()
