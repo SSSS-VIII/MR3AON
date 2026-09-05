@@ -225,6 +225,36 @@
         ]
     },
     "没有通灵兽说明还在巡逻": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    10,
+                    152,
+                    301,
+                    450
+                ],
+                "expected": [
+                    "小时|时|分钟|分|秒"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ScheduleDeferredTask",
+                "custom_action_param": {
+                    "key": "通灵巡逻",
+                    "entry": "通灵巡逻entry",
+                    "reuse_current_override": true
+                }
+            }
+        },
+        "next": [
+            "通灵巡逻完成回到主页面"
+        ]
+    },
+    "无法识别通灵巡逻主页面倒计时": {
         "recognition": "DirectHit",
         "action": {
             "type": "Custom",
@@ -345,7 +375,8 @@
             "点击通灵兽"
         ],
         "on_error": [
-            "没有通灵兽说明还在巡逻"
+            "没有通灵兽说明还在巡逻",
+            "无法识别通灵巡逻主页面倒计时"
         ]
     },
     "确认在主页面则点击忍阶_巡逻": {

@@ -162,7 +162,8 @@ class PipelineGuardTest(unittest.TestCase):
         deferred_nodes = {
             "更新通灵巡逻倒计时": (None, return_and_finish),
             "登记通灵巡逻预计倒计时": (7200, return_and_finish),
-            "没有通灵兽说明还在巡逻": (7200, finish_at_home),
+            "没有通灵兽说明还在巡逻": (None, finish_at_home),
+            "无法识别通灵巡逻主页面倒计时": (7200, finish_at_home),
         }
         for node_name, (fallback_seconds, exit_node) in deferred_nodes.items():
             with self.subTest(node=node_name):
@@ -175,6 +176,18 @@ class PipelineGuardTest(unittest.TestCase):
                 self.assertTrue(param["reuse_current_override"])
                 self.assertEqual(param.get("fallback_seconds"), fallback_seconds)
                 self.assertEqual(node["next"], [exit_node])
+
+        self.assertEqual(
+            pipeline["没有通灵兽说明还在巡逻"]["recognition"]["param"]["roi"],
+            pipeline["点击通灵兽"]["recognition"]["param"]["roi"],
+        )
+        self.assertEqual(
+            pipeline["直接去巡逻"]["on_error"],
+            [
+                "没有通灵兽说明还在巡逻",
+                "无法识别通灵巡逻主页面倒计时",
+            ],
+        )
 
         self.assertEqual(
             pipeline["还在巡逻"]["next"], ["登记通灵巡逻预计倒计时"]
