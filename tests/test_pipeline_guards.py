@@ -203,6 +203,14 @@ class PipelineGuardTest(unittest.TestCase):
         )
         self.assertEqual(pipeline[finish_at_home]["action"]["type"], "StopTask")
 
+    def test_trial_stage_swipes_settle_before_ocr(self):
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "忍村试炼.json").read_text(encoding="utf-8")
+        )
+        for index in range(1, 6):
+            with self.subTest(index=index):
+                self.assertEqual(pipeline[f"试炼左滑{index}"]["post_delay"], 2000)
+
 
 if __name__ == "__main__":
     unittest.main()

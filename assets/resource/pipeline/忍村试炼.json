@@ -800,7 +800,7 @@
                 ]
             }
         },
-        "post_delay": 500
+        "post_delay": 2000
     },
     "试炼左滑2": {
         "recognition": {
@@ -834,7 +834,7 @@
                 ]
             }
         },
-        "post_delay": 500
+        "post_delay": 2000
     },
     "试炼左滑3": {
         "recognition": {
@@ -868,7 +868,7 @@
                 ]
             }
         },
-        "post_delay": 500
+        "post_delay": 2000
     },
     "试炼左滑4": {
         "recognition": {
@@ -902,7 +902,7 @@
                 ]
             }
         },
-        "post_delay": 500
+        "post_delay": 2000
     },
     "试炼左滑5": {
         "recognition": {
@@ -936,7 +936,7 @@
                 ]
             }
         },
-        "post_delay": 500
+        "post_delay": 2000
     },
     "试炼购买饭团": {
         "recognition": {
