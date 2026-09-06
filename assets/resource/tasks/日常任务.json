@@ -5,7 +5,8 @@
             "entry": "启动游戏entry",
             "option": [
                 "请选择服务器",
-                "请选择区服"
+                "请选择区服",
+                "自动登录密码"
             ],
             "group": [
                 "daily"
@@ -312,6 +313,26 @@
                     }
                 }
             ]
+        },
+        "自动登录密码": {
+            "type": "input",
+            "description": "已有账号被要求重新登录时，用于自动填写密码。留空时不能完成密码输入。",
+            "inputs": [
+                {
+                    "name": "登录密码",
+                    "default": "",
+                    "pipeline_type": "string"
+                }
+            ],
+            "pipeline_override": {
+                "输入登录密码": {
+                    "action": {
+                        "param": {
+                            "custom_action_param": "{登录密码}"
+                        }
+                    }
+                }
+            }
         },
         "有忍阶任务才巡逻": {
             "type": "switch",

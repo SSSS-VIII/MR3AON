@@ -345,6 +345,9 @@
         "next": [
             "启动游戏总超时已到",
             "记录启动应用包名",
+            "已有账号需要重新登录",
+            "账号重新登录同意并继续",
+            "账号重新登录密码页面",
             "识别登录",
             "关闭选择区服页面交给上层处理",
             "需要更新",
@@ -1061,6 +1064,132 @@
                 ]
             }
         }
+    },
+    "已有账号需要重新登录": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    520,
+                    465,
+                    115,
+                    50
+                ],
+                "expected": [
+                    "账密登录"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 500,
+        "next": [
+            "账号重新登录同意并继续",
+            "账号重新登录密码页面"
+        ]
+    },
+    "账号重新登录同意并继续": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    680,
+                    405,
+                    165,
+                    60
+                ],
+                "expected": [
+                    "同意并继续"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 500,
+        "next": [
+            "账号重新登录密码页面"
+        ]
+    },
+    "账号重新登录密码页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    390,
+                    335,
+                    220,
+                    60
+                ],
+                "expected": [
+                    "请输入登录密码"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 250,
+        "next": [
+            "清空登录密码输入框"
+        ]
+    },
+    "清空登录密码输入框": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ClearInputTextCompat"
+            }
+        },
+        "next": [
+            "输入登录密码"
+        ]
+    },
+    "输入登录密码": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "InputTextCompat",
+                "custom_action_param": ""
+            }
+        },
+        "post_delay": 500,
+        "next": [
+            "登录密码输入完成关闭键盘"
+        ]
+    },
+    "登录密码输入完成关闭键盘": {
+        "action": {
+            "type": "ClickKey",
+            "param": {
+                "key": 66
+            }
+        },
+        "post_delay": 500,
+        "next": [
+            "账号密码点击登录"
+        ]
+    },
+    "账号密码点击登录": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    580,
+                    410,
+                    110,
+                    70
+                ],
+                "expected": [
+                    "^\u767b录$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1500
     },
     "识别登录": {
         "recognition": {
