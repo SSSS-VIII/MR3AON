@@ -31,6 +31,21 @@ def _parse_roi(value, name: str) -> Optional[List[int]]:
         return None
     return roi
 
+"""
+    模糊匹配 允许三个字符中有一个字符错误
+"""
+def _fuzzy_equal(a: str, b: str) -> bool:
+    if len(a) != len(b):
+        return False
+
+    diff = sum(c1 != c2 for c1, c2 in zip(a, b))
+
+    # 每3个字允许1个错字
+    allowed = len(a) // 3
+
+    return diff <= allowed
+
+
 
 def _collect_text(detail: Optional[RecognitionDetail]) -> str:
     """从 OCR 识别详情中按顺序拼接所有文本。"""
@@ -63,7 +78,7 @@ class OcrConsistency(CustomRecognition):
     - roi_b: 第二个 OCR 区域，必填，格式 [x, y, w, h]。
     - threshold: OCR 阈值，可选，默认 0.3。
     - strict: 是否严格比较，可选，默认 false。
-      - false: 规范化后比较（去标点/空白、大小写归一），对 OCR 细微差异更鲁棒。
+      - false: 规范化后比较（去标点/空白、大小写归一），同时三个字符中允许有一个错误， 但要求长度一致。对 OCR 细微差异更鲁棒。
       - true: 仅 strip 首尾空白后直接比较，要求完全一致。
     - return_box: 命中后返回的 ROI，可选，默认 "a"。
       - "a": 返回 roi_a
@@ -97,7 +112,7 @@ class OcrConsistency(CustomRecognition):
             text_b = self._ocr_text(context, img, roi_b, threshold)
 
             if not text_a or not text_b:
-                logger.debug(
+                logger.info(
                     f"OcrConsistency: OCR 结果为空 a={text_a!r} b={text_b!r}"
                 )
                 return None
@@ -105,10 +120,10 @@ class OcrConsistency(CustomRecognition):
             if strict:
                 matched = text_a.strip() == text_b.strip()
             else:
-                matched = normalize_text(text_a) == normalize_text(text_b)
+                matched = _fuzzy_equal(normalize_text(text_a), normalize_text(text_b))
 
             if not matched:
-                logger.debug(f"OcrConsistency: 不一致 a={text_a!r} b={text_b!r}")
+                logger.info(f"OcrConsistency: 不一致 a={text_a!r} b={text_b!r}")
                 return None
 
             box = self._resolve_return_box(roi_a, roi_b, return_box)

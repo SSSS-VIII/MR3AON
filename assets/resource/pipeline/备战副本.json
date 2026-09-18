@@ -788,7 +788,20 @@
             }
         }
     },
-    "备战副本已完成没发现奖励信息": {},
+    "备战副本已完成没发现奖励信息": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "备战副本entry",
+                    "enabled": false,
+                    "valid_until": "next_weekly_reset",
+                    "weekday": 6
+                }
+            }
+        }
+    },
     "备战副本entry": {
         "next": [
             "[JumpBack]备战副本入口",
