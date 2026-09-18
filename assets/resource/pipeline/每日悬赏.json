@@ -276,7 +276,9 @@
         },
         "next": [
             "[JumpBack]每日悬赏首次购买免费",
+            "[JumpBack]每日悬赏花费50确认",
             "[JumpBack]每日悬赏每日首次免费",
+            "[JumpBack]每日悬赏花费50领取",
             "[JumpBack]每日悬赏购买叉叉",
             "每日悬赏家族组队任务",
             "每日悬赏好友组队任务",
@@ -679,6 +681,48 @@
             "type": "Click"
         },
         "post_delay": 400
+    },
+    "每日悬赏花费50领取": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    279,
+                    51,
+                    293,
+                    128
+                ],
+                "expected": [
+                    "50"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 400
+    },
+    "每日悬赏花费50确认": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    465,
+                    406,
+                    366,
+                    143
+                ],
+                "expected": [
+                    "50"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 600
     },
     "每日悬赏没人打则点击退出": {
         "recognition": {
