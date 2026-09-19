@@ -231,6 +231,21 @@ def _post_managed_task(tasker: Any, task: ManagedTask) -> bool:
 
 
 def dispatch_next(tasker: Any) -> bool:
+    # 分辨率失败标记由 Tasker sink 写入。停 Tasker 必须放在这次调度里，
+    # 不能放回那个 sink：Tasker 事件会插进别的 RPC，再 post_stop 会把回包吃掉。
+    from custom.sink.aspect_ratio import aspect_ratio_blocked
+
+    if aspect_ratio_blocked():
+        logger.error("分辨率不是 16:9，停止任务队列")
+        try:
+            tasker.post_stop()
+        except Exception as exc:
+            logger.exception(f"分辨率不匹配时停止任务队列失败: {exc}")
+        managed_task_queue.finish()
+        deferred_task_store.clear()
+        managed_task_yield_signal_store.clear()
+        return False
+
     if tasker.stopping:
         managed_task_queue.finish()
         deferred_task_store.clear()

@@ -1,19 +1,32 @@
 """
 分辨率检查器
 
-在任务开始时检查模拟器分辨率是否为 16:9，如果不是则停止任务并输出警告。
+任务开始时确认 Android 逻辑分辨率是 16:9。
+
+Tasker 事件由 MaaPiCli 用 send() 塞进 Agent 当前正在等的那次 RPC。
+这里如果再访问 tasker.controller / post_screencap / post_stop，内层
+send_and_recv 会把外层回包当成 unexpected msg 丢掉，那一帧就不再返回，
+C 栈会一直叠到 RecursionError。所以这里只读 adb wm size。
 """
 
-from maa.agent.agent_server import AgentServer
-from maa.tasker import Tasker, TaskerEventSink
-from maa.event_sink import NotificationType
+from __future__ import annotations
 
+import re
+
+from maa.agent.agent_server import AgentServer
+from maa.event_sink import NotificationType
+from maa.tasker import Tasker, TaskerEventSink
+
+from utils.adb_device import adb_shell, adb_target
 from utils.logger import logger
 
 # 目标宽高比：16:9
 TARGET_RATIO = 16.0 / 9.0
 # 容差范围（±2%）
 TOLERANCE = 0.02
+
+_SIZE_RE = re.compile(r"(\d+)\s*x\s*(\d+)", re.IGNORECASE)
+_blocked = False
 
 
 def is_aspect_ratio_16x9(width: int, height: int) -> bool:
@@ -44,15 +57,40 @@ def calculate_aspect_ratio(width: int, height: int) -> float:
     return h / w
 
 
+def aspect_ratio_blocked() -> bool:
+    return _blocked
+
+
+def logical_display_size(wm_size_text: str) -> tuple[int, int] | None:
+    """Override size 才是脚本看到的分辨率；没有覆写时用 Physical size。"""
+    override: tuple[int, int] | None = None
+    physical: tuple[int, int] | None = None
+    for line in wm_size_text.splitlines():
+        match = _SIZE_RE.search(line)
+        if match is None:
+            continue
+        pair = (int(match.group(1)), int(match.group(2)))
+        if "Override size" in line:
+            override = pair
+        elif "Physical size" in line:
+            physical = pair
+    return override or physical
+
+
+def _mark_blocked(width: int, height: int) -> None:
+    global _blocked
+    _blocked = True
+    actual_ratio = calculate_aspect_ratio(width, height)
+    logger.error(
+        f"分辨率比例不匹配，后续调度将停止。"
+        f"当前: {width}x{height} (比例: {actual_ratio:.4f})，"
+        f"MR3A 仅支持 16:9 比例，请调整为: 2560x1440, 1920x1080, 1600x900, 1280x720 (推荐)"
+    )
+
+
 @AgentServer.tasker_sink()
 class AspectRatioChecker(TaskerEventSink):
-    """
-    分辨率检查器
-    在任务开始时检查设备分辨率是否为 16:9
-    """
-
-    def __init__(self):
-        self._checked = False
+    """任务开始时用 adb 读 wm size，不调用任何 Maa API。"""
 
     def on_tasker_task(
         self,
@@ -60,55 +98,32 @@ class AspectRatioChecker(TaskerEventSink):
         noti_type: NotificationType,
         detail: TaskerEventSink.TaskerTaskDetail,
     ):
-        # 只在任务开始时检查
+        del tasker
         if noti_type != NotificationType.Starting:
             return
-
-        # 忽略停止任务事件
         if detail.entry == "MaaTaskerPostStop":
-            logger.debug("收到 PostStop 事件，跳过分辨率检查")
+            return
+        if _blocked:
             return
 
-        # 每次任务开始时都检查（不再使用 _checked 标志）
         logger.debug(
             f"任务开始前检查分辨率 - task_id: {detail.task_id}, entry: {detail.entry}"
         )
-
-        # 获取控制器
-        controller = tasker.controller
-        if controller is None:
-            logger.error("无法获取控制器")
-            return
-
-        # 获取缓存的图像
         try:
-            img = controller.cached_image
-            if img is None:
-                # 如果没有缓存图像，尝试截图
-                img = controller.post_screencap().wait().get()
-        except Exception as e:
-            logger.error(f"无法获取截图: {e}")
+            adb, serial = adb_target()
+            text = adb_shell(adb, serial, "wm", "size", wait_sec=10)
+        except Exception as exc:
+            logger.error(f"无法读取 wm size，跳过本轮分辨率检查: {exc}")
             return
 
-        if img is None:
-            logger.error("无法获取截图")
+        size = logical_display_size(text)
+        if size is None:
+            logger.error(f"wm size 没有解析出分辨率: {text!r}")
             return
 
-        # 获取图像尺寸
-        height, width = img.shape[:2]
-
-        logger.debug(f"截图尺寸: {width} x {height}")
-
-        # 检查宽高比
+        width, height = size
+        logger.debug(f"逻辑分辨率: {width} x {height}")
         if not is_aspect_ratio_16x9(width, height):
-            actual_ratio = calculate_aspect_ratio(width, height)
-            logger.error(
-                f"🚨 分辨率比例不匹配！任务已停止。"
-                f"当前: {width}x{height} (比例: {actual_ratio:.4f})，"
-                f"MR3A 仅支持 16:9 比例，请调整为: 2560x1440, 1920x1080, 1600x900, 1280x720 (推荐)"
-            )
-
-            # 停止任务
-            tasker.post_stop()
-        else:
-            logger.debug(f"分辨率检查通过: {width}x{height} (16:9)")
+            _mark_blocked(width, height)
+            return
+        logger.debug(f"分辨率检查通过: {width}x{height} (16:9)")
