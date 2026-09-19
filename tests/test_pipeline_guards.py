@@ -65,6 +65,28 @@ class PipelineGuardTest(unittest.TestCase):
                     "SetManagedTaskPersistentState",
                 )
 
+    def test_daily_shop_ten_minute_deadline_uses_error_recovery(self):
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "每日商店.json").read_text(encoding="utf-8")
+        )
+        arm = pipeline["每日商店entry"]["action"]["param"]
+        self.assertEqual(arm["custom_action"], "LoopDeadlineArm")
+        self.assertEqual(arm["custom_action_param"]["scope"], "每日商店总超时")
+        self.assertEqual(arm["custom_action_param"]["duration_ms"], 600_000)
+
+        expired = pipeline["每日商店总超时"]
+        self.assertEqual(
+            expired["recognition"]["param"]["custom_recognition"],
+            "LoopDeadlineExpired",
+        )
+        self.assertEqual(
+            expired["recognition"]["param"]["custom_recognition_param"]["scope"],
+            "每日商店总超时",
+        )
+        self.assertEqual(expired["next"], ["Default_on_error"])
+        self.assertEqual(pipeline["处理悬赏商店任务"]["next"][0], "每日商店总超时")
+        self.assertEqual(pipeline["神秘商店页面"]["next"][0], "每日商店总超时")
+
     def test_default_timeout_and_error_route_are_explicit(self):
         defaults = json.loads(
             (RESOURCE / "default_pipeline.json").read_text(encoding="utf-8")
