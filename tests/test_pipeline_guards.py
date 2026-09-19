@@ -225,6 +225,37 @@ class PipelineGuardTest(unittest.TestCase):
         )
         self.assertEqual(pipeline[finish_at_home]["action"]["type"], "StopTask")
 
+    def test_startup_timeout_reopens_without_rerecording_package(self):
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "启动游戏.json").read_text(encoding="utf-8")
+        )
+        record = pipeline["记录启动应用包名"]
+        self.assertEqual(record["max_hit"], 1)
+        self.assertEqual(record["next"], ["启动应用"])
+        self.assertEqual(
+            record["action"]["param"]["custom_action"],
+            "RememberGamePackage",
+        )
+
+        clear_hit = pipeline["启动游戏失败清理命中计数"]
+        self.assertEqual(
+            clear_hit["action"]["param"]["custom_action_param"]["node_name"],
+            "启动游戏失败调用关闭游戏",
+        )
+        self.assertEqual(
+            clear_hit["next"],
+            [
+                "[JumpBack]启动游戏失败调用关闭游戏",
+                "启动应用",
+                "启动流程",
+            ],
+        )
+        reopen = pipeline["启动游戏失败调用关闭游戏"]
+        self.assertEqual(
+            reopen["action"]["param"]["custom_action_param"]["node_name"],
+            "启动应用",
+        )
+
     def test_trial_stage_swipes_settle_before_ocr(self):
         pipeline = json.loads(
             (RESOURCE / "pipeline" / "忍村试炼.json").read_text(encoding="utf-8")
