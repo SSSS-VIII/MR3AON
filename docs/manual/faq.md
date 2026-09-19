@@ -104,4 +104,4 @@ You must install .NET Desktop Runtime to run this application.
 当您**确定已经阅读过以上常见问题**并**尝试自行解决无果**后，您可以：
 
 1. 到[项目Issues页面](https://github.com/originalsage/MR3A/issues) ，**根据模板要求**提交相关材料。
-2. MR3A 交流群 QQ 群：1090310179。
+2. MR3A 交流群 QQ 群：1061560215。
