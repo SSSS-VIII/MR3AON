@@ -1,9 +1,38 @@
 #!/usr/bin/env bash
 # MaaPiCli 会在启动 Agent 之前连接控制器。ADB 或 session 未就绪时会直接段错误，
-# 所以先在本机把 Waydroid 和 ADB 准备好，再进 deps/bin 跑正式入口。
+# 所以先在本机把 Waydroid 和 ADB 准备好，再进工作目录跑入口。
+#
+#   ./run        主环境，deps/bin，会写主配置和 debug
+#   ./run test   测试环境，deps/.run-test，不写主配置、主日志、任务状态
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
+MODE="${1:-}"
+if [[ $# -gt 1 || ( -n "$MODE" && "$MODE" != "test" ) ]]; then
+    echo "用法: ./run [test]" >&2
+    exit 2
+fi
+
 export PYTHONPATH="${ROOT}/agent${PYTHONPATH:+:${PYTHONPATH}}"
 "${ROOT}/.venv/bin/python" -c 'from utils.waydroid_host import ensure_waydroid_and_adb; ensure_waydroid_and_adb()'
+
+if [[ "$MODE" == "test" ]]; then
+    SRC="/home/linn/MaaPiCli/build/bin/RelWithDebInfo"
+    WORK="${ROOT}/deps/.run-test"
+    mkdir -p "${WORK}/config" "${WORK}/debug" "${WORK}/plugins"
+    cp -a "${SRC}/MaaPiCli" "${WORK}/MaaPiCli"
+    shopt -s nullglob
+    for lib in "${SRC}"/*.so "${SRC}"/*.so.*; do
+        ln -sfn "${lib}" "${WORK}/$(basename "${lib}")"
+    done
+    shopt -u nullglob
+    ln -sfn "${ROOT}/assets/interface.json" "${WORK}/interface.json"
+    ln -sfn "${ROOT}/assets/resource" "${WORK}/resource"
+    # 只复制，不把 config 指回主目录。Agent 的 ../../agent/main.py 依赖工作目录在 deps 下一级。
+    cp -a "${ROOT}/deps/bin/config/." "${WORK}/config/"
+    export MR3A_TEST_WORK="${WORK}"
+    cd "${WORK}"
+    exec ./MaaPiCli -d
+fi
+
 cd "${ROOT}/deps/bin"
 exec ./MaaPiCli -d

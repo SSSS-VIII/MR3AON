@@ -323,6 +323,17 @@ class PersistentTaskStateStore:
                 pass
             raise
 
-persistent_task_state_store = PersistentTaskStateStore(
-    get_runtime_paths().project_root / "deps" / "bin" / "config" / "agent_task_state.json"
-)
+def _agent_task_state_path() -> Path:
+    test_work = os.environ.get("MR3A_TEST_WORK")
+    if test_work:
+        return Path(test_work) / "config" / "agent_task_state.json"
+    return (
+        get_runtime_paths().project_root
+        / "deps"
+        / "bin"
+        / "config"
+        / "agent_task_state.json"
+    )
+
+
+persistent_task_state_store = PersistentTaskStateStore(_agent_task_state_path())
