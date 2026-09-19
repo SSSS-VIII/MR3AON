@@ -1,4 +1,5 @@
 from .general import *
+from .game_process_missing import GameProcessMissing, WaydroidRestartRequested
 from .landlady_qa import LandladyQaAnswer
 from .loop_deadline import *
 from .managed_task_yield import ManagedTaskYieldRequested
@@ -23,4 +24,6 @@ __all__ = [
     "LandladyQaAnswer",
     "TrialMaxRemainingReachedThree",
     "OcrConsistency",
+    "GameProcessMissing",
+    "WaydroidRestartRequested",
 ]

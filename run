@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# MaaPiCli 会在启动 Agent 之前连接控制器。ADB 或 session 未就绪时会直接段错误，
+# 所以先在本机把 Waydroid 和 ADB 准备好，再进 deps/bin 跑正式入口。
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+export PYTHONPATH="${ROOT}/agent${PYTHONPATH:+:${PYTHONPATH}}"
+"${ROOT}/.venv/bin/python" -c 'from utils.waydroid_host import ensure_waydroid_and_adb; ensure_waydroid_and_adb()'
+cd "${ROOT}/deps/bin"
+exec ./MaaPiCli -d

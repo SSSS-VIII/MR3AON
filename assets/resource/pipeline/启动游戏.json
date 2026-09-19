@@ -79,7 +79,69 @@
                 }
             }
         },
+        "post_delay": 0,
+        "next": [
+            "开始监视游戏进程"
+        ]
+    },
+    "开始监视游戏进程": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ArmGameProcessWatch"
+            }
+        },
         "post_delay": 0
+    },
+    "处理游戏闪退": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "WaydroidRestartRequested"
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "HandleGameCrash"
+            }
+        },
+        "focus": "游戏进程已消失，按闪退处理"
+    },
+    "若闪退需重启Waydroid": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "WaydroidRestartRequested"
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "RestartWaydroid"
+            }
+        },
+        "focus": "闪退，重启 Waydroid",
+        "next": [
+            "闪退后重新拉起应用"
+        ]
+    },
+    "闪退后重新拉起应用": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "启动应用"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "启动应用"
+        ]
     },
     "关闭节点切换区右滑": {
         "pre_delay": 0,
@@ -343,6 +405,7 @@
         "post_delay": 0,
         "timeout": 360000,
         "next": [
+            "处理游戏闪退",
             "启动游戏总超时已到",
             "记录启动应用包名",
             "已有账号需要重新登录",
@@ -379,6 +442,7 @@
             }
         },
         "next": [
+            "处理游戏闪退",
             "[JumpBack]启动流程"
         ]
     },
@@ -1299,6 +1363,20 @@
         "action": {
             "type": "Custom",
             "param": {
+                "custom_action": "DisarmGameProcessWatch"
+            }
+        },
+        "post_delay": 0,
+        "focus": "6分钟内启动游戏失败，尝试关闭游戏",
+        "next": [
+            "启动游戏失败清理命中计数"
+        ]
+    },
+    "启动游戏失败清理命中计数": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
                 "custom_action": "ClearMaxHit",
                 "custom_action_param": {
                     "node_name": "启动游戏失败调用关闭游戏"
@@ -1306,7 +1384,6 @@
             }
         },
         "post_delay": 0,
-        "focus": "6分钟内启动游戏失败，尝试关闭游戏",
         "next": [
             "[JumpBack]启动游戏失败调用关闭游戏",
             "启动流程"

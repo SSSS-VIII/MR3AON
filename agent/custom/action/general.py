@@ -25,6 +25,7 @@ from custom.deferred_tasks import (
     managed_task_queue,
     pipeline_override_for_entry,
 )
+from custom.game_process_watch import game_process_watch
 from custom.pipeline_params import parse_pipeline_json_param
 
 
@@ -234,6 +235,9 @@ class RestartGame(CustomAction):
         if not package:
             logger.error("RestartGame: 尚未记录实际启动包名，拒绝使用流水线默认值")
             return CustomAction.RunResult(success=False)
+
+        # 主动停进程不是闪退，先停掉监视，避免随后的 pidof 空结果触发 Waydroid 重启。
+        game_process_watch.disarm()
 
         controller = context.tasker.controller
         try:

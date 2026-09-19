@@ -4,8 +4,9 @@
 
 - 项目目录：`/home/linn/MR3A`
 - 设备连接：Waydroid + ADB
-- 正式入口：`maapicli`
-- 正式入口及其缓存：不修改、不覆盖
+- 启动入口：仓库根目录 `./run`。它先准备 Waydroid / ADB，再执行 `deps/bin/MaaPiCli -d`
+- `deps/bin/MaaPiCli` 保持指向 `/home/linn/MaaPiCli/build/bin/RelWithDebInfo/MaaPiCli` 的符号链接，不改成包装脚本
+- 正式入口缓存：不修改、不覆盖
 - 运行验证：优先使用临时 MaaPiCli 副本，避免污染主入口配置
 
 ## 2026-08-27 错误恢复重构验证

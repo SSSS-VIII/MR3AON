@@ -16,6 +16,12 @@ from .sync_race_parkour import sync_race_parkour
 from .treasure_map_config import ApplyTreasureMapConfig, RemoveQualityFromAttach
 from .trial_state import RecordTrialRemainingChallengeMax
 from .input_text_compat import ClearInputTextCompat, InputTextCompat
+from .waydroid_runtime import (
+    ArmGameProcessWatch,
+    DisarmGameProcessWatch,
+    HandleGameCrash,
+    RestartWaydroid,
+)
 
 __all__ = [
     "DownloadGameMeta",
@@ -45,6 +51,10 @@ __all__ = [
     "ApplyTreasureMapConfig",
     "RemoveQualityFromAttach",
     "RecordTrialRemainingChallengeMax",
+    "RestartWaydroid",
+    "ArmGameProcessWatch",
+    "DisarmGameProcessWatch",
+    "HandleGameCrash",
     "fight",
     "my_3v3_kn_an_p1",
     "my_3v3_kn_an_p2",
