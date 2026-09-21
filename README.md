@@ -24,7 +24,7 @@ Powered by [MaaFramework](https://github.com/MaaXYZ/MaaFramework) & [MFAAvalonia
 项目处于**快速迭代**阶段，偶发小问题欢迎反馈，我们会尽快处理。
 
 - 问题反馈：[GitHub Issues](https://github.com/originalsage/MR3A/issues)
-- 用户 QQ 2群：**1061560215**（使用答疑、功能建议、闲聊摸鱼，bug反馈，欢迎来玩~）
+- 用户 QQ 群：**1090310179**（使用答疑、功能建议、闲聊摸鱼，bug反馈，欢迎来玩~）
 
 ## 功能列表
 
@@ -105,7 +105,7 @@ Powered by [MaaFramework](https://github.com/MaaXYZ/MaaFramework) & [MFAAvalonia
 
 🌟 如果你觉得本项目有帮助，请点个 ⭐ Star 支持一下❤️！
 
-MR3A 用户 QQ 2群：1061560215
+MR3A 用户 QQ 群：1090310179
 
 本项目采用 [MIT](LICENSE) 许可证
 
