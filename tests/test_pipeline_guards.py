@@ -264,6 +264,70 @@ class PipelineGuardTest(unittest.TestCase):
             with self.subTest(index=index):
                 self.assertEqual(pipeline[f"试炼左滑{index}"]["post_delay"], 2000)
 
+    def test_mystery_shop_can_buy_configured_fragment_with_magatama(self):
+        from custom.action.mystery_shop_fragments import FRAGMENT_ROSTER, fragment_pattern
+
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "每日商店.json").read_text(encoding="utf-8")
+        )
+        tasks = json.loads(
+            (RESOURCE / "tasks" / "日常任务.json").read_text(encoding="utf-8")
+        )
+        option = tasks["option"]["勾玉购买忍者碎片"]
+        self.assertEqual(option["type"], "checkbox")
+        self.assertEqual(option["default_case"], [])
+        self.assertEqual([case["name"] for case in option["cases"]], FRAGMENT_ROSTER)
+        self.assertIn(
+            "勾玉购买忍者碎片",
+            tasks["option"]["忍币购买神秘商店"]["cases"][0]["option"],
+        )
+        self.assertEqual(
+            pipeline["神秘商店任务"]["action"]["param"]["custom_action"],
+            "ApplyMysteryShopFragmentConfig",
+        )
+        self.assertEqual(pipeline["勾玉购买忍者碎片配置"]["attach"], {})
+        for case in option["cases"]:
+            self.assertEqual(
+                case["pipeline_override"]["勾玉购买忍者碎片配置"]["attach"],
+                {case["name"]: True},
+            )
+        for index in range(8):
+            with self.subTest(slot=index):
+                nxt = pipeline[f"神秘商店商品{index}"]["next"]
+                coin = f"神秘商店商品{index}有忍币图标"
+                fragment = f"神秘商店商品{index}是配置碎片"
+                skip = f"神秘商店商品{index}没有忍币图标"
+                self.assertLess(nxt.index(coin), nxt.index(fragment))
+                self.assertLess(nxt.index(fragment), nxt.index(skip))
+                node = pipeline[fragment]
+                self.assertFalse(node["enabled"])
+                self.assertEqual(
+                    node["recognition"]["param"]["expected"],
+                    ["不购买碎片"],
+                )
+                self.assertEqual(node["next"], ["神秘商店商品0购买页面"])
+
+        for name in ("忍币商店没有MAX", "忍币商店识别并点击max"):
+            nxt = pipeline[name]["next"]
+            self.assertLess(
+                nxt.index("再次确认是花费忍币并点击购买"),
+                nxt.index("再次确认是花费勾玉并点击购买"),
+            )
+            self.assertLess(
+                nxt.index("再次确认是花费勾玉并点击购买"),
+                nxt.index("忍币商店点击空白处"),
+            )
+
+        confirm = pipeline["再次确认是花费勾玉并点击购买"]
+        self.assertEqual(
+            confirm["recognition"]["param"]["template"],
+            ["神秘商店勾玉1.png"],
+        )
+        self.assertEqual(confirm["action"]["param"]["target"], "忍币商品识别到购买")
+        self.assertTrue((RESOURCE / "image" / "神秘商店勾玉1.png").is_file())
+        card = "剑心 · 卫鲤碎片".replace(" ", "").replace("　", "")
+        self.assertRegex(card, fragment_pattern("剑心·卫鲤"))
+
 
 if __name__ == "__main__":
     unittest.main()
