@@ -13,6 +13,7 @@ class PipelineGuardTest(unittest.TestCase):
         expected = {
             ("3v3.json", "登记3v3每日完成"): ("3v3entry", None),
             ("免费召唤.json", "免费召唤回到主页面"): ("免费召唤entry", None),
+            ("领取饭团.json", "领取饭团回到了主页面"): ("领取饭团entry", None),
             ("忍村试炼.json", "登记忍村试炼每日完成"): ("忍村试炼entry", None),
             ("每日商店.json", "每日商店回到了主页面"): ("每日商店entry", None),
             ("每日悬赏.json", "每日悬赏完成回到了主页面"): ("每日悬赏entry", None),
@@ -49,7 +50,6 @@ class PipelineGuardTest(unittest.TestCase):
             ("忍村试炼.json", "挂起忍村试炼四小时"),
             ("通灵巡逻.json", "登记通灵巡逻预计倒计时"),
             ("藏宝图.json", "藏宝图检查让出调度信号"),
-            ("领取饭团.json", "领取饭团回到了主页面"),
             ("小屋修炼.json", "确定继续修炼"),
             ("好友忍币.json", "好友忍币任务完成"),
             ("领取邮件.json", "领取邮件任务完成"),
