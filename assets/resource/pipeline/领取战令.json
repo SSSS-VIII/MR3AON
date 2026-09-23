@@ -44,13 +44,18 @@
             "param": {
                 "roi": "识别战令",
                 "roi_offset": [
-                    22,
-                    -74,
-                    24,
-                    42
+                    10,
+                    -80,
+                    50,
+                    55
                 ],
                 "template": [
-                    "红点.png"
+                    "红点.png",
+                    "红点1.png"
+                ],
+                "green_mask": true,
+                "threshold": [
+                    0.6
                 ]
             }
         },
