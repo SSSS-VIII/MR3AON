@@ -349,7 +349,7 @@
     },
     "点击通灵兽": {
         "recognition": {
-            "type": "OCR",
+            "type": "TemplateMatch",
             "param": {
                 "roi": [
                     10,
@@ -357,13 +357,10 @@
                     301,
                     450
                 ],
-                "expected": [
-                    "通灵兽",
-                    "通灵",
-                    "通景",
-                    "通店",
-                    "通"
-                ]
+                "template": [
+                    "通灵兽侧栏文字.png"
+                ],
+                "green_mask": true
             }
         },
         "action": {
@@ -374,7 +371,7 @@
         ]
     },
     "直接去巡逻": {
-        "timeout": 500,
+        "timeout": 5000,
         "next": [
             "点击通灵兽"
         ],
