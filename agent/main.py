@@ -410,16 +410,27 @@ def agent(is_dev_mode=False):
             try:
                 run_agent_tui()
             finally:
+                # TUI 退出必须拆掉 Agent 侧服务，否则 PiCli/run 会一直挂着等 socket。
+                logger.info("TUI 已退出，正在关闭 AgentServer")
                 try:
                     AgentServer.shut_down()
                 except Exception:
                     logger.exception("AgentServer shut_down 失败")
-                join_thread.join(timeout=8)
+                join_thread.join(timeout=5)
+                if join_thread.is_alive():
+                    logger.warning(
+                        "AgentServer.join 未在 5s 内返回，强制结束 Agent 进程"
+                    )
+                    # 非 daemon 残留会拖住解释器；直接退出让父进程 PiCli 收到子进程结束。
+                    os._exit(0)
         else:
             AgentServer.join()
             AgentServer.shut_down()
 
         logger.info("AgentServer关闭")
+        # 正常路径也显式退出，避免 Textual/线程残留拖住 run 脚本
+        if use_tui:
+            sys.exit(0)
     except ImportError as e:
         logger.error(f"导入模块失败: {e}")
         logger.error("考虑重新配置环境")
