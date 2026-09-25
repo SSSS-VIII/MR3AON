@@ -4,3 +4,4 @@ pillow
 pytz
 requests
 json-with-comments
+textual>=2.0

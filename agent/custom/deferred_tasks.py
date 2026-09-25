@@ -186,6 +186,8 @@ class ManagedTaskQueue:
         self._task_templates: dict[str, ManagedTask] = {}
         self._disabled_entries: set[str] = set()
         self._recurring_current: dict[int, datetime] = {}
+        # 首次 activate 时的计划顺序，供 TUI 任务列表稳定展示。
+        self._plan_order: list[str] = []
 
     def activate(
         self,
@@ -205,8 +207,11 @@ class ManagedTaskQueue:
             # MaaPiCli 只提交一次完整计划，Agent 后续插入/重跑任务时
             # 必须能按目标 entry 找回它自己的 PI option override。
             self._task_templates = {}
+            self._plan_order = []
             for task in task_list:
                 self._task_templates.setdefault(task.entry, deepcopy(task))
+                if task.entry not in self._plan_order:
+                    self._plan_order.append(task.entry)
 
     def active_for(self, task_id: int) -> bool:
         with self._lock:
@@ -370,10 +375,20 @@ class ManagedTaskQueue:
             self._task_templates = {}
             self._disabled_entries = set()
             self._recurring_current = {}
+            self._plan_order = []
 
     def snapshot(self) -> tuple[bool, list[ManagedTask], int | None]:
         with self._lock:
             return self._active, list(self._pending), self._current_task_id
+
+    def plan_order(self) -> list[str]:
+        with self._lock:
+            return list(self._plan_order)
+
+    def template_for(self, entry: str) -> ManagedTask | None:
+        with self._lock:
+            task = self._task_templates.get(entry)
+            return deepcopy(task) if task is not None else None
 
 
 deferred_task_store = DeferredTaskStore()

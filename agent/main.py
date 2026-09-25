@@ -382,6 +382,7 @@ def agent(is_dev_mode=False):
         from maa.toolkit import Toolkit
 
         import custom
+        from tui import run_agent_tui, tui_should_run
 
         Tasker.set_log_dir("./debug")
         Toolkit.init_option("./")
@@ -395,8 +396,29 @@ def agent(is_dev_mode=False):
 
         AgentServer.start_up(socket_id)
         logger.info("AgentServer启动")
-        AgentServer.join()
-        AgentServer.shut_down()
+
+        use_tui = tui_should_run()
+        if use_tui:
+            import threading
+
+            join_thread = threading.Thread(
+                target=AgentServer.join,
+                name="maa-agent-join",
+                daemon=True,
+            )
+            join_thread.start()
+            try:
+                run_agent_tui()
+            finally:
+                try:
+                    AgentServer.shut_down()
+                except Exception:
+                    logger.exception("AgentServer shut_down 失败")
+                join_thread.join(timeout=8)
+        else:
+            AgentServer.join()
+            AgentServer.shut_down()
+
         logger.info("AgentServer关闭")
     except ImportError as e:
         logger.error(f"导入模块失败: {e}")

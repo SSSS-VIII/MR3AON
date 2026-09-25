@@ -26,6 +26,7 @@ from custom.persistent_task_state import (
     next_weekly_reset,
     persistent_task_state_store,
 )
+from tui.status import runtime_status
 from utils.logger import logger
 
 
@@ -215,6 +216,8 @@ def _post_managed_task(tasker: Any, task: ManagedTask) -> bool:
         return False
     managed_task_queue.set_current(job.job_id, task)
     managed_task_yield_signal_store.clear()
+    runtime_status.set_current_task(name=task.name, entry=task.entry)
+    runtime_status.set_agent_phase("running")
     time_slice_seconds = _TIME_SLICE_SECONDS.get(task.entry)
     if time_slice_seconds is not None:
         managed_task_yield_signal_store.arm(job.job_id, time_slice_seconds)
@@ -293,6 +296,9 @@ def dispatch_next(tasker: Any) -> bool:
         logger.error("Agent 调度提交等待任务返回无效 task_id")
         return False
     managed_task_queue.set_current(job.job_id, None)
+    runtime_status.set_current_task(name="—", entry="")
+    runtime_status.set_node("—")
+    runtime_status.set_agent_phase("waiting")
     return True
 
 
@@ -547,6 +553,7 @@ class ManagedTaskSchedulerBootstrap(CustomAction):
             f"Agent 已接管任务队列: count={len(tasks)}, "
             f"entries={[task.entry for task in tasks]!r}"
         )
+        runtime_status.set_agent_phase("scheduling")
         return CustomAction.RunResult(success=dispatch_next(context.tasker))
 
 

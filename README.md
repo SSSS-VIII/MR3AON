@@ -38,7 +38,7 @@ Powered by [MaaFramework](https://github.com/MaaXYZ/MaaFramework) & [MFAAvalonia
   - 重新启动时不用再重复任务
 - ✅ 过夜状态刷新 
   - 睡醒之后日常就全都完成了!
-- ⬜ Agent运行时TUI
+- ✅ Agent运行时TUI
   - 想要看可爱的卡通小人搬砖
 - ⬜ 多账号协同 
   - 通过小号邀请大号实现MVP垄断 或者什么别的东西～ 但是需要一个解锁了A悬赏的小号，而且涉及到容器多实例，目前没有充足的测试环境只能测试waydroid～
