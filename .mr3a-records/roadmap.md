@@ -12,7 +12,7 @@ task/重复节点的通用无进展 watchdog 与 `进入战斗中.png` 页面上
 
 已为启动流程接入现有 `LoopDeadline`总时限：正常启动 6 分钟后关闭游戏，再用已记录的包名重新打开，然后回到启动流程。业务任务的恢复启动 2 分钟后再次 `RestartGame`。该时限使用 Agent 单调时钟，不会被节点持续识别成功或 JumpBack 重置。
 
-后续继续使用临时 MaaPiCli 副本做真实设备验证，正式入口缓存不动。Agent 运行时 TUI（Textual，竖屏半窗 / btop 风）已接入：TTY 下默认开启，`MR3A_TUI=0` 关闭；列表含排队与延后未提交项。
+后续继续使用临时 MaaPiCli 副本做真实设备验证，正式入口缓存不动。Agent 运行时 TUI（Textual，竖屏半窗 / btop 风）已接入：TTY 下默认开启，`MR3A_TUI=0` 关闭；列表含排队与延后未提交项；waiting 显示最近到期任务名；`q` 会结束父 MaaPiCli 以回到 shell。
 
 已实现 Agent 接管 MaaPiCli 任务队列的延后任务调度试点：MaaPiCli 只提交一个
 bootstrap，Agent 将每个业务任务作为独立顶层 task 逐项提交。业务流水线即将执行

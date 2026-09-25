@@ -116,9 +116,43 @@ def build_task_rows() -> list[TaskRow]:
     return rows
 
 
+def build_waiting_hint() -> str:
+    """最近到期的延后/休眠任务名 + ETA，供 waiting 面板展示。"""
+    mono = time.monotonic()
+    now = datetime.now().astimezone()
+    candidates: list[tuple[float, str]] = []
+
+    for task, ready in deferred_task_store.snapshot():
+        template = managed_task_queue.template_for(task.entry)
+        name = _display_name(
+            task.entry, template.name if template is not None else task.key
+        )
+        eta = 0.0 if ready else max(0.0, task.due_at - mono)
+        candidates.append((eta, name))
+
+    _active, pending, _task_id = managed_task_queue.snapshot()
+    for pending_task in pending:
+        if pending_task.not_before is None or pending_task.not_before <= now:
+            continue
+        eta = (pending_task.not_before - now).total_seconds()
+        candidates.append((eta, _display_name(pending_task.entry, pending_task.name)))
+
+    if not candidates:
+        return ""
+    candidates.sort(key=lambda item: item[0])
+    eta, name = candidates[0]
+    eta_s = _fmt_eta(eta)
+    return f"{name}  {eta_s}" if eta_s else name
+
+
 def build_view_model() -> dict:
+    rows = build_task_rows()
     status = runtime_status.snapshot()
+    if status["phase"] == "waiting":
+        hint = build_waiting_hint()
+        runtime_status.set_waiting_hint(hint)
+        status = runtime_status.snapshot()
     return {
         "status": status,
-        "tasks": build_task_rows(),
+        "tasks": rows,
     }

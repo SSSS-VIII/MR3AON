@@ -298,7 +298,9 @@ def dispatch_next(tasker: Any) -> bool:
     managed_task_queue.set_current(job.job_id, None)
     runtime_status.set_current_task(name="—", entry="")
     runtime_status.set_node("—")
-    runtime_status.set_agent_phase("waiting")
+    from tui.snapshot import build_waiting_hint
+
+    runtime_status.set_agent_phase("waiting", waiting_hint=build_waiting_hint())
     return True
 
 

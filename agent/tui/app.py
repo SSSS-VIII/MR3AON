@@ -91,6 +91,7 @@ class CurrentPanel(Static):
     task_name: reactive[str] = reactive("—")
     node_name: reactive[str] = reactive("—")
     agent_phase: reactive[str] = reactive("idle")
+    waiting_hint: reactive[str] = reactive("")
     wait_frame: reactive[int] = reactive(0)
 
     def on_mount(self) -> None:
@@ -103,9 +104,10 @@ class CurrentPanel(Static):
     def render(self) -> str:
         phase = self.agent_phase
         if phase == "waiting":
-            phase_line = f"[dim]agent[/] waiting [_WAITING]".replace(
-                "[_WAITING]", f"[#e0af68]{_WAITING_DOTS[self.wait_frame]}[/]"
-            )
+            dots = f"[#e0af68]{_WAITING_DOTS[self.wait_frame]}[/]"
+            phase_line = f"[dim]agent[/] waiting {dots}"
+            if self.waiting_hint:
+                phase_line += f"\n[#e0af68]{self.waiting_hint}[/]"
         else:
             phase_line = f"[dim]agent[/] {phase}"
         return (
@@ -260,5 +262,6 @@ class AgentTuiApp(App[None]):
         current.task_name = status["task_name"]
         current.node_name = status["node"]
         current.agent_phase = status["phase"]
+        current.waiting_hint = status.get("waiting_hint", "")
         phase = status["phase"]
         self.query_one("#topbar", Static).update(f"mr3a  ·  {phase}")

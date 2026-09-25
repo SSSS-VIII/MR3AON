@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from custom.deferred_tasks import ManagedTask, deferred_task_store, managed_task_queue
-from tui.snapshot import build_task_rows
+from tui.snapshot import build_task_rows, build_waiting_hint
 from tui.status import runtime_status
 
 
@@ -10,6 +10,7 @@ def _reset() -> None:
     deferred_task_store.clear()
     runtime_status.set_current_task(name="—", entry="")
     runtime_status.set_node("—")
+    runtime_status.set_agent_phase("idle")
 
 
 def test_build_task_rows_marks_running_pending_deferred():
@@ -47,5 +48,32 @@ def test_build_task_rows_marks_running_pending_deferred():
     assert rows["小屋修炼entry"].phase == "deferred"
     assert rows["启动游戏entry"].phase == "pending"
     assert rows["领取饭团entry"].phase == "pending"
+
+    _reset()
+
+
+def test_build_waiting_hint_shows_nearest_deferred_name():
+    _reset()
+    tasks = [
+        ManagedTask("通灵巡逻", "通灵巡逻entry", {}),
+        ManagedTask("小屋修炼", "小屋修炼entry", {}),
+    ]
+    managed_task_queue.activate(tasks, bootstrap_task_id=1)
+    deferred_task_store.arm(
+        key="小屋修炼",
+        entry="小屋修炼entry",
+        delay_seconds=7200,
+        pipeline_override={},
+    )
+    deferred_task_store.arm(
+        key="通灵巡逻",
+        entry="通灵巡逻entry",
+        delay_seconds=60,
+        pipeline_override={},
+    )
+
+    hint = build_waiting_hint()
+    assert hint.startswith("通灵巡逻")
+    assert "m" in hint or "s" in hint
 
     _reset()

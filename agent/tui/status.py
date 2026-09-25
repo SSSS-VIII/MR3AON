@@ -27,6 +27,7 @@ class RuntimeStatus:
     current_task_entry: str = ""
     current_node: str = "—"
     agent_phase: str = "idle"
+    waiting_hint: str = ""
     last_event_at: float = 0.0
 
     def set_node(self, name: str) -> None:
@@ -39,9 +40,17 @@ class RuntimeStatus:
             self.current_task_name = name or "—"
             self.current_task_entry = entry or ""
 
-    def set_agent_phase(self, phase: str) -> None:
+    def set_agent_phase(self, phase: str, *, waiting_hint: str | None = None) -> None:
         with self._lock:
             self.agent_phase = phase
+            if waiting_hint is not None:
+                self.waiting_hint = waiting_hint
+            elif phase != "waiting":
+                self.waiting_hint = ""
+
+    def set_waiting_hint(self, hint: str) -> None:
+        with self._lock:
+            self.waiting_hint = hint
 
     def snapshot(self) -> dict[str, str]:
         with self._lock:
@@ -50,6 +59,7 @@ class RuntimeStatus:
                 "task_entry": self.current_task_entry,
                 "node": self.current_node,
                 "phase": self.agent_phase,
+                "waiting_hint": self.waiting_hint,
             }
 
 
