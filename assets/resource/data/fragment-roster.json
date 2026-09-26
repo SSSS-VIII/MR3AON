@@ -1,4 +1,5 @@
 {
+  "note": "Single source for mystery-shop magatama fragment names. Edit names here, then run: python3 tools/ci/update_fragment_roster.py --sync-tasks-only. Or run GitHub Action 'Sync fragment roster' to refresh from BWiki.",
   "names": [
     "双焰·小椒",
     "星闪·小椒",

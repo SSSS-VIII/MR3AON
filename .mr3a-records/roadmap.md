@@ -2,7 +2,7 @@
 
 已完成错误恢复重构：默认错误与普通 `back` 分流；全局恢复回主页后每个 task 最多重试一次；重启使用启动 task 记录的实际包名；恢复耗尽后停止整个 Tasker。
 
-每日商店从入口起算 10 分钟。神秘商店和悬赏商店每圈都先看这个截止时间，到点进入 `Default_on_error`，由 Agent 排回退并重跑该任务。神秘商店仍购买全部忍币商品。勾玉碎片名单唯一源是 `assets/resource/data/fragment-roster.json`（CI 从 BWIKI 作战忍者/作战角色同步，并回写勾选 cases）；Agent 与 GUI 共用这份列表，改名单需发版。默认不选。勾选后只认第 8 商品位卡面全名，确认付款图标再点购买。
+每日商店从入口起算 10 分钟。神秘商店和悬赏商店每圈都先看这个截止时间，到点进入 `Default_on_error`，由 Agent 排回退并重跑该任务。神秘商店仍购买全部忍币商品。勾玉碎片名单唯一源是 `assets/resource/data/fragment-roster.json`；Actions「Sync fragment roster」仅手动触发，或本地改源后跑 `update_fragment_roster.py --sync-tasks-only`。改名单需发版。默认不选。勾选后只认第 8 商品位卡面全名，确认付款图标再点购买。
 
 通灵「点击通灵兽」已改侧栏文字绿幕模板匹配（`通灵兽侧栏文字.png`），实机 score≈1 点进巡逻页；早先 OCR 兜底不足以应对白底白字漏检。战令红点模板已开 green_mask、补 红点1、放宽 ROI。好友饭团主页误判仍未处理。神秘商店里未挂接的「配置碎片」死节点已删。
 

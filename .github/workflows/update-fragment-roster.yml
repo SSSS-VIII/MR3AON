@@ -1,9 +1,8 @@
 name: Sync fragment roster
 
+# 手动维护神秘商店勾玉碎片名单。新角色上线后再跑即可，无需定时。
+# Actions → Sync fragment roster → Run workflow（选 main）。
 on:
-  schedule:
-    - cron: '17 */12 * * *'   # 北京时间每 12 小时 17 分
-      timezone: 'Asia/Shanghai'
   workflow_dispatch:
 
 permissions:
@@ -20,16 +19,18 @@ jobs:
       - name: Fetch BWiki combat roster and sync checkbox cases
         run: |
           echo "Current Date and Time: $(date '+%Y-%m-%d %H:%M:%S')"
-          python tools/ci/update_fragment_roster.py
+          echo "Source of truth after sync: assets/resource/data/fragment-roster.json"
+          python3 tools/ci/update_fragment_roster.py
 
       - name: Check if roster files changed
         id: check
         run: |
           if [[ -n "$(git status --porcelain -- assets/resource/data/fragment-roster.json assets/resource/tasks/日常任务.json)" ]]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git status --porcelain -- assets/resource/data/fragment-roster.json assets/resource/tasks/日常任务.json
           else
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "No changes to commit"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes to commit (roster already up to date)"
           fi
 
       - name: Commit and push
@@ -39,5 +40,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add assets/resource/data/fragment-roster.json assets/resource/tasks/日常任务.json
           git commit -m "chore: sync mystery-shop fragment roster from BWiki"
-          git pull origin $(git rev-parse --abbrev-ref HEAD) --rebase
+          git pull origin "$(git rev-parse --abbrev-ref HEAD)" --rebase
           git push
