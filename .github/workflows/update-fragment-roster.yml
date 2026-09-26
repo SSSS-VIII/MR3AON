@@ -1,15 +1,13 @@
 name: Sync fragment roster
 
-# 神秘商店勾玉碎片名单（仅手动）。
+# 刷新神秘商店勾玉碎片 GUI 待选项（仅手动）。
 #
-# 唯一源: assets/resource/data/fragment-roster.json → names
-# 派生: 日常任务.json 里「勾玉购买忍者碎片」勾选 cases（本 workflow / 脚本生成，勿手改）
+# 唯一维护处: assets/resource/tasks/日常任务.json
+#   → option「勾玉购买忍者碎片」.cases
+# Agent 不读名单，只买框架写入 attach 的已选项。
 #
-# 用法:
-#   Actions → Sync fragment roster → Run workflow（BWiki 已有新角色时）
-#   若 BWiki 还没收录: 先改源文件 names，本地跑
-#     python3 tools/ci/update_fragment_roster.py --sync-tasks-only
-#   再提交源文件与 日常任务.json
+# BWiki 已有新角色: Actions → Sync fragment roster → Run workflow
+# BWiki 未更新: 直接在上述 cases 里追加一项后发版
 on:
   workflow_dispatch:
 
@@ -24,21 +22,21 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch BWiki combat roster and sync checkbox cases
+      - name: Fetch BWiki combat names into checkbox cases
         run: |
           echo "Current Date and Time: $(date '+%Y-%m-%d %H:%M:%S')"
-          echo "Source of truth: assets/resource/data/fragment-roster.json"
+          echo "Updates: assets/resource/tasks/日常任务.json option 勾玉购买忍者碎片"
           python3 tools/ci/update_fragment_roster.py
 
-      - name: Check if roster files changed
+      - name: Check if task options changed
         id: check
         run: |
-          if [[ -n "$(git status --porcelain -- assets/resource/data/fragment-roster.json assets/resource/tasks/日常任务.json)" ]]; then
+          if [[ -n "$(git status --porcelain -- assets/resource/tasks/日常任务.json)" ]]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
-            git status --porcelain -- assets/resource/data/fragment-roster.json assets/resource/tasks/日常任务.json
+            git status --porcelain -- assets/resource/tasks/日常任务.json
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "No changes to commit (roster already up to date)"
+            echo "No changes to commit"
           fi
 
       - name: Commit and push
@@ -46,7 +44,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/resource/data/fragment-roster.json assets/resource/tasks/日常任务.json
-          git commit -m "chore: sync mystery-shop fragment roster from BWiki"
+          git add assets/resource/tasks/日常任务.json
+          git commit -m "chore: sync mystery-shop fragment options from BWiki"
           git pull origin "$(git rev-parse --abbrev-ref HEAD)" --rebase
           git push

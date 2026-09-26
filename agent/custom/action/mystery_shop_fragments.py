@@ -1,67 +1,34 @@
-import json
 import re
-from pathlib import Path
 
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
 
 from utils import logger
-from utils.runtime_paths import get_runtime_paths
+
 
 CONFIG_NODE = "勾玉购买忍者碎片配置"
 # 游戏里只有第 8 个商品位会刷勾玉碎片（0-based：商品7）。
 FRAGMENT_SLOT = 7
 FRAGMENT_NODE = f"神秘商店商品{FRAGMENT_SLOT}是配置碎片"
-# 名单唯一源: assets/resource/data/fragment-roster.json（维护说明见 tools/ci/update_fragment_roster.py）
-_ROSTER_FILE = "fragment-roster.json"
-
-
-def _roster_candidates() -> list[Path]:
-    paths = get_runtime_paths()
-    return [
-        paths.resource_dir / "data" / _ROSTER_FILE,
-        paths.project_root / "assets" / "resource" / "data" / _ROSTER_FILE,
-    ]
-
-
-def load_fragment_roster() -> list[str]:
-    """Load names from the single roster JSON (same source the CI syncs)."""
-    last_error: Exception | None = None
-    for path in _roster_candidates():
-        if not path.is_file():
-            continue
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as e:
-            last_error = e
-            continue
-        names = data if isinstance(data, list) else data.get("names")
-        if not isinstance(names, list) or not names:
-            last_error = ValueError(f"{path}: names must be a non-empty list")
-            continue
-        return [str(name) for name in names]
-    raise FileNotFoundError(
-        f"fragment roster not found in {[str(p) for p in _roster_candidates()]}"
-        + (f"; last error: {last_error}" if last_error else "")
-    )
-
-
-# 商店卡面是「流派·忍者碎片」。空格会先被节点 replace 去掉。
-FRAGMENT_ROSTER = load_fragment_roster()
 
 
 def fragment_pattern(name: str) -> str:
     return re.escape(name) + r".*碎片"
 
 
+def selected_fragment_names(attach: dict) -> list[str]:
+    """GUI/checkbox 勾选后写入 attach；Agent 只消费已选项。"""
+    return [str(key) for key, value in attach.items() if value]
+
+
 @AgentServer.custom_action("ApplyMysteryShopFragmentConfig")
 class ApplyMysteryShopFragmentConfig(CustomAction):
     """
-    读取勾玉购买忍者碎片配置的 attach，把勾选的全名写入第 8 商品位的碎片识别。
+    读取勾玉购买忍者碎片配置的 attach，把已勾选全名写入第 8 商品位的碎片识别。
 
-    attach 的 key 是流派·忍者全名，值为 true 才购买。
-    多个勾选靠配置合并进同一个 attach，和藏宝图一样。
+    待选项只在 日常任务.json 的 checkbox cases 里维护；框架把选中项合并进 attach。
+    Agent 不持有完整名单，只根据 attach 里为 true 的 key 购买。
     没有勾选时该商品位保持关闭，商店继续只买忍币商品。
     """
 
@@ -73,11 +40,7 @@ class ApplyMysteryShopFragmentConfig(CustomAction):
         del argv
         config_node = context.get_node_data(CONFIG_NODE)
         attach = config_node.get("attach", {}) if config_node else {}
-        roster = set(FRAGMENT_ROSTER)
-        selected = [name for name in FRAGMENT_ROSTER if attach.get(name)]
-        for key, value in attach.items():
-            if value and key not in roster:
-                logger.warning(f"无法识别的勾玉碎片 {key!r}，已跳过")
+        selected = selected_fragment_names(attach if isinstance(attach, dict) else {})
 
         if not selected:
             logger.info("未勾选勾玉忍者碎片")

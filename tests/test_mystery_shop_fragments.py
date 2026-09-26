@@ -7,9 +7,9 @@ from types import SimpleNamespace
 from custom.action.mystery_shop_fragments import (
     CONFIG_NODE,
     FRAGMENT_NODE,
-    FRAGMENT_ROSTER,
     ApplyMysteryShopFragmentConfig,
     fragment_pattern,
+    selected_fragment_names,
 )
 
 
@@ -33,13 +33,16 @@ def _argv():
 
 
 class MysteryShopFragmentConfigTest(unittest.TestCase):
-    def test_roster_names_match_shop_cards_after_spaces_are_removed(self):
+    def test_fragment_pattern_matches_shop_card_without_spaces(self):
         card = "剑心 · 卫鲤碎片".replace(" ", "").replace("　", "")
         self.assertRegex(card, fragment_pattern("剑心·卫鲤"))
-        self.assertEqual(len(FRAGMENT_ROSTER), len(set(FRAGMENT_ROSTER)))
-        for name in FRAGMENT_ROSTER:
-            self.assertIn("·", name)
-            self.assertRegex(f"{name}碎片", fragment_pattern(name))
+
+    def test_selected_names_come_only_from_attach(self):
+        attach = {"剑心·卫鲤": True, "双焰·小椒": False, "极刃·血影": True}
+        self.assertEqual(
+            selected_fragment_names(attach),
+            ["剑心·卫鲤", "极刃·血影"],
+        )
 
     def test_no_selection_leaves_fragment_nodes_disabled(self):
         context = _Context({})
@@ -68,11 +71,13 @@ class MysteryShopFragmentConfigTest(unittest.TestCase):
                 or re.fullmatch(pattern, "极刃·血影碎片")
             )
 
-    def test_unknown_attach_key_is_not_purchased(self):
+    def test_any_truthy_attach_key_is_purchased(self):
         context = _Context({"白·小黑": True})
         result = ApplyMysteryShopFragmentConfig().run(context, _argv())
         self.assertTrue(result.success)
-        self.assertEqual(context.overrides, [])
+        self.assertEqual(len(context.overrides), 1)
+        expected = context.overrides[0][FRAGMENT_NODE]["recognition"]["param"]["expected"]
+        self.assertEqual(expected, [fragment_pattern("白·小黑")])
 
 
 if __name__ == "__main__":
