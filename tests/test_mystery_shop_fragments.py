@@ -6,8 +6,8 @@ from types import SimpleNamespace
 
 from custom.action.mystery_shop_fragments import (
     CONFIG_NODE,
+    FRAGMENT_NODE,
     FRAGMENT_ROSTER,
-    SLOT_COUNT,
     ApplyMysteryShopFragmentConfig,
     fragment_pattern,
 )
@@ -48,7 +48,7 @@ class MysteryShopFragmentConfigTest(unittest.TestCase):
         self.assertEqual(context.assert_name, CONFIG_NODE)
         self.assertEqual(context.overrides, [])
 
-    def test_selected_full_names_are_written_to_every_slot(self):
+    def test_selected_full_names_are_written_to_eighth_slot_only(self):
         context = _Context({"剑心·卫鲤": True, "双焰·小椒": False, "极刃·血影": True})
         result = ApplyMysteryShopFragmentConfig().run(context, _argv())
         self.assertTrue(result.success)
@@ -58,12 +58,15 @@ class MysteryShopFragmentConfigTest(unittest.TestCase):
             fragment_pattern("剑心·卫鲤"),
             fragment_pattern("极刃·血影"),
         ]
-        self.assertEqual(set(override), {f"神秘商店商品{i}是配置碎片" for i in range(SLOT_COUNT)})
-        for node in override.values():
-            self.assertTrue(node["enabled"])
-            self.assertEqual(node["recognition"]["param"]["expected"], expected)
-            for pattern in node["recognition"]["param"]["expected"]:
-                self.assertIsNotNone(re.fullmatch(pattern, "剑心·卫鲤碎片") or re.fullmatch(pattern, "极刃·血影碎片"))
+        self.assertEqual(set(override), {FRAGMENT_NODE})
+        node = override[FRAGMENT_NODE]
+        self.assertTrue(node["enabled"])
+        self.assertEqual(node["recognition"]["param"]["expected"], expected)
+        for pattern in node["recognition"]["param"]["expected"]:
+            self.assertIsNotNone(
+                re.fullmatch(pattern, "剑心·卫鲤碎片")
+                or re.fullmatch(pattern, "极刃·血影碎片")
+            )
 
     def test_unknown_attach_key_is_not_purchased(self):
         context = _Context({"白·小黑": True})

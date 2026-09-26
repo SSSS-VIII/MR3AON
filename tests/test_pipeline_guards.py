@@ -294,21 +294,28 @@ class PipelineGuardTest(unittest.TestCase):
                 case["pipeline_override"]["勾玉购买忍者碎片配置"]["attach"],
                 {case["name"]: True},
             )
-        for index in range(8):
+        for index in range(7):
             with self.subTest(slot=index):
                 nxt = pipeline[f"神秘商店商品{index}"]["next"]
-                coin = f"神秘商店商品{index}有忍币图标"
-                fragment = f"神秘商店商品{index}是配置碎片"
-                skip = f"神秘商店商品{index}没有忍币图标"
-                self.assertLess(nxt.index(coin), nxt.index(fragment))
-                self.assertLess(nxt.index(fragment), nxt.index(skip))
-                node = pipeline[fragment]
-                self.assertFalse(node["enabled"])
-                self.assertEqual(
-                    node["recognition"]["param"]["expected"],
-                    ["不购买碎片"],
-                )
-                self.assertEqual(node["next"], ["神秘商店商品0购买页面"])
+                self.assertNotIn(f"神秘商店商品{index}是配置碎片", nxt)
+                self.assertNotIn(f"神秘商店商品{index}是配置碎片", pipeline)
+
+        eighth = pipeline["神秘商店商品7"]["next"]
+        self.assertLess(
+            eighth.index("神秘商店商品7有忍币图标"),
+            eighth.index("神秘商店商品7是配置碎片"),
+        )
+        self.assertLess(
+            eighth.index("神秘商店商品7是配置碎片"),
+            eighth.index("神秘商店商品7没有忍币图标"),
+        )
+        node = pipeline["神秘商店商品7是配置碎片"]
+        self.assertFalse(node["enabled"])
+        self.assertEqual(
+            node["recognition"]["param"]["expected"],
+            ["不购买碎片"],
+        )
+        self.assertEqual(node["next"], ["神秘商店商品0购买页面"])
 
         for name in ("忍币商店没有MAX", "忍币商店识别并点击max"):
             nxt = pipeline[name]["next"]

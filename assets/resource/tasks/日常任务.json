@@ -918,6 +918,16 @@
                     }
                 },
                 {
+                    "name": "乘霄·戌时",
+                    "pipeline_override": {
+                        "勾玉购买忍者碎片配置": {
+                            "attach": {
+                                "乘霄·戌时": true
+                            }
+                        }
+                    }
+                },
+                {
                     "name": "极刃·血影",
                     "pipeline_override": {
                         "勾玉购买忍者碎片配置": {
