@@ -410,20 +410,18 @@ def agent(is_dev_mode=False):
             try:
                 run_agent_tui()
             finally:
-                # TUI 退出必须拆掉 Agent；./run 已 exec 成 MaaPiCli，还要结束父进程才回 shell。
+                # 先杀 PiCli 还 shell：shut_down 常卡住，杀父进程的代码根本跑不到。
+                # Agent 也常被 systemd 收养，不能只靠 getppid。
                 from tui import terminate_parent_maa_picli
 
-                logger.info("TUI 已退出，正在关闭 AgentServer")
+                sys.stderr.write("info:TUI 已退出，结束 MaaPiCli 以回到 shell\n")
+                sys.stderr.flush()
+                terminate_parent_maa_picli()
                 try:
                     AgentServer.shut_down()
                 except Exception:
-                    logger.exception("AgentServer shut_down 失败")
-                join_thread.join(timeout=5)
-                if join_thread.is_alive():
-                    logger.warning(
-                        "AgentServer.join 未在 5s 内返回，强制结束 Agent 进程"
-                    )
-                terminate_parent_maa_picli()
+                    pass
+                join_thread.join(timeout=1)
                 os._exit(0)
         else:
             AgentServer.join()
