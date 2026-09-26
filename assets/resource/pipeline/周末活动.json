@@ -8,7 +8,56 @@
         ]
     },
     "周末活动任务出错": {
-        "focus": "任务出错：周末活动❌"
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ScheduleDeferredTask",
+                "custom_action_param": {
+                    "key": "周末活动失败重试",
+                    "entry": "周末活动entry",
+                    "fallback_seconds": 3600,
+                    "reuse_current_override": true
+                }
+            }
+        },
+        "next": [
+            "周末活动挂起后结束"
+        ],
+        "focus": "任务出错：周末活动❌，一小时后重试"
+    },
+    "周末活动未到九点挂起": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "TimeBefore",
+                "custom_recognition_param": {
+                    "time": "09:00"
+                }
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ScheduleDeferredTask",
+                "custom_action_param": {
+                    "key": "周末活动等待九点",
+                    "entry": "周末活动entry",
+                    "daily_times": [
+                        "09:00"
+                    ],
+                    "reuse_current_override": true
+                }
+            }
+        },
+        "next": [
+            "周末活动挂起后结束"
+        ],
+        "focus": "周末活动：未到 09:00，挂起到九点"
+    },
+    "周末活动挂起后结束": {
+        "action": {
+            "type": "StopTask"
+        }
     },
     "周末活动入口": {
         "max_hit": 3,
@@ -51,16 +100,37 @@
                 "green_mask": true
             }
         },
-        "action": {
-            "type": "StopTask"
-        },
+        "next": [
+            "登记周末活动每日完成"
+        ],
         "focus": "任务完成：周末活动✅"
     },
     "周末活动当前不为周末": {
+        "next": [
+            "登记周末活动每日完成"
+        ],
+        "focus": "非周末，跳过此任务"
+    },
+    "登记周末活动每日完成": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "周末活动entry",
+                    "enabled": false,
+                    "valid_until": "next_daily_reset"
+                }
+            }
+        },
+        "next": [
+            "周末活动完成停止任务"
+        ]
+    },
+    "周末活动完成停止任务": {
         "action": {
             "type": "StopTask"
-        },
-        "focus": "非周末，跳过此任务"
+        }
     },
     "周末活动当前为周六": {
         "recognition": {
@@ -73,6 +143,7 @@
             }
         },
         "next": [
+            "周末活动未到九点挂起",
             "周末活动进入集会所"
         ]
     },
@@ -87,6 +158,7 @@
             }
         },
         "next": [
+            "周末活动未到九点挂起",
             "周末活动进入集会所"
         ]
     },
@@ -301,6 +373,26 @@
             "type": "Custom",
             "param": {
                 "custom_action": "ResetCount"
+            }
+        },
+        "next": [
+            "周末活动覆盖错误恢复"
+        ]
+    },
+    "周末活动覆盖错误恢复": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "Default_on_error": {
+                        "next": [
+                            "处理游戏闪退",
+                            "全局恢复主页面确认",
+                            "周末活动任务出错"
+                        ]
+                    }
+                }
             }
         },
         "next": [

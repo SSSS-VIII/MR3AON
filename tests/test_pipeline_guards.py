@@ -26,6 +26,7 @@ class PipelineGuardTest(unittest.TestCase):
             ("活动奖励.json", "登记领取奖励_活动奖励每日完成"): ("领取奖励entry", "领取奖励_活动奖励"),
             ("神龙契约.json", "登记领取奖励_神龙契约每日完成"): ("领取奖励entry", "领取奖励_神龙契约"),
             ("领取战令.json", "登记领取奖励_领取战令每日完成"): ("领取奖励entry", "领取奖励_领取战令"),
+            ("周末活动.json", "登记周末活动每日完成"): ("周末活动entry", None),
         }
         for (filename, node_name), (entry, child_node) in expected.items():
             with self.subTest(filename=filename, node=node_name):
@@ -53,6 +54,8 @@ class PipelineGuardTest(unittest.TestCase):
             ("小屋修炼.json", "确定继续修炼"),
             ("好友忍币.json", "好友忍币任务完成"),
             ("领取邮件.json", "领取邮件任务完成"),
+            ("周末活动.json", "周末活动未到九点挂起"),
+            ("周末活动.json", "周末活动任务出错"),
         }
         for filename, node_name in deferred_paths:
             with self.subTest(deferred=filename, node=node_name):
@@ -327,6 +330,99 @@ class PipelineGuardTest(unittest.TestCase):
         self.assertTrue((RESOURCE / "image" / "神秘商店勾玉1.png").is_file())
         card = "剑心 · 卫鲤碎片".replace(" ", "").replace("　", "")
         self.assertRegex(card, fragment_pattern("剑心·卫鲤"))
+
+    def test_weekend_activity_defers_before_nine_and_on_failure(self):
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "周末活动.json").read_text(encoding="utf-8")
+        )
+
+        for weekday_node in ("周末活动当前为周六", "周末活动当前为周日"):
+            self.assertEqual(
+                pipeline[weekday_node]["next"],
+                ["周末活动未到九点挂起", "周末活动进入集会所"],
+            )
+
+        before_nine = pipeline["周末活动未到九点挂起"]
+        self.assertEqual(
+            before_nine["recognition"]["param"]["custom_recognition"],
+            "TimeBefore",
+        )
+        self.assertEqual(
+            before_nine["recognition"]["param"]["custom_recognition_param"]["time"],
+            "09:00",
+        )
+        before_param = before_nine["action"]["param"]["custom_action_param"]
+        self.assertEqual(before_param["entry"], "周末活动entry")
+        self.assertEqual(before_param["daily_times"], ["09:00"])
+        self.assertTrue(before_param["reuse_current_override"])
+        self.assertEqual(before_nine["next"], ["周末活动挂起后结束"])
+
+        failed = pipeline["周末活动任务出错"]
+        fail_param = failed["action"]["param"]["custom_action_param"]
+        self.assertEqual(fail_param["entry"], "周末活动entry")
+        self.assertEqual(fail_param["fallback_seconds"], 3600)
+        self.assertTrue(fail_param["reuse_current_override"])
+        self.assertEqual(failed["next"], ["周末活动挂起后结束"])
+        self.assertEqual(
+            pipeline["周末活动挂起后结束"]["action"]["type"],
+            "StopTask",
+        )
+
+        override = pipeline["周末活动覆盖错误恢复"]["action"]["param"]
+        self.assertEqual(override["custom_action"], "NodeOverride")
+        self.assertEqual(
+            override["custom_action_param"]["Default_on_error"]["next"],
+            [
+                "处理游戏闪退",
+                "全局恢复主页面确认",
+                "周末活动任务出错",
+            ],
+        )
+        self.assertEqual(
+            pipeline["重置周末活动内部节点计数器"]["next"],
+            ["周末活动覆盖错误恢复"],
+        )
+
+        self.assertEqual(
+            pipeline["周末活动完成回到了主页面"]["next"],
+            ["登记周末活动每日完成"],
+        )
+        self.assertEqual(
+            pipeline["周末活动当前不为周末"]["next"],
+            ["登记周末活动每日完成"],
+        )
+        register = pipeline["登记周末活动每日完成"]
+        reg_param = register["action"]["param"]["custom_action_param"]
+        self.assertEqual(reg_param["entry"], "周末活动entry")
+        self.assertFalse(reg_param["enabled"])
+        self.assertEqual(reg_param["valid_until"], "next_daily_reset")
+        self.assertEqual(register["next"], ["周末活动完成停止任务"])
+        self.assertEqual(
+            pipeline["周末活动完成停止任务"]["action"]["type"],
+            "StopTask",
+        )
+
+    def test_hut_training_rechecks_countdown_after_continue(self):
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "小屋修炼.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            pipeline["确定继续修炼"]["next"],
+            ["[JumpBack]修炼饭团不够包子", "进入了忍者小屋页面"],
+        )
+        self.assertEqual(
+            pipeline["进入了忍者小屋页面"]["next"],
+            [
+                "[JumpBack]忍者小屋误点3F",
+                " 修炼完成",
+                "忍者修炼",
+                "忍者小屋还在修炼",
+            ],
+        )
+        defer = pipeline["忍者小屋还在修炼"]["action"]["param"]["custom_action_param"]
+        self.assertEqual(defer["key"], "小屋修炼")
+        self.assertEqual(defer["entry"], "小屋修炼entry")
+        self.assertTrue(defer["reuse_current_override"])
 
 
 if __name__ == "__main__":
