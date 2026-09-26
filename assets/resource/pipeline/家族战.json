@@ -365,9 +365,9 @@
         ]
     },
     "家族战当前不为周末": {
-        "action": {
-            "type": "StopTask"
-        },
+        "next": [
+            "登记家族战每日完成"
+        ],
         "focus": "家族战：非周末，跳过此任务"
     },
     "家族战当前为星期六": {
@@ -382,7 +382,7 @@
         },
         "next": [
             "家族战当前时间大于21点20",
-            "[JumpBack]家族战当前时间小于20点",
+            "家族战当前时间小于20点",
             "家族战在目标时间范围"
         ]
     },
@@ -398,7 +398,7 @@
         },
         "next": [
             "家族战当前时间大于21点20",
-            "[JumpBack]家族战当前时间小于20点",
+            "家族战当前时间小于20点",
             "家族战在目标时间范围"
         ]
     },
@@ -412,9 +412,9 @@
                 }
             }
         },
-        "action": {
-            "type": "StopTask"
-        },
+        "next": [
+            "登记家族战每日完成"
+        ],
         "focus": "家族战：当前时间大于21:20，跳过此任务"
     },
     "家族战当前时间小于20点": {
@@ -427,10 +427,24 @@
                 }
             }
         },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ScheduleDeferredTask",
+                "custom_action_param": {
+                    "key": "家族战等待八点",
+                    "entry": "家族战entry",
+                    "daily_times": [
+                        "20:00"
+                    ],
+                    "reuse_current_override": true
+                }
+            }
+        },
         "next": [
-            "[JumpBack]家族战等待提示",
-            "家族战等待5秒"
-        ]
+            "家族战挂起后结束"
+        ],
+        "focus": "家族战：未到 20:00，挂起到八点"
     },
     "家族战意外点击到了深渊": {
         "recognition": {
@@ -499,10 +513,10 @@
                 "green_mask": true
             }
         },
-        "action": {
-            "type": "StopTask"
-        },
-        "focus": "任务完成：家族战✅"
+        "focus": "任务完成：家族战✅",
+        "next": [
+            "登记家族战每日完成"
+        ]
     },
     "家族战未结束": {},
     "家族战本次未参加家族战": {
@@ -645,10 +659,10 @@
                 "green_mask": true
             }
         },
-        "action": {
-            "type": "StopTask"
-        },
-        "focus": "任务完成：家族战✅"
+        "focus": "任务完成：家族战✅",
+        "next": [
+            "登记家族战每日完成"
+        ]
     },
     "家族战结束时间大于21点20": {
         "recognition": {
@@ -964,6 +978,32 @@
         },
         "action": {
             "type": "Click"
+        }
+    },
+    "家族战挂起后结束": {
+        "action": {
+            "type": "StopTask"
+        }
+    },
+    "登记家族战每日完成": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "家族战entry",
+                    "enabled": false,
+                    "valid_until": "next_daily_reset"
+                }
+            }
+        },
+        "next": [
+            "家族战完成停止任务"
+        ]
+    },
+    "家族战完成停止任务": {
+        "action": {
+            "type": "StopTask"
         }
     }
 }

@@ -27,6 +27,7 @@ class PipelineGuardTest(unittest.TestCase):
             ("神龙契约.json", "登记领取奖励_神龙契约每日完成"): ("领取奖励entry", "领取奖励_神龙契约"),
             ("领取战令.json", "登记领取奖励_领取战令每日完成"): ("领取奖励entry", "领取奖励_领取战令"),
             ("周末活动.json", "登记周末活动每日完成"): ("周末活动entry", None),
+            ("家族战.json", "登记家族战每日完成"): ("家族战entry", None),
         }
         for (filename, node_name), (entry, child_node) in expected.items():
             with self.subTest(filename=filename, node=node_name):
@@ -56,6 +57,7 @@ class PipelineGuardTest(unittest.TestCase):
             ("领取邮件.json", "领取邮件任务完成"),
             ("周末活动.json", "周末活动未到九点挂起"),
             ("周末活动.json", "周末活动任务出错"),
+            ("家族战.json", "家族战当前时间小于20点"),
         }
         for filename, node_name in deferred_paths:
             with self.subTest(deferred=filename, node=node_name):
@@ -406,6 +408,68 @@ class PipelineGuardTest(unittest.TestCase):
         self.assertEqual(register["next"], ["周末活动完成停止任务"])
         self.assertEqual(
             pipeline["周末活动完成停止任务"]["action"]["type"],
+            "StopTask",
+        )
+
+    def test_family_war_defers_before_eight_and_registers_completion(self):
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "家族战.json").read_text(encoding="utf-8")
+        )
+
+        for weekday_node in ("家族战当前为星期六", "家族战当前为星期日"):
+            self.assertEqual(
+                pipeline[weekday_node]["next"],
+                [
+                    "家族战当前时间大于21点20",
+                    "家族战当前时间小于20点",
+                    "家族战在目标时间范围",
+                ],
+            )
+
+        before_eight = pipeline["家族战当前时间小于20点"]
+        self.assertEqual(
+            before_eight["recognition"]["param"]["custom_recognition"],
+            "TimeBefore",
+        )
+        self.assertEqual(
+            before_eight["recognition"]["param"]["custom_recognition_param"]["time"],
+            "20:00",
+        )
+        before_param = before_eight["action"]["param"]["custom_action_param"]
+        self.assertEqual(before_param["entry"], "家族战entry")
+        self.assertEqual(before_param["daily_times"], ["20:00"])
+        self.assertTrue(before_param["reuse_current_override"])
+        self.assertEqual(before_eight["next"], ["家族战挂起后结束"])
+        self.assertEqual(
+            pipeline["家族战挂起后结束"]["action"]["type"],
+            "StopTask",
+        )
+
+        self.assertEqual(
+            pipeline["家族战当前时间大于21点20"]["next"],
+            ["登记家族战每日完成"],
+        )
+        self.assertEqual(
+            pipeline["家族战当前不为周末"]["next"],
+            ["登记家族战每日完成"],
+        )
+        self.assertEqual(
+            pipeline["家族战结束完成回到了主页面"]["next"],
+            ["登记家族战每日完成"],
+        )
+        self.assertEqual(
+            pipeline["家族战未报名回到了主页面"]["next"],
+            ["登记家族战每日完成"],
+        )
+
+        register = pipeline["登记家族战每日完成"]
+        reg_param = register["action"]["param"]["custom_action_param"]
+        self.assertEqual(reg_param["entry"], "家族战entry")
+        self.assertFalse(reg_param["enabled"])
+        self.assertEqual(reg_param["valid_until"], "next_daily_reset")
+        self.assertEqual(register["next"], ["家族战完成停止任务"])
+        self.assertEqual(
+            pipeline["家族战完成停止任务"]["action"]["type"],
             "StopTask",
         )
 
