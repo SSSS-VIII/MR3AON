@@ -1,7 +1,15 @@
 name: Sync fragment roster
 
-# 手动维护神秘商店勾玉碎片名单。新角色上线后再跑即可，无需定时。
-# Actions → Sync fragment roster → Run workflow（选 main）。
+# 神秘商店勾玉碎片名单（仅手动）。
+#
+# 唯一源: assets/resource/data/fragment-roster.json → names
+# 派生: 日常任务.json 里「勾玉购买忍者碎片」勾选 cases（本 workflow / 脚本生成，勿手改）
+#
+# 用法:
+#   Actions → Sync fragment roster → Run workflow（BWiki 已有新角色时）
+#   若 BWiki 还没收录: 先改源文件 names，本地跑
+#     python3 tools/ci/update_fragment_roster.py --sync-tasks-only
+#   再提交源文件与 日常任务.json
 on:
   workflow_dispatch:
 
@@ -19,7 +27,7 @@ jobs:
       - name: Fetch BWiki combat roster and sync checkbox cases
         run: |
           echo "Current Date and Time: $(date '+%Y-%m-%d %H:%M:%S')"
-          echo "Source of truth after sync: assets/resource/data/fragment-roster.json"
+          echo "Source of truth: assets/resource/data/fragment-roster.json"
           python3 tools/ci/update_fragment_roster.py
 
       - name: Check if roster files changed

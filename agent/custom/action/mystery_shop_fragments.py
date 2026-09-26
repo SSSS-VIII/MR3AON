@@ -13,6 +13,7 @@ CONFIG_NODE = "勾玉购买忍者碎片配置"
 # 游戏里只有第 8 个商品位会刷勾玉碎片（0-based：商品7）。
 FRAGMENT_SLOT = 7
 FRAGMENT_NODE = f"神秘商店商品{FRAGMENT_SLOT}是配置碎片"
+# 名单唯一源: assets/resource/data/fragment-roster.json（维护说明见 tools/ci/update_fragment_roster.py）
 _ROSTER_FILE = "fragment-roster.json"
 
 
@@ -25,7 +26,7 @@ def _roster_candidates() -> list[Path]:
 
 
 def load_fragment_roster() -> list[str]:
-    """Load the single shipped roster used by agent and GUI checkbox sync."""
+    """Load names from the single roster JSON (same source the CI syncs)."""
     last_error: Exception | None = None
     for path in _roster_candidates():
         if not path.is_file():
