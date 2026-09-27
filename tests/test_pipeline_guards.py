@@ -230,6 +230,44 @@ class PipelineGuardTest(unittest.TestCase):
         )
         self.assertEqual(pipeline[finish_at_home]["action"]["type"], "StopTask")
 
+        self.assertEqual(
+            pipeline["巡逻饭团不足"]["recognition"]["param"]["expected"],
+            ["兵粮丸不足", "饭团不足"],
+        )
+        self.assertEqual(
+            pipeline["饭团不足退出巡逻"]["next"],
+            ["登记通灵巡逻每日完成"],
+        )
+
+    def test_bounty_shop_alternates_swipe_direction(self):
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "每日商店.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            pipeline["再次点击悬赏商店"]["next"],
+            ["悬赏商店右滑", "悬赏商店左滑"],
+        )
+        self.assertNotIn("enabled", pipeline["悬赏商店右滑"])
+        self.assertFalse(pipeline["悬赏商店左滑"]["enabled"])
+        self.assertEqual(
+            pipeline["悬赏商店右滑"]["next"], ["关闭节点悬赏商店右滑"]
+        )
+        self.assertEqual(
+            pipeline["悬赏商店左滑"]["next"], ["关闭节点悬赏商店左滑"]
+        )
+        self.assertEqual(
+            pipeline["关闭节点悬赏商店右滑"]["next"],
+            ["使能节点悬赏商店左滑"],
+        )
+        self.assertEqual(
+            pipeline["关闭节点悬赏商店左滑"]["next"],
+            ["使能节点悬赏商店右滑"],
+        )
+        right_swipe = pipeline["悬赏商店右滑"]["action"]["param"]
+        left_swipe = pipeline["悬赏商店左滑"]["action"]["param"]
+        self.assertEqual(right_swipe["begin"], left_swipe["end"][0])
+        self.assertEqual(left_swipe["begin"], right_swipe["end"][0])
+
     def test_startup_timeout_reopens_without_rerecording_package(self):
         pipeline = json.loads(
             (RESOURCE / "pipeline" / "启动游戏.json").read_text(encoding="utf-8")

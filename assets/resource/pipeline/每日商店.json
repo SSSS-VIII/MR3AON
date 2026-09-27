@@ -100,7 +100,8 @@
         },
         "post_delay": 100,
         "next": [
-            "悬赏商店右滑"
+            "悬赏商店右滑",
+            "悬赏商店左滑"
         ]
     },
     "再次确认是花费忍币并点击购买": {
@@ -306,7 +307,111 @@
                     400
                 ]
             }
-        }
+        },
+        "next": [
+            "关闭节点悬赏商店右滑"
+        ]
+    },
+    "悬赏商店左滑": {
+        "enabled": false,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1101,
+                    100,
+                    176,
+                    473
+                ],
+                "expected": [
+                    "悬赏商店",
+                    "赏商店"
+                ]
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    250,
+                    401,
+                    1,
+                    1
+                ],
+                "end": [
+                    [
+                        985,
+                        401,
+                        1,
+                        1
+                    ]
+                ],
+                "end_hold": [
+                    400
+                ]
+            }
+        },
+        "next": [
+            "关闭节点悬赏商店左滑"
+        ]
+    },
+    "关闭节点悬赏商店右滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "悬赏商店右滑"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "使能节点悬赏商店左滑"
+        ]
+    },
+    "关闭节点悬赏商店左滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "悬赏商店左滑"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "使能节点悬赏商店右滑"
+        ]
+    },
+    "使能节点悬赏商店右滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "悬赏商店右滑"
+                }
+            }
+        },
+        "post_delay": 0
+    },
+    "使能节点悬赏商店左滑": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "EnableNode",
+                "custom_action_param": {
+                    "node_name": "悬赏商店左滑"
+                }
+            }
+        },
+        "post_delay": 0
     },
     "悬赏商店忍币不足": {
         "recognition": {
