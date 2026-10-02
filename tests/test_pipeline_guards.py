@@ -28,6 +28,14 @@ class PipelineGuardTest(unittest.TestCase):
             ("领取战令.json", "登记领取奖励_领取战令每日完成"): ("领取奖励entry", "领取奖励_领取战令"),
             ("周末活动.json", "登记周末活动每日完成"): ("周末活动entry", None),
             ("家族战.json", "登记家族战每日完成"): ("家族战entry", None),
+            ("镜界百器.json", "登记清理镜界百器体力每日完成"): (
+                "镜界百器entry",
+                "清理镜界百器体力",
+            ),
+            ("镜界百器.json", "登记镜界百器每日任务每日完成"): (
+                "镜界百器entry",
+                "镜界百器每日任务",
+            ),
         }
         for (filename, node_name), (entry, child_node) in expected.items():
             with self.subTest(filename=filename, node=node_name):

@@ -7,7 +7,8 @@ import subprocess
 from typing import Optional
 
 
-def adb_target() -> tuple[str, str]:
+def list_adb_states() -> tuple[str, list[tuple[str, str]]]:
+    """Return (adb_path, [(serial, state), ...]) for every `adb devices` row."""
     adb = shutil.which("adb") or "/usr/bin/adb"
     result = subprocess.run(
         [adb, "devices"],
@@ -21,13 +22,21 @@ def adb_target() -> tuple[str, str]:
     if result.returncode != 0:
         raise RuntimeError(f"无法执行 adb devices: {result.stderr.strip()}")
 
-    devices: list[str] = []
+    rows: list[tuple[str, str]] = []
     for line in result.stdout.splitlines()[1:]:
         fields = line.split()
-        if len(fields) >= 2 and fields[1] == "device":
-            devices.append(fields[0])
+        if len(fields) >= 2:
+            rows.append((fields[0], fields[1]))
+    return adb, rows
+
+
+def adb_target() -> tuple[str, str]:
+    adb, rows = list_adb_states()
+    devices = [serial for serial, state in rows if state == "device"]
     if len(devices) != 1:
-        raise RuntimeError(f"需要恰好一个 ADB 设备，当前发现: {devices!r}")
+        raise RuntimeError(
+            f"需要恰好一个 ADB 设备，当前发现: {devices!r} (全部={rows!r})"
+        )
     return adb, devices[0]
 
 

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import shutil
 import subprocess
 import time
@@ -89,54 +88,6 @@ def show_full_ui() -> None:
         f"waydroid show-full-ui: code={result.returncode} "
         f"out={(result.stdout or result.stderr or '').strip()!r}"
     )
-    _focus_waydroid_window()
-
-
-def _focus_waydroid_window() -> None:
-    niri = shutil.which("niri")
-    if not niri:
-        return
-    try:
-        listed = subprocess.run(
-            [niri, "msg", "-j", "windows"],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=5,
-            check=False,
-        )
-        windows = json.loads(listed.stdout or "[]")
-    except Exception as exc:
-        logger.debug(f"查询 niri 窗口失败: {exc}")
-        return
-    window_id = next(
-        (
-            item.get("id")
-            for item in windows
-            if item.get("app_id") == "Waydroid" or item.get("title") == "Waydroid"
-        ),
-        None,
-    )
-    if window_id is None:
-        logger.warning("show-full-ui 之后没有找到 Waydroid 窗口")
-        return
-    focused = subprocess.run(
-        [niri, "msg", "action", "focus-window", "--id", str(window_id)],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=5,
-        check=False,
-    )
-    if focused.returncode == 0:
-        logger.info(f"已把 Waydroid 窗口切到前台: id={window_id}")
-    else:
-        logger.warning(
-            f"聚焦 Waydroid 窗口失败: code={focused.returncode} "
-            f"out={(focused.stdout or focused.stderr or '').strip()!r}"
-        )
 
 
 def wait_session_running(deadline_sec: float = 120) -> bool:
@@ -172,7 +123,8 @@ def set_display_size(size: str = DISPLAY_SIZE) -> None:
 
 
 def connect_adb() -> None:
-    result = _run_waydroid("adb", "connect", wait_sec=60)
+    # 不带 --details-to-stdout 时失败只剩一句提示，看不出 IP/adbd 是否就绪。
+    result = _run_waydroid("--details-to-stdout", "adb", "connect", wait_sec=60)
     logger.info(
         f"waydroid adb connect: code={result.returncode} "
         f"out={(result.stdout or result.stderr or '').strip()!r}"
@@ -180,16 +132,23 @@ def connect_adb() -> None:
 
 
 def wait_adb_device(deadline_sec: float = 90) -> bool:
+    from utils.adb_device import list_adb_states
+
     deadline = time.monotonic() + deadline_sec
     while time.monotonic() < deadline:
         try:
             adb_target()
             return True
-        except Exception:
+        except Exception as exc:
+            try:
+                _, rows = list_adb_states()
+            except Exception:
+                rows = []
+            logger.info(f"等待 ADB device: {exc}; adb devices={rows!r}")
             try:
                 connect_adb()
-            except Exception as exc:
-                logger.debug(f"adb connect 重试: {exc}")
+            except Exception as retry_exc:
+                logger.debug(f"adb connect 重试: {retry_exc}")
             time.sleep(2)
     return False
 

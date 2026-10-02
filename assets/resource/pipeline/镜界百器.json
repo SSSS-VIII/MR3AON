@@ -600,6 +600,23 @@
             }
         },
         "next": [
+            "登记清理镜界百器体力每日完成"
+        ]
+    },
+    "登记清理镜界百器体力每日完成": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "镜界百器entry",
+                    "node": "清理镜界百器体力",
+                    "enabled": false,
+                    "valid_until": "next_daily_reset"
+                }
+            }
+        },
+        "next": [
             "镜界百器任务开始"
         ]
     },
@@ -626,6 +643,23 @@
                 "custom_action": "DisableNode",
                 "custom_action_param": {
                     "node_name": "镜界百器每日任务"
+                }
+            }
+        },
+        "next": [
+            "登记镜界百器每日任务每日完成"
+        ]
+    },
+    "登记镜界百器每日任务每日完成": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "镜界百器entry",
+                    "node": "镜界百器每日任务",
+                    "enabled": false,
+                    "valid_until": "next_daily_reset"
                 }
             }
         }
