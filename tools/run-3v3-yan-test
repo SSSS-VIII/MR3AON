@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# 炎之窟跑图调试：从右下角「完成」起测（入口 3v3炎之窟测试entry）。
+# 请先手动停在困难图选关页，且当前图为炎之窟。
+#
+#   ./tools/run-3v3-yan-test
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SRC="/home/linn/MaaPiCli/build/bin/RelWithDebInfo"
+WORK="${ROOT}/deps/.run-test"
+
+export PYTHONPATH="${ROOT}/agent${PYTHONPATH:+:${PYTHONPATH}}"
+"${ROOT}/.venv/bin/python" -c 'from utils.waydroid_host import ensure_waydroid_and_adb; ensure_waydroid_and_adb()'
+
+mkdir -p "${WORK}/config" "${WORK}/debug" "${WORK}/plugins"
+cp -a "${SRC}/MaaPiCli" "${WORK}/MaaPiCli"
+shopt -s nullglob
+for lib in "${SRC}"/*.so "${SRC}"/*.so.*; do
+    ln -sfn "${lib}" "${WORK}/$(basename "${lib}")"
+done
+shopt -u nullglob
+ln -sfn "${ROOT}/assets/interface.json" "${WORK}/interface.json"
+ln -sfn "${ROOT}/assets/resource" "${WORK}/resource"
+cp -a "${ROOT}/deps/bin/config/." "${WORK}/config/"
+
+"${ROOT}/.venv/bin/python" - <<'PY'
+import json
+from pathlib import Path
+cfg = Path("/home/linn/MR3A/deps/.run-test/config/maa_pi_config.json")
+data = json.loads(cfg.read_text(encoding="utf-8"))
+data["task"] = [{"name": "3v3炎之窟跑图测试", "option": []}]
+cfg.write_text(json.dumps(data, ensure_ascii=False, indent=4) + "\n", encoding="utf-8")
+print("已写入测试任务: 3v3炎之窟跑图测试 → 3v3炎之窟测试entry（从完成开始）")
+PY
+
+export MR3A_TEST_WORK="${WORK}"
+cd "${WORK}"
+exec ./MaaPiCli -d

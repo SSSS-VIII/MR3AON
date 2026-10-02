@@ -23,6 +23,8 @@ from utils.logger import logger
 _DEFAULT_POLL_MS = 100
 # 原始操作序列的 delay 隐含了作者开发环境中的输入耗时；先补回这一固定
 # 差值，再按当前环境每次真实的 controller.wait 耗时动态校准。
+# 人手录制（record-3v3-parkour）的按键间隔是 wall-clock，粘贴前须先减去本值，
+# 否则每步再 +60，相对录制基线线性变慢；录制脚本导出已自动扣除。
 _CLICK_DELAY_CORRECTION_MS = 60
 
 # ADB 点击命令到游戏响应以及首次识图的延迟，只校准一次。
