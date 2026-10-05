@@ -36,7 +36,8 @@
         },
         "action": {
             "type": "Click"
-        }
+        },
+        "post_delay": 1500
     },
     "战令有红点": {
         "recognition": {
@@ -96,16 +97,18 @@
     },
     "战令页面": {
         "recognition": {
-            "type": "TemplateMatch",
+            "type": "OCR",
             "param": {
                 "roi": [
+                    366,
                     0,
-                    0,
-                    125,
-                    100
+                    881,
+                    140
                 ],
-                "template": [
-                    "返回按钮.png"
+                "expected": [
+                    "试炼奖励",
+                    "月度试炼",
+                    "每日试炼"
                 ]
             }
         },
@@ -113,7 +116,7 @@
             "[JumpBack]每日试炼",
             "[JumpBack]月度试炼",
             "[JumpBack]试炼奖励",
-            "退出战令页面"
+            "领取战令完成准备返回主页"
         ]
     },
     "无奖励领取": {
@@ -243,6 +246,7 @@
         "action": {
             "type": "Click"
         },
+        "post_delay": 500,
         "next": [
             "再次检查战令页面"
         ]
@@ -665,8 +669,7 @@
             "领取战令任务完成"
         ]
     },
-    "领取战令完成": {},
-    "领取战令任务完成": {
+    "领取战令完成": {
         "action": {
             "type": "Custom",
             "param": {
@@ -676,10 +679,121 @@
                 }
             }
         },
-        "next": ["登记领取奖励_领取战令每日完成"],
-        "focus": "任务完成：领取战令✅"
+        "focus": "任务完成：领取战令✅",
+        "next": [
+            "登记领取奖励_领取战令每日完成"
+        ]
+    },
+    "领取战令任务完成": {
+        "pre_delay": 0,
+        "post_delay": 0
     },
     "登记领取奖励_领取战令每日完成": {
-        "action": {"type": "Custom", "param": {"custom_action": "SetManagedTaskPersistentState", "custom_action_param": {"entry": "领取奖励entry", "node": "领取奖励_领取战令", "enabled": false, "valid_until": "next_daily_reset"}}}
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "领取奖励entry",
+                    "node": "领取奖励_领取战令",
+                    "enabled": false,
+                    "valid_until": "next_daily_reset"
+                }
+            }
+        }
+    },
+    "识别并点击战令": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    141,
+                    479,
+                    442
+                ],
+                "template": [
+                    "战令图标.png",
+                    "战令图标1.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000,
+        "next": [
+            "[JumpBack]战令前往",
+            "战令有红点",
+            "战令页面",
+            "识别并点击战令1s后未发现预期页面"
+        ]
+    },
+    "识别并点击战令1s后未发现预期页面": {
+        "pre_delay": 0,
+        "post_delay": 3000,
+        "next": [
+            "[JumpBack]战令前往",
+            "战令页面",
+            "识别并点击战令"
+        ]
+    },
+    "领取战令完成准备返回主页": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "领取战令完成回到了主页面",
+            "[JumpBack]back"
+        ]
+    },
+    "领取战令完成回到了主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    4,
+                    136,
+                    434,
+                    459
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "领取战令任务出错"
+                }
+            }
+        },
+        "next": [
+            "领取战令完成"
+        ]
+    },
+    "领取战令确认在主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    500,
+                    712
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "next": [
+            "识别并点击战令"
+        ]
     }
 }

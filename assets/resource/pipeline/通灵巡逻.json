@@ -226,31 +226,6 @@
         ]
     },
     "没有通灵兽说明还在巡逻": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "roi": [
-                    10,
-                    152,
-                    301,
-                    450
-                ],
-                "expected": [
-                    "小时|时|分钟|分|秒"
-                ]
-            }
-        },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "ScheduleDeferredTask",
-                "custom_action_param": {
-                    "key": "通灵巡逻",
-                    "entry": "通灵巡逻entry",
-                    "reuse_current_override": true
-                }
-            }
-        },
         "next": [
             "通灵巡逻完成回到主页面"
         ]
@@ -372,9 +347,10 @@
         ]
     },
     "直接去巡逻": {
-        "timeout": 5000,
+        "timeout": 1500,
         "next": [
-            "点击通灵兽"
+            "点击通灵兽文字",
+            "点击通灵兽图片"
         ],
         "on_error": [
             "没有通灵兽说明还在巡逻",
@@ -810,6 +786,88 @@
         "post_delay": 500,
         "next": [
             "登记通灵巡逻每日完成"
+        ]
+    },
+    "点击通灵兽图片": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "主页通灵兽.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "通灵兽巡逻页面"
+        ]
+    },
+    "点击通灵兽文字": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    10,
+                    152,
+                    301,
+                    450
+                ],
+                "expected": [
+                    "通灵兽"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "通灵兽巡逻页面"
+        ]
+    },
+    "忍阶巡逻完成退出": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    125,
+                    100
+                ],
+                "template": [
+                    "返回按钮.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "通灵巡逻完成回到主页面"
+        ]
+    },
+    "退出巡逻并任务结束": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    125,
+                    100
+                ],
+                "template": [
+                    "返回按钮.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "通灵巡逻完成回到主页面"
         ]
     }
 }

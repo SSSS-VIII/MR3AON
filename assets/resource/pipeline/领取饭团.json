@@ -349,7 +349,7 @@
             }
         },
         "next": [
-            "识别好友",
+            "领取饭团确认在主页面",
             "[JumpBack]back"
         ]
     },
@@ -395,11 +395,15 @@
                 }
             }
         },
-        "next": ["领取饭团完成停止任务"],
+        "next": [
+            "领取饭团完成停止任务"
+        ],
         "focus": "任务完成：领取饭团✅"
     },
     "领取饭团完成停止任务": {
-        "action": {"type": "StopTask"}
+        "action": {
+            "type": "StopTask"
+        }
     },
     "饭团点击返回": {
         "recognition": {
@@ -422,6 +426,236 @@
         "post_delay": 400,
         "next": [
             "领取饭团回到了主页面"
+        ]
+    },
+    "好友页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    13,
+                    136,
+                    257,
+                    416
+                ],
+                "expected": [
+                    "好友列表",
+                    "添加好友",
+                    "黑名单",
+                    "师徒"
+                ]
+            }
+        },
+        "next": [
+            "点击收取饭团"
+        ]
+    },
+    "点击主页好友": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    140,
+                    500,
+                    450
+                ],
+                "expected": [
+                    "好友"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000,
+        "next": [
+            "好友页面",
+            "点击主页好友1s后未发现预期页面"
+        ]
+    },
+    "点击主页好友1s后未发现预期页面": {
+        "pre_delay": 0,
+        "post_delay": 3000,
+        "next": [
+            "好友页面",
+            "点击主页好友"
+        ]
+    },
+    "点击收取饭团": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1141,
+                    16,
+                    140,
+                    90
+                ],
+                "expected": [
+                    "收取饭团"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 600,
+        "next": [
+            "点开了收取饭团",
+            "点击收取饭团0.6s后未发现预期页面"
+        ]
+    },
+    "点击收取饭团0.6s后未发现预期页面": {
+        "pre_delay": 0,
+        "post_delay": 2400,
+        "next": [
+            "点开了收取饭团",
+            "点击收取饭团"
+        ]
+    },
+    "点开了收取饭团": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    438,
+                    0,
+                    435,
+                    110
+                ],
+                "expected": [
+                    "收取饭团"
+                ]
+            }
+        },
+        "next": [
+            "领取饭团点击全部收取"
+        ]
+    },
+    "领取饭团完成回到了主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    4,
+                    136,
+                    434,
+                    459
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "领取饭团entry",
+                    "enabled": false,
+                    "valid_until": "next_daily_reset"
+                }
+            }
+        },
+        "focus": "任务完成：领取饭团✅",
+        "next": [
+            "领取饭团完成停止任务"
+        ]
+    },
+    "领取饭团点击全部回赠": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    176,
+                    519,
+                    479,
+                    197
+                ],
+                "expected": [
+                    "全部回赠"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "领取饭团完成回到了主页面",
+            "[JumpBack]back"
+        ]
+    },
+    "领取饭团点击全部收取": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    722,
+                    455,
+                    374,
+                    263
+                ],
+                "expected": [
+                    "全部收取"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 500,
+        "timeout": 2000,
+        "next": [
+            "领取饭团点击确定"
+        ],
+        "on_error": [
+            "领取饭团点击全部回赠"
+        ]
+    },
+    "领取饭团点击确定": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    395,
+                    496,
+                    476,
+                    222
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 500,
+        "next": [
+            "领取饭团点击全部回赠"
+        ]
+    },
+    "领取饭团确认在主页面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    500,
+                    712
+                ],
+                "template": [
+                    "主页面.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "next": [
+            "点击主页好友"
         ]
     }
 }

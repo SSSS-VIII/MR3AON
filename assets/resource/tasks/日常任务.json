@@ -17,7 +17,6 @@
             "name": "通灵巡逻",
             "entry": "通灵巡逻entry",
             "option": [
-                "有忍阶任务才巡逻",
                 "巡逻关卡"
             ],
             "group": [
@@ -246,6 +245,18 @@
                             "action": {
                                 "param": {
                                     "package": "com.pandadastudio.ninjamustdie3.bilibili"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "应用宝",
+                    "pipeline_override": {
+                        "启动应用": {
+                            "action": {
+                                "param": {
+                                    "package": "com.tencent.tmgp.pandadastudio.ninja3"
                                 }
                             }
                         }
@@ -1635,50 +1646,6 @@
                 }
             ]
         },
-        "给特定好友送饭团": {
-            "type": "switch",
-            "default_case": "No",
-            "cases": [
-                {
-                    "name": "Yes",
-                    "label": "开启",
-                    "option": [
-                        "指定饭团好友昵称"
-                    ],
-                    "pipeline_override": {
-                        "给特定好友送饭团": {
-                            "enabled": true
-                        }
-                    }
-                },
-                {
-                    "name": "No",
-                    "label": "关闭",
-                    "pipeline_override": {
-                        "给特定好友送饭团": {
-                            "enabled": false
-                        }
-                    }
-                }
-            ]
-        },
-        "指定饭团好友昵称": {
-            "type": "input",
-            "description": "支持模糊匹配以及多个好友，用|分隔，如：张三|李四",
-            "inputs": [
-                {
-                    "name": "好友昵称",
-                    "default": "",
-                    "pipeline_type": "string",
-                    "pattern_msg": "请输入好友昵称"
-                }
-            ],
-            "pipeline_override": {
-                "识别好友名字": {
-                    "expected": "{好友昵称}"
-                }
-            }
-        },
         "满了也刷（最好不要）": {
             "type": "switch",
             "label": "满了也刷（最好不要）",
@@ -1707,6 +1674,20 @@
                     "pipeline_override": {
                         "关闭游戏直接关闭游戏": {
                             "enabled": false
+                        },
+                        "取消屏蔽组队邀请后不关闭游戏": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "取消屏蔽邀请后不关闭游戏",
+                    "pipeline_override": {
+                        "关闭游戏直接关闭游戏": {
+                            "enabled": false
+                        },
+                        "取消屏蔽组队邀请后不关闭游戏": {
+                            "enabled": true
                         }
                     }
                 },
@@ -1715,6 +1696,9 @@
                     "pipeline_override": {
                         "关闭游戏直接关闭游戏": {
                             "enabled": true
+                        },
+                        "取消屏蔽组队邀请后不关闭游戏": {
+                            "enabled": false
                         }
                     }
                 }

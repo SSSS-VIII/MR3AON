@@ -717,7 +717,7 @@
                     625,
                     139,
                     311,
-                    201
+                    337
                 ],
                 "expected": [
                     "屏蔽所有组队邀请"
@@ -1053,22 +1053,28 @@
             "type": "Swipe",
             "param": {
                 "begin": [
-                    1000,
-                    450,
-                    1,
-                    1
+                    1100,
+                    430,
+                    30,
+                    30
                 ],
                 "end": [
                     [
-                        1000,
-                        400,
-                        1,
-                        1
+                        1100,
+                        230,
+                        30,
+                        30
                     ]
+                ],
+                "end_hold": [
+                    1000
                 ]
             }
         },
-        "post_delay": 1000
+        "next": [
+            "设置页面上滑计数",
+            "重置节点设置页面上滑计数"
+        ]
     },
     "识别上层勾勾": {
         "recognition": {
@@ -1247,7 +1253,7 @@
                     200
                 ],
                 "expected": [
-                    "^\u767b录$"
+                    "^登录$"
                 ]
             }
         },
@@ -1406,6 +1412,32 @@
         "post_delay": 0,
         "next": [
             "启动游戏失败时关闭游戏"
+        ]
+    },
+    "设置页面上滑计数": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 4
+                }
+            }
+        }
+    },
+    "重置节点设置页面上滑计数": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "设置页面上滑计数"
+                }
+            }
+        },
+        "focus": "⚠️屏蔽组队邀请失败，跳过屏蔽组队邀请，继续后续任务",
+        "next": [
+            "启动阶段关闭设置"
         ]
     }
 }
