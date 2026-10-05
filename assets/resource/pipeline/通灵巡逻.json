@@ -226,6 +226,31 @@
         ]
     },
     "没有通灵兽说明还在巡逻": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    10,
+                    152,
+                    301,
+                    450
+                ],
+                "expected": [
+                    "小时|时|分钟|分|秒"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ScheduleDeferredTask",
+                "custom_action_param": {
+                    "key": "通灵巡逻",
+                    "entry": "通灵巡逻entry",
+                    "reuse_current_override": true
+                }
+            }
+        },
         "next": [
             "通灵巡逻完成回到主页面"
         ]
@@ -347,10 +372,9 @@
         ]
     },
     "直接去巡逻": {
-        "timeout": 1500,
+        "timeout": 5000,
         "next": [
-            "点击通灵兽文字",
-            "点击通灵兽图片"
+            "点击通灵兽"
         ],
         "on_error": [
             "没有通灵兽说明还在巡逻",
