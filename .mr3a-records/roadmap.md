@@ -51,3 +51,5 @@ Agent 启动终端的大块乱码已确认是截图头被 Waydroid `amdgpu.ids` 
 通灵巡逻不足文案改为同时认「兵粮丸不足」；命中后登记禁用到下一 05:00，避免误重启死循环。悬赏商店每轮滑动改为左右交替，避免卡在最右侧看不到左侧商品。
 
 镜界百器清体力与每日任务已分别挂节点级日更禁用（`next_daily_reset`）；当次仍 DisableNode 以便同跑另一支。清体力默认炼狱。Waydroid 启动侧补了 ADB devices 诊断与 connect 详情，去掉多次 show-full-ui/niri 抢焦点，且不再用 immersive（会藏返回栏）。启动流程：密码页 ROI 水平加宽；设置「屏蔽所有组队邀请」ROI 高度扩到约三倍。
+
+2026-10-05：3v3 战内失败（金鱼币/商店等）改为 JumpBack 回作战页清结算，不再默认重启；boss 循环 240s；观战「返回」等消失后点中央；`LoopDeadline` 到期落图；`./tools/run-3v3` 单独跑完整 3v3。详见 `archived/2026-10-05-3v3-midfight-jumpback-and-settle.md`。
