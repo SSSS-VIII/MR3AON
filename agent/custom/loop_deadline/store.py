@@ -13,6 +13,7 @@ class LoopDeadlineStore:
     """
 
     _deadline_at: Dict[str, float] = {}
+    _expired_dump_done: Dict[str, bool] = {}
     _last_task_id: int = -1
 
     @classmethod
@@ -23,6 +24,7 @@ class LoopDeadlineStore:
     def _sync_task(cls, task_id: int) -> None:
         if task_id != cls._last_task_id:
             cls._deadline_at.clear()
+            cls._expired_dump_done.clear()
             cls._last_task_id = task_id
 
     @classmethod
@@ -30,9 +32,9 @@ class LoopDeadlineStore:
         cls._sync_task(task_id)
         if duration_ms < 0:
             raise ValueError("duration_ms must be non-negative")
-        cls._deadline_at[cls._key(task_id, scope)] = (
-            time.perf_counter() + duration_ms / 1000.0
-        )
+        key = cls._key(task_id, scope)
+        cls._deadline_at[key] = time.perf_counter() + duration_ms / 1000.0
+        cls._expired_dump_done.pop(key, None)
 
     @classmethod
     def reset(cls, task_id: int, scope: Optional[str] = None) -> None:
@@ -43,8 +45,11 @@ class LoopDeadlineStore:
             for k in list(cls._deadline_at.keys()):
                 if k.startswith(prefix):
                     del cls._deadline_at[k]
+                    cls._expired_dump_done.pop(k, None)
         else:
-            cls._deadline_at.pop(cls._key(task_id, scope), None)
+            key = cls._key(task_id, scope)
+            cls._deadline_at.pop(key, None)
+            cls._expired_dump_done.pop(key, None)
 
     @classmethod
     def is_armed(cls, task_id: int, scope: str) -> bool:
@@ -59,3 +64,20 @@ class LoopDeadlineStore:
         if end is None:
             return False
         return time.perf_counter() >= end
+
+    @classmethod
+    def claim_expired_dump(cls, task_id: int, scope: str) -> bool:
+        """
+        同一轮 arm 到期后仅允许领取一次截图保存权。
+        未到期 / 未 arm / 已领取过 → False。
+        """
+        cls._sync_task(task_id)
+        key = cls._key(task_id, scope)
+        if key not in cls._deadline_at:
+            return False
+        if time.perf_counter() < cls._deadline_at[key]:
+            return False
+        if cls._expired_dump_done.get(key):
+            return False
+        cls._expired_dump_done[key] = True
+        return True

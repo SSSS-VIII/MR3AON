@@ -10,7 +10,8 @@
         "post_delay": 0,
         "next": [
             "p1购卡1_1"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "3v3_kn_wu_p1": {
         "pre_delay": 0,
@@ -23,7 +24,8 @@
         "post_delay": 0,
         "next": [
             "p1购卡1_3"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "3v3_kn_ya_p1": {
         "pre_delay": 0,
@@ -36,7 +38,8 @@
         "post_delay": 0,
         "next": [
             "p1购卡1_2"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "3v3_kn_ying_p1": {
         "pre_delay": 0,
@@ -49,7 +52,8 @@
         "post_delay": 0,
         "next": [
             "p1购卡1_0"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "3v3entry": {
         "next": [
@@ -549,6 +553,7 @@
         "timeout": 420000,
         "next": [
             "[JumpBack]3v3进入准备页面",
+            "[JumpBack]3v3观战返回等待消失",
             "[JumpBack]3v3结算确定",
             "[JumpBack]3v3继续0",
             "[JumpBack]3v3继续1",
@@ -1122,7 +1127,8 @@
         "rate_limit": 200,
         "next": [
             "p1购卡2_0"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡1_1": {
         "recognition": {
@@ -1154,7 +1160,8 @@
         "rate_limit": 200,
         "next": [
             "p1购卡2_1"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡1_2": {
         "recognition": {
@@ -1186,7 +1193,8 @@
         "rate_limit": 200,
         "next": [
             "p1购卡2_2"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡1_3": {
         "recognition": {
@@ -1218,7 +1226,8 @@
         "rate_limit": 200,
         "next": [
             "p1购卡2_3"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡2_0": {
         "recognition": {
@@ -1250,7 +1259,8 @@
         "rate_limit": 200,
         "next": [
             "p1购卡3_0"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡2_1": {
         "recognition": {
@@ -1282,7 +1292,8 @@
         "rate_limit": 200,
         "next": [
             "p1购卡3_1"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡2_2": {
         "recognition": {
@@ -1314,7 +1325,8 @@
         "rate_limit": 200,
         "next": [
             "p1购卡3_2"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡2_3": {
         "recognition": {
@@ -1346,7 +1358,8 @@
         "rate_limit": 200,
         "next": [
             "p1购卡3_3"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡3_0": {
         "recognition": {
@@ -1378,7 +1391,8 @@
         "rate_limit": 200,
         "next": [
             "p1购卡4_0"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡3_1": {
         "recognition": {
@@ -1410,7 +1424,8 @@
         "rate_limit": 200,
         "next": [
             "p1购卡4_1"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡3_2": {
         "recognition": {
@@ -1442,7 +1457,8 @@
         "rate_limit": 200,
         "next": [
             "p1购卡4_2"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡3_3": {
         "recognition": {
@@ -1474,7 +1490,8 @@
         "rate_limit": 200,
         "next": [
             "p1购卡4_3"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡4_0": {
         "recognition": {
@@ -1507,7 +1524,8 @@
         "rate_limit": 200,
         "next": [
             "发现3v3_boss_0"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡4_1": {
         "recognition": {
@@ -1540,7 +1558,8 @@
         "rate_limit": 200,
         "next": [
             "发现3v3_boss_1"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡4_2": {
         "recognition": {
@@ -1573,7 +1592,8 @@
         "rate_limit": 200,
         "next": [
             "发现3v3_boss_2"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡4_3": {
         "recognition": {
@@ -1606,7 +1626,8 @@
         "rate_limit": 200,
         "next": [
             "发现3v3_boss_3"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "关闭3v3难度所有勾选1": {
         "recognition": {
@@ -1703,7 +1724,7 @@
                 "custom_action": "LoopDeadlineArm",
                 "custom_action_param": {
                     "scope": "3v3_boss战斗循环",
-                    "duration_ms": 120000
+                    "duration_ms": 240000
                 }
             }
         },
@@ -1712,7 +1733,8 @@
         "rate_limit": 50,
         "next": [
             "3v3_boss战斗循环_0"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "发现3v3_boss_1": {
         "recognition": {
@@ -1746,7 +1768,7 @@
                 "custom_action": "LoopDeadlineArm",
                 "custom_action_param": {
                     "scope": "3v3_boss战斗循环",
-                    "duration_ms": 120000
+                    "duration_ms": 240000
                 }
             }
         },
@@ -1755,7 +1777,8 @@
         "rate_limit": 50,
         "next": [
             "3v3_boss战斗循环_1"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "发现3v3_boss_2": {
         "recognition": {
@@ -1789,7 +1812,7 @@
                 "custom_action": "LoopDeadlineArm",
                 "custom_action_param": {
                     "scope": "3v3_boss战斗循环",
-                    "duration_ms": 120000
+                    "duration_ms": 240000
                 }
             }
         },
@@ -1798,7 +1821,8 @@
         "rate_limit": 50,
         "next": [
             "3v3_boss战斗循环_2"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "发现3v3_boss_3": {
         "recognition": {
@@ -1832,7 +1856,7 @@
                 "custom_action": "LoopDeadlineArm",
                 "custom_action_param": {
                     "scope": "3v3_boss战斗循环",
-                    "duration_ms": 120000
+                    "duration_ms": 240000
                 }
             }
         },
@@ -1841,7 +1865,8 @@
         "rate_limit": 50,
         "next": [
             "3v3_boss战斗循环_3"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "3v3_boss战斗循环_0": {
         "recognition": "DirectHit",
@@ -1895,9 +1920,7 @@
                 }
             }
         },
-        "next": [
-            "Default_on_error"
-        ]
+        "next": []
     },
     "回到了3v3主页面": {
         "recognition": {
@@ -2125,7 +2148,8 @@
         "next": [
             "p1购卡1_0"
         ],
-        "rate_limit": 0
+        "rate_limit": 0,
+        "on_error": "3v3战内失败收束"
     },
     "识别到下滑按钮1": {
         "recognition": {
@@ -2162,7 +2186,8 @@
         "next": [
             "p1购卡1_1"
         ],
-        "rate_limit": 0
+        "rate_limit": 0,
+        "on_error": "3v3战内失败收束"
     },
     "识别到下滑按钮2": {
         "recognition": {
@@ -2199,7 +2224,8 @@
         "next": [
             "p1购卡1_2"
         ],
-        "rate_limit": 0
+        "rate_limit": 0,
+        "on_error": "3v3战内失败收束"
     },
     "识别到下滑按钮3": {
         "recognition": {
@@ -2236,7 +2262,8 @@
         "next": [
             "p1购卡1_3"
         ],
-        "rate_limit": 0
+        "rate_limit": 0,
+        "on_error": "3v3战内失败收束"
     },
     "识别并点击3v3": {
         "recognition": {
@@ -2422,7 +2449,8 @@
         "next": [
             "p1购卡1_4"
         ],
-        "rate_limit": 0
+        "rate_limit": 0,
+        "on_error": "3v3战内失败收束"
     },
     "3v3_kn_yan_p1": {
         "pre_delay": 0,
@@ -2435,7 +2463,8 @@
         "post_delay": 0,
         "next": [
             "p1购卡1_4"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡1_4": {
         "recognition": {
@@ -2467,7 +2496,8 @@
         "rate_limit": 200,
         "next": [
             "p1购卡2_4"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡2_4": {
         "recognition": {
@@ -2499,7 +2529,8 @@
         "rate_limit": 200,
         "next": [
             "p1购卡3_4"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡3_4": {
         "recognition": {
@@ -2531,7 +2562,8 @@
         "rate_limit": 200,
         "next": [
             "p1购卡4_4"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "p1购卡4_4": {
         "recognition": {
@@ -2564,7 +2596,8 @@
         "rate_limit": 200,
         "next": [
             "发现3v3_boss_4"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "发现3v3_boss_4": {
         "recognition": {
@@ -2598,7 +2631,7 @@
                 "custom_action": "LoopDeadlineArm",
                 "custom_action_param": {
                     "scope": "3v3_boss战斗循环",
-                    "duration_ms": 120000
+                    "duration_ms": 240000
                 }
             }
         },
@@ -2607,7 +2640,8 @@
         "rate_limit": 50,
         "next": [
             "3v3_boss战斗循环_4"
-        ]
+        ],
+        "on_error": "3v3战内失败收束"
     },
     "3v3_boss战斗循环_4": {
         "recognition": "DirectHit",
@@ -2679,5 +2713,50 @@
             "识别到下滑按钮4"
         ],
         "focus": "测试专用：跳过进入战斗中，只等高频下滑白点"
+    },
+    "3v3战内失败收束": {
+        "recognition": "DirectHit",
+        "next": [],
+        "focus": "战内超时/失败：空 next 触发 JumpBack 回 3v3确定进入了作战页面"
+    },
+    "3v3观战返回等待消失": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    480,
+                    620,
+                    320,
+                    90
+                ],
+                "expected": [
+                    "返回"
+                ]
+            }
+        },
+        "post_delay": 5000,
+        "rate_limit": 0,
+        "timeout": 60000,
+        "next": [
+            "3v3观战返回等待消失",
+            "3v3观战返回消失后点中间"
+        ],
+        "focus": "观战进度页有「返回」：每 5s 再检查，直到消失后再点屏幕中央",
+        "on_error": "3v3观战返回消失后点中间"
+    },
+    "3v3观战返回消失后点中间": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    640,
+                    360,
+                    1,
+                    1
+                ]
+            }
+        },
+        "next": []
     }
 }

@@ -2,7 +2,12 @@ from maa.agent.agent_server import AgentServer
 from maa.context import Context
 from maa.custom_action import CustomAction
 
-from custom.interruptible import TaskStopRequested, interruptible_sleep
+from custom.interruptible import (
+    ClickDelayState,
+    TaskStopRequested,
+    click_delay_calibrate,
+    interruptible_click,
+)
 
 
 @AgentServer.custom_action("my_3v3_kn_yan_p2")
