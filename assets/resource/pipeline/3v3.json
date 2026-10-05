@@ -448,7 +448,10 @@
         "timeout": 180000,
         "next": [
             "3v3进入战斗了0"
-        ]
+        ],
+        "rate_limit": 30,
+        "pre_delay": 0,
+        "post_delay": 0
     },
     "3v3点击完成1": {
         "recognition": {
@@ -471,7 +474,10 @@
         "timeout": 180000,
         "next": [
             "3v3进入战斗了1"
-        ]
+        ],
+        "rate_limit": 30,
+        "pre_delay": 0,
+        "post_delay": 0
     },
     "3v3点击完成2": {
         "recognition": {
@@ -494,7 +500,10 @@
         "timeout": 180000,
         "next": [
             "3v3进入战斗了2"
-        ]
+        ],
+        "rate_limit": 30,
+        "pre_delay": 0,
+        "post_delay": 0
     },
     "3v3点击完成3": {
         "recognition": {
@@ -517,7 +526,10 @@
         "timeout": 180000,
         "next": [
             "3v3进入战斗了3"
-        ]
+        ],
+        "rate_limit": 30,
+        "pre_delay": 0,
+        "post_delay": 0
     },
     "3v3确定进入了作战页面": {
         "recognition": {
@@ -847,10 +859,12 @@
             }
         },
         "timeout": 180000,
-        "rate_limit": 30,
+        "rate_limit": 0,
         "next": [
             "识别到下滑按钮0"
-        ]
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
     },
     "3v3进入战斗了1": {
         "recognition": {
@@ -868,10 +882,12 @@
             }
         },
         "timeout": 180000,
-        "rate_limit": 30,
+        "rate_limit": 0,
         "next": [
             "识别到下滑按钮1"
-        ]
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
     },
     "3v3进入战斗了2": {
         "recognition": {
@@ -889,10 +905,12 @@
             }
         },
         "timeout": 180000,
-        "rate_limit": 30,
+        "rate_limit": 0,
         "next": [
             "识别到下滑按钮2"
-        ]
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
     },
     "3v3进入战斗了3": {
         "recognition": {
@@ -910,10 +928,12 @@
             }
         },
         "timeout": 180000,
-        "rate_limit": 30,
+        "rate_limit": 0,
         "next": [
             "识别到下滑按钮3"
-        ]
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
     },
     "3v3退出确定": {
         "recognition": {
@@ -2104,7 +2124,8 @@
         "post_delay": 0,
         "next": [
             "p1购卡1_0"
-        ]
+        ],
+        "rate_limit": 0
     },
     "识别到下滑按钮1": {
         "recognition": {
@@ -2140,7 +2161,8 @@
         "post_delay": 0,
         "next": [
             "p1购卡1_1"
-        ]
+        ],
+        "rate_limit": 0
     },
     "识别到下滑按钮2": {
         "recognition": {
@@ -2176,7 +2198,8 @@
         "post_delay": 0,
         "next": [
             "p1购卡1_2"
-        ]
+        ],
+        "rate_limit": 0
     },
     "识别到下滑按钮3": {
         "recognition": {
@@ -2212,7 +2235,8 @@
         "post_delay": 0,
         "next": [
             "p1购卡1_3"
-        ]
+        ],
+        "rate_limit": 0
     },
     "识别并点击3v3": {
         "recognition": {
@@ -2334,10 +2358,11 @@
         },
         "timeout": 180000,
         "next": [
-            "识别到下滑按钮4",
-            "3v3进入战斗了4",
-            "3v3点击完成4"
-        ]
+            "3v3进入战斗了4"
+        ],
+        "rate_limit": 30,
+        "pre_delay": 0,
+        "post_delay": 0
     },
     "3v3进入战斗了4": {
         "recognition": {
@@ -2355,10 +2380,12 @@
             }
         },
         "timeout": 180000,
-        "rate_limit": 30,
+        "rate_limit": 0,
         "next": [
             "识别到下滑按钮4"
-        ]
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
     },
     "识别到下滑按钮4": {
         "recognition": {
@@ -2394,7 +2421,8 @@
         "post_delay": 0,
         "next": [
             "p1购卡1_4"
-        ]
+        ],
+        "rate_limit": 0
     },
     "3v3_kn_yan_p1": {
         "pre_delay": 0,
@@ -2619,11 +2647,37 @@
     },
     "3v3炎之窟测试entry": {
         "next": [
-            "3v3点击完成4",
-            "识别到下滑按钮4",
-            "3v3进入战斗了4",
+            "3v3点击完成测试4",
             "3v3任务出错"
         ],
-        "focus": "测试：炎之窟从完成/进入战场开始"
+        "focus": "单人测试：无进入战斗中图标，点完成/进入战场后直接高频等下滑白点",
+        "timeout": 180000
+    },
+    "3v3点击完成测试4": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1007,
+                    623,
+                    219,
+                    79
+                ],
+                "expected": [
+                    "完成|进入战场"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "timeout": 180000,
+        "rate_limit": 0,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "识别到下滑按钮4"
+        ],
+        "focus": "测试专用：跳过进入战斗中，只等高频下滑白点"
     }
 }

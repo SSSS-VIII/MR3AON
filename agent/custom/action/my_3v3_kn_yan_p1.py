@@ -39,7 +39,7 @@ class my_3v3_kn_yan_p1(CustomAction):
             # click(1100, 620, t) 为跳跃
             # ===================
 
-            click(1, 1, 0)
+            click(1, 1, 150)
 
             click(1100, 620, 527)  # 跳跃
             click(1100, 620, 677)  # 跳跃
