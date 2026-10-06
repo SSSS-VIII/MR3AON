@@ -55,3 +55,5 @@ Agent 启动终端的大块乱码已确认是截图头被 Waydroid `amdgpu.ids` 
 2026-10-05：3v3 战内失败（金鱼币/商店等）改为 JumpBack 回作战页清结算，不再默认重启；boss 循环 240s；观战「返回」等消失后点中央；`LoopDeadline` 到期落图；`./tools/run-3v3` 单独跑完整 3v3。详见 `archived/2026-10-05-3v3-midfight-jumpback-and-settle.md`。
 
 2026-10-05：已合并上游 MR3A（`maafw` 5.14.2 等）；流水线冲突以本地为底、重叠修法跟上游。定制 `MaaPiCli`（`mr3a-managed-queue`）已 merge `v5.14.2` 重编对齐协议 8。本机已清空 `agent_task_state.json`。详见 `archived/2026-10-05-upstream-merge-and-maapicli-5142.md`。
+
+2026-10-06：3v3「满了也刷」挂到任务；每场回决斗场先 Yield 再 StopTask；超时 SetManaged 挂到次日 11:00。详见 `archived/2026-10-06-3v3-full-and-keep-farming.md`。

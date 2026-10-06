@@ -107,6 +107,9 @@
         {
             "name": "3v3（仅支持困难图）",
             "entry": "3v3entry",
+            "option": [
+                "满了也刷（最好不要）"
+            ],
             "group": [
                 "daily"
             ],
@@ -1649,13 +1652,34 @@
         "满了也刷（最好不要）": {
             "type": "switch",
             "label": "满了也刷（最好不要）",
+            "description": "开启后：每日任务领完仍继续刷。每场打完回到决斗场主页会让出调度（可插队其它任务后再回来）；不在开放时段则登记完成并挂到次日 11:00。",
             "default_case": "No",
             "cases": [
                 {
                     "name": "Yes",
                     "pipeline_override": {
-                        "3v3每日任务满了": {
-                            "next": "识别并点击匹配模式"
+                        "3v3满了也刷继续匹配": {
+                            "enabled": true
+                        },
+                        "3v3满了也刷本场结束退出": {
+                            "enabled": true
+                        },
+                        "没有匹配模式说明时间不符合": {
+                            "action": {
+                                "type": "Custom",
+                                "param": {
+                                    "custom_action": "SetManagedTaskPersistentState",
+                                    "custom_action_param": {
+                                        "entry": "3v3entry",
+                                        "enabled": false,
+                                        "valid_until": "next_daily_times",
+                                        "daily_times": [
+                                            "11:00"
+                                        ]
+                                    }
+                                }
+                            },
+                            "focus": "3v3满了也刷：已过活动时段，登记完成并挂到次日11:00"
                         }
                     }
                 },

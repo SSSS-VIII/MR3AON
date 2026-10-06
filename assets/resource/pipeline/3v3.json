@@ -374,6 +374,7 @@
         },
         "timeout": 2000,
         "next": [
+            "3v3满了也刷继续匹配",
             "登记3v3每日完成"
         ]
     },
@@ -1938,8 +1939,22 @@
             }
         },
         "next": [
+            "3v3满了也刷本场结束退出",
             "点击每日任务"
         ]
+    },
+    "3v3满了也刷本场结束退出": {
+        "enabled": false,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ManagedTaskSchedulerYieldCurrent"
+            }
+        },
+        "next": [
+            "3v3满了也刷本场StopTask"
+        ],
+        "focus": "3v3满了也刷：让出调度权"
     },
     "打完boss还活着进入kn_an_p2": {
         "recognition": {
@@ -2758,5 +2773,19 @@
             }
         },
         "next": []
+    },
+    "3v3满了也刷本场StopTask": {
+        "action": {
+            "type": "StopTask"
+        },
+        "focus": "3v3满了也刷：本场结束，交回 Agent"
+    },
+    "3v3满了也刷继续匹配": {
+        "enabled": false,
+        "next": [
+            "识别并点击匹配模式",
+            "没有匹配模式说明时间不符合"
+        ],
+        "focus": "3v3满了也刷：每日已领完，继续匹配"
     }
 }

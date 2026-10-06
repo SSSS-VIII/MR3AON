@@ -442,11 +442,17 @@ class SetManagedTaskPersistentState(CustomAction):
                 if not isinstance(weekday, int) or isinstance(weekday, bool):
                     raise ValueError("weekday 必须是 0 到 6 的整数")
                 valid_until = next_weekly_reset(now, weekday)
+            elif raw_until == "next_daily_times":
+                # 与 ScheduleDeferredTask 的 daily_times 对齐：禁用到下一个固定开放点
+                valid_until = next_daily_time(param.get("daily_times"), now=now)
+                if valid_until.tzinfo is None:
+                    valid_until = valid_until.replace(tzinfo=now.tzinfo)
             elif isinstance(raw_until, str):
                 valid_until = datetime.fromisoformat(raw_until)
             else:
                 raise ValueError(
-                    "valid_until 必须是 ISO 时间、next_daily_reset 或 next_weekly_reset"
+                    "valid_until 必须是 ISO 时间、next_daily_reset、"
+                    "next_weekly_reset 或 next_daily_times"
                 )
             if node is None:
                 persistent_task_state_store.set(
