@@ -2,10 +2,11 @@ from maa.agent.agent_server import AgentServer
 from maa.context import Context
 from maa.custom_action import CustomAction
 
+
 from custom.interruptible import (
     ClickDelayState,
     TaskStopRequested,
-    interruptible_click,
+    bind_parkour_clicks,
 )
 
 
@@ -24,22 +25,18 @@ class my_3v3_kn_yan_p1(CustomAction):
         """
         try:
             delay_state = ClickDelayState()
-
-            def click(x, y, delay_ms=0):
-                if not interruptible_click(
-                    context, x, y, delay_ms, delay_state=delay_state
-                ):
-                    raise TaskStopRequested
+            click, doubleclick = bind_parkour_clicks(context, delay_state)
 
             # ===================
             # 20261002-180115 录制；粘贴前已对每段 delay 减去
             # interruptible.ClickDelayState 的 +60ms 修正，避免相对人手
             # 录制基线每步累加变慢。主偏移可改下面首段。
             # click(200, 620, t) 为下翻
+            # doubleclick(200, 620, t) 为下翻连点两次
             # click(1100, 620, t) 为跳跃
             # ===================
 
-            click(1, 1, 150)
+            click(1, 1, 50)
 
             click(1100, 620, 527)  # 跳跃
             click(1100, 620, 677)  # 跳跃

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 极简 3v3 按键录制：回车开始，s下翻 k跳跃 q结束
+# 极简 3v3 按键录制：回车开始，s下翻 d下翻×2(doubleclick) k跳跃 q结束
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "${ROOT}"

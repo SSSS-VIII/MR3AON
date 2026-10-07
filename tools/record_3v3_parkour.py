@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """3v3 跑图按键录制（极简）。
 
-  s → 下翻 (200, 620)
-  k → 跳跃 (1100, 620)
+  s → 下翻 (200, 620) → click(...)
+  d → 下翻连点两次（中间不 sleep）→ doubleclick(...)
+  k → 跳跃 (1100, 620) → click(...)
   q → 结束，写出相对间隔序列
 
 不识图、不校准起始偏移；只保留按键相对顺序与间隔，主偏移你后调。
@@ -10,6 +11,7 @@
 写出给 Agent 的 delay 已减去 ``interruptible`` 里 ClickDelayState 的
 ``+60ms`` 修正：人手按键间隔若原样粘贴，实跑会每步再 +60，整条相对录制
 基线线性变慢。日志里的 gap= 仍是原始间隔；``.py`` 里是 Agent 可直接粘贴值。
+``doubleclick`` 与运行时一致：一步时间轴、只扣一次 60ms。
 """
 
 from __future__ import annotations
@@ -30,10 +32,12 @@ DOWN = (200, 620)
 # 与 agent/custom/interruptible.py 中 _CLICK_DELAY_CORRECTION_MS 保持一致。
 AGENT_DELAY_CORRECTION_MS = 60
 KEYS = {
-    "s": ("下翻", DOWN),
-    "S": ("下翻", DOWN),
-    "k": ("跳跃", JUMP),
-    "K": ("跳跃", JUMP),
+    "s": ("下翻", "click", DOWN),
+    "S": ("下翻", "click", DOWN),
+    "k": ("跳跃", "click", JUMP),
+    "K": ("跳跃", "click", JUMP),
+    "d": ("下翻×2", "doubleclick", DOWN),
+    "D": ("下翻×2", "doubleclick", DOWN),
 }
 
 
@@ -66,7 +70,8 @@ def main() -> int:
     log_path = out_dir / f"{stamp}.log"
     py_path = out_dir / f"{stamp}.py"
 
-    events: list[tuple[str, int, int, float]] = []  # name,x,y,monotonic
+    # name, call, x, y, monotonic
+    events: list[tuple[str, str, int, int, float]] = []
 
     def log(msg: str) -> None:
         line = f"{datetime.now().strftime('%H:%M:%S.%f')[:-3]} {msg}"
@@ -89,7 +94,7 @@ def main() -> int:
 
     log(f"log={log_path}")
     log(f"out={py_path}")
-    log("s=下翻 k=跳跃 q=结束；回车后开始")
+    log("s=下翻 d=下翻×2(doubleclick) k=跳跃 q=结束；回车后开始")
     try:
         input()
     except EOFError:
@@ -98,6 +103,22 @@ def main() -> int:
     log("录制中…")
     fd = sys.stdin.fileno()
     old = termios.tcgetattr(fd)
+
+    def record_event(name: str, call: str, x: int, y: int) -> bool:
+        t = time.monotonic()
+        try:
+            adb_tap(x, y)
+            if call == "doubleclick":
+                # 与 interruptible_double_click 一致：背靠背再点一次，中间不 sleep
+                adb_tap(x, y)
+        except Exception as exc:
+            log(f"tap 失败 {name}: {exc}")
+            return False
+        events.append((name, call, x, y, t))
+        gap = 0 if len(events) == 1 else int(round((t - events[-2][4]) * 1000))
+        log(f"#{len(events)} {name} {call}({x},{y}) gap={gap}ms")
+        return True
+
     try:
         tty.setcbreak(fd)
         while True:
@@ -109,16 +130,8 @@ def main() -> int:
             mapped = KEYS.get(ch)
             if not mapped:
                 continue
-            name, (x, y) = mapped
-            t = time.monotonic()
-            try:
-                adb_tap(x, y)
-            except Exception as exc:
-                log(f"tap 失败 {name}: {exc}")
-                continue
-            events.append((name, x, y, t))
-            gap = 0 if len(events) == 1 else int(round((t - events[-2][3]) * 1000))
-            log(f"#{len(events)} {name} ({x},{y}) gap={gap}ms")
+            name, call, (x, y) = mapped
+            record_event(name, call, x, y)
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
@@ -129,17 +142,18 @@ def main() -> int:
             f"（AGENT_DELAY_CORRECTION_MS={AGENT_DELAY_CORRECTION_MS}）；"
         ),
         "        # 否则实跑每步再 +60，相对录制基线线性变慢。主偏移自行改首段。",
-        "        # 勿对下列 delay 再减一遍 60。click(200,620)=下翻  click(1100,620)=跳跃",
+        "        # 勿对下列 delay 再减一遍 60。",
+        "        # click(200,620)=下翻  doubleclick(200,620)=下翻×2  click(1100,620)=跳跃",
     ]
-    for i, (name, x, y, t) in enumerate(events):
+    for i, (name, call, x, y, t) in enumerate(events):
         if i + 1 < len(events):
-            raw_delay = max(0, int(round((events[i + 1][3] - t) * 1000)))
+            raw_delay = max(0, int(round((events[i + 1][4] - t) * 1000)))
             delay = max(0, raw_delay - AGENT_DELAY_CORRECTION_MS)
         else:
             raw_delay = 0
             delay = 0
         lines.append(
-            f"        click({x}, {y}, {delay})  # {name}"
+            f"        {call}({x}, {y}, {delay})  # {name}"
             f"  raw_gap={raw_delay}ms"
         )
     text = "\n".join(lines) + "\n"

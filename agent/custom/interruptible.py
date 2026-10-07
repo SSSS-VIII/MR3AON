@@ -10,12 +10,16 @@
   随片数线性增长。本模块以绝对 deadline 为基准，最后一片自动收尾，
   总耗时与原 ``time.sleep(delay_ms / 1000)`` 同一量级。
 
-在自定义动作里可包一层 ``click``：若 ``interruptible_click`` 返回 False 则抛出
+在自定义动作里可包一层 ``click`` / ``doubleclick``：若返回 False 则抛出
 ``TaskStopRequested``，由 ``run`` 里 ``except TaskStopRequested`` 返回
-``success=False``，主序列仍保持一行 ``click(x, y, t)``。
+``success=False``。``doubleclick`` 连点两次、中间不 sleep，整段只走一次
+``+60ms`` 时间轴，避免短间隔双击与修正叠出乱序。
 """
 
+from __future__ import annotations
+
 import time
+from collections.abc import Callable
 
 from maa.context import Context
 from utils.logger import logger
@@ -98,6 +102,37 @@ def interruptible_sleep(
     return _interruptible_sleep_until(context, deadline, poll_ms)
 
 
+def _finish_click_delay(
+    context: Context,
+    *,
+    label: str,
+    x: int,
+    y: int,
+    click_started: float,
+    click_finished: float,
+    delay_ms: int,
+    poll_ms: int,
+    delay_state: ClickDelayState | None,
+) -> bool:
+    submit_ms = (click_finished - click_started) * 1000.0
+    if delay_state is not None:
+        deadline = delay_state.advance(click_started, delay_ms)
+        remaining_ms = max(0.0, (deadline - click_finished) * 1000.0)
+        debt_ms = max(0.0, (click_finished - deadline) * 1000.0)
+        logger.info(
+            f"3v3 {label}#{delay_state.next_index()}=({x},{y}) "
+            f"submit={submit_ms:.1f}ms delay={delay_ms}ms "
+            f"correction=+{_CLICK_DELAY_CORRECTION_MS}ms "
+            f"sleep<={remaining_ms:.1f}ms debt={debt_ms:.1f}ms"
+        )
+        return _interruptible_sleep_until(context, deadline, poll_ms)
+
+    logger.info(
+        f"{label}=({x},{y}) submit={submit_ms:.1f}ms post_delay={delay_ms}ms"
+    )
+    return interruptible_sleep(context, delay_ms, poll_ms)
+
+
 def interruptible_click(
     context: Context,
     x: int,
@@ -118,21 +153,72 @@ def interruptible_click(
     click_finished = time.monotonic()
     if is_stopping(context):
         return False
+    return _finish_click_delay(
+        context,
+        label="click",
+        x=x,
+        y=y,
+        click_started=click_started,
+        click_finished=click_finished,
+        delay_ms=delay_ms,
+        poll_ms=poll_ms,
+        delay_state=delay_state,
+    )
 
-    submit_ms = (click_finished - click_started) * 1000.0
-    if delay_state is not None:
-        deadline = delay_state.advance(click_started, delay_ms)
-        remaining_ms = max(0.0, (deadline - click_finished) * 1000.0)
-        debt_ms = max(0.0, (click_finished - deadline) * 1000.0)
-        logger.info(
-            f"3v3 click#{delay_state.next_index()}=({x},{y}) "
-            f"submit={submit_ms:.1f}ms delay={delay_ms}ms "
-            f"correction=+{_CLICK_DELAY_CORRECTION_MS}ms "
-            f"sleep<={remaining_ms:.1f}ms debt={debt_ms:.1f}ms"
-        )
-        return _interruptible_sleep_until(context, deadline, poll_ms)
-    else:
-        logger.info(
-            f"click=({x},{y}) submit={submit_ms:.1f}ms post_delay={delay_ms}ms"
-        )
-    return interruptible_sleep(context, delay_ms, poll_ms)
+
+def interruptible_double_click(
+    context: Context,
+    x: int,
+    y: int,
+    delay_ms: int = 0,
+    poll_ms: int = _DEFAULT_POLL_MS,
+    delay_state: ClickDelayState | None = None,
+) -> bool:
+    """可中止的连点两次 + 一段延迟。
+
+    两次 ``post_click`` 背靠背，中间不插入 sleep；整段只推进一次时间轴
+    （含 ``+60ms`` 修正），避免短间隔双击被修正拆成两段乱序。
+    """
+    if is_stopping(context):
+        return False
+    click_started = time.monotonic()
+    context.tasker.controller.post_click(x, y).wait()
+    if is_stopping(context):
+        return False
+    context.tasker.controller.post_click(x, y).wait()
+    click_finished = time.monotonic()
+    if is_stopping(context):
+        return False
+    return _finish_click_delay(
+        context,
+        label="doubleclick",
+        x=x,
+        y=y,
+        click_started=click_started,
+        click_finished=click_finished,
+        delay_ms=delay_ms,
+        poll_ms=poll_ms,
+        delay_state=delay_state,
+    )
+
+
+def bind_parkour_clicks(
+    context: Context,
+    delay_state: ClickDelayState | None = None,
+) -> tuple[Callable[..., None], Callable[..., None]]:
+    """给 my_3v3_kn_* 绑定 ``click`` / ``doubleclick`` 本地包装。"""
+
+    def click(x: int, y: int, delay_ms: int = 0) -> None:
+        if not interruptible_click(
+            context, x, y, delay_ms, delay_state=delay_state
+        ):
+            raise TaskStopRequested
+
+    def doubleclick(x: int, y: int, delay_ms: int = 0) -> None:
+        if not interruptible_double_click(
+            context, x, y, delay_ms, delay_state=delay_state
+        ):
+            raise TaskStopRequested
+
+    return click, doubleclick
+
