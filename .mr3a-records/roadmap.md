@@ -59,3 +59,5 @@ Agent 启动终端的大块乱码已确认是截图头被 Waydroid `amdgpu.ids` 
 2026-10-06：3v3「满了也刷」挂到任务；每场回决斗场先 Yield 再 StopTask；超时 SetManaged 挂到次日 11:00。详见 `archived/2026-10-06-3v3-full-and-keep-farming.md`。
 
 2026-10-07：S/SS+ 完成回主页后与每日悬赏相同，`SetManagedTaskPersistentState` 禁用到下一 05:00。详见 `archived/2026-10-07-sss-daily-persistent-disable.md`。
+
+2026-10-07：队列真正跑完或 PiCli 先断开时，主动 `request_tui_exit` 让 Textual 先恢复终端再杀 PiCli，避免 alternate screen 残留弄坏 shell。同日另落地跑图 `doubleclick`/录制 `d`、全图完成页认图测试、`adb-screencap` 与 LoopDeadline 超时截图上限；炎之窟 OCR「战斗开始」双参考点试过后已撤回。详见 `archived/2026-10-07-3v3-tui-doubleclick-and-tools.md`。
