@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# 炎之窟跑图调试：从右下角「完成」起测（入口 3v3炎之窟测试entry）。
-# 请先手动停在困难图选关页，且当前图为炎之窟。
+# 3v3 困难图跑图调试：停在选关「完成」页即可。
+# 流水线与正式线相同：先认到「完成」→ OCR 地图名 → 点完成 → 跳过「进入战斗中」直接等高频下滑白点。
 #
 #   ./tools/run-3v3-yan-test
 set -euo pipefail
@@ -27,9 +27,9 @@ import json
 from pathlib import Path
 cfg = Path("/home/linn/MR3A/deps/.run-test/config/maa_pi_config.json")
 data = json.loads(cfg.read_text(encoding="utf-8"))
-data["task"] = [{"name": "3v3炎之窟跑图测试", "option": []}]
+data["task"] = [{"name": "3v3跑图测试", "option": []}]
 cfg.write_text(json.dumps(data, ensure_ascii=False, indent=4) + "\n", encoding="utf-8")
-print("已写入测试任务: 3v3炎之窟跑图测试 → 3v3炎之窟测试entry（从完成开始）")
+print("已写入测试任务: 3v3跑图测试 → 3v3跑图测试entry（完成页自动认图）")
 PY
 
 export MR3A_TEST_WORK="${WORK}"

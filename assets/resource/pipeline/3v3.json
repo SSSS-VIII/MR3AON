@@ -2694,13 +2694,259 @@
         },
         "post_delay": 0
     },
-    "3v3炎之窟测试entry": {
+    "3v3跑图测试entry": {
         "next": [
-            "3v3点击完成测试4",
+            "3v3测试进入准备页面",
             "3v3任务出错"
         ],
-        "focus": "单人测试：无进入战斗中图标，点完成/进入战场后直接高频等下滑白点",
+        "focus": "单人测试：完成页认图后点完成，跳过进入战斗中，直接等高频下滑白点",
         "timeout": 180000
+    },
+    "3v3测试进入准备页面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1036,
+                    626,
+                    143,
+                    76
+                ],
+                "expected": [
+                    "完成"
+                ]
+            }
+        },
+        "next": [
+            "3v3困难图测试"
+        ],
+        "focus": "测试：与正式线相同，先确认完成页再认地图名"
+    },
+    "3v3困难图测试": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    800,
+                    140,
+                    219,
+                    60
+                ],
+                "expected": [
+                    "困难"
+                ]
+            }
+        },
+        "next": [
+            "3v3樱之谷测试",
+            "3v3暗之狱测试",
+            "3v3鸦之巢测试",
+            "3v3雾隐湖测试",
+            "3v3炎之窟测试"
+        ]
+    },
+    "3v3樱之谷测试": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    800,
+                    140,
+                    219,
+                    60
+                ],
+                "expected": [
+                    "樱之谷"
+                ]
+            }
+        },
+        "next": [
+            "3v3点击完成测试0"
+        ]
+    },
+    "3v3暗之狱测试": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    800,
+                    140,
+                    219,
+                    60
+                ],
+                "expected": [
+                    "暗之狱"
+                ]
+            }
+        },
+        "next": [
+            "3v3点击完成测试1"
+        ]
+    },
+    "3v3鸦之巢测试": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    800,
+                    140,
+                    219,
+                    60
+                ],
+                "expected": [
+                    "鸦之巢"
+                ]
+            }
+        },
+        "next": [
+            "3v3点击完成测试2"
+        ]
+    },
+    "3v3雾隐湖测试": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    800,
+                    140,
+                    219,
+                    60
+                ],
+                "expected": [
+                    "雾隐湖"
+                ]
+            }
+        },
+        "next": [
+            "3v3点击完成测试3"
+        ]
+    },
+    "3v3炎之窟测试": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    800,
+                    140,
+                    219,
+                    60
+                ],
+                "expected": [
+                    "炎之窟"
+                ]
+            }
+        },
+        "next": [
+            "3v3点击完成测试4"
+        ]
+    },
+    "3v3点击完成测试0": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1007,
+                    623,
+                    219,
+                    79
+                ],
+                "expected": [
+                    "完成|进入战场"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "timeout": 180000,
+        "rate_limit": 0,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "识别到下滑按钮0"
+        ],
+        "focus": "测试专用：跳过进入战斗中，只等高频下滑白点"
+    },
+    "3v3点击完成测试1": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1007,
+                    623,
+                    219,
+                    79
+                ],
+                "expected": [
+                    "完成|进入战场"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "timeout": 180000,
+        "rate_limit": 0,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "识别到下滑按钮1"
+        ],
+        "focus": "测试专用：跳过进入战斗中，只等高频下滑白点"
+    },
+    "3v3点击完成测试2": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1007,
+                    623,
+                    219,
+                    79
+                ],
+                "expected": [
+                    "完成|进入战场"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "timeout": 180000,
+        "rate_limit": 0,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "识别到下滑按钮2"
+        ],
+        "focus": "测试专用：跳过进入战斗中，只等高频下滑白点"
+    },
+    "3v3点击完成测试3": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1007,
+                    623,
+                    219,
+                    79
+                ],
+                "expected": [
+                    "完成|进入战场"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "timeout": 180000,
+        "rate_limit": 0,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "识别到下滑按钮3"
+        ],
+        "focus": "测试专用：跳过进入战斗中，只等高频下滑白点"
     },
     "3v3点击完成测试4": {
         "recognition": {

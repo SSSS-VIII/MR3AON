@@ -116,12 +116,14 @@
             "description": "<span style=\"color:tomato;font-size:15px\">当前 3v3只支持困难图，依赖固定延时点击，由于不同设备延迟和网速不同，<strong>不保证可用性</strong>，如果p1跑图失败<strong>建议停用</strong></span>"
         },
         {
+            "name": "3v3跑图测试",
+            "entry": "3v3跑图测试entry",
+            "description": "调试用：停在困难图选关「完成」页即可；自动 OCR 地图名后点完成开测。优先用 ./tools/run-3v3-yan-test"
+        },
+        {
             "name": "3v3炎之窟跑图测试",
-            "entry": "3v3炎之窟测试entry",
-            "group": [
-                "daily"
-            ],
-            "description": "<span style=\"color:deepskyblue;font-size:15px\">调试用：从右下角「完成」直接开测炎之窟 p1/p2 跑图录制。请先停在困难图选关且当前图为炎之窟。</span>"
+            "entry": "3v3跑图测试entry",
+            "description": "兼容旧名：同「3v3跑图测试」。优先用 ./tools/run-3v3-yan-test"
         },
         {
             "name": "领取奖励",
