@@ -401,8 +401,18 @@ def agent(is_dev_mode=False):
         if use_tui:
             import threading
 
+            from tui import request_tui_exit, terminate_parent_maa_picli
+
+            def _join_and_signal_tui() -> None:
+                # PiCli 先跑完/断开时，join 返回；必须先让 Textual 恢复终端，
+                # 否则 alternate screen 残留会把 shell 弄坏。
+                try:
+                    AgentServer.join()
+                finally:
+                    request_tui_exit("agent_disconnected")
+
             join_thread = threading.Thread(
-                target=AgentServer.join,
+                target=_join_and_signal_tui,
                 name="maa-agent-join",
                 daemon=True,
             )
@@ -412,9 +422,18 @@ def agent(is_dev_mode=False):
             finally:
                 # 先杀 PiCli 还 shell：shut_down 常卡住，杀父进程的代码根本跑不到。
                 # Agent 也常被 systemd 收养，不能只靠 getppid。
-                from tui import terminate_parent_maa_picli
+                reason = ""
+                try:
+                    from tui.status import runtime_status
 
-                sys.stderr.write("info:TUI 已退出，结束 MaaPiCli 以回到 shell\n")
+                    reason = runtime_status.snapshot().get("exit_reason", "") or ""
+                except Exception:
+                    pass
+                msg = "info:TUI 已退出"
+                if reason:
+                    msg += f"（{reason}）"
+                msg += "，结束 MaaPiCli 以回到 shell\n"
+                sys.stderr.write(msg)
                 sys.stderr.flush()
                 terminate_parent_maa_picli()
                 try:

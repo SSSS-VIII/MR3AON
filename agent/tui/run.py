@@ -7,8 +7,13 @@ import signal
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 from utils.logger import logger, setup_logger
+
+from .status import runtime_status
+
+_tui_app: Any | None = None
 
 
 def tui_should_run() -> bool:
@@ -172,9 +177,27 @@ def terminate_parent_maa_picli() -> None:
             pass
 
 
+def request_tui_exit(reason: str = "") -> None:
+    """从任意线程请求 TUI 退出；有 App 时立刻 call_from_thread，避免 PiCli 先拆掉终端。"""
+    runtime_status.request_exit(reason)
+    app = _tui_app
+    if app is None:
+        return
+    try:
+        app.call_from_thread(app.exit)
+    except Exception as exc:
+        logger.debug(f"request_tui_exit: call_from_thread 失败: {exc}")
+
+
 def run_agent_tui() -> None:
+    global _tui_app
     _quiet_console_logging()
     logger.info("Agent TUI 启动（控制台日志降至 ERROR，详情见 debug/custom）")
     from .app import AgentTuiApp
 
-    AgentTuiApp().run()
+    app = AgentTuiApp()
+    _tui_app = app
+    try:
+        app.run()
+    finally:
+        _tui_app = None

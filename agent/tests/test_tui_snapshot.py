@@ -8,9 +8,21 @@ from tui.status import runtime_status
 def _reset() -> None:
     managed_task_queue.finish()
     deferred_task_store.clear()
+    runtime_status.clear_exit_request()
     runtime_status.set_current_task(name="—", entry="")
     runtime_status.set_node("—")
     runtime_status.set_agent_phase("idle")
+
+
+def test_request_exit_marks_done_phase():
+    _reset()
+    assert not runtime_status.should_exit()
+    runtime_status.request_exit("queue_finished")
+    assert runtime_status.should_exit()
+    snap = runtime_status.snapshot()
+    assert snap["phase"] == "done"
+    assert snap["exit_reason"] == "queue_finished"
+    _reset()
 
 
 def test_build_task_rows_marks_running_pending_deferred():

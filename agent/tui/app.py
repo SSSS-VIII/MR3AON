@@ -254,6 +254,11 @@ class AgentTuiApp(App[None]):
         self.refresh_status()
 
     def refresh_status(self) -> None:
+        from .status import runtime_status
+
+        if runtime_status.should_exit():
+            self.exit()
+            return
         model = build_view_model()
         status = model["status"]
         tasks: list[TaskRow] = model["tasks"]

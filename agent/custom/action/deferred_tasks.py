@@ -26,6 +26,7 @@ from custom.persistent_task_state import (
     next_weekly_reset,
     persistent_task_state_store,
 )
+from tui.run import request_tui_exit
 from tui.status import runtime_status
 from utils.logger import logger
 
@@ -247,12 +248,14 @@ def dispatch_next(tasker: Any) -> bool:
         managed_task_queue.finish()
         deferred_task_store.clear()
         managed_task_yield_signal_store.clear()
+        request_tui_exit("aspect_ratio_blocked")
         return False
 
     if tasker.stopping:
         managed_task_queue.finish()
         deferred_task_store.clear()
         managed_task_yield_signal_store.clear()
+        request_tui_exit("tasker_stopping")
         return False
 
     _refresh_persistent_candidate_states()
@@ -269,6 +272,7 @@ def dispatch_next(tasker: Any) -> bool:
         managed_task_queue.finish()
         managed_task_yield_signal_store.clear()
         logger.info("Agent 管理的任务队列已全部完成")
+        request_tui_exit("queue_finished")
         return True
 
     if managed_task_queue.has_pending() and not managed_task_queue.has_runnable_pending():
@@ -640,5 +644,6 @@ class ManagedTaskSchedulerWait(CustomAction):
                 managed_task_queue.finish()
                 deferred_task_store.clear()
                 managed_task_yield_signal_store.clear()
+                request_tui_exit("wait_interrupted")
                 return CustomAction.RunResult(success=False)
         return CustomAction.RunResult(success=dispatch_next(context.tasker))
