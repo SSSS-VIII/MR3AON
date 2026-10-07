@@ -57,3 +57,5 @@ Agent 启动终端的大块乱码已确认是截图头被 Waydroid `amdgpu.ids` 
 2026-10-05：已合并上游 MR3A（`maafw` 5.14.2 等）；流水线冲突以本地为底、重叠修法跟上游。定制 `MaaPiCli`（`mr3a-managed-queue`）已 merge `v5.14.2` 重编对齐协议 8。本机已清空 `agent_task_state.json`。详见 `archived/2026-10-05-upstream-merge-and-maapicli-5142.md`。
 
 2026-10-06：3v3「满了也刷」挂到任务；每场回决斗场先 Yield 再 StopTask；超时 SetManaged 挂到次日 11:00。详见 `archived/2026-10-06-3v3-full-and-keep-farming.md`。
+
+2026-10-07：S/SS+ 完成回主页后与每日悬赏相同，`SetManagedTaskPersistentState` 禁用到下一 05:00。详见 `archived/2026-10-07-sss-daily-persistent-disable.md`。

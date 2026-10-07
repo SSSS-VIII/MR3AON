@@ -17,6 +17,7 @@ class PipelineGuardTest(unittest.TestCase):
             ("忍村试炼.json", "登记忍村试炼每日完成"): ("忍村试炼entry", None),
             ("每日商店.json", "每日商店回到了主页面"): ("每日商店entry", None),
             ("每日悬赏.json", "每日悬赏完成回到了主页面"): ("每日悬赏entry", None),
+            ("S_SS+.json", "S_SS+完成回到了主页面"): ("S_SS+entry", None),
             ("竞技场.json", "每周跑酷和每日老板娘问答结束"): ("竞技场entry", None),
             ("藏宝图.json", "每日藏宝图完成回到了主页面"): ("每日藏宝图entry", None),
             ("通灵巡逻.json", "登记通灵巡逻每日完成"): ("通灵巡逻entry", None),
