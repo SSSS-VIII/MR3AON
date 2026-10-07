@@ -14,6 +14,8 @@ from utils import logger
 
 # 相对进程 cwd（与 debug/on_error 同级约定）
 _EXPIRED_DUMP_DIR = Path("debug") / "loop_deadline_expired"
+# 目录内最多保留的超时截图数；超出则按修改时间删最旧的，避免撑爆磁盘。
+_EXPIRED_DUMP_MAX_FILES = 50
 
 
 def _explicit_scope_from_argv(argv_param: str) -> Optional[str]:
@@ -35,6 +37,26 @@ def _safe_filename_scope(scope: str) -> str:
     return "".join(c if (c.isalnum() or c in "-_.") else "_" for c in scope) or "scope"
 
 
+def _prune_expired_screenshots(keep_newest: Optional[Path] = None) -> None:
+    """保留最新 ``_EXPIRED_DUMP_MAX_FILES`` 张 png，其余按 mtime 删掉。"""
+    try:
+        files = [p for p in _EXPIRED_DUMP_DIR.glob("*.png") if p.is_file()]
+    except OSError as e:
+        logger.warning(f"LoopDeadlineExpired: 列举超时截图失败: {e}")
+        return
+    if len(files) <= _EXPIRED_DUMP_MAX_FILES:
+        return
+    files.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+    for old in files[_EXPIRED_DUMP_MAX_FILES:]:
+        if keep_newest is not None and old.resolve() == keep_newest.resolve():
+            continue
+        try:
+            old.unlink(missing_ok=True)
+            logger.info(f"LoopDeadlineExpired: 已清理旧超时截图 {old}")
+        except OSError as e:
+            logger.warning(f"LoopDeadlineExpired: 清理旧超时截图失败 {old}: {e}")
+
+
 def _save_expired_screenshot(image: Any, scope: str) -> Optional[str]:
     """把到期当帧存到 debug/loop_deadline_expired/；失败只打日志。"""
     if image is None:
@@ -49,6 +71,7 @@ def _save_expired_screenshot(image: Any, scope: str) -> Optional[str]:
         if getattr(arr, "ndim", 0) == 3 and arr.shape[2] == 3:
             arr = arr[:, :, ::-1]
         Image.fromarray(arr).save(path)
+        _prune_expired_screenshots(keep_newest=path)
         logger.info(f"LoopDeadlineExpired: 已保存超时截图 {path}")
         return str(path)
     except Exception as e:
@@ -61,7 +84,7 @@ class LoopDeadlineExpired(CustomRecognition):
     """
     超时分支：显式传入非空 scope，且已为该 scope Arm，且当前已超过截止时间 → 命中；否则不命中。
     custom_recognition_param 为空、或未含非空 scope → 视为参数未设置 → 不命中。
-    首次命中到期时，将当前识别帧保存到 debug/loop_deadline_expired/。
+    首次命中到期时，将当前识别帧保存到 debug/loop_deadline_expired/（最多保留 50 张）。
     """
 
     def analyze(
