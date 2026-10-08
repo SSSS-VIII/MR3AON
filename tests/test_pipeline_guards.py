@@ -277,6 +277,37 @@ class PipelineGuardTest(unittest.TestCase):
         self.assertEqual(right_swipe["begin"], left_swipe["end"][0])
         self.assertEqual(left_swipe["begin"], right_swipe["end"][0])
 
+    def test_startup_homepage_settings_click_enable_disable_same_node(self):
+        """Enable/Disable 必须对着同一节点名。"""
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "启动游戏.json").read_text(encoding="utf-8")
+        )
+        enable = pipeline["两次识别成功后则确定进入了主页面"]
+        disable = pipeline["关闭节点点击主页设置"]
+        self.assertEqual(
+            enable["action"]["param"]["custom_action_param"]["node_name"],
+            "启动游戏点击主页设置",
+        )
+        self.assertEqual(
+            disable["action"]["param"]["custom_action_param"]["node_name"],
+            "启动游戏点击主页设置",
+        )
+        self.assertIn("启动游戏点击主页设置", pipeline)
+
+    def test_startup_start_app_skips_when_process_alive(self):
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "启动游戏.json").read_text(encoding="utf-8")
+        )
+        start = pipeline["启动应用"]
+        self.assertEqual(start["action"]["type"], "Custom")
+        self.assertEqual(
+            start["action"]["param"]["custom_action"],
+            "StartAppIfNeeded",
+        )
+        self.assertTrue(
+            start["action"]["param"]["custom_action_param"]["package"].strip()
+        )
+
     def test_startup_timeout_reopens_without_rerecording_package(self):
         pipeline = json.loads(
             (RESOURCE / "pipeline" / "启动游戏.json").read_text(encoding="utf-8")

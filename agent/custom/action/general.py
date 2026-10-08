@@ -83,9 +83,21 @@ def _get_start_app_package(context: Context) -> Optional[str]:
 
     param = action.get("param")
     if isinstance(param, dict):
+        # 任务 override 常直接写 param.package；Custom 节点则在 custom_action_param。
         package = param.get("package")
         if isinstance(package, str) and package.strip():
             return package.strip()
+
+        cap = param.get("custom_action_param")
+        if isinstance(cap, str):
+            try:
+                cap = json.loads(cap)
+            except json.JSONDecodeError:
+                cap = None
+        if isinstance(cap, dict):
+            package = cap.get("package")
+            if isinstance(package, str) and package.strip():
+                return package.strip()
 
     package = action.get("package")
     if isinstance(package, str) and package.strip():

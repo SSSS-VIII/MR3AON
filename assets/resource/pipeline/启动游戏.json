@@ -192,7 +192,7 @@
             "param": {
                 "custom_action": "DisableNode",
                 "custom_action_param": {
-                    "node_name": "点击主页设置"
+                    "node_name": "启动游戏点击主页设置"
                 }
             }
         },
@@ -373,9 +373,12 @@
     "启动应用": {
         "pre_delay": 0,
         "action": {
-            "type": "StartApp",
+            "type": "Custom",
             "param": {
-                "package": "com.pandadastudio.ninjamustdie3.vivo"
+                "custom_action": "StartAppIfNeeded",
+                "custom_action_param": {
+                    "package": "com.pandadastudio.ninjamustdie3.vivo"
+                }
             }
         },
         "post_delay": 0,

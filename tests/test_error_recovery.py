@@ -4,6 +4,7 @@ import unittest
 from types import SimpleNamespace
 
 from custom.action import general
+from custom.action import waydroid_runtime
 from custom.deferred_tasks import ManagedTask, managed_task_queue
 
 
@@ -55,8 +56,11 @@ class _Context:
             return None
         return {
             "action": {
-                "type": "StartApp",
-                "param": {"package": self.package},
+                "type": "Custom",
+                "param": {
+                    "custom_action": "StartAppIfNeeded",
+                    "custom_action_param": {"package": self.package},
+                },
             }
         }
 
@@ -183,6 +187,33 @@ class ErrorRecoveryTest(unittest.TestCase):
         )
         self.assertTrue(result.success)
         self.assertEqual(context.tasker.stop_requests, 1)
+
+    def test_start_app_if_needed_skips_when_pid_exists(self):
+        context = _Context("com.pandadastudio.ninjamustdie3")
+        argv = _argv(66, "启动游戏entry", "启动应用")
+        original = waydroid_runtime.pidof_package
+        waydroid_runtime.pidof_package = lambda package, wait_sec=5: "12345"
+        try:
+            result = waydroid_runtime.StartAppIfNeeded().run(context, argv)
+        finally:
+            waydroid_runtime.pidof_package = original
+        self.assertTrue(result.success)
+        self.assertEqual(context.tasker.controller.started, [])
+
+    def test_start_app_if_needed_starts_when_pid_missing(self):
+        context = _Context("com.pandadastudio.ninjamustdie3")
+        argv = _argv(67, "启动游戏entry", "启动应用")
+        original = waydroid_runtime.pidof_package
+        waydroid_runtime.pidof_package = lambda package, wait_sec=5: None
+        try:
+            result = waydroid_runtime.StartAppIfNeeded().run(context, argv)
+        finally:
+            waydroid_runtime.pidof_package = original
+        self.assertTrue(result.success)
+        self.assertEqual(
+            context.tasker.controller.started,
+            ["com.pandadastudio.ninjamustdie3"],
+        )
 
 
 if __name__ == "__main__":

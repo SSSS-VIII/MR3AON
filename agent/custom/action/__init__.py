@@ -32,6 +32,7 @@ from .waydroid_runtime import (
     DisarmGameProcessWatch,
     HandleGameCrash,
     RestartWaydroid,
+    StartAppIfNeeded,
 )
 
 __all__ = [
@@ -64,6 +65,7 @@ __all__ = [
     "RemoveQualityFromAttach",
     "RecordTrialRemainingChallengeMax",
     "RestartWaydroid",
+    "StartAppIfNeeded",
     "ArmGameProcessWatch",
     "DisarmGameProcessWatch",
     "HandleGameCrash",

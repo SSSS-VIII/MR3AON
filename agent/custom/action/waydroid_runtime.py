@@ -13,8 +13,50 @@ from custom.action.general import (
     _get_start_app_package,
 )
 from custom.game_process_watch import game_process_watch
+from utils.adb_device import pidof_package
 from utils.logger import logger
 from utils.waydroid_host import restart_waydroid_session
+
+
+@AgentServer.custom_action("StartAppIfNeeded")
+class StartAppIfNeeded(CustomAction):
+    """进程已在则跳过 StartApp，避免对前台 Unity 再发 MAIN 导致卡死。"""
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
+        package = _get_start_app_package(context) or _get_remembered_game_package()
+        if not package:
+            logger.error("StartAppIfNeeded: 无法解析 package")
+            return CustomAction.RunResult(success=False)
+
+        pid = pidof_package(package)
+        if pid:
+            logger.info(
+                f"StartAppIfNeeded: 进程已在运行，跳过 StartApp "
+                f"(package={package!r}, pid={pid})"
+            )
+            return CustomAction.RunResult(success=True)
+
+        controller = context.tasker.controller
+        try:
+            job = controller.post_start_app(package)
+            job.wait()
+            if not job.succeeded:
+                logger.error(
+                    f"StartAppIfNeeded: StartApp 未成功 (package={package!r})"
+                )
+                return CustomAction.RunResult(success=False)
+        except Exception as exc:
+            logger.exception(
+                f"StartAppIfNeeded: StartApp 失败 (package={package!r}): {exc}"
+            )
+            return CustomAction.RunResult(success=False)
+
+        logger.info(f"StartAppIfNeeded: 已启动 {package!r}")
+        return CustomAction.RunResult(success=True)
 
 
 def _reconnect_controller(context: Context) -> bool:
