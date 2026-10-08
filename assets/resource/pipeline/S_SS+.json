@@ -822,7 +822,7 @@
         "timeout": 480000,
         "next": [
             "[JumpBack]S_SS+悬赏调用fight",
-            "[JumpBack]S_SS+悬赏结算确定",
+            "[JumpBack]S_SS+悬赏结算截图",
             "[JumpBack]S_SS+悬赏点击空白处关闭",
             "[JumpBack]S_SS+悬赏点到了个人信息",
             "S_SS+悬赏进入战斗后回到了召令悬赏页面",
@@ -888,7 +888,7 @@
             }
         }
     },
-    "S_SS+悬赏结算确定": {
+    "S_SS+悬赏结算截图": {
         "recognition": {
             "type": "OCR",
             "param": {
@@ -904,7 +904,31 @@
             }
         },
         "action": {
-            "type": "Click"
+            "type": "Custom",
+            "param": {
+                "custom_action": "SaveRewardScreenshot",
+                "custom_action_param": {
+                    "dir": "S_SS+"
+                }
+            }
+        },
+        "next": [
+            "S_SS+悬赏结算确定"
+        ],
+        "focus": "结算确认：截图存奖励记录"
+    },
+    "S_SS+悬赏结算确定": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    521,
+                    408,
+                    246,
+                    309
+                ]
+            }
         }
     },
     "S_SS+悬赏调用fight": {

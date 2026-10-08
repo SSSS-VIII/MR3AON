@@ -27,6 +27,7 @@ from .mystery_shop_fragments import ApplyMysteryShopFragmentConfig
 from .treasure_map_config import ApplyTreasureMapConfig, RemoveQualityFromAttach
 from .trial_state import RecordTrialRemainingChallengeMax
 from .input_text_compat import ClearInputTextCompat, InputTextCompat
+from .reward_screenshot import SaveRewardScreenshot
 from .waydroid_runtime import (
     ArmGameProcessWatch,
     DisarmGameProcessWatch,
@@ -46,6 +47,7 @@ __all__ = [
     "LoadGameMetaOverride",
     "InputTextCompat",
     "ClearInputTextCompat",
+    "SaveRewardScreenshot",
     "LoopDeadlineArm",
     "LoopDeadlineReset",
     "DisableNode",

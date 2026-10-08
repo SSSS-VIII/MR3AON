@@ -193,6 +193,14 @@ def run_agent_tui() -> None:
     global _tui_app
     _quiet_console_logging()
     logger.info("Agent TUI 启动（控制台日志降至 ERROR，详情见 debug/custom）")
+    # 先装探测护栏再 import App（内部可能加载 textual-image）
+    try:
+        from .kitty_image import get_term_image_class
+
+        if get_term_image_class() is None:
+            logger.warning("Kitty 高清图不可用，奖励区仅提示不支持、不渲染预览")
+    except Exception as exc:
+        logger.warning(f"Kitty 图像初始化跳过: {exc}")
     from .app import AgentTuiApp
 
     app = AgentTuiApp()

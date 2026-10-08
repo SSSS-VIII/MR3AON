@@ -5,3 +5,4 @@ pytz
 requests
 json-with-comments
 textual>=2.0
+textual-image[textual]

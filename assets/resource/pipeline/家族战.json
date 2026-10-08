@@ -241,7 +241,7 @@
             "[JumpBack]领取家族战参战奖励",
             "[JumpBack]点击族战宝箱",
             "[JumpBack]族战宝箱确定",
-            "[JumpBack]族战战报结算确定",
+            "[JumpBack]族战战报结算截图",
             "[JumpBack]识别到全员参战且有进入战场",
             "[JumpBack]团队战已结束",
             "[JumpBack]团队战点击加入战斗",
@@ -777,7 +777,7 @@
             "type": "Click"
         }
     },
-    "族战战报结算确定": {
+    "族战战报结算截图": {
         "recognition": {
             "type": "OCR",
             "param": {
@@ -793,7 +793,31 @@
             }
         },
         "action": {
-            "type": "Click"
+            "type": "Custom",
+            "param": {
+                "custom_action": "SaveRewardScreenshot",
+                "custom_action_param": {
+                    "dir": "家族战"
+                }
+            }
+        },
+        "next": [
+            "族战战报结算确定"
+        ],
+        "focus": "结算确认：截图存奖励记录"
+    },
+    "族战战报结算确定": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1071,
+                    650,
+                    160,
+                    59
+                ]
+            }
         }
     },
     "点击家族战小图标": {
