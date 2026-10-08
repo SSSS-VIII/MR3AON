@@ -11,11 +11,11 @@ Agent 一启动固定先跑 `启动游戏`，`启动应用` 无条件 `StartApp`
 ## 改动
 
 - `启动应用` 改为自定义动作 `StartAppIfNeeded`：`pidof` 到包名则跳过，否则 `post_start_app`。
-- 包名仍从 `启动应用` 节点读取（兼容任务里 `param.package` override，以及 `custom_action_param.package`）。
-- `关闭节点点击主页设置` 的 Disable 目标改为真正的 `启动游戏点击主页设置`（原先 Disable 了不存在的 `点击主页设置`）。
-- 去掉误加的设置点击 rate_limit / max_hit / 「避免狂点」focus。
+- 包名以 Maa 传入的 `custom_action_param.package` 为准；`请选择服务器` 的 override 必须写 `custom_action_param.package`（只写 `param.package` 时 Custom 动作仍吃到流水线默认 `.vivo`，官服会秒失败）。
+- 流水线默认包改为官服 `com.pandadastudio.ninjamustdie3`。
+- `关闭节点点击主页设置` 的 Disable 目标改为真正的 `启动游戏点击主页设置`。
 
 ## 验证
 
 - `tests/test_pipeline_guards.py`、`tests/test_error_recovery.py` 相关断言。
-- 未在设备上复现「主页开脚本」全流程。
+- 实机：官服配置下 `StartAppIfNeeded` 日志包名无 `.vivo` 后缀。

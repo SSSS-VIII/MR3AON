@@ -64,4 +64,4 @@ Agent 启动终端的大块乱码已确认是截图头被 Waydroid `amdgpu.ids` 
 
 2026-10-08：结算确认前增加同 OCR 的截图节点 `SaveRewardScreenshot`（仅存图，dir 入参），再 DirectHit 点击原确定节点；图在 `debug/reward_shots/<dir>/`，TUI 当前任务面板下方可浏览（d / ← / →）；日常 05:00 周期外清理。已挂每日悬赏 / S_SS+ / 家族战。神秘商店在进店与每次刷新回「自动刷新」八格列表时截整页（dir=神秘商店）。奖励区仅 Kitty TGP 单图；左侧 OptionList 自选目录（↑↓），←/→ 翻图；非 Kitty 只提示不支持。详见 `archived/2026-10-08-reward-screenshots-tui.md`。
 
-2026-10-08：主页已开着再跑脚本时，`启动应用` 无条件 StartApp 会再给前台 Unity 发 MAIN，间歇性 pause 超时卡死。改为 `StartAppIfNeeded`：`pidof` 已有进程则跳过。顺带修正 `关闭节点点击主页设置` 的 Disable 目标为 `启动游戏点击主页设置`。详见 `archived/2026-10-08-startapp-skip-if-running.md`。
+2026-10-08：主页已开着再跑脚本时，`启动应用` 无条件 StartApp 会再给前台 Unity 发 MAIN，间歇性 pause 超时卡死。改为 `StartAppIfNeeded`：`pidof` 已有进程则跳过；服务器包名 override 写入 `custom_action_param`。TUI 退出与 Abort 时强制清 alternate screen / Kitty 图，避免弄坏 shell。详见 `archived/2026-10-08-startapp-skip-if-running.md`。

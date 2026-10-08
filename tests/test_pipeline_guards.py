@@ -308,6 +308,19 @@ class PipelineGuardTest(unittest.TestCase):
             start["action"]["param"]["custom_action_param"]["package"].strip()
         )
 
+    def test_server_option_overrides_custom_action_param_package(self):
+        """Custom StartApp 只吃 custom_action_param，服务器选项必须写到那里。"""
+        tasks = json.loads(
+            (RESOURCE / "tasks" / "日常任务.json").read_text(encoding="utf-8")
+        )
+        cases = tasks["option"]["请选择服务器"]["cases"]
+        self.assertGreaterEqual(len(cases), 2)
+        for case in cases:
+            with self.subTest(server=case["name"]):
+                param = case["pipeline_override"]["启动应用"]["action"]["param"]
+                pkg = param["package"]
+                self.assertEqual(param["custom_action_param"]["package"], pkg)
+
     def test_startup_timeout_reopens_without_rerecording_package(self):
         pipeline = json.loads(
             (RESOURCE / "pipeline" / "启动游戏.json").read_text(encoding="utf-8")

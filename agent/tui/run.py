@@ -31,6 +31,20 @@ def _quiet_console_logging() -> None:
     setup_logger(console_level="ERROR")
 
 
+def _restore_terminal() -> None:
+    """Textual / Kitty TGP 退出后清 alternate screen 与图像残留，避免弄坏 shell。"""
+    # 离开备用屏、显光标、复位属性、结束同步更新、删 Kitty 图
+    seq = "\033[?1049l\033[?25h\033[0m\033[?2026l\033_Ga=d\033\\"
+    for stream in (sys.__stdout__, sys.__stderr__):
+        if stream is None:
+            continue
+        try:
+            stream.write(seq)
+            stream.flush()
+        except Exception:
+            pass
+
+
 def _cmdline(pid: int) -> str:
     try:
         raw = Path(f"/proc/{pid}/cmdline").read_bytes()
@@ -209,3 +223,4 @@ def run_agent_tui() -> None:
         app.run()
     finally:
         _tui_app = None
+        _restore_terminal()

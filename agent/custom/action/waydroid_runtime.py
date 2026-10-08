@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from copy import deepcopy
 
 from maa.agent.agent_server import AgentServer
@@ -18,6 +19,21 @@ from utils.logger import logger
 from utils.waydroid_host import restart_waydroid_session
 
 
+def _package_from_action_argv(argv: CustomAction.RunArg) -> str | None:
+    """Maa 传给 Custom 的 custom_action_param（任务 override 应写这里）。"""
+    raw = argv.custom_action_param
+    if isinstance(raw, str) and raw.strip():
+        try:
+            raw = json.loads(raw)
+        except json.JSONDecodeError:
+            return None
+    if isinstance(raw, dict):
+        package = raw.get("package")
+        if isinstance(package, str) and package.strip():
+            return package.strip()
+    return None
+
+
 @AgentServer.custom_action("StartAppIfNeeded")
 class StartAppIfNeeded(CustomAction):
     """进程已在则跳过 StartApp，避免对前台 Unity 再发 MAIN 导致卡死。"""
@@ -27,7 +43,11 @@ class StartAppIfNeeded(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> CustomAction.RunResult:
-        package = _get_start_app_package(context) or _get_remembered_game_package()
+        package = (
+            _package_from_action_argv(argv)
+            or _get_start_app_package(context)
+            or _get_remembered_game_package()
+        )
         if not package:
             logger.error("StartAppIfNeeded: 无法解析 package")
             return CustomAction.RunResult(success=False)

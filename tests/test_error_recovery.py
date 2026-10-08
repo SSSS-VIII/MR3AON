@@ -77,10 +77,11 @@ class _Context:
         return SimpleNamespace(status=SimpleNamespace(succeeded=True))
 
 
-def _argv(task_id: int, entry: str, node_name: str):
+def _argv(task_id: int, entry: str, node_name: str, custom_action_param=None):
     return SimpleNamespace(
         task_detail=SimpleNamespace(task_id=task_id, entry=entry),
         node_name=node_name,
+        custom_action_param=custom_action_param,
     )
 
 
@@ -189,20 +190,37 @@ class ErrorRecoveryTest(unittest.TestCase):
         self.assertEqual(context.tasker.stop_requests, 1)
 
     def test_start_app_if_needed_skips_when_pid_exists(self):
-        context = _Context("com.pandadastudio.ninjamustdie3")
-        argv = _argv(66, "启动游戏entry", "启动应用")
+        context = _Context("com.pandadastudio.ninjamustdie3.vivo")
+        argv = _argv(
+            66,
+            "启动游戏entry",
+            "启动应用",
+            '{"package":"com.pandadastudio.ninjamustdie3"}',
+        )
         original = waydroid_runtime.pidof_package
-        waydroid_runtime.pidof_package = lambda package, wait_sec=5: "12345"
+        seen: list[str] = []
+
+        def fake_pidof(package, wait_sec=5):
+            seen.append(package)
+            return "12345"
+
+        waydroid_runtime.pidof_package = fake_pidof
         try:
             result = waydroid_runtime.StartAppIfNeeded().run(context, argv)
         finally:
             waydroid_runtime.pidof_package = original
         self.assertTrue(result.success)
+        self.assertEqual(seen, ["com.pandadastudio.ninjamustdie3"])
         self.assertEqual(context.tasker.controller.started, [])
 
     def test_start_app_if_needed_starts_when_pid_missing(self):
-        context = _Context("com.pandadastudio.ninjamustdie3")
-        argv = _argv(67, "启动游戏entry", "启动应用")
+        context = _Context("com.pandadastudio.ninjamustdie3.vivo")
+        argv = _argv(
+            67,
+            "启动游戏entry",
+            "启动应用",
+            '{"package":"com.pandadastudio.ninjamustdie3"}',
+        )
         original = waydroid_runtime.pidof_package
         waydroid_runtime.pidof_package = lambda package, wait_sec=5: None
         try:

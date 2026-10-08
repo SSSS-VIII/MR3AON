@@ -368,6 +368,13 @@ class AbortTasker(CustomAction):
             f"(task_id={argv.task_detail.task_id}, "
             f"entry={effective_task_entry(argv.task_detail.entry)!r})"
         )
+        # 队列被掐断时也要先让 TUI 退备用屏，否则 shell 会烂在 alternate screen。
+        try:
+            from tui.run import request_tui_exit
+
+            request_tui_exit("abort_tasker")
+        except Exception:
+            pass
         return CustomAction.RunResult(success=True)
 
 

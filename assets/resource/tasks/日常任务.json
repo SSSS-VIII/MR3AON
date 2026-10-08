@@ -165,7 +165,10 @@
                         "启动应用": {
                             "action": {
                                 "param": {
-                                    "package": "com.pandadastudio.ninjamustdie3"
+                                    "package": "com.pandadastudio.ninjamustdie3",
+                                    "custom_action_param": {
+                                        "package": "com.pandadastudio.ninjamustdie3"
+                                    }
                                 }
                             }
                         }
@@ -177,7 +180,10 @@
                         "启动应用": {
                             "action": {
                                 "param": {
-                                    "package": "com.pandadastudio.ninjamustdie3.vivo"
+                                    "package": "com.pandadastudio.ninjamustdie3.vivo",
+                                    "custom_action_param": {
+                                        "package": "com.pandadastudio.ninjamustdie3.vivo"
+                                    }
                                 }
                             }
                         }
@@ -189,7 +195,10 @@
                         "启动应用": {
                             "action": {
                                 "param": {
-                                    "package": "com.pandadastudio.ninjamustdie3.nearme.gamecenter"
+                                    "package": "com.pandadastudio.ninjamustdie3.nearme.gamecenter",
+                                    "custom_action_param": {
+                                        "package": "com.pandadastudio.ninjamustdie3.nearme.gamecenter"
+                                    }
                                 }
                             }
                         }
@@ -201,7 +210,10 @@
                         "启动应用": {
                             "action": {
                                 "param": {
-                                    "package": "com.pandadastudio.ninjamustdie3.m4399"
+                                    "package": "com.pandadastudio.ninjamustdie3.m4399",
+                                    "custom_action_param": {
+                                        "package": "com.pandadastudio.ninjamustdie3.m4399"
+                                    }
                                 }
                             }
                         }
@@ -213,7 +225,10 @@
                         "启动应用": {
                             "action": {
                                 "param": {
-                                    "package": "com.pandadastudio.ninjamustdie3.huawei"
+                                    "package": "com.pandadastudio.ninjamustdie3.huawei",
+                                    "custom_action_param": {
+                                        "package": "com.pandadastudio.ninjamustdie3.huawei"
+                                    }
                                 }
                             }
                         }
@@ -225,7 +240,10 @@
                         "启动应用": {
                             "action": {
                                 "param": {
-                                    "package": "com.pandadastudio.ninjamustdie3.mi"
+                                    "package": "com.pandadastudio.ninjamustdie3.mi",
+                                    "custom_action_param": {
+                                        "package": "com.pandadastudio.ninjamustdie3.mi"
+                                    }
                                 }
                             }
                         }
@@ -237,7 +255,10 @@
                         "启动应用": {
                             "action": {
                                 "param": {
-                                    "package": "com.pandadastudio.ninjamustdie3.aligames"
+                                    "package": "com.pandadastudio.ninjamustdie3.aligames",
+                                    "custom_action_param": {
+                                        "package": "com.pandadastudio.ninjamustdie3.aligames"
+                                    }
                                 }
                             }
                         }
@@ -249,7 +270,10 @@
                         "启动应用": {
                             "action": {
                                 "param": {
-                                    "package": "com.pandadastudio.ninjamustdie3.bilibili"
+                                    "package": "com.pandadastudio.ninjamustdie3.bilibili",
+                                    "custom_action_param": {
+                                        "package": "com.pandadastudio.ninjamustdie3.bilibili"
+                                    }
                                 }
                             }
                         }
@@ -261,7 +285,10 @@
                         "启动应用": {
                             "action": {
                                 "param": {
-                                    "package": "com.tencent.tmgp.pandadastudio.ninja3"
+                                    "package": "com.tencent.tmgp.pandadastudio.ninja3",
+                                    "custom_action_param": {
+                                        "package": "com.tencent.tmgp.pandadastudio.ninja3"
+                                    }
                                 }
                             }
                         }

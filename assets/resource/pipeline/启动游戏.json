@@ -377,7 +377,7 @@
             "param": {
                 "custom_action": "StartAppIfNeeded",
                 "custom_action_param": {
-                    "package": "com.pandadastudio.ninjamustdie3.vivo"
+                    "package": "com.pandadastudio.ninjamustdie3"
                 }
             }
         },
