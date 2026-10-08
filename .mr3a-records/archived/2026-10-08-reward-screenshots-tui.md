@@ -7,12 +7,12 @@
 ## 改动
 
 - 自定义动作 `SaveRewardScreenshot`：按 `dir` 写入 `debug/reward_shots/<dir>/`，登记并做日常 05:00 周期外清理；目录名允许 `+`（如 `S_SS+`）。
-- 流水线：每日悬赏 / S_SS+ / 家族战在原「结算确定」前插入同 OCR 截图节点，再 DirectHit 点确定；神秘商店进店截图一次（`max_hit:1` → `神秘商店页面`），刷新确定后再截并走原重置计数链。
+- 流水线：每日悬赏 / S_SS+ / 家族战在原「结算确定」前插入同 OCR 截图节点，再 DirectHit 点确定；神秘商店相对上游只改 `点击神秘商店.next` 并加一个纯截图节点（→原`神秘商店页面`）。刷新链不动；刷新后上游 ResetCount → JumpBack 再进店时会再截。
 - TUI：当前任务面板下方奖励区，仅 Kitty TGP 单图；`d` 打开目录 OptionList，←/→ 翻图；非 Kitty 只提示不支持。依赖 `textual-image[textual]`。
 
 ## 踩坑
 
-进店截图若替代 `神秘商店页面` 且 next 去「重置商品计数」，会在仍显示「自动刷新」时每几秒重截并清 Count，购买空转直到每日商店十分钟超时。
+截图若 next 接到无参 `ResetCount`，会清掉 `神秘商店任务` Count；不足结束后 JumpBack 又再进店空转至超时。截图只该存图再回原 next；也不需要第二条刷新截图节点。
 
 ## 验证
 
