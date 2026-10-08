@@ -35,6 +35,9 @@ class SaveRewardScreenshot(CustomAction):
 
     custom_action_param:
       dir: 目录名（必填），如「每日悬赏」「S_SS+」「家族战」
+      burst_replace: 可选 bool。true 时距上次保存不足 burst_gap_sec（默认 10）
+        覆盖同场 b00N.png 只留最后一张；超过则新开场次。
+      burst_gap_sec: 可选 float，场次间隔秒数，默认 10。
     """
 
     def run(
@@ -49,8 +52,24 @@ class SaveRewardScreenshot(CustomAction):
                 logger.error("SaveRewardScreenshot: 缺少 dir 参数")
                 return CustomAction.RunResult(success=False)
 
+            burst_replace = bool(param.get("burst_replace", False))
+            gap_kw: dict[str, float] = {}
+            gap_raw = param.get("burst_gap_sec", None)
+            if gap_raw is not None:
+                try:
+                    gap_kw["burst_gap_sec"] = float(gap_raw)
+                except (TypeError, ValueError):
+                    logger.warning(
+                        f"SaveRewardScreenshot: 忽略非法 burst_gap_sec={gap_raw!r}"
+                    )
+
             image = _grab_image(context)
-            path = save_image_array(image, dir_name.strip())
+            path = save_image_array(
+                image,
+                dir_name.strip(),
+                burst_replace=burst_replace,
+                **gap_kw,
+            )
             if path is None:
                 logger.warning("SaveRewardScreenshot: 保存失败")
                 return CustomAction.RunResult(success=False)

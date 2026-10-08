@@ -908,7 +908,9 @@
             "param": {
                 "custom_action": "SaveRewardScreenshot",
                 "custom_action_param": {
-                    "dir": "S_SS+"
+                    "dir": "S_SS+",
+                    "burst_replace": true,
+                    "burst_gap_sec": 10
                 }
             }
         },

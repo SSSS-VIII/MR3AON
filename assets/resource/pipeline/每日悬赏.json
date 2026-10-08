@@ -1167,7 +1167,9 @@
             "param": {
                 "custom_action": "SaveRewardScreenshot",
                 "custom_action_param": {
-                    "dir": "每日悬赏"
+                    "dir": "每日悬赏",
+                    "burst_replace": true,
+                    "burst_gap_sec": 10
                 }
             }
         },

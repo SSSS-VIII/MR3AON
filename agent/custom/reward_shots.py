@@ -21,6 +21,10 @@ _lock = threading.RLock()
 # 流水线注册过的目录名（相对 reward_shots 根）
 _registered: set[str] = set()
 _last_prune_cycle: Optional[datetime] = None
+# dir -> (last_save_ts, battle_id, path)；burst_replace 用间隔区分场次
+_burst_state: dict[str, tuple[float, int, Path]] = {}
+# 结算连点通常 1～3s；跨场要隔战斗，默认 10s
+_DEFAULT_BURST_GAP_SEC = 10.0
 
 
 def _local_now() -> datetime:
@@ -181,8 +185,18 @@ def list_shots(dir_name: Optional[str] = None) -> list[Path]:
     return files
 
 
-def save_image_array(image: Any, dir_name: str) -> Optional[Path]:
-    """保存 BGR/RGB ndarray 到目录；失败返回 None。"""
+def save_image_array(
+    image: Any,
+    dir_name: str,
+    *,
+    burst_replace: bool = False,
+    burst_gap_sec: float = _DEFAULT_BURST_GAP_SEC,
+) -> Optional[Path]:
+    """保存 BGR/RGB ndarray 到目录；失败返回 None。
+
+    burst_replace=True：距上次保存不足 burst_gap_sec（默认 10s）视为同场连点，
+    覆盖该场 b00N.png 只留最后一张；超过则新开场次。不依赖 hit_count，任务重开也安全。
+    """
     from PIL import Image
 
     if image is None:
@@ -193,14 +207,46 @@ def save_image_array(image: Any, dir_name: str) -> Optional[Path]:
     try:
         out_dir = dir_path(safe)
         out_dir.mkdir(parents=True, exist_ok=True)
-        ts = _local_now().strftime("%Y%m%d-%H%M%S-%f")[:-3]
-        path = out_dir / f"{ts}.png"
+        now = _local_now()
+        now_ts = now.timestamp()
+        gap = max(0.0, float(burst_gap_sec))
+
+        with _lock:
+            if burst_replace:
+                prev = _burst_state.get(safe)
+                if prev is not None and (now_ts - prev[0]) < gap:
+                    battle_id = prev[1]
+                    path = prev[2]
+                else:
+                    battle_id = (prev[1] + 1) if prev is not None else 1
+                    # 任务重开内存清空时，跳过磁盘上已有的 b00N，避免盖掉上一趟
+                    while True:
+                        candidate = out_dir / f"b{battle_id:03d}.png"
+                        if not candidate.exists() or (
+                            prev is not None and candidate == prev[2]
+                        ):
+                            path = candidate
+                            break
+                        battle_id += 1
+            else:
+                battle_id = 0
+                ts = now.strftime("%Y%m%d-%H%M%S-%f")[:-3]
+                path = out_dir / f"{ts}.png"
+
         arr = image
         if getattr(arr, "ndim", 0) == 3 and arr.shape[2] == 3:
             # Maa / OpenCV: BGR → RGB
             arr = arr[:, :, ::-1]
         Image.fromarray(arr).save(path)
-        logger.info(f"reward_shots: 已保存 {path}")
+
+        if burst_replace:
+            with _lock:
+                _burst_state[safe] = (now_ts, battle_id, path)
+            logger.info(
+                f"reward_shots: 已保存 {path} (battle={battle_id}, burst_replace)"
+            )
+        else:
+            logger.info(f"reward_shots: 已保存 {path}")
         return path
     except Exception as exc:
         logger.exception(f"reward_shots: 保存失败: {exc}")
@@ -234,3 +280,4 @@ def _reset_for_tests() -> None:
     with _lock:
         _registered.clear()
         _last_prune_cycle = None
+        _burst_state.clear()
