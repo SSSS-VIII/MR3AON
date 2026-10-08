@@ -7,6 +7,7 @@ from custom.interruptible import (
     ClickDelayState,
     TaskStopRequested,
     bind_parkour_clicks,
+    click_delay_calibrate,
 )
 
 
@@ -36,7 +37,7 @@ class my_3v3_kn_yan_p1(CustomAction):
             # click(1100, 620, t) 为跳跃
             # ===================
 
-            click(1, 1, 50)
+            click(1, 1, 610 - click_delay_calibrate())
 
             click(1100, 620, 527)  # 跳跃
             click(1100, 620, 677)  # 跳跃
