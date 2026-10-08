@@ -713,6 +713,7 @@
         "post_wait_freezes": 300,
         "next": [
             "神秘商店列表截图",
+            "神秘商店页面",
             "点击神秘商店"
         ]
     },
@@ -1492,10 +1493,40 @@
             "type": "Click"
         },
         "next": [
-            "神秘商店列表截图"
+            "神秘商店刷新后列表截图"
         ]
     },
     "神秘商店列表截图": {
+        "max_hit": 1,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    443,
+                    46,
+                    203,
+                    85
+                ],
+                "expected": [
+                    "自动刷新"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SaveRewardScreenshot",
+                "custom_action_param": {
+                    "dir": "神秘商店"
+                }
+            }
+        },
+        "next": [
+            "神秘商店页面"
+        ],
+        "focus": "神秘商店：进店八格列表截图（仅一次）"
+    },
+    "神秘商店刷新后列表截图": {
         "recognition": {
             "type": "OCR",
             "param": {
@@ -1522,7 +1553,7 @@
         "next": [
             "重置节点神秘商店商品0节点计数器"
         ],
-        "focus": "神秘商店：八格商品列表整页截图"
+        "focus": "神秘商店：刷新后八格列表截图"
     },
     "神秘商店识别到刷新物品列表": {
         "recognition": {

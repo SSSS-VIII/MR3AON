@@ -101,6 +101,27 @@ class PipelineGuardTest(unittest.TestCase):
         self.assertEqual(pipeline["处理悬赏商店任务"]["next"][0], "每日商店总超时")
         self.assertEqual(pipeline["神秘商店页面"]["next"][0], "每日商店总超时")
 
+    def test_mystery_shop_list_screenshot_does_not_block_buy_loop(self):
+        """进店截图不得替代神秘商店页面，也不得每次清商品 Count。"""
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "每日商店.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            pipeline["点击神秘商店"]["next"],
+            ["神秘商店列表截图", "神秘商店页面", "点击神秘商店"],
+        )
+        enter = pipeline["神秘商店列表截图"]
+        self.assertEqual(enter.get("max_hit"), 1)
+        self.assertEqual(enter["next"], ["神秘商店页面"])
+        self.assertEqual(
+            pipeline["神秘商店点击确定刷新"]["next"],
+            ["神秘商店刷新后列表截图"],
+        )
+        self.assertEqual(
+            pipeline["神秘商店刷新后列表截图"]["next"],
+            ["重置节点神秘商店商品0节点计数器"],
+        )
+
     def test_default_timeout_and_error_route_are_explicit(self):
         defaults = json.loads(
             (RESOURCE / "default_pipeline.json").read_text(encoding="utf-8")
