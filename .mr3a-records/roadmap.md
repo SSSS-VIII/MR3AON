@@ -68,4 +68,6 @@ Agent 启动终端的大块乱码已确认是截图头被 Waydroid `amdgpu.ids` 
 
 2026-10-10：家族战截图只挂 `族战宝箱确定` 前（`burst_replace` 3s，确定后 `post_delay` 3s）；结算/参战奖励直接领取；撤掉误挂的战报确定截图；主页 next 增加关闭「个人信息」误点。详见同上 archived。
 
+2026-10-10：启动游戏 `勾选屏蔽` OCR roi 对齐 `屏蔽所有组队邀请`，避免认到文案却点不了勾选。详见 `archived/2026-10-10-startup-block-invite-roi.md`。
+
 2026-10-08：主页已开着再跑脚本时，`启动应用` 无条件 StartApp 会再给前台 Unity 发 MAIN，间歇性 pause 超时卡死。改为 `StartAppIfNeeded`：`pidof` 已有进程则跳过；服务器包名 override 写入 `custom_action_param`。TUI 退出与 Abort 时强制清 alternate screen / Kitty 图，避免弄坏 shell。详见 `archived/2026-10-08-startapp-skip-if-running.md`。
