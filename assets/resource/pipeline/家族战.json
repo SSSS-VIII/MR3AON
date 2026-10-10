@@ -237,11 +237,12 @@
         "timeout": 600000,
         "next": [
             "[JumpBack]家族战拒绝组队",
-            "[JumpBack]领取家族战结算奖励",
-            "[JumpBack]领取家族战参战奖励",
+            "[JumpBack]家族战点到了个人信息",
+            "[JumpBack]领取家族战结算奖励截图",
+            "[JumpBack]领取家族战参战奖励截图",
             "[JumpBack]点击族战宝箱",
-            "[JumpBack]族战宝箱确定",
-            "[JumpBack]族战战报结算截图",
+            "[JumpBack]族战宝箱确定截图",
+            "[JumpBack]族战战报结算确定",
             "[JumpBack]识别到全员参战且有进入战场",
             "[JumpBack]团队战已结束",
             "[JumpBack]团队战点击加入战斗",
@@ -251,6 +252,33 @@
             "[JumpBack]家族战页面下滑",
             "[JumpBack]家族战页面上滑"
         ]
+    },
+    "家族战点到了个人信息": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    57,
+                    33,
+                    255,
+                    127
+                ],
+                "expected": [
+                    "个人信息"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1269,
+                    366,
+                    1,
+                    1
+                ]
+            }
+        }
     },
     "家族战任务出错": {
         "focus": "任务出错：家族战❌"
@@ -758,7 +786,7 @@
             }
         }
     },
-    "族战宝箱确定": {
+    "族战宝箱确定截图": {
         "recognition": {
             "type": "OCR",
             "param": {
@@ -767,25 +795,6 @@
                     546,
                     358,
                     163
-                ],
-                "expected": [
-                    "确定"
-                ]
-            }
-        },
-        "action": {
-            "type": "Click"
-        }
-    },
-    "族战战报结算截图": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "roi": [
-                    1071,
-                    650,
-                    160,
-                    59
                 ],
                 "expected": [
                     "确定"
@@ -802,22 +811,41 @@
             }
         },
         "next": [
-            "族战战报结算确定"
+            "族战宝箱确定"
         ],
-        "focus": "结算确认：截图存奖励记录"
+        "focus": "家族战：宝箱确定截图"
     },
-    "族战战报结算确定": {
+    "族战宝箱确定": {
         "recognition": "DirectHit",
         "action": {
             "type": "Click",
             "param": {
                 "target": [
+                    465,
+                    546,
+                    358,
+                    163
+                ]
+            }
+        }
+    },
+    "族战战报结算确定": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
                     1071,
                     650,
                     160,
                     59
+                ],
+                "expected": [
+                    "确定"
                 ]
             }
+        },
+        "action": {
+            "type": "Click"
         }
     },
     "点击家族战小图标": {
@@ -966,26 +994,7 @@
             "[JumpBack]back"
         ]
     },
-    "领取家族战参战奖励": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "roi": [
-                    92,
-                    449,
-                    270,
-                    224
-                ],
-                "expected": [
-                    "奖励可领取"
-                ]
-            }
-        },
-        "action": {
-            "type": "Click"
-        }
-    },
-    "领取家族战结算奖励": {
+    "领取家族战结算奖励截图": {
         "recognition": {
             "type": "OCR",
             "param": {
@@ -1001,7 +1010,74 @@
             }
         },
         "action": {
-            "type": "Click"
+            "type": "Custom",
+            "param": {
+                "custom_action": "SaveRewardScreenshot",
+                "custom_action_param": {
+                    "dir": "家族战"
+                }
+            }
+        },
+        "next": [
+            "领取家族战结算奖励"
+        ],
+        "focus": "家族战：结算奖励截图"
+    },
+    "领取家族战结算奖励": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    462,
+                    420,
+                    360,
+                    105
+                ]
+            }
+        }
+    },
+    "领取家族战参战奖励截图": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    92,
+                    449,
+                    270,
+                    224
+                ],
+                "expected": [
+                    "奖励可领取"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SaveRewardScreenshot",
+                "custom_action_param": {
+                    "dir": "家族战"
+                }
+            }
+        },
+        "next": [
+            "领取家族战参战奖励"
+        ],
+        "focus": "家族战：参战奖励截图"
+    },
+    "领取家族战参战奖励": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    92,
+                    449,
+                    270,
+                    224
+                ]
+            }
         }
     },
     "家族战挂起后结束": {

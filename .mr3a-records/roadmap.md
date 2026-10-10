@@ -66,4 +66,6 @@ Agent 启动终端的大块乱码已确认是截图头被 Waydroid `amdgpu.ids` 
 
 2026-10-09：每日悬赏 / S_SS+ 结算 JumpBack 连点会狂截；`burst_replace`（10s）同场只覆盖留最后一张 `b00N.png`，跨场新开编号，任务重开跳过已有文件。家族战未开。详见同上 archived。
 
+2026-10-10：家族战截图改挂结算奖励 / 参战奖励 / 宝箱确定前（撤掉误挂的战报确定）；主页 next 增加关闭「个人信息」误点（同每日悬赏）。详见同上 archived。
+
 2026-10-08：主页已开着再跑脚本时，`启动应用` 无条件 StartApp 会再给前台 Unity 发 MAIN，间歇性 pause 超时卡死。改为 `StartAppIfNeeded`：`pidof` 已有进程则跳过；服务器包名 override 写入 `custom_action_param`。TUI 退出与 Abort 时强制清 alternate screen / Kitty 图，避免弄坏 shell。详见 `archived/2026-10-08-startapp-skip-if-running.md`。
