@@ -238,8 +238,8 @@
         "next": [
             "[JumpBack]家族战拒绝组队",
             "[JumpBack]家族战点到了个人信息",
-            "[JumpBack]领取家族战结算奖励截图",
-            "[JumpBack]领取家族战参战奖励截图",
+            "[JumpBack]领取家族战结算奖励",
+            "[JumpBack]领取家族战参战奖励",
             "[JumpBack]点击族战宝箱",
             "[JumpBack]族战宝箱确定截图",
             "[JumpBack]族战战报结算确定",
@@ -806,7 +806,9 @@
             "param": {
                 "custom_action": "SaveRewardScreenshot",
                 "custom_action_param": {
-                    "dir": "家族战"
+                    "dir": "家族战",
+                    "burst_replace": true,
+                    "burst_gap_sec": 3
                 }
             }
         },
@@ -827,7 +829,8 @@
                     163
                 ]
             }
-        }
+        },
+        "post_delay": 3000
     },
     "族战战报结算确定": {
         "recognition": {
@@ -994,7 +997,7 @@
             "[JumpBack]back"
         ]
     },
-    "领取家族战结算奖励截图": {
+    "领取家族战结算奖励": {
         "recognition": {
             "type": "OCR",
             "param": {
@@ -1010,22 +1013,6 @@
             }
         },
         "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "SaveRewardScreenshot",
-                "custom_action_param": {
-                    "dir": "家族战"
-                }
-            }
-        },
-        "next": [
-            "领取家族战结算奖励"
-        ],
-        "focus": "家族战：结算奖励截图"
-    },
-    "领取家族战结算奖励": {
-        "recognition": "DirectHit",
-        "action": {
             "type": "Click",
             "param": {
                 "target": [
@@ -1035,9 +1022,11 @@
                     105
                 ]
             }
-        }
+        },
+        "post_delay": 3000,
+        "focus": "家族战：结算奖励"
     },
-    "领取家族战参战奖励截图": {
+    "领取家族战参战奖励": {
         "recognition": {
             "type": "OCR",
             "param": {
@@ -1053,22 +1042,6 @@
             }
         },
         "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "SaveRewardScreenshot",
-                "custom_action_param": {
-                    "dir": "家族战"
-                }
-            }
-        },
-        "next": [
-            "领取家族战参战奖励"
-        ],
-        "focus": "家族战：参战奖励截图"
-    },
-    "领取家族战参战奖励": {
-        "recognition": "DirectHit",
-        "action": {
             "type": "Click",
             "param": {
                 "target": [
@@ -1078,7 +1051,9 @@
                     224
                 ]
             }
-        }
+        },
+        "post_delay": 3000,
+        "focus": "家族战：参战奖励"
     },
     "家族战挂起后结束": {
         "action": {
