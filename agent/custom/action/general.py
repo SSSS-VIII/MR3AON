@@ -61,7 +61,10 @@ def _run_set_node_enabled(
         logger.error(f"{label}: node_name 为空或仅空白")
         return CustomAction.RunResult(success=False)
 
-    if not context.override_pipeline({name: {"enabled": enabled}}):
+    # 与任务选项遗留字段 enable 对齐，避免只改 enabled 时 enable:true 仍生效
+    if not context.override_pipeline(
+        {name: {"enabled": enabled, "enable": enabled}}
+    ):
         logger.error(
             f"{label}: override_pipeline 失败 (node={name!r}, enabled={enabled})"
         )

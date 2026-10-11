@@ -134,17 +134,42 @@ def _merge_pipeline_override(target: dict[str, Any], patch: dict[str, Any]) -> N
             target[key] = deepcopy(value)
 
 
+def _node_enable_override(enabled: bool) -> dict[str, bool]:
+    """同时写 enabled / enable。
+
+    任务选项（如镜界百器清体力）仍用遗留字段 ``enable``；若只覆写 ``enabled``，
+    合并后会出现 ``enable:true`` + ``enabled:false``，框架按 ``enable`` 仍会进节点。
+    """
+    return {"enabled": enabled, "enable": enabled}
+
+
+def _canonicalize_pipeline_enable_fields(override: dict[str, Any]) -> None:
+    """把节点补丁里的 enable/enabled 收成一致的一对。"""
+    for value in override.values():
+        if not isinstance(value, dict):
+            continue
+        if "enable" not in value and "enabled" not in value:
+            continue
+        if "enabled" in value:
+            flag = bool(value["enabled"])
+        else:
+            flag = bool(value["enable"])
+        value["enabled"] = flag
+        value["enable"] = flag
+
+
 def _apply_persistent_node_overrides(task: ManagedTask) -> ManagedTask:
     base = deepcopy(
         task.base_pipeline_override
         if task.base_pipeline_override is not None
         else task.pipeline_override
     )
+    _canonicalize_pipeline_enable_fields(base)
     effective = deepcopy(base)
     for node, enabled in persistent_task_state_store.node_overrides(
         task.entry
     ).items():
-        _merge_pipeline_override(effective, {node: {"enabled": enabled}})
+        _merge_pipeline_override(effective, {node: _node_enable_override(enabled)})
     return ManagedTask(
         name=task.name,
         entry=task.entry,
@@ -172,13 +197,16 @@ def _normalize_pipeline_override(raw: Any) -> dict[str, Any]:
     if raw is None:
         return {}
     if isinstance(raw, dict):
-        return deepcopy(raw)
+        merged = deepcopy(raw)
+        _canonicalize_pipeline_enable_fields(merged)
+        return merged
     if isinstance(raw, list):
-        merged: dict[str, Any] = {}
+        merged = {}
         for index, item in enumerate(raw):
             if not isinstance(item, dict):
                 raise ValueError(f"pipeline_override[{index}] 非对象")
             _merge_pipeline_override(merged, item)
+        _canonicalize_pipeline_enable_fields(merged)
         return merged
     raise ValueError("pipeline_override 必须是对象或对象数组")
 
