@@ -14,3 +14,7 @@
 
 - `tests/test_pipeline_guards.py`：`test_family_war_defers_before_eight_and_registers_completion`。
 - 下次周末实机：20 点前应挂起；完成后当晚不应再进。
+
+## 后续
+
+- 2026-10-11：主页上下滑行程 y 100↔500 → 140↔460（缩短 20%，中点不变）；`duration` 显式 250ms（默认 200），滑动更慢一点。
