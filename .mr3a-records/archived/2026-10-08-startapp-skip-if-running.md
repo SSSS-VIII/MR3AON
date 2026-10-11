@@ -11,11 +11,15 @@ Agent 一启动固定先跑 `启动游戏`，`启动应用` 无条件 `StartApp`
 ## 改动
 
 - `启动应用` 改为自定义动作 `StartAppIfNeeded`：`pidof` 到包名则跳过，否则 `post_start_app`。
-- 包名以 Maa 传入的 `custom_action_param.package` 为准；`请选择服务器` 的 override 必须写 `custom_action_param.package`（只写 `param.package` 时 Custom 动作仍吃到流水线默认 `.vivo`，官服会秒失败）。
-- 流水线默认包改为官服 `com.pandadastudio.ninjamustdie3`。
+- 包名只来自任务配置「请选择服务器」：options 必须同时写 `param.package` 与 `custom_action_param.package`；流水线 `启动应用` 不硬编码任何渠道包。
+- `StartAppIfNeeded` 优先 `get_node_data("启动应用")` 合并结果，其次 argv，再次已记忆包名。
 - `关闭节点点击主页设置` 的 Disable 目标改为真正的 `启动游戏点击主页设置`。
 
 ## 验证
 
 - `tests/test_pipeline_guards.py`、`tests/test_error_recovery.py` 相关断言。
-- 实机：官服配置下 `StartAppIfNeeded` 日志包名无 `.vivo` 后缀。
+- 实机：所选渠道包名出现在 `StartAppIfNeeded` 日志，不得落成其它渠道默认包。
+
+## 后续
+
+- 2026-10-11：去掉流水线硬编码官服包；热启动必须跟当前服务器选项。

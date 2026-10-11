@@ -36,20 +36,28 @@ def _package_from_action_argv(argv: CustomAction.RunArg) -> str | None:
 
 @AgentServer.custom_action("StartAppIfNeeded")
 class StartAppIfNeeded(CustomAction):
-    """进程已在则跳过 StartApp，避免对前台 Unity 再发 MAIN 导致卡死。"""
+    """进程已在则跳过 StartApp，避免对前台 Unity 再发 MAIN 导致卡死。
+
+    包名必须来自任务「请选择服务器」等配置（合并进节点后的 package /
+    custom_action_param），禁止依赖流水线硬编码默认包。
+    """
 
     def run(
         self,
         context: Context,
         argv: CustomAction.RunArg,
     ) -> CustomAction.RunResult:
+        # 优先读合并后的节点数据（含服务器选项），再 argv，再已记忆包名
         package = (
-            _package_from_action_argv(argv)
-            or _get_start_app_package(context)
+            _get_start_app_package(context)
+            or _package_from_action_argv(argv)
             or _get_remembered_game_package()
         )
         if not package:
-            logger.error("StartAppIfNeeded: 无法解析 package")
+            logger.error(
+                "StartAppIfNeeded: 无法解析 package "
+                "（请确认「请选择服务器」已写入启动应用包名）"
+            )
             return CustomAction.RunResult(success=False)
 
         pid = pidof_package(package)

@@ -190,12 +190,14 @@ class ErrorRecoveryTest(unittest.TestCase):
         self.assertEqual(context.tasker.stop_requests, 1)
 
     def test_start_app_if_needed_skips_when_pid_exists(self):
-        context = _Context("com.pandadastudio.ninjamustdie3.vivo")
+        # 以合并后的节点配置（服务器选项）为准，不用流水线硬编码默认包
+        pkg = "com.pandadastudio.ninjamustdie3.vivo"
+        context = _Context(pkg)
         argv = _argv(
             66,
             "启动游戏entry",
             "启动应用",
-            '{"package":"com.pandadastudio.ninjamustdie3"}',
+            '{"package":"com.pandadastudio.ninjamustdie3.vivo"}',
         )
         original = waydroid_runtime.pidof_package
         seen: list[str] = []
@@ -210,16 +212,17 @@ class ErrorRecoveryTest(unittest.TestCase):
         finally:
             waydroid_runtime.pidof_package = original
         self.assertTrue(result.success)
-        self.assertEqual(seen, ["com.pandadastudio.ninjamustdie3"])
+        self.assertEqual(seen, [pkg])
         self.assertEqual(context.tasker.controller.started, [])
 
     def test_start_app_if_needed_starts_when_pid_missing(self):
-        context = _Context("com.pandadastudio.ninjamustdie3.vivo")
+        pkg = "com.pandadastudio.ninjamustdie3.vivo"
+        context = _Context(pkg)
         argv = _argv(
             67,
             "启动游戏entry",
             "启动应用",
-            '{"package":"com.pandadastudio.ninjamustdie3"}',
+            '{"package":"com.pandadastudio.ninjamustdie3.vivo"}',
         )
         original = waydroid_runtime.pidof_package
         waydroid_runtime.pidof_package = lambda package, wait_sec=5: None
@@ -228,9 +231,31 @@ class ErrorRecoveryTest(unittest.TestCase):
         finally:
             waydroid_runtime.pidof_package = original
         self.assertTrue(result.success)
+        self.assertEqual(context.tasker.controller.started, [pkg])
+
+    def test_start_app_if_needed_prefers_merged_node_over_stale_argv(self):
+        """节点上已是渠道包时，不得被 argv 里过期默认包盖掉。"""
+        context = _Context("com.pandadastudio.ninjamustdie3.vivo")
+        argv = _argv(
+            68,
+            "启动游戏entry",
+            "启动应用",
+            '{"package":"com.pandadastudio.ninjamustdie3"}',
+        )
+        original = waydroid_runtime.pidof_package
+        seen: list[str] = []
+        waydroid_runtime.pidof_package = lambda package, wait_sec=5: (
+            seen.append(package) or None
+        )
+        try:
+            result = waydroid_runtime.StartAppIfNeeded().run(context, argv)
+        finally:
+            waydroid_runtime.pidof_package = original
+        self.assertTrue(result.success)
+        self.assertEqual(seen, ["com.pandadastudio.ninjamustdie3.vivo"])
         self.assertEqual(
             context.tasker.controller.started,
-            ["com.pandadastudio.ninjamustdie3"],
+            ["com.pandadastudio.ninjamustdie3.vivo"],
         )
 
 

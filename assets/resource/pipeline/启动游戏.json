@@ -376,9 +376,7 @@
             "type": "Custom",
             "param": {
                 "custom_action": "StartAppIfNeeded",
-                "custom_action_param": {
-                    "package": "com.pandadastudio.ninjamustdie3"
-                }
+                "custom_action_param": {}
             }
         },
         "post_delay": 0,
