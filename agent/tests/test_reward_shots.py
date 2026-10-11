@@ -94,3 +94,51 @@ def test_burst_replace_keeps_last_within_gap(tmp_path: Path, monkeypatch):
     p4 = rs.save_image_array(paint(4), "每日悬赏", burst_replace=True, burst_gap_sec=10)
     assert p4 is not None and p4.name == "b003.png"
     assert np.array(PILImage.open(p1))[0, 0, 2] == 2
+
+
+def test_burst_entry_replace_until_sibling_next_hit(tmp_path: Path, monkeypatch):
+    """连续两次同入口保存则覆盖；同 next 列表命中其它候选后新开。"""
+    monkeypatch.chdir(tmp_path)
+    rs._reset_for_tests()
+
+    tz = timezone(timedelta(hours=8))
+    clock = {"t": datetime(2026, 10, 11, 20, 0, 0, tzinfo=tz)}
+    monkeypatch.setattr(rs, "_local_now", lambda: clock["t"])
+
+    def paint(v: int):
+        img = np.zeros((4, 4, 3), dtype=np.uint8)
+        img[:, :] = (v, 0, 0)
+        return img
+
+    entry = "族战宝箱确定截图"
+    home_next = frozenset(
+        {entry, "领取家族战结算奖励", "家族战页面下滑", "点击族战宝箱"}
+    )
+
+    p1 = rs.save_image_array(
+        paint(1), "家族战", burst_replace=True, burst_entry=entry
+    )
+    assert p1 is not None and p1.name == "b001.png"
+
+    clock["t"] += timedelta(seconds=4)
+    p2 = rs.save_image_array(
+        paint(2), "家族战", burst_replace=True, burst_entry=entry
+    )
+    assert p2 == p1
+    from PIL import Image as PILImage
+
+    assert int(np.array(PILImage.open(p1))[0, 0, 2]) == 2
+
+    # 私有 next（不含入口）不应打断
+    rs.on_recognition_succeeded(
+        "族战宝箱确定", next_candidates=frozenset({"族战宝箱确定"})
+    )
+    # 同主页 next 命中其它候选：打断连续
+    rs.on_recognition_succeeded(
+        "领取家族战结算奖励", next_candidates=home_next
+    )
+    clock["t"] += timedelta(seconds=2)
+    p3 = rs.save_image_array(
+        paint(3), "家族战", burst_replace=True, burst_entry=entry
+    )
+    assert p3 is not None and p3.name == "b002.png"

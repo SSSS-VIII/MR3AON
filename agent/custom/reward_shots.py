@@ -21,10 +21,12 @@ _lock = threading.RLock()
 # 流水线注册过的目录名（相对 reward_shots 根）
 _registered: set[str] = set()
 _last_prune_cycle: Optional[datetime] = None
-# dir -> (last_save_ts, battle_id, path)；burst_replace 用间隔区分场次
+# dir -> (last_save_ts, battle_id, path)
 _burst_state: dict[str, tuple[float, int, Path]] = {}
-# 结算连点通常 1～3s；跨场要隔战斗，默认 10s
+# 短间隔同场（无 burst_entry 时用）；默认 10s
 _DEFAULT_BURST_GAP_SEC = 10.0
+# dir -> 上次保存使用的 burst_entry；同入口连续保存则覆盖
+_entry_streak: dict[str, str] = {}
 
 
 def _local_now() -> datetime:
@@ -185,17 +187,69 @@ def list_shots(dir_name: Optional[str] = None) -> list[Path]:
     return files
 
 
+def break_entry_streak(dir_name: Optional[str] = None) -> None:
+    """打断连续入口覆盖。"""
+    with _lock:
+        if dir_name is None:
+            _entry_streak.clear()
+            return
+        try:
+            safe = sanitize_dir_name(dir_name)
+        except ValueError:
+            return
+        _entry_streak.pop(safe, None)
+
+
+def on_recognition_succeeded(
+    node_name: str,
+    *,
+    next_candidates: frozenset[str] | set[str] | None = None,
+) -> None:
+    """识别成功时调用：若当前 next 列表里同时有我们的入口和其它候选，命中其它则打断。
+
+    不需要主页白名单——只要知道 burst_entry；同列表兄弟节点命中即视为离开该入口。
+    入口节点自己的私有 next（如点确定）不含入口名，不会误打断。
+    """
+    from tui.status import bare_node_name, runtime_status
+
+    bare = bare_node_name(node_name)
+    if not bare:
+        return
+    if next_candidates is None:
+        next_candidates = runtime_status.next_list_candidates()
+    if not next_candidates:
+        return
+    cands = frozenset(bare_node_name(x) for x in next_candidates if x)
+    with _lock:
+        for safe, entry in list(_entry_streak.items()):
+            if entry not in cands:
+                continue
+            if bare == entry:
+                continue
+            if bare not in cands:
+                continue
+            _entry_streak.pop(safe, None)
+            logger.debug(
+                f"reward_shots: 入口连续被打断 dir={safe} entry={entry} by={bare}"
+            )
+
+
 def save_image_array(
     image: Any,
     dir_name: str,
     *,
     burst_replace: bool = False,
     burst_gap_sec: float = _DEFAULT_BURST_GAP_SEC,
+    burst_entry: str = "",
+    node_name: str = "",
 ) -> Optional[Path]:
     """保存 BGR/RGB ndarray 到目录；失败返回 None。
 
-    burst_replace=True：距上次保存不足 burst_gap_sec（默认 10s）视为同场连点，
-    覆盖该场 b00N.png 只留最后一张；超过则新开场次。不依赖 hit_count，任务重开也安全。
+    burst_replace=True 时写/覆盖 b00N.png：
+    - 若设置 burst_entry：保存时若本次入口与上次相同则覆盖；中间同 next
+      列表命中其它候选则新开（见 on_recognition_succeeded）。
+    - 否则：距上次保存 < burst_gap_sec（默认 10）则覆盖。
+    任务重开跳过磁盘已有 b00N。
     """
     from PIL import Image
 
@@ -210,16 +264,21 @@ def save_image_array(
         now = _local_now()
         now_ts = now.timestamp()
         gap = max(0.0, float(burst_gap_sec))
+        entry = (burst_entry or "").strip()
 
         with _lock:
             if burst_replace:
                 prev = _burst_state.get(safe)
-                if prev is not None and (now_ts - prev[0]) < gap:
+                if entry:
+                    replace = _entry_streak.get(safe) == entry
+                else:
+                    replace = prev is not None and (now_ts - prev[0]) < gap
+
+                if replace and prev is not None:
                     battle_id = prev[1]
                     path = prev[2]
                 else:
                     battle_id = (prev[1] + 1) if prev is not None else 1
-                    # 任务重开内存清空时，跳过磁盘上已有的 b00N，避免盖掉上一趟
                     while True:
                         candidate = out_dir / f"b{battle_id:03d}.png"
                         if not candidate.exists() or (
@@ -242,8 +301,12 @@ def save_image_array(
         if burst_replace:
             with _lock:
                 _burst_state[safe] = (now_ts, battle_id, path)
+                if entry:
+                    _entry_streak[safe] = entry
             logger.info(
-                f"reward_shots: 已保存 {path} (battle={battle_id}, burst_replace)"
+                f"reward_shots: 已保存 {path} (battle={battle_id}, "
+                f"burst_replace, entry={entry or '-'}, "
+                f"node={node_name or '-'})"
             )
         else:
             logger.info(f"reward_shots: 已保存 {path}")
@@ -281,3 +344,4 @@ def _reset_for_tests() -> None:
         _registered.clear()
         _last_prune_cycle = None
         _burst_state.clear()
+        _entry_streak.clear()

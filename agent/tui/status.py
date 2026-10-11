@@ -18,14 +18,30 @@ class TaskRow:
     detail: str = ""
 
 
+_JUMPBACK_PREFIX = "[JumpBack]"
+
+
+def bare_node_name(name: str) -> str:
+    """去掉 [JumpBack] 前缀，得到可比较的节点名。"""
+    text = (name or "").strip()
+    if text.startswith(_JUMPBACK_PREFIX):
+        return text[len(_JUMPBACK_PREFIX) :].strip()
+    return text
+
+
 @dataclass
 class RuntimeStatus:
-    """线程安全的当前节点/任务展示状态。"""
+    """线程安全的 Agent 运行时状态（TUI / sink / 业务共用）。"""
 
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
     current_task_name: str = "—"
     current_task_entry: str = ""
     current_node: str = "—"
+    # 最近一次识别成功的节点（全局，可供截图覆盖等复用）
+    last_recognition_succeeded: str = ""
+    # 当前正在轮询的 next 列表（Starting 时写入，结束时清空）
+    next_list_parent: str = ""
+    _next_list_candidates: frozenset[str] = field(default_factory=frozenset)
     agent_phase: str = "idle"
     waiting_hint: str = ""
     last_event_at: float = 0.0
@@ -36,6 +52,38 @@ class RuntimeStatus:
         with self._lock:
             if name:
                 self.current_node = name
+
+    def note_recognition_succeeded(self, name: str) -> str:
+        """记录识别成功；返回规范化节点名。"""
+        bare = bare_node_name(name)
+        with self._lock:
+            if bare:
+                self.last_recognition_succeeded = bare
+                self.current_node = bare
+        return bare
+
+    def note_next_list_starting(
+        self, parent: str, candidates: list[str] | tuple[str, ...]
+    ) -> None:
+        """next 列表开始轮询。"""
+        parent_bare = bare_node_name(parent)
+        cands = frozenset(
+            bare_node_name(c) for c in candidates if bare_node_name(c)
+        )
+        with self._lock:
+            if parent_bare:
+                self.current_node = parent_bare
+                self.next_list_parent = parent_bare
+            self._next_list_candidates = cands
+
+    def note_next_list_finished(self) -> None:
+        with self._lock:
+            self.next_list_parent = ""
+            self._next_list_candidates = frozenset()
+
+    def next_list_candidates(self) -> frozenset[str]:
+        with self._lock:
+            return self._next_list_candidates
 
     def set_current_task(self, *, name: str, entry: str) -> None:
         with self._lock:
@@ -77,6 +125,8 @@ class RuntimeStatus:
                 "task_name": self.current_task_name,
                 "task_entry": self.current_task_entry,
                 "node": self.current_node,
+                "last_recognition": self.last_recognition_succeeded,
+                "next_list_parent": self.next_list_parent,
                 "phase": self.agent_phase,
                 "waiting_hint": self.waiting_hint,
                 "exit_requested": "1" if self.exit_requested else "",

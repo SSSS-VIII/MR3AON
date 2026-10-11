@@ -801,6 +801,7 @@
                 ]
             }
         },
+        "pre_delay": 1000,
         "action": {
             "type": "Custom",
             "param": {
@@ -808,14 +809,15 @@
                 "custom_action_param": {
                     "dir": "家族战",
                     "burst_replace": true,
-                    "burst_gap_sec": 3
+                    "burst_entry": "族战宝箱确定截图",
+                    "fresh_capture": true
                 }
             }
         },
         "next": [
             "族战宝箱确定"
         ],
-        "focus": "家族战：宝箱确定截图"
+        "focus": "家族战：认出确定后等1s截图"
     },
     "族战宝箱确定": {
         "recognition": "DirectHit",
