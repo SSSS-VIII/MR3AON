@@ -1169,7 +1169,7 @@
                 "custom_action_param": {
                     "dir": "每日悬赏",
                     "burst_replace": true,
-                    "burst_gap_sec": 10
+                    "burst_gap_sec": 30
                 }
             }
         },
