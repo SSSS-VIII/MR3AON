@@ -61,6 +61,7 @@ class PipelineGuardTest(unittest.TestCase):
             ("忍村试炼.json", "挂起忍村试炼四小时"),
             ("通灵巡逻.json", "登记通灵巡逻预计倒计时"),
             ("藏宝图.json", "藏宝图检查让出调度信号"),
+            ("每周逆袭悬赏.json", "每周逆袭悬赏检查让出调度信号"),
             ("小屋修炼.json", "确定继续修炼"),
             ("好友忍币.json", "好友忍币任务完成"),
             ("领取邮件.json", "领取邮件任务完成"),
@@ -194,6 +195,40 @@ class PipelineGuardTest(unittest.TestCase):
             pipeline["藏宝图让出调度已回到主页"]["action"]["type"],
             "StopTask",
         )
+
+    def test_weekly_bounty_yields_only_from_safe_page_nodes(self):
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "每周逆袭悬赏.json").read_text(encoding="utf-8")
+        )
+        signal_node = "每周逆袭悬赏检查让出调度信号"
+
+        self.assertEqual(
+            pipeline[signal_node]["recognition"]["param"]["custom_recognition"],
+            "ManagedTaskYieldRequested",
+        )
+        self.assertEqual(
+            pipeline[signal_node]["action"]["param"]["custom_action"],
+            "ManagedTaskSchedulerYieldCurrent",
+        )
+        for safe_node in (
+            "每周逆袭悬赏悬赏主页面",
+            "每周逆袭悬赏悬赏仍在主页中",
+            "每周逆袭悬赏悬赏进入战斗后回到了逆袭悬赏页面",
+        ):
+            with self.subTest(safe_node=safe_node):
+                self.assertIn(signal_node, pipeline[safe_node]["next"])
+
+        # 刷新后要抢速度，不在点击刷新后检查让出
+        self.assertNotIn(signal_node, pipeline["每周逆袭悬赏点击刷新"]["next"])
+        self.assertEqual(
+            pipeline["每周逆袭悬赏让出调度已回到主页"]["action"]["type"],
+            "StopTask",
+        )
+
+        from custom.action.deferred_tasks import _TIME_SLICE_SECONDS
+
+        self.assertEqual(_TIME_SLICE_SECONDS.get("每周逆袭悬赏entry"), 60 * 60)
+        self.assertEqual(_TIME_SLICE_SECONDS.get("藏宝图entry"), 60 * 60)
 
     def test_spirit_patrol_keeps_both_entry_modes_and_all_deferred_exits(self):
         pipeline = json.loads(

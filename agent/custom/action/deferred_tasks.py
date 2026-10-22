@@ -47,6 +47,7 @@ _FINALIZE_ENTRY = "AgentSchedulerTaskFinalize"
 _WAIT_ENTRY = "AgentSchedulerWait"
 _TIME_SLICE_SECONDS = {
     "藏宝图entry": 60 * 60,
+    "每周逆袭悬赏entry": 60 * 60,
 }
 
 
