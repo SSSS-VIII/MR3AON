@@ -41,7 +41,9 @@ Powered by [MaaFramework](https://github.com/MaaXYZ/MaaFramework) & [MFAAvalonia
 - ✅ 过夜状态刷新 
   - 睡醒之后日常就全都完成了!
 - ✅ Agent运行时TUI
-  - 想要看可爱的卡通小人搬砖
+  - 想要看可爱的卡通小人搬砖(GUI有了 但是不会画可爱的ASCII小人 求助～)
+- ✅ 奖励截图记录
+  - 不知道自己得到了什么奖励不是白打了吗， 每天的奖励可以记录在GUI上了！
 - ⬜ 多账号协同 
   - 通过小号邀请大号实现MVP垄断 或者什么别的东西～ 但是需要一个解锁了A悬赏的小号，而且涉及到容器多实例，目前没有充足的测试环境只能测试waydroid～
 - ⬜ 🎇REALEASE🎇 真的可以到达这里吗?
