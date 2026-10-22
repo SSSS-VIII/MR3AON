@@ -718,9 +718,20 @@
             }
         },
         "action": {
-            "type": "StopTask"
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "每日逆袭悬赏entry",
+                    "enabled": false,
+                    "valid_until": "next_daily_reset"
+                }
+            }
         },
-        "focus": "任务完成：每日逆袭悬赏✅"
+        "focus": "任务完成：每日逆袭悬赏✅",
+        "next": [
+            "每日逆袭悬赏完成停止任务"
+        ]
     },
     "每日逆袭悬赏已准备": {
         "recognition": {
@@ -2154,5 +2165,10 @@
         "next": [
             "每日逆袭悬赏检查子任务均完成"
         ]
+    },
+    "每日逆袭悬赏完成停止任务": {
+        "action": {
+            "type": "StopTask"
+        }
     }
 }

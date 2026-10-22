@@ -1091,7 +1091,8 @@
         "next": [
             "每周逆袭悬赏阶段1进行中",
             "每周逆袭悬赏阶段2进行中",
-            "每周逆袭悬赏阶段3进行中"
+            "每周逆袭悬赏阶段3进行中",
+            "每周逆袭悬赏全部阶段已完成"
         ]
     },
     "每周逆袭悬赏点击刷新后狂点加入队伍": {
@@ -1120,13 +1121,12 @@
         ]
     },
     "每周逆袭悬赏阶段1进行中": {
-        "enabled": true,
         "enable": true,
+        "enabled": true,
         "pre_delay": 0,
         "post_delay": 0,
         "next": [
-            "每周逆袭悬赏阶段1识别到奖励上限",
-            "每周逆袭悬赏阶段1未满继续"
+            "每周逆袭悬赏阶段1应用S筛选"
         ],
         "focus": "阶段1：刷S至奖励上限"
     },
@@ -1148,79 +1148,17 @@
         "pre_delay": 0,
         "post_delay": 0,
         "next": [
-            "每周逆袭悬赏切入阶段2"
+            "每周逆袭悬赏阶段1完成禁用"
         ],
         "focus": "阶段1完成：已到奖励上限"
     },
-    "每周逆袭悬赏阶段1未满继续": {
-        "pre_delay": 0,
-        "post_delay": 0,
-        "next": [
-            "每周逆袭悬赏筛选模块"
-        ]
-    },
-    "每周逆袭悬赏切入阶段2": {
-        "pre_delay": 0,
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "NodeOverride",
-                "custom_action_param": {
-                    "每周逆袭悬赏阶段1进行中": {
-                        "enable": false,
-                        "enabled": false
-                    },
-                    "每周逆袭悬赏阶段2进行中": {
-                        "enable": true,
-                        "enabled": true
-                    },
-                    "每周逆袭悬赏阶段3进行中": {
-                        "enable": false,
-                        "enabled": false
-                    },
-                    "每周逆袭悬赏筛选模块": {
-                        "next": [
-                            "[JumpBack]每周逆袭悬赏A选项",
-                            "[JumpBack]每周逆袭悬赏S选项",
-                            "[JumpBack]每周逆袭悬赏SS+选项",
-                            "每周逆袭悬赏抢悬赏模块"
-                        ]
-                    },
-                    "每周逆袭悬赏A选项": {
-                        "template": "召令悬赏未选择.png"
-                    },
-                    "每周逆袭悬赏S选项": {
-                        "template": "召令悬赏已选择.png"
-                    },
-                    "每周逆袭悬赏需要刷逆袭A": {
-                        "enable": true,
-                        "enabled": true
-                    },
-                    "每周逆袭悬赏需要刷逆袭S": {
-                        "enable": false,
-                        "enabled": false
-                    },
-                    "每周逆袭悬赏需要刷逆袭SS+": {
-                        "enable": false,
-                        "enabled": false
-                    }
-                }
-            }
-        },
-        "post_delay": 0,
-        "next": [
-            "每周逆袭悬赏筛选模块"
-        ],
-        "focus": "进入阶段2：无限刷A至概率掉落"
-    },
     "每周逆袭悬赏阶段2进行中": {
-        "enabled": false,
-        "enable": false,
+        "enable": true,
+        "enabled": true,
         "pre_delay": 0,
         "post_delay": 0,
         "next": [
-            "每周逆袭悬赏阶段2仍有概率掉落",
-            "每周逆袭悬赏阶段2已无概率掉落"
+            "每周逆袭悬赏阶段2应用A筛选"
         ],
         "focus": "阶段2：刷A至概率掉落"
     },
@@ -1264,72 +1202,17 @@
         "pre_delay": 0,
         "post_delay": 0,
         "next": [
-            "每周逆袭悬赏切入阶段3"
+            "每周逆袭悬赏阶段2完成禁用"
         ],
         "focus": "阶段2完成：A概率掉落已刷到"
     },
-    "每周逆袭悬赏切入阶段3": {
-        "pre_delay": 0,
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "NodeOverride",
-                "custom_action_param": {
-                    "每周逆袭悬赏阶段1进行中": {
-                        "enable": false,
-                        "enabled": false
-                    },
-                    "每周逆袭悬赏阶段2进行中": {
-                        "enable": false,
-                        "enabled": false
-                    },
-                    "每周逆袭悬赏阶段3进行中": {
-                        "enable": true,
-                        "enabled": true
-                    },
-                    "每周逆袭悬赏筛选模块": {
-                        "next": [
-                            "[JumpBack]每周逆袭悬赏S选项",
-                            "[JumpBack]每周逆袭悬赏A选项",
-                            "[JumpBack]每周逆袭悬赏SS+选项",
-                            "每周逆袭悬赏抢悬赏模块"
-                        ]
-                    },
-                    "每周逆袭悬赏A选项": {
-                        "template": "召令悬赏已选择.png"
-                    },
-                    "每周逆袭悬赏S选项": {
-                        "template": "召令悬赏未选择.png"
-                    },
-                    "每周逆袭悬赏需要刷逆袭A": {
-                        "enable": false,
-                        "enabled": false
-                    },
-                    "每周逆袭悬赏需要刷逆袭S": {
-                        "enable": true,
-                        "enabled": true
-                    },
-                    "每周逆袭悬赏需要刷逆袭SS+": {
-                        "enable": false,
-                        "enabled": false
-                    }
-                }
-            }
-        },
-        "post_delay": 0,
-        "next": [
-            "每周逆袭悬赏筛选模块"
-        ],
-        "focus": "进入阶段3：无限刷S至概率掉落"
-    },
     "每周逆袭悬赏阶段3进行中": {
-        "enabled": false,
-        "enable": false,
+        "enable": true,
+        "enabled": true,
         "pre_delay": 0,
         "post_delay": 0,
         "next": [
-            "每周逆袭悬赏阶段3仍有概率掉落",
-            "每周逆袭悬赏阶段3已无概率掉落"
+            "每周逆袭悬赏阶段3应用S筛选"
         ],
         "focus": "阶段3：刷S至概率掉落"
     },
@@ -1373,8 +1256,254 @@
         "pre_delay": 0,
         "post_delay": 0,
         "next": [
+            "每周逆袭悬赏阶段3完成禁用"
+        ],
+        "focus": "阶段3完成：S概率掉落已刷到"
+    },
+    "每周逆袭悬赏全部阶段已完成": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
             "每周逆袭悬赏任务完成"
         ],
-        "focus": "阶段3完成：S概率掉落已刷到，每周逆袭结束"
+        "focus": "每周逆袭三段均已完成（或均已持久化禁用）"
+    },
+    "每周逆袭悬赏阶段1应用S筛选": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "每周逆袭悬赏筛选模块": {
+                        "next": [
+                            "[JumpBack]每周逆袭悬赏S选项",
+                            "[JumpBack]每周逆袭悬赏A选项",
+                            "[JumpBack]每周逆袭悬赏SS+选项",
+                            "每周逆袭悬赏抢悬赏模块"
+                        ]
+                    },
+                    "每周逆袭悬赏A选项": {
+                        "template": "召令悬赏已选择.png"
+                    },
+                    "每周逆袭悬赏S选项": {
+                        "template": "召令悬赏未选择.png"
+                    },
+                    "每周逆袭悬赏需要刷逆袭A": {
+                        "enable": false,
+                        "enabled": false
+                    },
+                    "每周逆袭悬赏需要刷逆袭S": {
+                        "enable": true,
+                        "enabled": true
+                    },
+                    "每周逆袭悬赏需要刷逆袭SS+": {
+                        "enable": false,
+                        "enabled": false
+                    }
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "每周逆袭悬赏阶段1识别到奖励上限",
+            "每周逆袭悬赏阶段1未满继续刷"
+        ]
+    },
+    "每周逆袭悬赏阶段1未满继续刷": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "每周逆袭悬赏筛选模块"
+        ]
+    },
+    "每周逆袭悬赏阶段1完成禁用": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "每周逆袭悬赏阶段1进行中"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "登记每周逆袭悬赏阶段1每周完成"
+        ]
+    },
+    "登记每周逆袭悬赏阶段1每周完成": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "每周逆袭悬赏entry",
+                    "node": "每周逆袭悬赏阶段1进行中",
+                    "enabled": false,
+                    "valid_until": "next_weekly_reset",
+                    "weekday": 6
+                }
+            }
+        },
+        "next": [
+            "每周逆袭悬赏任务检查模块"
+        ],
+        "focus": "阶段1已持久化禁用至下周日 05:00"
+    },
+    "每周逆袭悬赏阶段2应用A筛选": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "每周逆袭悬赏筛选模块": {
+                        "next": [
+                            "[JumpBack]每周逆袭悬赏A选项",
+                            "[JumpBack]每周逆袭悬赏S选项",
+                            "[JumpBack]每周逆袭悬赏SS+选项",
+                            "每周逆袭悬赏抢悬赏模块"
+                        ]
+                    },
+                    "每周逆袭悬赏A选项": {
+                        "template": "召令悬赏未选择.png"
+                    },
+                    "每周逆袭悬赏S选项": {
+                        "template": "召令悬赏已选择.png"
+                    },
+                    "每周逆袭悬赏需要刷逆袭A": {
+                        "enable": true,
+                        "enabled": true
+                    },
+                    "每周逆袭悬赏需要刷逆袭S": {
+                        "enable": false,
+                        "enabled": false
+                    },
+                    "每周逆袭悬赏需要刷逆袭SS+": {
+                        "enable": false,
+                        "enabled": false
+                    }
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "每周逆袭悬赏阶段2仍有概率掉落",
+            "每周逆袭悬赏阶段2已无概率掉落"
+        ]
+    },
+    "每周逆袭悬赏阶段2完成禁用": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "每周逆袭悬赏阶段2进行中"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "登记每周逆袭悬赏阶段2每周完成"
+        ]
+    },
+    "登记每周逆袭悬赏阶段2每周完成": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "每周逆袭悬赏entry",
+                    "node": "每周逆袭悬赏阶段2进行中",
+                    "enabled": false,
+                    "valid_until": "next_weekly_reset",
+                    "weekday": 6
+                }
+            }
+        },
+        "next": [
+            "每周逆袭悬赏任务检查模块"
+        ],
+        "focus": "阶段2已持久化禁用至下周日 05:00"
+    },
+    "每周逆袭悬赏阶段3应用S筛选": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "每周逆袭悬赏筛选模块": {
+                        "next": [
+                            "[JumpBack]每周逆袭悬赏S选项",
+                            "[JumpBack]每周逆袭悬赏A选项",
+                            "[JumpBack]每周逆袭悬赏SS+选项",
+                            "每周逆袭悬赏抢悬赏模块"
+                        ]
+                    },
+                    "每周逆袭悬赏A选项": {
+                        "template": "召令悬赏已选择.png"
+                    },
+                    "每周逆袭悬赏S选项": {
+                        "template": "召令悬赏未选择.png"
+                    },
+                    "每周逆袭悬赏需要刷逆袭A": {
+                        "enable": false,
+                        "enabled": false
+                    },
+                    "每周逆袭悬赏需要刷逆袭S": {
+                        "enable": true,
+                        "enabled": true
+                    },
+                    "每周逆袭悬赏需要刷逆袭SS+": {
+                        "enable": false,
+                        "enabled": false
+                    }
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "每周逆袭悬赏阶段3仍有概率掉落",
+            "每周逆袭悬赏阶段3已无概率掉落"
+        ]
+    },
+    "每周逆袭悬赏阶段3完成禁用": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "每周逆袭悬赏阶段3进行中"
+                }
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "登记每周逆袭悬赏阶段3每周完成"
+        ]
+    },
+    "登记每周逆袭悬赏阶段3每周完成": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "每周逆袭悬赏entry",
+                    "node": "每周逆袭悬赏阶段3进行中",
+                    "enabled": false,
+                    "valid_until": "next_weekly_reset",
+                    "weekday": 6
+                }
+            }
+        },
+        "next": [
+            "每周逆袭悬赏任务完成"
+        ],
+        "focus": "阶段3已持久化禁用至下周日 05:00，每周逆袭结束"
     }
 }

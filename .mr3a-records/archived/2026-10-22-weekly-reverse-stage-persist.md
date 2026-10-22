@@ -1,0 +1,34 @@
+# 每周逆袭三段独立持久化；每日逆袭整单次日禁用
+
+## 需求
+
+- 每日类整单完成后持久化禁用到次日 05:00（`每日悬赏` 原本已有；`每日逆袭悬赏` 补上）。
+- 每周逆袭三个阶段各自独立记录，完成后禁用到**下周日 05:00**（`weekday: 6`）。
+
+## 实现（对齐镜界百器多子节点）
+
+三段门控节点默认均 `enabled`：
+
+- `每周逆袭悬赏阶段1进行中` / `阶段2进行中` / `阶段3进行中`
+
+`任务检查模块` next：`阶段1 → 阶段2 → 阶段3 → 全部阶段已完成`。  
+未完成的门控 DirectHit 优先命中；已 `DisableNode` / 持久化禁用的跳过。
+
+每阶段完成：
+
+1. `DisableNode` 本阶段门控（本会话立刻跳过）
+2. `SetManagedTaskPersistentState`（`entry: 每周逆袭悬赏entry`，`node: 阶段N进行中`，`valid_until: next_weekly_reset`，`weekday: 6`）
+3. 阶段1/2 回 `任务检查模块` 进下一段；阶段3 走 `任务完成`
+
+进段时用 `NodeOverride` 切筛选/接队（阶段1/3=S，阶段2=A），不再用「切入阶段」临时改门控 enable。
+
+选项：
+
+- 逆袭A和逆袭S：三门控全开
+- 仅逆袭A：只开阶段2
+- 仅逆袭S：开阶段1+3（检查时自动跳过阶段2）
+
+## 验证
+
+- `test_weekly_bounty_three_stage_stop_logic`
+- `test_daily_completion_registration_is_only_on_explicit_success_paths`（含每日逆袭整单 + 三阶段登记）

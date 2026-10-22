@@ -75,3 +75,5 @@ Agent 启动终端的大块乱码已确认是截图头被 Waydroid `amdgpu.ids` 
 2026-10-22：每周逆袭悬赏按藏宝图同款一小时安全点让出（主页/仍在主页/战后回页；不挂刷新热路径）。流水线后续上游可能改，合并时对照 archived。详见 `archived/2026-10-22-weekly-bounty-hourly-yield.md`。同日补结算截图（同悬赏令）；每日悬赏 / S_SS+ / 每周逆袭 / 每日逆袭（三支）`burst_gap` 统一 30s。
 
 2026-10-22：每周逆袭「逆袭A和逆袭S」改为三段停判：S奖励上限 → A概率掉落 → S概率掉落；仅A/仅S为子阶段。详见 `archived/2026-10-22-weekly-reverse-three-stage-stop.md`。
+
+2026-10-22：每周逆袭三段按镜界百器同款独立 `SetManagedTaskPersistentState` 至下周日 05:00；每日逆袭整单完成后禁用到次日 05:00（每日悬赏原本已有）。详见 `archived/2026-10-22-weekly-reverse-stage-persist.md`。
