@@ -125,6 +125,168 @@ class PipelineGuardTest(unittest.TestCase):
         self.assertNotIn("神秘商店刷新后列表截图", pipeline)
         self.assertNotIn("next", pipeline["重置节点神秘商店商品7节点计数器"])
 
+    def test_daily_reverse_brush_uses_prob_drop_presence(self):
+        """未刷出：概率掉落+上限横幅都在；已刷出：只剩上限。必须先认概率掉落再判完成。"""
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "每日逆袭悬赏.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            pipeline["每日逆袭悬赏刷出A在队伍页面"]["next"],
+            [
+                "每日逆袭悬赏刷出A识别到概率掉落",
+                "每日逆袭悬赏刷出自己的逆袭A已完成",
+            ],
+        )
+        drop = pipeline["每日逆袭悬赏刷出A识别到概率掉落"]["recognition"]["param"]
+        self.assertIn("概率掉落", drop["expected"])
+        px, py, pw, ph = drop["roi"]
+        # 只扫顶栏小标签，避开下方上限横幅，避免 OCR 串台
+        self.assertLessEqual(py + ph, 65)
+        self.assertLess(pw, 150)
+
+        done = pipeline["每日逆袭悬赏刷出自己的逆袭A已完成"]
+        self.assertNotEqual(done.get("enabled"), False)
+        self.assertIn(
+            "已达到每日悬赏奖励次数上限",
+            done["recognition"]["param"]["expected"],
+        )
+        dx, dy, dw, dh = done["recognition"]["param"]["roi"]
+        self.assertGreaterEqual(dy, 45)
+        self.assertLessEqual(dy + dh, 110)
+        # 完成 ROI 与概率掉落 ROI 纵向错开
+        self.assertGreaterEqual(dy, py + ph)
+
+    def test_weekly_bounty_filter_selects_wanted_before_deselect(self):
+        """先勾上目标难度，再取消其它；避免游戏要求至少勾一项时卡死。"""
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "每周逆袭悬赏.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            pipeline["每周逆袭悬赏筛选模块"]["next"],
+            [
+                "[JumpBack]每周逆袭悬赏S选项",
+                "[JumpBack]每周逆袭悬赏A选项",
+                "[JumpBack]每周逆袭悬赏SS+选项",
+                "每周逆袭悬赏抢悬赏模块",
+            ],
+        )
+        tasks = json.loads(
+            (RESOURCE / "tasks" / "限时活动.json").read_text(encoding="utf-8")
+        )
+        boss_opt = tasks["option"]["选择要打的逆袭boss"]
+        self.assertEqual(boss_opt["default_case"], "逆袭A和逆袭S")
+        cases = {
+            case["name"]: case["pipeline_override"]
+            for case in boss_opt["cases"]
+        }
+        # 默认 / 仅 S / A+S 起步都是只刷 S；仅 A 起步只刷 A
+        self.assertEqual(
+            cases["仅逆袭A"]["每周逆袭悬赏筛选模块"]["next"],
+            [
+                "[JumpBack]每周逆袭悬赏A选项",
+                "[JumpBack]每周逆袭悬赏S选项",
+                "[JumpBack]每周逆袭悬赏SS+选项",
+                "每周逆袭悬赏抢悬赏模块",
+            ],
+        )
+        for case_name in ("仅逆袭S", "逆袭A和逆袭S"):
+            self.assertEqual(
+                cases[case_name]["每周逆袭悬赏筛选模块"]["next"],
+                pipeline["每周逆袭悬赏筛选模块"]["next"],
+                case_name,
+            )
+        for case_name, want_a, want_s in (
+            ("仅逆袭A", True, False),
+            ("仅逆袭S", False, True),
+            ("逆袭A和逆袭S", False, True),
+        ):
+            for node, want in (
+                ("每周逆袭悬赏需要刷逆袭A", want_a),
+                ("每周逆袭悬赏需要刷逆袭S", want_s),
+                ("每周逆袭悬赏需要刷逆袭SS+", False),
+            ):
+                patch = cases[case_name][node]
+                self.assertEqual(patch.get("enable"), want, case_name)
+                self.assertEqual(patch.get("enabled"), want, case_name)
+
+    def test_weekly_bounty_three_stage_stop_logic(self):
+        """S奖励上限 → A概率掉落 → S概率掉落；每阶段只认自己的停判。"""
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "每周逆袭悬赏.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            pipeline["每周逆袭悬赏任务检查模块"]["next"],
+            [
+                "每周逆袭悬赏阶段1进行中",
+                "每周逆袭悬赏阶段2进行中",
+                "每周逆袭悬赏阶段3进行中",
+            ],
+        )
+        self.assertTrue(pipeline["每周逆袭悬赏阶段1进行中"].get("enabled", True))
+        self.assertFalse(pipeline["每周逆袭悬赏阶段2进行中"].get("enabled", True))
+        self.assertFalse(pipeline["每周逆袭悬赏阶段3进行中"].get("enabled", True))
+
+        cap = pipeline["每周逆袭悬赏阶段1识别到奖励上限"]["recognition"]["param"]
+        self.assertEqual(cap["roi"], [570, 50, 360, 50])
+        self.assertIn("已达到每日悬赏奖励次数上限", cap["expected"])
+        self.assertEqual(
+            pipeline["每周逆袭悬赏阶段1识别到奖励上限"]["next"],
+            ["每周逆袭悬赏切入阶段2"],
+        )
+
+        drop_roi = [560, 15, 100, 35]
+        for stage in ("阶段2", "阶段3"):
+            still = pipeline[f"每周逆袭悬赏{stage}仍有概率掉落"]["recognition"]["param"]
+            self.assertEqual(still["roi"], drop_roi)
+            self.assertIn("概率掉落", still["expected"])
+            done = pipeline[f"每周逆袭悬赏{stage}已无概率掉落"]["recognition"]["param"]
+            self.assertEqual(done["roi"], [570, 50, 360, 50])
+            self.assertIn("已达到每日悬赏奖励次数上限", done["expected"])
+
+        self.assertEqual(
+            pipeline["每周逆袭悬赏阶段2已无概率掉落"]["next"],
+            ["每周逆袭悬赏切入阶段3"],
+        )
+        self.assertEqual(
+            pipeline["每周逆袭悬赏阶段3已无概率掉落"]["next"],
+            ["每周逆袭悬赏任务完成"],
+        )
+
+        # 切入阶段时用 NodeOverride 切换筛选/接队
+        to2 = pipeline["每周逆袭悬赏切入阶段2"]["action"]["param"][
+            "custom_action_param"
+        ]
+        self.assertEqual(to2["每周逆袭悬赏需要刷逆袭A"]["enabled"], True)
+        self.assertEqual(to2["每周逆袭悬赏需要刷逆袭S"]["enabled"], False)
+        self.assertEqual(
+            to2["每周逆袭悬赏筛选模块"]["next"][0],
+            "[JumpBack]每周逆袭悬赏A选项",
+        )
+        to3 = pipeline["每周逆袭悬赏切入阶段3"]["action"]["param"][
+            "custom_action_param"
+        ]
+        self.assertEqual(to3["每周逆袭悬赏需要刷逆袭A"]["enabled"], False)
+        self.assertEqual(to3["每周逆袭悬赏需要刷逆袭S"]["enabled"], True)
+
+        tasks = json.loads(
+            (RESOURCE / "tasks" / "限时活动.json").read_text(encoding="utf-8")
+        )
+        cases = {
+            case["name"]: case["pipeline_override"]
+            for case in tasks["option"]["选择要打的逆袭boss"]["cases"]
+        }
+        # 仅 A：直接阶段2，刷完结束
+        self.assertTrue(cases["仅逆袭A"]["每周逆袭悬赏阶段2进行中"]["enabled"])
+        self.assertEqual(
+            cases["仅逆袭A"]["每周逆袭悬赏阶段2已无概率掉落"]["next"],
+            ["每周逆袭悬赏任务完成"],
+        )
+        # 仅 S：上限后跳过 A，进阶段3
+        self.assertEqual(
+            cases["仅逆袭S"]["每周逆袭悬赏阶段1识别到奖励上限"]["next"],
+            ["每周逆袭悬赏切入阶段3"],
+        )
+
     def test_bounty_settlement_screenshots_use_30s_burst_gap(self):
         """悬赏类结算截图同场覆盖窗口统一 30s；每周逆袭与每日悬赏同挂法。"""
         cases = (
