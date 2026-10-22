@@ -125,6 +125,34 @@ class PipelineGuardTest(unittest.TestCase):
         self.assertNotIn("神秘商店刷新后列表截图", pipeline)
         self.assertNotIn("next", pipeline["重置节点神秘商店商品7节点计数器"])
 
+    def test_bounty_settlement_screenshots_use_30s_burst_gap(self):
+        """悬赏类结算截图同场覆盖窗口统一 30s；每周逆袭与每日悬赏同挂法。"""
+        cases = (
+            ("每日悬赏.json", "每日悬赏结算截图", "每日悬赏结算确定", "每日悬赏"),
+            ("S_SS+.json", "S_SS+悬赏结算截图", "S_SS+悬赏结算确定", "S_SS+"),
+            (
+                "每周逆袭悬赏.json",
+                "每周逆袭悬赏悬赏结算截图",
+                "每周逆袭悬赏悬赏结算确定",
+                "每周逆袭悬赏",
+            ),
+        )
+        for filename, shot_name, click_name, shot_dir in cases:
+            with self.subTest(pipeline=filename):
+                pipeline = json.loads(
+                    (RESOURCE / "pipeline" / filename).read_text(encoding="utf-8")
+                )
+                shot = pipeline[shot_name]
+                param = shot["action"]["param"]
+                self.assertEqual(param["custom_action"], "SaveRewardScreenshot")
+                cap = param["custom_action_param"]
+                self.assertEqual(cap["dir"], shot_dir)
+                self.assertTrue(cap["burst_replace"])
+                self.assertEqual(cap["burst_gap_sec"], 30)
+                self.assertEqual(shot["next"], [click_name])
+                self.assertEqual(pipeline[click_name]["recognition"], "DirectHit")
+                self.assertEqual(pipeline[click_name]["action"]["type"], "Click")
+
     def test_default_timeout_and_error_route_are_explicit(self):
         defaults = json.loads(
             (RESOURCE / "default_pipeline.json").read_text(encoding="utf-8")

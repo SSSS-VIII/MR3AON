@@ -910,7 +910,7 @@
                 "custom_action_param": {
                     "dir": "S_SS+",
                     "burst_replace": true,
-                    "burst_gap_sec": 10
+                    "burst_gap_sec": 30
                 }
             }
         },

@@ -587,7 +587,7 @@
             }
         }
     },
-    "每周逆袭悬赏悬赏结算确定": {
+    "每周逆袭悬赏悬赏结算截图": {
         "recognition": {
             "type": "OCR",
             "param": {
@@ -603,7 +603,34 @@
             }
         },
         "action": {
-            "type": "Click"
+            "type": "Custom",
+            "param": {
+                "custom_action": "SaveRewardScreenshot",
+                "custom_action_param": {
+                    "dir": "每周逆袭悬赏",
+                    "burst_replace": true,
+                    "burst_gap_sec": 30
+                }
+            }
+        },
+        "next": [
+            "每周逆袭悬赏悬赏结算确定"
+        ],
+        "rate_limit": 3000,
+        "focus": "结算确认：截图存奖励记录"
+    },
+    "每周逆袭悬赏悬赏结算确定": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    521,
+                    408,
+                    246,
+                    309
+                ]
+            }
         }
     },
     "每周逆袭悬赏悬赏识别到进入了战斗": {
@@ -626,7 +653,7 @@
         "timeout": 480000,
         "next": [
             "[JumpBack]每周逆袭悬赏悬赏调用fight",
-            "[JumpBack]每周逆袭悬赏悬赏结算确定",
+            "[JumpBack]每周逆袭悬赏悬赏结算截图",
             "[JumpBack]每周逆袭悬赏悬赏点击空白处关闭",
             "[JumpBack]每周逆袭悬赏悬赏点到了个人信息",
             "每周逆袭悬赏悬赏进入战斗后回到了逆袭悬赏页面",

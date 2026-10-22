@@ -18,6 +18,10 @@
 
 - `tests.test_pipeline_guards.PipelineGuardTest.test_weekly_bounty_yields_only_from_safe_page_nodes`
 
+## 后续（同日）
+
+结算确认已按悬赏令同款挂 `每周逆袭悬赏悬赏结算截图` → DirectHit `结算确定`（`dir=每周逆袭悬赏`，`burst_gap_sec=30`）。战斗 next 走截图节点，不再直接点确定。
+
 ## 上游注意
 
 这一块（每周逆袭悬赏流水线 / 筛选与抢队核心环）后续上游可能有更新。合并时优先核对：
@@ -25,3 +29,4 @@
 - 上述三个安全点的 `next` 是否仍含 `每周逆袭悬赏检查让出调度信号`
 - `_TIME_SLICE_SECONDS["每周逆袭悬赏entry"]` 是否还在
 - 不要把让出检查加回「点击刷新 → 狂点加入」热路径
+- 战斗链仍应是 `…结算截图` → DirectHit `结算确定`，勿被上游纯 Click 确定盖掉
