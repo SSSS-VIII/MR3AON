@@ -275,11 +275,13 @@ class PipelineGuardTest(unittest.TestCase):
             ]["param"]
             self.assertEqual(still["roi"], drop["roi"])
             self.assertIn("概率掉落", still["expected"])
-            done = pipeline[f"每周逆袭悬赏准备页已无概率掉落_阶段{stage}"][
-                "recognition"
-            ]["param"]
-            self.assertEqual(done["roi"], cap["roi"])
-            self.assertIn("次数上限", done["expected"])
+            # 掉落阶段：无概率掉落即结束，不认次数上限（那是阶段1的事）
+            done = pipeline[f"每周逆袭悬赏准备页已无概率掉落_阶段{stage}"]
+            self.assertEqual(done.get("recognition"), "DirectHit")
+            self.assertEqual(
+                done["next"],
+                [f"每周逆袭悬赏阶段{stage}完成禁用"],
+            )
 
         leave = [
             "每周逆袭悬赏检查悬赏不匹配退出队伍回到悬赏页并重置筛选按钮"
