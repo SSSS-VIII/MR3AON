@@ -436,7 +436,7 @@
         "post_delay": 1000
     },
     "每日逆袭悬赏刷出A组队超时退出悬赏组队": {},
-    "每日逆袭悬赏刷出A结算确定": {
+    "每日逆袭悬赏刷出A结算截图": {
         "recognition": {
             "type": "OCR",
             "param": {
@@ -452,9 +452,35 @@
             }
         },
         "action": {
-            "type": "Click"
+            "type": "Custom",
+            "param": {
+                "custom_action": "SaveRewardScreenshot",
+                "custom_action_param": {
+                    "dir": "每日逆袭悬赏",
+                    "burst_replace": true,
+                    "burst_gap_sec": 30
+                }
+            }
         },
-        "rate_limit": 3000
+        "next": [
+            "每日逆袭悬赏刷出A结算确定"
+        ],
+        "rate_limit": 3000,
+        "focus": "结算确认：截图存奖励记录"
+    },
+    "每日逆袭悬赏刷出A结算确定": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    521,
+                    408,
+                    246,
+                    309
+                ]
+            }
+        }
     },
     "每日逆袭悬赏刷出A识别到概率掉落": {
         "recognition": {
@@ -497,7 +523,7 @@
         "timeout": 480000,
         "next": [
             "[JumpBack]每日逆袭悬赏刷出A调用fight",
-            "[JumpBack]每日逆袭悬赏刷出A结算确定",
+            "[JumpBack]每日逆袭悬赏刷出A结算截图",
             "[JumpBack]每日逆袭悬赏刷出A点击空白处关闭",
             "[JumpBack]每日逆袭悬赏刷出A点到了个人信息",
             "每日逆袭悬赏刷出A进入战斗后回到悬赏令页面",
@@ -893,7 +919,7 @@
             }
         }
     },
-    "每日逆袭悬赏悬赏结算确定": {
+    "每日逆袭悬赏悬赏结算截图": {
         "recognition": {
             "type": "OCR",
             "param": {
@@ -909,7 +935,34 @@
             }
         },
         "action": {
-            "type": "Click"
+            "type": "Custom",
+            "param": {
+                "custom_action": "SaveRewardScreenshot",
+                "custom_action_param": {
+                    "dir": "每日逆袭悬赏",
+                    "burst_replace": true,
+                    "burst_gap_sec": 30
+                }
+            }
+        },
+        "next": [
+            "每日逆袭悬赏悬赏结算确定"
+        ],
+        "rate_limit": 3000,
+        "focus": "结算确认：截图存奖励记录"
+    },
+    "每日逆袭悬赏悬赏结算确定": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    521,
+                    408,
+                    246,
+                    309
+                ]
+            }
         }
     },
     "每日逆袭悬赏悬赏识别到进入了战斗": {
@@ -932,7 +985,7 @@
         "timeout": 480000,
         "next": [
             "[JumpBack]每日逆袭悬赏悬赏调用fight",
-            "[JumpBack]每日逆袭悬赏悬赏结算确定",
+            "[JumpBack]每日逆袭悬赏悬赏结算截图",
             "[JumpBack]每日逆袭悬赏悬赏点击空白处关闭",
             "[JumpBack]每日逆袭悬赏悬赏点到了个人信息",
             "每日逆袭悬赏悬赏进入战斗后回到了逆袭悬赏页面",
@@ -1428,7 +1481,7 @@
             "任意位置开始每日逆袭悬赏"
         ]
     },
-    "每日逆袭悬赏清A结算确定": {
+    "每日逆袭悬赏清A结算截图": {
         "recognition": {
             "type": "OCR",
             "param": {
@@ -1444,9 +1497,35 @@
             }
         },
         "action": {
-            "type": "Click"
+            "type": "Custom",
+            "param": {
+                "custom_action": "SaveRewardScreenshot",
+                "custom_action_param": {
+                    "dir": "每日逆袭悬赏",
+                    "burst_replace": true,
+                    "burst_gap_sec": 30
+                }
+            }
         },
-        "rate_limit": 3000
+        "next": [
+            "每日逆袭悬赏清A结算确定"
+        ],
+        "rate_limit": 3000,
+        "focus": "结算确认：截图存奖励记录"
+    },
+    "每日逆袭悬赏清A结算确定": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    521,
+                    408,
+                    246,
+                    309
+                ]
+            }
+        }
     },
     "每日逆袭悬赏清A识别到进入了战斗": {
         "recognition": {
@@ -1468,7 +1547,7 @@
         "timeout": 480000,
         "next": [
             "[JumpBack]每日逆袭悬赏清A调用fight",
-            "[JumpBack]每日逆袭悬赏清A结算确定",
+            "[JumpBack]每日逆袭悬赏清A结算截图",
             "[JumpBack]每日逆袭悬赏清A点击空白处关闭",
             "[JumpBack]每日逆袭悬赏清A点到了个人信息",
             "每日逆袭悬赏清A进入战斗后回到悬赏令页面",

@@ -136,6 +136,24 @@ class PipelineGuardTest(unittest.TestCase):
                 "每周逆袭悬赏悬赏结算确定",
                 "每周逆袭悬赏",
             ),
+            (
+                "每日逆袭悬赏.json",
+                "每日逆袭悬赏刷出A结算截图",
+                "每日逆袭悬赏刷出A结算确定",
+                "每日逆袭悬赏",
+            ),
+            (
+                "每日逆袭悬赏.json",
+                "每日逆袭悬赏悬赏结算截图",
+                "每日逆袭悬赏悬赏结算确定",
+                "每日逆袭悬赏",
+            ),
+            (
+                "每日逆袭悬赏.json",
+                "每日逆袭悬赏清A结算截图",
+                "每日逆袭悬赏清A结算确定",
+                "每日逆袭悬赏",
+            ),
         )
         for filename, shot_name, click_name, shot_dir in cases:
             with self.subTest(pipeline=filename):
