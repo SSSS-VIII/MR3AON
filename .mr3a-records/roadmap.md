@@ -79,3 +79,5 @@ Agent 启动终端的大块乱码已确认是截图头被 Waydroid `amdgpu.ids` 
 2026-10-22：每周逆袭三段按镜界百器同款独立 `SetManagedTaskPersistentState` 至下周日 05:00；每日逆袭整单完成后禁用到次日 05:00（每日悬赏原本已有）。详见 `archived/2026-10-22-weekly-reverse-stage-persist.md`。
 
 同日：每周逆袭顶栏停判改为宽匹配「次数上限」。
+
+同日：每周逆袭阶段停判改到准备开战页（对齐每日逆袭刷出A顶栏）；列表页只切筛选。详见 `archived/2026-10-22-weekly-reverse-stage-persist.md`。
