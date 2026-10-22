@@ -32,3 +32,7 @@
 
 - `test_weekly_bounty_three_stage_stop_logic`
 - `test_daily_completion_registration_is_only_on_explicit_success_paths`（含每日逆袭整单 + 三阶段登记）
+
+## 同日修正
+
+阶段1停判与阶段2/3「已无概率掉落」确认横幅，OCR 由整句「已达到每日悬赏奖励次数上限」改为宽匹配「次数上限」。

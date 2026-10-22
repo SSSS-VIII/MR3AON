@@ -248,7 +248,7 @@ class PipelineGuardTest(unittest.TestCase):
 
         cap = pipeline["每周逆袭悬赏阶段1识别到奖励上限"]["recognition"]["param"]
         self.assertEqual(cap["roi"], [570, 50, 360, 50])
-        self.assertIn("已达到每日悬赏奖励次数上限", cap["expected"])
+        self.assertIn("次数上限", cap["expected"])
         self.assertEqual(
             pipeline["每周逆袭悬赏阶段1识别到奖励上限"]["next"],
             ["每周逆袭悬赏阶段1完成禁用"],
