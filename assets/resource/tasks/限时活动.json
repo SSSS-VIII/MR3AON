@@ -71,7 +71,7 @@
             "entry": "每周逆袭悬赏entry",
             "option": [
                 "选择要打的逆袭boss",
-                "每周逆袭悬赏刷新方式"
+                "残卷兑换进出刷新"
             ],
             "group": [
                 "限时活动"
@@ -519,15 +519,15 @@
                 }
             ]
         },
-        "每周逆袭悬赏刷新方式": {
-            "type": "select",
-            "label": "列表刷新方式",
-            "description": "残卷兑换进出可绕过刷新按钮冷却且不改筛选；若官方修复该行为可改回右上角刷新。",
-            "default_case": "刷新按钮",
+        "残卷兑换进出刷新": {
+            "type": "switch",
+            "label": "残卷兑换进出刷新（Yes=无CD残卷；No=右上角刷新）",
+            "description": "Yes：进出残卷兑换绕过刷新冷却且不改筛选。No：点右上角刷新按钮（有CD）。",
+            "default_case": "No",
             "cases": [
                 {
-                    "name": "残卷兑换进出",
-                    "label": "残卷兑换进出（无CD）",
+                    "name": "Yes",
+                    "label": "开启",
                     "pipeline_override": {
                         "每周逆袭悬赏执行刷新": {
                             "next": [
@@ -537,8 +537,8 @@
                     }
                 },
                 {
-                    "name": "刷新按钮",
-                    "label": "右上角刷新按钮（有CD）",
+                    "name": "No",
+                    "label": "关闭",
                     "pipeline_override": {
                         "每周逆袭悬赏执行刷新": {
                             "next": [

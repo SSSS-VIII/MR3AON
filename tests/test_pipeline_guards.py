@@ -288,16 +288,17 @@ class PipelineGuardTest(unittest.TestCase):
             )
 
         task = next(t for t in tasks["task"] if t["name"] == "每周逆袭悬赏")
-        self.assertIn("每周逆袭悬赏刷新方式", task["option"])
-        opt = tasks["option"]["每周逆袭悬赏刷新方式"]
-        self.assertEqual(opt["default_case"], "刷新按钮")
+        self.assertIn("残卷兑换进出刷新", task["option"])
+        opt = tasks["option"]["残卷兑换进出刷新"]
+        self.assertEqual(opt["type"], "switch")
+        self.assertEqual(opt["default_case"], "No")
         cases = {c["name"]: c["pipeline_override"] for c in opt["cases"]}
         self.assertEqual(
-            cases["残卷兑换进出"]["每周逆袭悬赏执行刷新"]["next"],
+            cases["Yes"]["每周逆袭悬赏执行刷新"]["next"],
             ["每周逆袭悬赏残卷兑换刷新"],
         )
         self.assertEqual(
-            cases["刷新按钮"]["每周逆袭悬赏执行刷新"]["next"],
+            cases["No"]["每周逆袭悬赏执行刷新"]["next"],
             ["每周逆袭悬赏点击刷新"],
         )
         self.assertEqual(
