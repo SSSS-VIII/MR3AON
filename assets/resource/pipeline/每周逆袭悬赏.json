@@ -107,8 +107,7 @@
         "post_delay": 0,
         "next": [
             "每周逆袭悬赏可以点击准备"
-        ],
-        "enable": false
+        ]
     },
     "每周逆袭悬赏需要刷逆袭S": {
         "enabled": true,
@@ -116,8 +115,7 @@
         "post_delay": 0,
         "next": [
             "每周逆袭悬赏可以点击准备"
-        ],
-        "enable": true
+        ]
     },
     "每周逆袭悬赏不需要刷逆袭A": {
         "pre_delay": 0,
@@ -139,8 +137,7 @@
         "post_delay": 0,
         "next": [
             "每周逆袭悬赏可以点击准备"
-        ],
-        "enable": false
+        ]
     },
     "每周逆袭悬赏不需要刷逆袭SS+": {
         "pre_delay": 0,
@@ -1122,7 +1119,6 @@
         ]
     },
     "每周逆袭悬赏阶段1进行中": {
-        "enable": true,
         "enabled": true,
         "pre_delay": 0,
         "post_delay": 0,
@@ -1132,7 +1128,6 @@
         "focus": "阶段1：刷S至奖励上限（停判在准备页）"
     },
     "每周逆袭悬赏阶段2进行中": {
-        "enable": true,
         "enabled": true,
         "pre_delay": 0,
         "post_delay": 0,
@@ -1142,7 +1137,6 @@
         "focus": "阶段2：刷A至概率掉落（停判在准备页）"
     },
     "每周逆袭悬赏阶段3进行中": {
-        "enable": true,
         "enabled": true,
         "pre_delay": 0,
         "post_delay": 0,
@@ -1181,15 +1175,12 @@
                         "template": "召令悬赏未选择.png"
                     },
                     "每周逆袭悬赏需要刷逆袭A": {
-                        "enable": false,
                         "enabled": false
                     },
                     "每周逆袭悬赏需要刷逆袭S": {
-                        "enable": true,
                         "enabled": true
                     },
                     "每周逆袭悬赏需要刷逆袭SS+": {
-                        "enable": false,
                         "enabled": false
                     },
                     "每周逆袭悬赏识别到准备": {
@@ -1266,15 +1257,12 @@
                         "template": "召令悬赏已选择.png"
                     },
                     "每周逆袭悬赏需要刷逆袭A": {
-                        "enable": true,
                         "enabled": true
                     },
                     "每周逆袭悬赏需要刷逆袭S": {
-                        "enable": false,
                         "enabled": false
                     },
                     "每周逆袭悬赏需要刷逆袭SS+": {
-                        "enable": false,
                         "enabled": false
                     },
                     "每周逆袭悬赏识别到准备": {
@@ -1352,15 +1340,12 @@
                         "template": "召令悬赏未选择.png"
                     },
                     "每周逆袭悬赏需要刷逆袭A": {
-                        "enable": false,
                         "enabled": false
                     },
                     "每周逆袭悬赏需要刷逆袭S": {
-                        "enable": true,
                         "enabled": true
                     },
                     "每周逆袭悬赏需要刷逆袭SS+": {
-                        "enable": false,
                         "enabled": false
                     },
                     "每周逆袭悬赏识别到准备": {
