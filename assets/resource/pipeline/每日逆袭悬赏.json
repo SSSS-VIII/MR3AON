@@ -469,17 +469,22 @@
         "focus": "结算确认：截图存奖励记录"
     },
     "每日逆袭悬赏刷出A结算确定": {
-        "recognition": "DirectHit",
-        "action": {
-            "type": "Click",
+        "recognition": {
+            "type": "OCR",
             "param": {
-                "target": [
+                "roi": [
                     521,
                     408,
                     246,
                     309
+                ],
+                "expected": [
+                    "确定|下一页"
                 ]
             }
+        },
+        "action": {
+            "type": "Click"
         }
     },
     "每日逆袭悬赏刷出A识别到概率掉落": {
@@ -965,17 +970,22 @@
         "focus": "结算确认：截图存奖励记录"
     },
     "每日逆袭悬赏悬赏结算确定": {
-        "recognition": "DirectHit",
-        "action": {
-            "type": "Click",
+        "recognition": {
+            "type": "OCR",
             "param": {
-                "target": [
+                "roi": [
                     521,
                     408,
                     246,
                     309
+                ],
+                "expected": [
+                    "确定|下一页"
                 ]
             }
+        },
+        "action": {
+            "type": "Click"
         }
     },
     "每日逆袭悬赏悬赏识别到进入了战斗": {
@@ -1527,17 +1537,22 @@
         "focus": "结算确认：截图存奖励记录"
     },
     "每日逆袭悬赏清A结算确定": {
-        "recognition": "DirectHit",
-        "action": {
-            "type": "Click",
+        "recognition": {
+            "type": "OCR",
             "param": {
-                "target": [
+                "roi": [
                     521,
                     408,
                     246,
                     309
+                ],
+                "expected": [
+                    "确定|下一页"
                 ]
             }
+        },
+        "action": {
+            "type": "Click"
         }
     },
     "每日逆袭悬赏清A识别到进入了战斗": {

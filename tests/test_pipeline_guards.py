@@ -227,6 +227,84 @@ class PipelineGuardTest(unittest.TestCase):
                 self.assertEqual(patch.get("enable"), want, case_name)
                 self.assertEqual(patch.get("enabled"), want, case_name)
 
+    def test_weekly_bounty_refresh_mode_button_default(self):
+        """默认右上角刷新；残卷用标题模板确认进店；黑屏结束再狂点×8。"""
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "每周逆袭悬赏.json").read_text(encoding="utf-8")
+        )
+        tasks = json.loads(
+            (RESOURCE / "tasks" / "限时活动.json").read_text(encoding="utf-8")
+        )
+        core_next = pipeline["每周逆袭悬赏抢悬赏核心节点"]["next"]
+        self.assertIn("[JumpBack]每周逆袭悬赏执行刷新", core_next)
+        self.assertNotIn("[JumpBack]每周逆袭悬赏点击刷新", core_next)
+        self.assertEqual(
+            pipeline["每周逆袭悬赏执行刷新"]["next"],
+            ["每周逆袭悬赏点击刷新"],
+        )
+        self.assertEqual(
+            pipeline["每周逆袭悬赏队伍已解散"]["next"][0],
+            "每周逆袭悬赏执行刷新",
+        )
+        # 残卷：列表页有「刷新」才点残卷；进店用大块标题模板；黑屏结束再狂点
+        fragment = pipeline["每周逆袭悬赏残卷兑换刷新"]
+        self.assertEqual(fragment["recognition"]["type"], "OCR")
+        self.assertEqual(
+            fragment["recognition"]["param"]["expected"],
+            ["刷新"],
+        )
+        self.assertEqual(
+            fragment["action"]["param"]["target"],
+            [1120, 55, 1, 1],
+        )
+        shop_back = pipeline["每周逆袭悬赏残卷商店内点返回"]
+        self.assertEqual(shop_back["recognition"]["type"], "TemplateMatch")
+        self.assertEqual(
+            shop_back["recognition"]["param"]["template"],
+            ["每周逆袭残卷兑换标题.png"],
+        )
+        wrong_shop = pipeline["每周逆袭悬赏误入悬赏令商店点返回"]
+        self.assertEqual(wrong_shop["recognition"]["type"], "TemplateMatch")
+        wait_black = pipeline["每周逆袭悬赏残卷返回后等到黑屏"]
+        self.assertEqual(wait_black["recognition"]["type"], "ColorMatch")
+        self.assertEqual(
+            wait_black["next"],
+            ["每周逆袭悬赏残卷黑屏结束立刻狂点"],
+        )
+        end_black = pipeline["每周逆袭悬赏残卷黑屏结束立刻狂点"]
+        self.assertTrue(end_black["inverse"])
+        self.assertEqual(
+            end_black["next"],
+            ["每周逆袭悬赏点击刷新后狂点加入队伍"],
+        )
+        self.assertNotIn("每周逆袭悬赏已回到悬赏列表可抢点", pipeline)
+        self.assertNotIn("每周逆袭悬赏刷新后抢点枢纽", pipeline)
+        self.assertNotIn("每周逆袭悬赏盲点加入一次", pipeline)
+        self.assertNotIn("每周逆袭悬赏刷新抢点超时回核心", pipeline)
+        for name in ("每周逆袭残卷兑换标题.png", "每周逆袭悬赏令商店标题.png"):
+            self.assertTrue(
+                (RESOURCE / "image" / name).is_file(),
+                name,
+            )
+
+        task = next(t for t in tasks["task"] if t["name"] == "每周逆袭悬赏")
+        self.assertIn("每周逆袭悬赏刷新方式", task["option"])
+        opt = tasks["option"]["每周逆袭悬赏刷新方式"]
+        self.assertEqual(opt["default_case"], "刷新按钮")
+        cases = {c["name"]: c["pipeline_override"] for c in opt["cases"]}
+        self.assertEqual(
+            cases["残卷兑换进出"]["每周逆袭悬赏执行刷新"]["next"],
+            ["每周逆袭悬赏残卷兑换刷新"],
+        )
+        self.assertEqual(
+            cases["刷新按钮"]["每周逆袭悬赏执行刷新"]["next"],
+            ["每周逆袭悬赏点击刷新"],
+        )
+        self.assertEqual(
+            pipeline["每周逆袭悬赏点击刷新"]["next"],
+            ["每周逆袭悬赏点击刷新后狂点加入队伍"],
+        )
+
     def test_weekly_bounty_three_stage_stop_logic(self):
         """列表页只切筛选；停判在准备页，ROI 与每日逆袭刷出A一致。"""
         pipeline = json.loads(
@@ -382,8 +460,14 @@ class PipelineGuardTest(unittest.TestCase):
                 self.assertTrue(cap["burst_replace"])
                 self.assertEqual(cap["burst_gap_sec"], 30)
                 self.assertEqual(shot["next"], [click_name])
-                self.assertEqual(pipeline[click_name]["recognition"], "DirectHit")
-                self.assertEqual(pipeline[click_name]["action"]["type"], "Click")
+                click = pipeline[click_name]
+                self.assertEqual(click["recognition"]["type"], "OCR")
+                self.assertEqual(
+                    click["recognition"]["param"]["expected"],
+                    ["确定|下一页"],
+                )
+                self.assertEqual(click["action"]["type"], "Click")
+                self.assertNotIn("target", click["action"].get("param", {}))
 
     def test_default_timeout_and_error_route_are_explicit(self):
         defaults = json.loads(
@@ -478,8 +562,12 @@ class PipelineGuardTest(unittest.TestCase):
             with self.subTest(safe_node=safe_node):
                 self.assertIn(signal_node, pipeline[safe_node]["next"])
 
-        # 刷新后要抢速度，不在点击刷新后检查让出
+        # 刷新后要抢速度，不在刷新链路里检查让出
         self.assertNotIn(signal_node, pipeline["每周逆袭悬赏点击刷新"]["next"])
+        self.assertNotIn(signal_node, pipeline["每周逆袭悬赏执行刷新"]["next"])
+        self.assertNotIn(
+            signal_node, pipeline["每周逆袭悬赏点击刷新后狂点加入队伍"].get("next", [])
+        )
         self.assertEqual(
             pipeline["每周逆袭悬赏让出调度已回到主页"]["action"]["type"],
             "StopTask",

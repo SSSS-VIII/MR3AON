@@ -501,11 +501,15 @@
                 }
             }
         },
-        "next": ["每日悬赏完成停止任务"],
+        "next": [
+            "每日悬赏完成停止任务"
+        ],
         "focus": "任务完成：每日悬赏✅"
     },
     "每日悬赏完成停止任务": {
-        "action": {"type": "StopTask"}
+        "action": {
+            "type": "StopTask"
+        }
     },
     "每日悬赏家族组队任务": {
         "pre_delay": 0,
@@ -1180,17 +1184,22 @@
         "focus": "结算确认：截图存奖励记录"
     },
     "每日悬赏结算确定": {
-        "recognition": "DirectHit",
-        "action": {
-            "type": "Click",
+        "recognition": {
+            "type": "OCR",
             "param": {
-                "target": [
+                "roi": [
                     521,
                     408,
                     246,
                     309
+                ],
+                "expected": [
+                    "确定|下一页"
                 ]
             }
+        },
+        "action": {
+            "type": "Click"
         }
     },
     "每日悬赏识别到进入了战斗": {

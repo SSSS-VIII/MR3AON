@@ -920,17 +920,22 @@
         "focus": "结算确认：截图存奖励记录"
     },
     "S_SS+悬赏结算确定": {
-        "recognition": "DirectHit",
-        "action": {
-            "type": "Click",
+        "recognition": {
+            "type": "OCR",
             "param": {
-                "target": [
+                "roi": [
                     521,
                     408,
                     246,
                     309
+                ],
+                "expected": [
+                    "确定|下一页"
                 ]
             }
+        },
+        "action": {
+            "type": "Click"
         }
     },
     "S_SS+悬赏调用fight": {
