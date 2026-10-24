@@ -83,3 +83,7 @@ Agent 启动终端的大块乱码已确认是截图头被 Waydroid `amdgpu.ids` 
 同日：每周逆袭阶段停判改到准备开战页（对齐每日逆袭刷出A顶栏）；列表页只切筛选。详见 `archived/2026-10-22-weekly-reverse-stage-persist.md`。
 
 同日：每周逆袭阶段2/3准备页停判只认概率掉落有无，不认次数上限。
+
+2026-10-24：每周逆袭阶段2/3收尾先认等级再认空掉落；管道去遗留 `enable`；悬赏商店滑程对齐；多人竞速认「看我的吧」+ Agent 防孤儿；3v3 观战等待去重复 on_error。详见 `archived/2026-10-24-misc-pipeline-and-agent.md`。
+
+2026-10-25：每周逆袭可选残卷兑换进出刷新（认刷新页 + 标题模板进店 + 黑屏结束再狂点×8）；悬赏类结算确定改为 OCR 点「确定|下一页」命中框，不再大块 DirectHit。详见 `archived/2026-10-25-weekly-fragment-refresh-and-settlement-click.md`。
