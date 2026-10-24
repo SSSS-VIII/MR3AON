@@ -7,6 +7,8 @@ alwaysApply: true
 
 用户已反复要求。完成功能/修复/行为变化后，**提交代码之前**必须写记录；**不要等用户再说「写记录」**。
 
+注意：若 Cursor 工作区是 `/home/linn` 而不是本仓库根，本文件可能不会注入；家目录另有 `~/.cursor/rules/mr3a-development-records.mdc`，且仓库根有 `AGENTS.md` 互为备份。
+
 ## 提交检查清单（每次 git commit 前）
 
 1. 在 `.mr3a-records/archived/` 新增或更新对应归档（中文；结构：现象或需求、原因、改动、验证）。
