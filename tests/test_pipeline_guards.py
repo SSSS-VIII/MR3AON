@@ -269,13 +269,27 @@ class PipelineGuardTest(unittest.TestCase):
         # 宽匹配次数上限；每日逆袭刷出A 仍用整句，ROI 对齐即可
         self.assertEqual(s1["roi"], cap["roi"])
 
+        level_expected = {2: "80", 3: "90"}
         for stage in (2, 3):
             still = pipeline[f"每周逆袭悬赏准备页仍有概率掉落_阶段{stage}"][
                 "recognition"
             ]["param"]
-            self.assertEqual(still["roi"], drop["roi"])
+            # S 角标更靠右，宽 ROI 盖住 A/S 两种布局
+            self.assertEqual(still["roi"], [560, 10, 360, 45])
             self.assertIn("概率掉落", still["expected"])
-            # 掉落阶段：无概率掉落即结束，不认次数上限（那是阶段1的事）
+            # 收尾：先认到本阶段 boss 等级，再确认无概率掉落（顶栏 OCR 崩成 [] 时不误关）
+            level = pipeline[f"每周逆袭悬赏准备页认出目标等级_阶段{stage}"][
+                "recognition"
+            ]["param"]
+            self.assertEqual(level["roi"], [342, 20, 222, 115])
+            self.assertEqual(level["expected"], [level_expected[stage]])
+            self.assertEqual(
+                pipeline[f"每周逆袭悬赏准备页认出目标等级_阶段{stage}"]["next"],
+                [
+                    f"每周逆袭悬赏准备页仍有概率掉落_阶段{stage}",
+                    f"每周逆袭悬赏准备页已无概率掉落_阶段{stage}",
+                ],
+            )
             done = pipeline[f"每周逆袭悬赏准备页已无概率掉落_阶段{stage}"]
             self.assertEqual(done.get("recognition"), "DirectHit")
             self.assertEqual(
@@ -297,8 +311,21 @@ class PipelineGuardTest(unittest.TestCase):
         ]
         self.assertTrue(a_cfg["每周逆袭悬赏需要刷逆袭A"]["enabled"])
         self.assertEqual(
-            a_cfg["每周逆袭悬赏识别到准备"]["next"][0],
-            "每周逆袭悬赏准备页仍有概率掉落_阶段2",
+            a_cfg["每周逆袭悬赏识别到准备"]["next"][:2],
+            [
+                "每周逆袭悬赏准备页仍有概率掉落_阶段2",
+                "每周逆袭悬赏准备页认出目标等级_阶段2",
+            ],
+        )
+        s_cfg = pipeline["每周逆袭悬赏阶段3应用S筛选"]["action"]["param"][
+            "custom_action_param"
+        ]
+        self.assertEqual(
+            s_cfg["每周逆袭悬赏识别到准备"]["next"][:2],
+            [
+                "每周逆袭悬赏准备页仍有概率掉落_阶段3",
+                "每周逆袭悬赏准备页认出目标等级_阶段3",
+            ],
         )
 
         tasks = json.loads(
