@@ -383,6 +383,7 @@ def agent(is_dev_mode=False):
 
         import custom
         from tui import run_agent_tui, tui_should_run
+        from utils.agent_lifecycle import guard_agent_process
 
         Tasker.set_log_dir("./debug")
         Toolkit.init_option("./")
@@ -393,6 +394,9 @@ def agent(is_dev_mode=False):
 
         socket_id = sys.argv[-1]
         logger.debug(f"socket_id: {socket_id}")
+
+        # MaaPiCli 退出后 Agent 曾被 systemd 收养泄漏；父死即退 + 清孤儿
+        guard_agent_process(socket_id)
 
         AgentServer.start_up(socket_id)
         logger.info("AgentServer启动")
@@ -464,6 +468,12 @@ def main():
     # 如果是Linux系统或开发模式，启动虚拟环境
     if sys.platform.startswith("linux") or is_dev_mode:
         ensure_venv_and_relaunch_if_needed()
+
+    # 尽早挂上：依赖安装阶段 MaaPiCli 被杀也不留下孤儿
+    if sys.platform.startswith("linux"):
+        from utils.agent_lifecycle import install_parent_death_signal
+
+        install_parent_death_signal()
 
     check_and_install_dependencies()
 
