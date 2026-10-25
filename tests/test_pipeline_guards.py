@@ -265,30 +265,30 @@ class PipelineGuardTest(unittest.TestCase):
         )
         self.assertEqual(
             shop_back["next"],
-            ["每周逆袭悬赏残卷商店点击返回按钮"],
+            ["每周逆袭悬赏残卷返回后处理"],
         )
-        back_btn = pipeline["每周逆袭悬赏残卷商店点击返回按钮"]
+        hub = pipeline["每周逆袭悬赏残卷返回后处理"]
         self.assertEqual(
-            back_btn["recognition"]["param"]["template"],
-            ["返回按钮.png"],
+            hub["next"],
+            [
+                "每周逆袭悬赏残卷返回后等到黑屏",
+                "[JumpBack]每周逆袭悬赏残卷店内再点返回",
+            ],
         )
-        self.assertEqual(back_btn["action"]["type"], "Click")
-        self.assertNotIn("target", back_btn["action"].get("param", {}))
+        retry = pipeline["每周逆袭悬赏残卷店内再点返回"]
+        self.assertEqual(retry["recognition"]["type"], "And")
+        self.assertEqual(retry["action"]["type"], "Click")
         wrong_shop = pipeline["每周逆袭悬赏误入悬赏令商店点返回"]
         self.assertEqual(wrong_shop["recognition"]["type"], "TemplateMatch")
         self.assertEqual(
             wrong_shop["next"],
-            ["每周逆袭悬赏残卷商店点击返回按钮"],
+            ["每周逆袭悬赏残卷返回后处理"],
         )
         wait_black = pipeline["每周逆袭悬赏残卷返回后等到黑屏"]
         self.assertEqual(wait_black["recognition"]["type"], "ColorMatch")
         self.assertEqual(
             wait_black["next"],
             ["每周逆袭悬赏残卷黑屏结束立刻狂点"],
-        )
-        self.assertEqual(
-            wait_black["on_error"],
-            ["每周逆袭悬赏残卷商店内点返回"],
         )
         end_black = pipeline["每周逆袭悬赏残卷黑屏结束立刻狂点"]
         self.assertTrue(end_black["inverse"])
