@@ -22,6 +22,7 @@ from custom.deferred_tasks import (
 from custom.interruptible import interruptible_sleep
 from custom.pipeline_params import parse_pipeline_json_param
 from custom.persistent_task_state import (
+    in_one_month,
     next_daily_reset,
     next_weekly_reset,
     persistent_task_state_store,
@@ -475,6 +476,11 @@ class SetManagedTaskPersistentState(CustomAction):
                 if not isinstance(weekday, int) or isinstance(weekday, bool):
                     raise ValueError("weekday 必须是 0 到 6 的整数")
                 valid_until = next_weekly_reset(now, weekday)
+            elif raw_until == "in_one_month":
+                days = param.get("days", 30)
+                if not isinstance(days, int) or isinstance(days, bool) or days < 1:
+                    raise ValueError("days 必须是 >= 1 的整数")
+                valid_until = in_one_month(now, days=days)
             elif raw_until == "next_daily_times":
                 # 与 ScheduleDeferredTask 的 daily_times 对齐：禁用到下一个固定开放点
                 valid_until = next_daily_time(param.get("daily_times"), now=now)
@@ -485,7 +491,7 @@ class SetManagedTaskPersistentState(CustomAction):
             else:
                 raise ValueError(
                     "valid_until 必须是 ISO 时间、next_daily_reset、"
-                    "next_weekly_reset 或 next_daily_times"
+                    "next_weekly_reset、in_one_month 或 next_daily_times"
                 )
             if node is None:
                 persistent_task_state_store.set(

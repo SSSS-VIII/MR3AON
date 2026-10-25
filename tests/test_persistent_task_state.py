@@ -8,6 +8,7 @@ from pathlib import Path
 
 from custom.persistent_task_state import (
     PersistentTaskStateStore,
+    in_one_month,
     next_daily_reset,
     next_weekly_reset,
 )
@@ -134,6 +135,10 @@ class PersistentTaskStateTest(unittest.TestCase):
         self.assertEqual(
             next_weekly_reset(now),
             datetime(2026, 8, 31, 5, 0, tzinfo=timezone.utc),
+        )
+        self.assertEqual(
+            in_one_month(now),
+            datetime(2026, 9, 28, 5, 0, tzinfo=timezone.utc),
         )
 
 

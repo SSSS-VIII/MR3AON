@@ -69,8 +69,8 @@ class PipelineGuardTest(unittest.TestCase):
                     self.assertEqual(state["valid_until"], "next_weekly_reset")
                     self.assertEqual(state["weekday"], 4)
                 elif node_name.startswith("登记每周逆袭悬赏阶段"):
-                    self.assertEqual(state["valid_until"], "next_weekly_reset")
-                    self.assertEqual(state["weekday"], 6)  # 周日 05:00
+                    self.assertEqual(state["valid_until"], "in_one_month")
+                    self.assertNotIn("weekday", state)
                 else:
                     self.assertEqual(state["valid_until"], "next_daily_reset")
 
@@ -228,7 +228,7 @@ class PipelineGuardTest(unittest.TestCase):
                 self.assertEqual(patch.get("enabled"), want, case_name)
 
     def test_weekly_bounty_refresh_mode_button_default(self):
-        """默认右上角刷新；残卷用标题模板确认进店；黑屏结束再狂点×8。"""
+        """默认右上角刷新；残卷：点返回后 100ms 再狂点 2s。"""
         pipeline = json.loads(
             (RESOURCE / "pipeline" / "每周逆袭悬赏.json").read_text(encoding="utf-8")
         )
@@ -238,15 +238,20 @@ class PipelineGuardTest(unittest.TestCase):
         core_next = pipeline["每周逆袭悬赏抢悬赏核心节点"]["next"]
         self.assertIn("[JumpBack]每周逆袭悬赏执行刷新", core_next)
         self.assertNotIn("[JumpBack]每周逆袭悬赏点击刷新", core_next)
+        exec_refresh = pipeline["每周逆袭悬赏执行刷新"]
+        self.assertEqual(exec_refresh["recognition"]["type"], "OCR")
         self.assertEqual(
-            pipeline["每周逆袭悬赏执行刷新"]["next"],
+            exec_refresh["recognition"]["param"]["expected"],
+            ["刷新"],
+        )
+        self.assertEqual(
+            exec_refresh["next"],
             ["每周逆袭悬赏点击刷新"],
         )
         self.assertEqual(
             pipeline["每周逆袭悬赏队伍已解散"]["next"][0],
             "每周逆袭悬赏执行刷新",
         )
-        # 残卷：列表页有「刷新」才点残卷；进店用大块标题模板；黑屏结束再狂点
         fragment = pipeline["每周逆袭悬赏残卷兑换刷新"]
         self.assertEqual(fragment["recognition"]["type"], "OCR")
         self.assertEqual(
@@ -265,37 +270,32 @@ class PipelineGuardTest(unittest.TestCase):
         )
         self.assertEqual(
             shop_back["next"],
-            ["每周逆袭悬赏残卷返回后处理"],
+            ["每周逆袭悬赏残卷店内点返回"],
         )
-        hub = pipeline["每周逆袭悬赏残卷返回后处理"]
+        click_back = pipeline["每周逆袭悬赏残卷店内点返回"]
+        self.assertEqual(click_back["recognition"]["type"], "And")
+        self.assertEqual(click_back["action"]["type"], "Click")
+        self.assertEqual(click_back["post_delay"], 100)
         self.assertEqual(
-            hub["next"],
-            [
-                "每周逆袭悬赏残卷返回后等到黑屏",
-                "[JumpBack]每周逆袭悬赏残卷店内再点返回",
-            ],
+            click_back["next"],
+            ["每周逆袭悬赏残卷返回后狂点加入队伍"],
         )
-        retry = pipeline["每周逆袭悬赏残卷店内再点返回"]
-        self.assertEqual(retry["recognition"]["type"], "And")
-        self.assertEqual(retry["action"]["type"], "Click")
         wrong_shop = pipeline["每周逆袭悬赏误入悬赏令商店点返回"]
         self.assertEqual(wrong_shop["recognition"]["type"], "TemplateMatch")
         self.assertEqual(
             wrong_shop["next"],
-            ["每周逆袭悬赏残卷返回后处理"],
+            ["每周逆袭悬赏残卷店内点返回"],
         )
-        wait_black = pipeline["每周逆袭悬赏残卷返回后等到黑屏"]
-        self.assertEqual(wait_black["recognition"]["type"], "ColorMatch")
+        mash = pipeline["每周逆袭悬赏残卷返回后狂点加入队伍"]
+        self.assertEqual(mash["repeat"], 20)
+        self.assertEqual(mash["repeat_delay"], 100)
         self.assertEqual(
-            wait_black["next"],
-            ["每周逆袭悬赏残卷黑屏结束立刻狂点"],
+            mash["action"]["param"]["target"],
+            [400, 305, 1, 1],
         )
-        end_black = pipeline["每周逆袭悬赏残卷黑屏结束立刻狂点"]
-        self.assertTrue(end_black["inverse"])
-        self.assertEqual(
-            end_black["next"],
-            ["每周逆袭悬赏点击刷新后狂点加入队伍"],
-        )
+        self.assertNotIn("每周逆袭悬赏残卷返回后处理", pipeline)
+        self.assertNotIn("每周逆袭悬赏残卷返回后等到黑屏", pipeline)
+        self.assertNotIn("每周逆袭悬赏残卷黑屏结束立刻狂点", pipeline)
         self.assertNotIn("每周逆袭悬赏已回到悬赏列表可抢点", pipeline)
         self.assertNotIn("每周逆袭悬赏刷新后抢点枢纽", pipeline)
         self.assertNotIn("每周逆袭悬赏盲点加入一次", pipeline)

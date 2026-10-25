@@ -1,5 +1,5 @@
 from .aspect_ratio import AspectRatioChecker  # noqa: F401
-from .deferred_tasks import ManagedTaskStopSink  # noqa: F401
+from .deferred_tasks import ManagedTaskHardEndSink, ManagedTaskStopSink  # noqa: F401
 from .game_process_watch_sink import GameProcessWatchSink  # noqa: F401
 from .popup_watchdog import PopupWatchdog  # noqa: F401
 from .tui_status import TuiStatusSink  # noqa: F401

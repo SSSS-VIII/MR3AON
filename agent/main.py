@@ -408,8 +408,7 @@ def agent(is_dev_mode=False):
             from tui import request_tui_exit, terminate_parent_maa_picli
 
             def _join_and_signal_tui() -> None:
-                # PiCli 先跑完/断开时，join 返回；必须先让 Textual 恢复终端，
-                # 否则 alternate screen 残留会把 shell 弄坏。
+                # PiCli 先跑完/断开时，join 返回；先让 Textual 退出并恢复终端。
                 try:
                     AgentServer.join()
                 finally:
@@ -424,8 +423,8 @@ def agent(is_dev_mode=False):
             try:
                 run_agent_tui()
             finally:
-                # 先杀 PiCli 还 shell：shut_down 常卡住，杀父进程的代码根本跑不到。
-                # Agent 也常被 systemd 收养，不能只靠 getppid。
+                # TUI 已退：必须结束占着 TTY 的 PiCli，否则 q 后退不回 shell。
+                # shut_down 常卡住，所以先杀 PiCli 再 os._exit，别等它。
                 reason = ""
                 try:
                     from tui.status import runtime_status

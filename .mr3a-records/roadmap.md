@@ -12,7 +12,7 @@ task/重复节点的通用无进展 watchdog 与 `进入战斗中.png` 页面上
 
 已为启动流程接入现有 `LoopDeadline`总时限：正常启动 6 分钟后关闭游戏，再用已记录的包名重新打开，然后回到启动流程。业务任务的恢复启动 2 分钟后再次 `RestartGame`。该时限使用 Agent 单调时钟，不会被节点持续识别成功或 JumpBack 重置。
 
-后续继续使用临时 MaaPiCli 副本做真实设备验证，正式入口缓存不动。Agent 运行时 TUI（Textual，竖屏半窗 / btop 风）已接入：TTY 下默认开启，`MR3A_TUI=0` 关闭；列表含排队与延后未提交项；waiting 显示最近到期任务名；`q` 先 SIGINT 同 TTY 的 MaaPiCli 再退出，应直接回 shell。
+后续继续使用临时 MaaPiCli 副本做真实设备验证，正式入口缓存不动。Agent 运行时 TUI（Textual，竖屏半窗 / btop 风）已接入：TTY 下默认开启，`MR3A_TUI=0` 关闭；列表含排队与延后未提交项；waiting 显示最近到期任务名；`q` 结束 TUI 后由 main 收掉同 TTY 的 MaaPiCli 回到 shell。管理任务 `Task.Failed`（未走 StopTask）离线程推进队列或 `request_tui_exit`；见 `archived/2026-10-25-tui-recover-after-managed-task-fail.md`。
 
 已实现 Agent 接管 MaaPiCli 任务队列的延后任务调度试点：MaaPiCli 只提交一个
 bootstrap，Agent 将每个业务任务作为独立顶层 task 逐项提交。业务流水线即将执行
@@ -76,7 +76,7 @@ Agent 启动终端的大块乱码已确认是截图头被 Waydroid `amdgpu.ids` 
 
 2026-10-22：每周逆袭「逆袭A和逆袭S」改为三段停判：S奖励上限 → A概率掉落 → S概率掉落；仅A/仅S为子阶段。详见 `archived/2026-10-22-weekly-reverse-three-stage-stop.md`。
 
-2026-10-22：每周逆袭三段按镜界百器同款独立 `SetManagedTaskPersistentState` 至下周日 05:00；每日逆袭整单完成后禁用到次日 05:00（每日悬赏原本已有）。详见 `archived/2026-10-22-weekly-reverse-stage-persist.md`。
+2026-10-22：每周逆袭三段按镜界百器同款独立 `SetManagedTaskPersistentState`；2026-10-25 起改为约一个月（`in_one_month`）。每日逆袭整单完成后禁用到次日 05:00（每日悬赏原本已有）。详见 `archived/2026-10-22-weekly-reverse-stage-persist.md`。
 
 同日：每周逆袭顶栏停判改为宽匹配「次数上限」。
 
@@ -86,6 +86,6 @@ Agent 启动终端的大块乱码已确认是截图头被 Waydroid `amdgpu.ids` 
 
 2026-10-24：每周逆袭阶段2/3收尾先认等级再认空掉落；管道去遗留 `enable`；悬赏商店滑程对齐；多人竞速认「看我的吧」+ Agent 防孤儿；3v3 观战等待去重复 on_error。详见 `archived/2026-10-24-misc-pipeline-and-agent.md`。
 
-2026-10-25：每周逆袭可选残卷兑换进出刷新（认刷新页 + 标题模板进店 + 黑屏结束再狂点×8）；悬赏类结算确定改为 OCR 点「确定|下一页」命中框，不再大块 DirectHit。刷新选项改为 switch「残卷兑换进出刷新」（Yes/No，label 写明含义）。残卷返回：没出店（标题还在）就循环再点返回，有黑屏再跟转场。详见 `archived/2026-10-25-weekly-fragment-refresh-and-settlement-click.md`。
+2026-10-25：每周逆袭可选残卷兑换进出刷新（认刷新页 + 标题模板进店；点返回后 100ms 再狂点 2s，不等黑屏）；悬赏类结算确定改为 OCR 点「确定|下一页」命中框，不再大块 DirectHit。刷新选项改为 switch「残卷兑换进出刷新」（Yes/No，label 写明含义）。详见 `archived/2026-10-25-weekly-fragment-refresh-and-settlement-click.md`。
 
 2026-10-25：开发记录规则补强——工作区常为 `/home/linn` 时 `MR3A/.cursor/rules` 不注入；在 `~/.cursor/rules/mr3a-development-records.mdc` 与仓库 `AGENTS.md` 再挂强制写 `.mr3a-records`。详见 `archived/2026-10-25-records-rule-home-workspace.md`。

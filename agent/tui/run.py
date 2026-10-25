@@ -192,7 +192,7 @@ def terminate_parent_maa_picli() -> None:
 
 
 def request_tui_exit(reason: str = "") -> None:
-    """从任意线程请求 TUI 退出；有 App 时立刻 call_from_thread，避免 PiCli 先拆掉终端。"""
+    """从任意线程请求 TUI 退出；只结束 Textual App，不动终端上其它进程。"""
     runtime_status.request_exit(reason)
     app = _tui_app
     if app is None:

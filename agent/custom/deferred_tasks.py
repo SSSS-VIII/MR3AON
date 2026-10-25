@@ -323,6 +323,21 @@ class ManagedTaskQueue:
             self._pending.append(retained)
             return retained
 
+    def abandon_current(self, task_id: int) -> ManagedTask | None:
+        """硬失败或未走 StopTask 结束时丢掉当前实例，不入休眠队列。"""
+        with self._lock:
+            if (
+                not self._active
+                or self._current_task_id != task_id
+                or self._current_task is None
+            ):
+                return None
+            self._recurring_current.pop(task_id, None)
+            task = self._current_task
+            self._current_task_id = None
+            self._current_task = None
+            return task
+
     def current(self) -> ManagedTask | None:
         with self._lock:
             return self._current_task

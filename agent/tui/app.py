@@ -487,6 +487,13 @@ class AgentTuiApp(App[None]):
         self.set_interval(0.5, self.refresh_status)
         self.refresh_status()
 
+    async def action_quit(self) -> None:
+        """q：结束 TUI；回到 shell 由 main 收尾。"""
+        from .status import runtime_status
+
+        runtime_status.request_exit("user_quit")
+        self.exit()
+
     def action_reward_dirs(self) -> None:
         self.query_one("#reward-gallery", RewardGallery).toggle_dirs()
 

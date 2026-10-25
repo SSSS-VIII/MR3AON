@@ -51,6 +51,21 @@ def next_weekly_reset(now: datetime, weekday: int = 0) -> datetime:
     return candidate
 
 
+def in_one_month(now: datetime, *, days: int = 30) -> datetime:
+    """约一个月后的 05:00；默认 30 天。"""
+    if days < 1:
+        raise ValueError("days 必须 >= 1")
+    candidate = (now + timedelta(days=days)).replace(
+        hour=_DAILY_RESET_HOUR,
+        minute=0,
+        second=0,
+        microsecond=0,
+    )
+    if candidate <= now:
+        candidate += timedelta(days=1)
+    return candidate
+
+
 def _reset_cycle(now: datetime) -> datetime:
     cycle = now.replace(
         hour=_DAILY_RESET_HOUR,
