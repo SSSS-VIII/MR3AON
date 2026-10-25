@@ -3,7 +3,7 @@
 ## 需求
 
 - 每日类整单完成后持久化禁用到次日 05:00（`每日悬赏` 原本已有；`每日逆袭悬赏` 补上）。
-- 每周逆袭三个阶段各自独立记录，完成后禁用约**一个月**（`valid_until: in_one_month` → 30 天后 05:00；Agent 新增同名 token）。本机状态可直接写入 `agent_task_state.json` 的 `nodes.每周逆袭悬赏entry`。
+- 每周逆袭三个阶段各自独立记录：阶段1/2 完成后禁用到**下周日 05:00**（`next_weekly_reset` + `weekday: 6`）；**仅阶段3**禁用约**一个月**（`in_one_month` → 30 天后 05:00）。本机状态写在 `agent_task_state.json` 的 `nodes.每周逆袭悬赏entry`。
 
 ## 实现（对齐镜界百器多子节点）
 
@@ -17,7 +17,7 @@
 每阶段完成：
 
 1. `DisableNode` 本阶段门控（本会话立刻跳过）
-2. `SetManagedTaskPersistentState`（`entry: 每周逆袭悬赏entry`，`node: 阶段N进行中`，`valid_until: in_one_month`）
+2. `SetManagedTaskPersistentState`（`entry: 每周逆袭悬赏entry`，`node: 阶段N进行中`；阶段1/2=`next_weekly_reset`，阶段3=`in_one_month`）
 3. 阶段1/2 回 `任务检查模块` 进下一段；阶段3 走 `任务完成`
 
 进段时用 `NodeOverride` 切筛选/接队（阶段1/3=S，阶段2=A），不再用「切入阶段」临时改门控 enable。

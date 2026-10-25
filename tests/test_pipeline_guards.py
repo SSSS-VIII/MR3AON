@@ -68,9 +68,12 @@ class PipelineGuardTest(unittest.TestCase):
                 if node_name == "登记领取奖励_每周兑换码每周完成":
                     self.assertEqual(state["valid_until"], "next_weekly_reset")
                     self.assertEqual(state["weekday"], 4)
-                elif node_name.startswith("登记每周逆袭悬赏阶段"):
+                elif node_name == "登记每周逆袭悬赏阶段3每周完成":
                     self.assertEqual(state["valid_until"], "in_one_month")
                     self.assertNotIn("weekday", state)
+                elif node_name.startswith("登记每周逆袭悬赏阶段"):
+                    self.assertEqual(state["valid_until"], "next_weekly_reset")
+                    self.assertEqual(state["weekday"], 6)  # 周日 05:00
                 else:
                     self.assertEqual(state["valid_until"], "next_daily_reset")
 

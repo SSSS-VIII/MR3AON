@@ -76,7 +76,7 @@ Agent 启动终端的大块乱码已确认是截图头被 Waydroid `amdgpu.ids` 
 
 2026-10-22：每周逆袭「逆袭A和逆袭S」改为三段停判：S奖励上限 → A概率掉落 → S概率掉落；仅A/仅S为子阶段。详见 `archived/2026-10-22-weekly-reverse-three-stage-stop.md`。
 
-2026-10-22：每周逆袭三段按镜界百器同款独立 `SetManagedTaskPersistentState`；2026-10-25 起改为约一个月（`in_one_month`）。每日逆袭整单完成后禁用到次日 05:00（每日悬赏原本已有）。详见 `archived/2026-10-22-weekly-reverse-stage-persist.md`。
+2026-10-22：每周逆袭三段按镜界百器同款独立 `SetManagedTaskPersistentState`；2026-10-25 起阶段1/2 仍周日重置，**仅阶段3**约一个月（`in_one_month`）。每日逆袭整单完成后禁用到次日 05:00（每日悬赏原本已有）。详见 `archived/2026-10-22-weekly-reverse-stage-persist.md`。
 
 同日：每周逆袭顶栏停判改为宽匹配「次数上限」。
 
