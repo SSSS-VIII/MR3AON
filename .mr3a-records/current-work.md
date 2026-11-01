@@ -14,6 +14,8 @@
 
 ## 已按功能提交
 
+小鲤受限 game_control 新增显式 `takeover`：停止持有 xiaoli 控制锁的脚本、保留 Android，再截图操作。内核锁/pidfd 核验，拒绝停止还控制其它实例的进程；真实占锁脚本已停止，main 原脚本仍运行。见 [受限工具接管](archived/2026-11-01-xiaoli-control-takeover.md)。本轮普通全量回归 137 passed、5 skipped、5 failed、80 subtests passed，既有失败不变。
+
 小鲤启动游戏新增「启动时屏蔽组队邀请=否」，实际配置与模板均已写入，下次启动不打开设置页勾选屏蔽，保留游戏原设置；其它环境默认仍屏蔽。静态保护和真实 Resource 覆盖验证通过，未中断正在操作设备的进程，见 [启动组队邀请选项](archived/2026-11-01-xiaoli-startup-invites.md)。
 
 | 工作 | 提交 | 记录与边界 |

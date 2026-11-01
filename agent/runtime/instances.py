@@ -361,13 +361,18 @@ class InstanceSession:
         write_json(self.spec.config_path, config)
 
     @contextmanager
-    def control(self):
+    def control(self, *, takeover: bool = False, timeout: float = 10):
+        if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not 1 <= timeout <= 30:
+            raise ValueError('接管等待须为 1–30 秒')
         self.spec.work_root.mkdir(parents=True, exist_ok=True)
         with (self.spec.work_root / "control.lock").open("a+") as lock:
             try:
                 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError:
-                raise RuntimeError(f"实例 {self.spec.name} 已有控制者；请用其它名字并行运行") from None
+                if not takeover:
+                    raise RuntimeError(f"实例 {self.spec.name} 已有控制者；可显式接管以停止该实例的控制脚本") from None
+                from runtime.control_takeover import acquire_by_stopping_controller
+                acquire_by_stopping_controller(lock, self.spec, timeout)
             # Adoption must also respect a main runner started by the old run.
             if not self.spec.slot:
                 for process in Path("/proc").iterdir():
