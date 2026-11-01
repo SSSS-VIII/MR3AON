@@ -756,6 +756,32 @@ class PipelineGuardTest(unittest.TestCase):
         )
         self.assertIn("启动游戏点击主页设置", pipeline)
 
+    def test_startup_can_leave_invites_unchanged_without_altering_default(self):
+        tasks = json.loads((RESOURCE / "tasks/日常任务.json").read_text())
+        startup = next(task for task in tasks["task"] if task["entry"] == "启动游戏entry")
+        self.assertIn("启动时屏蔽组队邀请", startup["option"])
+        option = tasks["option"]["启动时屏蔽组队邀请"]
+        self.assertEqual(option["default_case"], "是")
+        cases = {case["name"]: case for case in option["cases"]}
+        self.assertFalse(cases["是"].get("pipeline_override"))
+        override = cases["否"]["pipeline_override"]
+        self.assertEqual(set(override), {"两次识别成功后则确定进入了主页面", "屏蔽所有组队邀请"})
+        confirm = override["两次识别成功后则确定进入了主页面"]
+        self.assertEqual(confirm["action"], "DoNothing")
+        self.assertEqual(confirm["next"], ["启动游戏到了主页面"])
+        pipeline = json.loads((RESOURCE / "pipeline/启动游戏.json").read_text())
+        pending = list(override["屏蔽所有组队邀请"]["next"])
+        visited = set()
+        while pending:
+            name = pending.pop()
+            if name in visited:
+                continue
+            visited.add(name)
+            self.assertNotIn("勾选屏蔽", name)
+            pending.extend(pipeline[name].get("next", []))
+        self.assertIn("启动游戏到了主页面", visited)
+        self.assertEqual(pipeline["启动游戏到了主页面"]["action"]["type"], "StopTask")
+
     def test_startup_start_app_skips_when_process_alive(self):
         pipeline = json.loads(
             (RESOURCE / "pipeline" / "启动游戏.json").read_text(encoding="utf-8")
