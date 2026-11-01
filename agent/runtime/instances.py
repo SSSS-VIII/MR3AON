@@ -241,12 +241,19 @@ class InstanceSession:
 
     def ensure_ready(self, timeout: float = 180) -> str:
         self._backend("start", timeout=timeout)
-        self._serial = self._address()
+        deadline = time.monotonic() + timeout
+        while True:
+            try:
+                self._serial = self._address()
+                break
+            except RuntimeError:
+                if time.monotonic() >= deadline:
+                    raise
+                time.sleep(1)
         self._adb("connect", self._serial, target=False)
         devices = self._adb("devices", target=False).decode()
         if f"{self._serial}\tunauthorized" in devices:
             self._backend("authorize-adb", root=True, timeout=30)
-        deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             self._adb("connect", self._serial, target=False)
             devices = self._adb("devices", target=False).decode()
@@ -275,6 +282,12 @@ class InstanceSession:
     def restart(self) -> str:
         self.stop()
         return self.ensure_ready()
+
+    def shutdown(self) -> None:
+        """Explicit full shutdown; recovery's stop() deliberately keeps its manager."""
+        with self.control():
+            self._backend("stop")
+            self._serial = None
 
     def _shell(self, *args: str) -> str:
         return self._adb("shell", *args).decode(errors="replace")

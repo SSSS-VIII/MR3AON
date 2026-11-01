@@ -273,20 +273,23 @@ def manage(instance, action):
             if rows and len(rows[0]) >= 3:
                 import ipaddress
                 address = str(ipaddress.IPv4Address(rows[0][2])) + ":5555"
-        # Stop only the named session, then its own daemon. No global Waydroid
-        # service, adb server, process-name kill or nftables flush is used.
+        # Slot zero owns the packaged daemon; other slots own dedicated units.
+        # Never kill by process name or flush another instance's network state.
         subprocess.run([
             "busctl", "--user", "call", instance.session_bus,
             "/SessionManager", "id.waydro.SessionManager", "Stop",
         ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         for prefix, unit in ((["systemctl", "--user"], user_unit), (["sudo", "-n", "systemctl"], system_unit)):
-            if not instance.slot and prefix[0] == "sudo":
-                continue
             loaded = subprocess.check_output([*prefix, "show", "--property=LoadState", "--value", unit], text=True).strip()
             if loaded != "not-found":
                 subprocess.run([*prefix, "stop", unit], check=True)
         if address:
-            subprocess.run(["adb", "-P", str(instance.adb_port), "disconnect", address], check=True)
+            # ADB is host transport infrastructure, not an Android container.
+            # A stale server must not block an already completed shutdown.
+            try:
+                subprocess.run(["adb", "-P", str(instance.adb_port), "disconnect", address], check=True, timeout=5)
+            except (subprocess.SubprocessError, OSError) as exc:
+                print(f"Waydroid 已关闭；清理 ADB 连接失败：{exc}", file=sys.stderr)
         return
     if instance.slot and not (instance.work / "instance.json").is_file():
         subprocess.run(["sudo", "-n", *command, "create"], check=True)

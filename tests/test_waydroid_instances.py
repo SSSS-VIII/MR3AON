@@ -4,6 +4,7 @@ import importlib.util
 from pathlib import Path
 import subprocess
 import tempfile
+from unittest.mock import patch
 
 import pytest
 
@@ -94,3 +95,16 @@ def test_cli_help_never_loads_or_writes_system_waydroid():
     )
     assert "--slot" in result.stdout
     assert "authorize-adb" in result.stdout
+
+
+@pytest.mark.parametrize("slot", [0, 1])
+def test_full_stop_targets_only_own_units_and_adb(slot):
+    with patch.object(module.os, "geteuid", return_value=1000), patch.object(module.Path, "exists", return_value=False), patch.object(module.subprocess, "check_output", return_value="loaded\n"), patch.object(module.subprocess, "run") as run:
+        module.manage(Instance(slot), "stop")
+    commands = [call.args[0] for call in run.call_args_list]
+    system_unit = f"mr3a-waydroid-{slot}" if slot else "waydroid-container"
+    assert ["sudo", "-n", "systemctl", "stop", system_unit] in commands
+    assert ["systemctl", "--user", "stop", f"mr3a-waydroid-session-{slot}"] in commands
+    assert commands[0][3] == Instance(slot).session_bus
+    adb_commands = [command for command in commands if command[0] == "adb"]
+    assert adb_commands == []  # No lease, so no transport to disconnect.

@@ -8,6 +8,8 @@
 ./run small --configure       # 配置 small 自己的任务与登录选项
 ./run small --check           # 只准备/检查 Android，不运行游戏任务
 ./run small --prepare         # 只初始化运行文件，不启动 Android
+./run small --stop            # 关闭 small 窗口和 Waydroid 后台，保留数据
+./run --stop                  # 关闭默认 main 的 Waydroid
 ./tools/run-weekly-reverse     # main 本次只跑每周逆袭，不改保存的任务计划
 ./tools/run-3v3 small          # small 本次只跑完整 3v3
 ./tools/adb-screencap small    # 截图到 small/debug/adb-shots
@@ -19,6 +21,8 @@
 `test` 现在只是普通实例名，不再表示复制测试环境。旧 `deps/.run-test` 入口已停用，旧文件保留、不清空；单任务工具改用同一实例和同一可执行文件，任务选择仅在内存中生效。
 
 截图可在同名脚本运行时读取；录制会要求该名字的独占控制权，不能和脚本同时点击。录制结果写在实例自己的 `debug/3v3-record`。
+
+关闭窗口不等于关闭 Android。需要释放该实例后台时使用 `--stop`；先按 q 退出同名脚本，再关闭实例。停止会退出 Android 会话及对应容器管理服务，不删除配置、账号或日志；下次仍按原名字启动。ADB 服务器作为宿主传输基础设施保留，只清理该实例连接，不结束其它设备连接。
 
 ## 文件归属
 

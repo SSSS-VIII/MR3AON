@@ -44,6 +44,40 @@ def test_missing_bound_device_never_falls_back_to_other_account(monkeypatch):
         assert adb_target() == ("adb", "target")
 
 
+def test_shutdown_requires_control_and_keeps_profile_data(registry):
+    session = InstanceSession("small", registry=registry)
+    registry.prepare(session.spec)
+    before = session.spec.config_path.read_bytes()
+    other = InstanceSession("small", registry=registry)
+    with session.control(), patch.object(other, "_backend") as backend:
+        with pytest.raises(RuntimeError, match="已有控制者"):
+            other.shutdown()
+        backend.assert_not_called()
+    session._serial = "old"
+    with patch.object(session, "_backend") as backend:
+        session.shutdown()
+    backend.assert_called_once_with("stop")
+    assert session._serial is None
+    assert session.spec.config_path.read_bytes() == before
+
+
+def test_stop_entry_never_starts_android_or_prepares_config(registry, monkeypatch):
+    from runtime import launcher
+    session = InstanceSession("small", registry=registry)
+    monkeypatch.setattr("sys.argv", ["run", "small", "--stop"])
+    with patch.object(launcher, "InstanceRegistry", return_value=registry), patch.object(launcher, "InstanceSession", return_value=session), patch.object(session, "shutdown") as shutdown, patch.object(session, "ensure_ready", side_effect=AssertionError("关闭不能启动设备")), patch.object(registry, "prepare", side_effect=AssertionError("关闭不能初始化配置")):
+        assert launcher.main() == 0
+    shutdown.assert_called_once_with()
+
+
+def test_cold_start_waits_for_dhcp_before_connecting(registry):
+    session = InstanceSession("small", registry=registry)
+    serial = "192.168.241.112:5555"
+    with patch.object(session, "_backend"), patch.object(session, "_address", side_effect=[RuntimeError("尚无地址"), serial]), patch("runtime.instances.time.sleep") as sleep, patch.object(session, "_adb", return_value=f"{serial}\tdevice\n".encode()), patch.object(session, "_shell", return_value="1"):
+        assert session.ensure_ready() == serial
+    sleep.assert_called_once_with(1)
+
+
 def test_agent_outputs_and_qa_writes_follow_work_root_in_subprocess(registry):
     spec = registry.get("small")
     registry.prepare(spec)

@@ -12,15 +12,23 @@ from runtime.instances import InstanceRegistry, InstanceSession
 def main():
     parser = argparse.ArgumentParser(description="按名字启动 MR3A；省略名字使用现有 main 环境")
     parser.add_argument("name", nargs="?", default="main")
-    parser.add_argument("--configure", action="store_true", help="配置当前名字的任务和账号选项")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--configure", action="store_true", help="配置当前名字的任务和账号选项")
     parser.add_argument("--task", action="append", default=[], help="仅本次运行指定任务，不改保存的任务计划")
-    parser.add_argument("--prepare", action="store_true", help="初始化运行文件，不启动 Android 或游戏")
-    parser.add_argument("--check", action="store_true", help="准备并检查 Android 连接，不运行游戏任务")
+    mode.add_argument("--prepare", action="store_true", help="初始化运行文件，不启动 Android 或游戏")
+    mode.add_argument("--check", action="store_true", help="准备并检查 Android 连接，不运行游戏任务")
+    mode.add_argument("--stop", action="store_true", help="关闭该实例窗口及 Waydroid 后台，保留配置和账号数据；请先退出同名脚本")
     args = parser.parse_args()
     if args.configure and args.task:
         parser.error("--task 仅用于本次执行，不能与 --configure 同时使用")
+    if args.stop and args.task:
+        parser.error("--stop 不能与 --task 同时使用")
     registry = InstanceRegistry()
     session = InstanceSession(args.name, registry=registry)
+    if args.stop:
+        session.shutdown()
+        print(f"实例 {session.spec.name} 已关闭，配置和账号数据保留")
+        return 0
     if args.prepare:
         registry.prepare(session.spec)
         print(f"实例 {session.spec.name}：{session.spec.work_root}")
