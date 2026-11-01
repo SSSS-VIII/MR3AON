@@ -108,3 +108,21 @@ def test_full_stop_targets_only_own_units_and_adb(slot):
     assert commands[0][3] == Instance(slot).session_bus
     adb_commands = [command for command in commands if command[0] == "adb"]
     assert adb_commands == []  # No lease, so no transport to disconnect.
+
+
+@pytest.mark.parametrize("show_window", [True, False])
+def test_background_start_still_starts_session_but_only_opens_window_when_requested(show_window):
+    pings = iter([1, 0])
+    def result(command, **kwargs):
+        code = 0
+        if command[:2] == ["systemctl", "is-active"] or command[:3] == ["systemctl", "--user", "is-active"]:
+            code = 1
+        elif command[-1] == "Ping":
+            code = next(pings)
+        return subprocess.CompletedProcess(command, code)
+    with patch.object(module.os, "geteuid", return_value=1000), patch.object(module.Path, "is_file", return_value=True), patch.object(module.subprocess, "run", side_effect=result) as run:
+        module.manage(Instance(1), "start", show_window=show_window)
+    commands = [call.args[0] for call in run.call_args_list]
+    assert any(command[:2] == ["systemd-run", "--user"] and command[-2:] == ["session", "start"] for command in commands)
+    assert any(command[-1] == "show-full-ui" for command in commands) == show_window
+    assert any(command[-1] == "status" for command in commands)

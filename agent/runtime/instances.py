@@ -268,7 +268,9 @@ class InstanceSession:
         return self._adb_result(*args, timeout=timeout, input_data=input_data)
 
     def ensure_ready(self, timeout: float = 180) -> str:
-        self._backend("start", timeout=timeout)
+        # 恢复也保持启动入口选择；后台运行仍完成 Android、DHCP 与 ADB 的全部准备。
+        start_args = ("start", "--no-window") if os.environ.get("MR3A_SHOW_WINDOW") == "0" else ("start",)
+        self._backend(*start_args, timeout=timeout)
         deadline = time.monotonic() + timeout
         while True:
             try:

@@ -12,6 +12,7 @@ from runtime.instances import InstanceRegistry, InstanceSession
 def main():
     parser = argparse.ArgumentParser(description="按名字启动 MR3A；省略名字使用现有 main 环境")
     parser.add_argument("name", nargs="?", default="main")
+    parser.add_argument("--no-window", action="store_true", help="后台启动 Android，不打开桌面窗口；截图和输入照常可用")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--configure", action="store_true", help="配置当前名字的任务和账号选项")
     parser.add_argument("--task", action="append", default=[], help="仅本次运行指定任务，不改保存的任务计划")
@@ -19,6 +20,8 @@ def main():
     mode.add_argument("--check", action="store_true", help="准备并检查 Android 连接，不运行游戏任务")
     mode.add_argument("--stop", action="store_true", help="关闭该实例窗口及 Waydroid 后台，保留配置和账号数据；请先退出同名脚本")
     args = parser.parse_args()
+    # 明确覆盖继承值，避免其它名字从后台启动者那里继承无窗口策略；子进程恢复沿用本次选择。
+    os.environ["MR3A_SHOW_WINDOW"] = "0" if args.no_window else "1"
     if args.configure and args.task:
         parser.error("--task 仅用于本次执行，不能与 --configure 同时使用")
     if args.stop and args.task:

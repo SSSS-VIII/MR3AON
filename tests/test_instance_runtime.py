@@ -78,6 +78,29 @@ def test_cold_start_waits_for_dhcp_before_connecting(registry):
     sleep.assert_called_once_with(1)
 
 
+def test_background_policy_is_kept_when_device_is_prepared_or_recovered(registry, monkeypatch):
+    monkeypatch.setenv("MR3A_SHOW_WINDOW", "0")
+    session = InstanceSession("small", registry=registry)
+    serial = "192.168.241.112:5555"
+    with patch.object(session, "_backend") as backend, patch.object(session, "_address", return_value=serial), patch.object(session, "_adb", return_value=f"{serial}\tdevice\n".encode()), patch.object(session, "_shell", return_value="1"):
+        assert session.ensure_ready() == serial
+    backend.assert_called_once_with("start", "--no-window", timeout=180)
+    assert session.spec.environment()["MR3A_SHOW_WINDOW"] == "0"
+
+
+@pytest.mark.parametrize("no_window", [True, False])
+def test_launcher_overrides_inherited_window_policy_for_this_run(registry, monkeypatch, no_window):
+    from runtime import launcher
+    monkeypatch.setenv("MR3A_SHOW_WINDOW", "0")
+    monkeypatch.setattr("sys.argv", ["run", "small", "--check", *(["--no-window"] if no_window else [])])
+    session = InstanceSession("small", registry=registry)
+    with patch.object(launcher, "InstanceRegistry", return_value=registry), patch.object(launcher, "InstanceSession", return_value=session), patch.object(session, "ensure_ready") as ready:
+        assert launcher.main() == 0
+    ready.assert_called_once_with()
+    import os
+    assert os.environ["MR3A_SHOW_WINDOW"] == ("0" if no_window else "1")
+
+
 def test_agent_outputs_and_qa_writes_follow_work_root_in_subprocess(registry):
     spec = registry.get("small")
     registry.prepare(spec)

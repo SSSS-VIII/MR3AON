@@ -259,7 +259,7 @@ def authorize_adb(instance):
     print(f"已为次实例 {instance.name} 授权当前用户的 ADB 公钥")
 
 
-def manage(instance, action):
+def manage(instance, action, *, show_window=True):
     if os.geteuid() == 0:
         raise RuntimeError("start/stop 必须在桌面普通用户下运行；工具自行提权启动容器")
     command = ["/usr/bin/python3", str(Path(__file__).resolve()), "--slot", str(instance.slot)]
@@ -335,7 +335,8 @@ def manage(instance, action):
         time.sleep(1)
     else:
         raise RuntimeError("等待次实例 Android 会话超时；请查看对应用户服务日志")
-    subprocess.run([*command, "show-full-ui"], check=True, timeout=30)
+    if show_window:
+        subprocess.run([*command, "show-full-ui"], check=True, timeout=30)
     subprocess.run([*command, "status"], check=True)
     print(f"ADB server: localhost:{instance.adb_port}")
 
@@ -344,8 +345,11 @@ def main():
     os.umask(0o022)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--slot", type=int, required=True, help="1–14，固定映射独立网络与服务")
+    parser.add_argument("--no-window", action="store_true", help="start 只准备后台 Android 会话，不打开桌面窗口")
     parser.add_argument("action", choices=("create", "start", "stop", "authorize-adb", "status", "session", "container", "show-full-ui", "adb", "shell", "prop", "app", "log"))
     args, remaining = parser.parse_known_args()
+    if args.no_window and args.action != "start":
+        parser.error("--no-window 仅用于 start")
     instance = Instance(args.slot)
     # Avoid publishing secondary Android devices into the main script's ADB
     # server. Each slot still shares the installed adb binary and host key.
@@ -353,7 +357,7 @@ def main():
     if args.action in {"start", "stop"}:
         if remaining:
             parser.error("start/stop 不接受额外参数")
-        manage(instance, args.action)
+        manage(instance, args.action, show_window=not args.no_window)
         return 0
     tools = load_installed(instance)
     if args.action == "create":
