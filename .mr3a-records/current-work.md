@@ -16,6 +16,8 @@
 
 ## 已按功能提交
 
+每周逆袭阶段1列表停判已根据实际截图修正：改读奖励行的 S 剩余次数为 0，不再依赖「刷新」或准备页「次数上限」，阶段2/3显式关闭此判断。真实截图原生 OCR 回放通过；相关回归 30 passed、82 subtests passed、2 项既有失败。当前 main 未重启，在线阶段切换待验证，见 [列表 S 次数修复](archived/2026-11-02-weekly-bounty-list-s-count.md)。
+
 小鲤受限 game_control 新增显式 `takeover`：停止持有 xiaoli 控制锁的脚本、保留 Android，再截图操作。内核锁/pidfd 核验，拒绝停止还控制其它实例的进程；真实占锁脚本已停止，main 原脚本仍运行。见 [受限工具接管](archived/2026-11-01-xiaoli-control-takeover.md)。本轮普通全量回归 137 passed、5 skipped、5 failed、80 subtests passed，既有失败不变。
 
 小鲤启动游戏新增「启动时屏蔽组队邀请=否」，实际配置与模板均已写入，下次启动不打开设置页勾选屏蔽，保留游戏原设置；其它环境默认仍屏蔽。静态保护和真实 Resource 覆盖验证通过，未中断正在操作设备的进程，见 [启动组队邀请选项](archived/2026-11-01-xiaoli-startup-invites.md)。

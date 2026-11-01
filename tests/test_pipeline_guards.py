@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -329,7 +330,7 @@ class PipelineGuardTest(unittest.TestCase):
         )
 
     def test_weekly_bounty_three_stage_stop_logic(self):
-        """阶段1列表/刷新页先认次数上限；阶段2/3仍在准备页停判。"""
+        """阶段1在列表读取 S 剩余次数；阶段2/3关闭列表停判。"""
         pipeline = json.loads(
             (RESOURCE / "pipeline" / "每周逆袭悬赏.json").read_text(encoding="utf-8")
         )
@@ -361,6 +362,25 @@ class PipelineGuardTest(unittest.TestCase):
         list_cap = pipeline["每周逆袭悬赏列表页识别到次数上限_阶段1"]
         self.assertFalse(list_cap.get("enabled", True))
         self.assertEqual(list_cap["recognition"]["type"], "And")
+        page, count = [
+            item["recognition"]["param"]
+            for item in list_cap["recognition"]["param"]["all_of"]
+        ]
+        self.assertIn("我的逆袭悬赏", page["expected"])
+        self.assertNotIn("刷新", page["expected"])
+        # A/SS+ 用完不能结束 S 阶段，S:10 也不能被识别为 S:0。
+        for text, exhausted in (
+            ("剩余奖励次数：逆袭A:2/逆袭S:0/逆袭SS+:0", True),
+            ("逆袭A:0 / 逆袭S： 0 / 逆袭SS+:2", True),
+            ("逆袭A:0/逆袭S:2/逆袭SS+:0", False),
+            ("逆袭A:0/逆袭S:10/逆袭SS+:0", False),
+            ("逆袭A:0/逆袭SS+:0", False),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(
+                    any(re.search(pattern, text) for pattern in count["expected"]),
+                    exhausted,
+                )
         self.assertEqual(
             list_cap["next"],
             ["每周逆袭悬赏阶段1完成禁用"],
@@ -388,6 +408,13 @@ class PipelineGuardTest(unittest.TestCase):
 
         level_expected = {2: "80", 3: "90"}
         for stage in (2, 3):
+            grade = "A" if stage == 2 else "S"
+            override = pipeline[f"每周逆袭悬赏阶段{stage}应用{grade}筛选"][
+                "action"
+            ]["param"]["custom_action_param"]
+            self.assertFalse(
+                override["每周逆袭悬赏列表页识别到次数上限_阶段1"]["enabled"]
+            )
             still = pipeline[f"每周逆袭悬赏准备页仍有概率掉落_阶段{stage}"][
                 "recognition"
             ]["param"]
