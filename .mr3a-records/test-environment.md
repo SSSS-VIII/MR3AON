@@ -52,9 +52,9 @@ python3 dev/test_runtime_cli.py
 
 外部封装只选择名字，并使用 `runtime.InstanceSession` 的就绪、状态、截图和控制租约；不自行维护 Waydroid、ADB 或端口。接口边界见 `docs/develop/命名实例.md`。小鲤已通过独立插件的 `game_control` 接入：启动调用 `~/xiaoli/run` → 本项目 `run xiaoli --task 启动游戏`，只在单条设备操作期间持有租约；配置为 OPPO、上次登录。账号尚未提供，仅验证到渠道账号页；大小号协同业务仍未实现。
 
-## 小鲤魅族渠道依赖
+## 小鲤当前游戏渠道
 
-xiaoli 的魅族忍三除游戏本体外还需要 `com.meizu.gamecenter.service`（魅族/魅玩游戏框架），当前已安装 8.2.4；魅族游戏中心也保留。若游戏内自动安装一直失败，可从官方 SDK 接入文档提供的压缩包提取手机用 `MzGameCenterService_*.apk`，经 `InstanceSession('xiaoli')` 控制租约安装，不使用其中的 FlymeAuto 车机测试包。框架更新时可能需要允许它自身安装应用；账号登录由用户完成。来源、文件校验与实际处理见 `archived/2026-11-01-xiaoli-meizu-framework.md`。
+xiaoli 当前仅保留 OPPO 忍三、OPPO 游戏中心及其服务，启动任务渠道为 `oppo`、区服为「上次登录」。实际账号配置保留，模板不含密码。魅族忍三、游戏中心及框架已按用户要求卸载，见 `archived/2026-11-01-xiaoli-return-oppo.md`。此前魅族框架安装处理只作为历史记录保留，不再是当前环境依赖。
 
 ## 历史验证记录（不是当前入口约定）
 
