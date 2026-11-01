@@ -41,6 +41,8 @@
 
 ## 收口前待办
 
+悬赏战后卡住正在排查：截图动作纯读图，已核对每日悬赏 5 次「两次确认点击后仍抓到结算帧，下一轮按钮消失，只等确认而超时重启」的时序；用户要求先找原因，尚未改业务流程或加入无条件返回出口。仍需区分页面更新/取帧延迟并修复确认后的同步，见 [结算时序排查](archived/2026-11-02-bounty-settlement-timing-investigation.md)。
+
 用户已明确后续保留定制 MaaPiCli，参考 MFA 设计自己的模拟器兼容层，暂不全面兼容 MFA；当前仍优先业务修复。统一启动路径/参数、设备绑定与目录隔离，Waydroid 为后端之一，见 [MFA 边界核对及方向修正](archived/2026-11-02-mfa-multi-instance-boundary.md) 及 `docs/develop/命名实例.md`。
 
 1. Wait 的 `override_pipeline` 异常分支仍回退 `dispatch_next(context.tasker)`，与记录所述「不在 Wait 回调直接 post」不完全一致。结合提交时已带 Stop 节点的实现核实异常策略；控制器长期断连另行验证，不能宣称已解决。
