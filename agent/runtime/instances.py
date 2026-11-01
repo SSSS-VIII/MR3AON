@@ -227,17 +227,43 @@ class InstanceSession:
             raise RuntimeError(f"实例 {self.spec.name} 返回了其它环境的地址，拒绝连接")
         return address + ":5555"
 
-    def _adb(self, *args: str, timeout: float = 20, target: bool = True):
+    def _adb_result(self, *args: str, timeout: float = 20, target: bool = True, input_data: bytes | None = None):
         command = [shutil.which("adb") or "/usr/bin/adb", "-P", str(self.spec.adb_port)]
         if target:
             if not self._serial:
                 self._serial = self._address()
             command.extend(["-s", self._serial])
         command.extend(args)
-        result = subprocess.run(command, capture_output=True, timeout=timeout, env=self.spec.environment(self._serial))
+        return subprocess.run(command, input=input_data, capture_output=True, timeout=timeout, env=self.spec.environment(self._serial))
+
+    def _adb(self, *args: str, timeout: float = 20, target: bool = True):
+        result = self._adb_result(*args, timeout=timeout, target=target)
         if result.returncode:
             raise RuntimeError(f"实例 {self.spec.name} 设备操作失败：{result.stderr.decode(errors='replace').strip()}")
         return result.stdout
+
+    def adb(self, *args: str, timeout: float = 20, input_data: bytes | None = None) -> subprocess.CompletedProcess:
+        """在持有控制权时执行设备命令，保留二进制输出、stderr 和退出码。
+
+        只开放本实例的设备传输；服务器、连接和目标选择仍由设备层管理。
+        宿主文件传输的路径权限由上层控制器按自己的工作目录校验。
+        """
+        if not self._owns_control:
+            raise RuntimeError("ADB 操作须先通过 control() 取得实例控制权")
+        host_commands = {
+            "devices", "connect", "disconnect", "pair", "start-server", "kill-server",
+            "server", "nodaemon", "attach", "detach", "reconnect", "mdns",
+            "track-devices", "host-features", "forward", "reverse", "tcpip", "usb",
+        }
+        if not args or any(not isinstance(arg, str) or "\0" in arg for arg in args):
+            raise ValueError("ADB 参数须为不含空字节的字符串")
+        if args[0].startswith("-") or args[0] in host_commands:
+            raise ValueError("设备目标、ADB 服务器和端口由实例层管理，不能从设备命令切换")
+        if not 0 < timeout <= 300:
+            raise ValueError("ADB 超时须在 0–300 秒内")
+        if input_data is not None and not isinstance(input_data, bytes):
+            raise ValueError("ADB 标准输入须为 bytes")
+        return self._adb_result(*args, timeout=timeout, input_data=input_data)
 
     def ensure_ready(self, timeout: float = 180) -> str:
         self._backend("start", timeout=timeout)
