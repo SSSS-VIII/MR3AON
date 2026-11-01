@@ -42,7 +42,7 @@ def main():
         print(f"实例 {session.spec.name} 已就绪：{session.spec.work_root}")
         return 0
     with session.control():
-        registry.prepare(session.spec, migrate_legacy=True)
+        registry.prepare(session.spec)
         session.ensure_ready()
         session.bind_config()
         binary = session.spec.project_root / "deps/bin/MaaPiCli"
