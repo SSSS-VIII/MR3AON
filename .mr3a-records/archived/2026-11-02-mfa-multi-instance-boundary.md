@@ -25,3 +25,7 @@
 - https://github.com/MaaXYZ/MFAAvalonia/blob/master/README.md
 - https://github.com/MaaXYZ/MFAAvalonia/blob/master/MFAAvalonia/ViewModels/UsersControls/Settings/StartSettingsUserControlModel.cs
 - https://github.com/MaaXYZ/MFAAvalonia/blob/master/MFAAvalonia/Extensions/MaaFW/AgentHelper.cs
+
+## 用户确认的后续方向（取代上文全面接入 MFA 的建议）
+
+用户在本次核对后明确：保留定制 MaaPiCli，参考 MFA 实现自己的模拟器兼容层，暂不全面兼容 MFA。已经同步开发文档和当前交接，后续按名字统一启动路径/参数、设备连接及运行目录隔离，Waydroid 作为一个后端；当前先修悬赏结算问题，不扩展其它模拟器。仅文档调整，diff 检查通过。
