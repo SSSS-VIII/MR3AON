@@ -41,6 +41,8 @@
 
 ## 收口前待办
 
+MFA release 兼容边界已核对：现有本地封装与标准 Adb 控制器没有底层冲突，但 MFA 的实例身份/业务目录/设备绑定、Waydroid 恢复后端及生命周期仍需适配，不能直接宣称发布包多实例可用。方向与验收条件见 [MFA 边界核对](archived/2026-11-02-mfa-multi-instance-boundary.md) 及 `docs/develop/命名实例.md`。
+
 1. Wait 的 `override_pipeline` 异常分支仍回退 `dispatch_next(context.tasker)`，与记录所述「不在 Wait 回调直接 post」不完全一致。结合提交时已带 Stop 节点的实现核实异常策略；控制器长期断连另行验证，不能宣称已解决。
 2. `周末活动检查集会所主页.next` 没有 `[JumpBack]周末活动点击讨伐鬼族`。补接后验证入口和退回路径，再继续内流程；当前不算已支持该活动。
 3. 处理以下 5 项测试失败。不能为通过断言而撤销历史上有原因的兼容逻辑，也不能未经核实恢复旧业务路径。
