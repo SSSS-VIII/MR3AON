@@ -777,6 +777,11 @@ class PipelineGuardTest(unittest.TestCase):
         )
         cases = tasks["option"]["请选择服务器"]["cases"]
         self.assertGreaterEqual(len(cases), 2)
+        meizu = next(case for case in cases if case["name"] == "魅族")
+        self.assertEqual(
+            meizu["pipeline_override"]["启动应用"]["action"]["param"]["custom_action_param"]["package"],
+            "com.pandadastudio.ninjamustdie3.mz",
+        )
         for case in cases:
             with self.subTest(server=case["name"]):
                 param = case["pipeline_override"]["启动应用"]["action"]["param"]

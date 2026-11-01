@@ -205,6 +205,21 @@
                     }
                 },
                 {
+                    "name": "魅族",
+                    "pipeline_override": {
+                        "启动应用": {
+                            "action": {
+                                "param": {
+                                    "package": "com.pandadastudio.ninjamustdie3.mz",
+                                    "custom_action_param": {
+                                        "package": "com.pandadastudio.ninjamustdie3.mz"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
                     "name": "4399",
                     "pipeline_override": {
                         "启动应用": {
