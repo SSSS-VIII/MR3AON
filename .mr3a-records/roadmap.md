@@ -1,6 +1,6 @@
 # Roadmap
 
-2026-11-01：包管理器版 Waydroid 已实现主实例与 slot 1 双开，独立 Binder/网络/D-Bus/数据与 ADB server 5038；启停隔离实测通过，MR3A 运行目录隔离尚待接入。见 `archived/2026-11-01-waydroid-package-multi-instance.md`。
+2026-11-01：命名多实例基础已落地：`run [名字]` 保留默认账号，新名独立凭据与运行数据，共用程序/源码；双实例 Agent 日志、奖励与状态隔离实测通过。大小号协同业务和 dsh 服务仍待开发，后续复用 `InstanceSession`；见 `archived/2026-11-01-named-run-isolation.md`。
 
 2026-11-01：调度、逆袭列表停判、家族战确认已按功能独立提交；鬼族未完成项留在工作区，当前交接与已知测试失败见 `current-work.md`。
 

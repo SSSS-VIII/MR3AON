@@ -266,31 +266,39 @@ def manage(instance, action):
     system_unit = f"mr3a-waydroid-{instance.slot}" if instance.slot else "waydroid-container"
     user_unit = f"mr3a-waydroid-session-{instance.slot}"
     if action == "stop":
+        address = None
+        lease = Path(f"/var/lib/misc/dnsmasq.{instance.bridge}.leases")
+        if lease.exists():
+            rows = [line.split() for line in lease.read_text().splitlines()]
+            if rows and len(rows[0]) >= 3:
+                import ipaddress
+                address = str(ipaddress.IPv4Address(rows[0][2])) + ":5555"
         # Stop only the named session, then its own daemon. No global Waydroid
         # service, adb server, process-name kill or nftables flush is used.
         subprocess.run([
             "busctl", "--user", "call", instance.session_bus,
             "/SessionManager", "id.waydro.SessionManager", "Stop",
         ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        for prefix, unit in ((["systemctl", "--user"], user_unit), (["sudo", "systemctl"], system_unit)):
+        for prefix, unit in ((["systemctl", "--user"], user_unit), (["sudo", "-n", "systemctl"], system_unit)):
             if not instance.slot and prefix[0] == "sudo":
                 continue
             loaded = subprocess.check_output([*prefix, "show", "--property=LoadState", "--value", unit], text=True).strip()
             if loaded != "not-found":
                 subprocess.run([*prefix, "stop", unit], check=True)
-        subprocess.run(["adb", "-P", str(instance.adb_port), "disconnect"], check=True)
+        if address:
+            subprocess.run(["adb", "-P", str(instance.adb_port), "disconnect", address], check=True)
         return
     if instance.slot and not (instance.work / "instance.json").is_file():
-        subprocess.run(["sudo", *command, "create"], check=True)
+        subprocess.run(["sudo", "-n", *command, "create"], check=True)
     active = subprocess.run(["systemctl", "is-active", "--quiet", system_unit])
     if active.returncode:
         if instance.slot:
             subprocess.run([
-                "sudo", "systemd-run", "--unit=" + system_unit, "--collect",
+                "sudo", "-n", "systemd-run", "--unit=" + system_unit, "--collect",
                 *command, "container", "start",
             ], check=True)
         else:
-            subprocess.run(["sudo", "systemctl", "start", system_unit], check=True)
+            subprocess.run(["sudo", "-n", "systemctl", "start", system_unit], check=True)
     # Wait for the dedicated bus name rather than assuming systemd's exec means
     # the container daemon is ready to receive session requests.
     for _ in range(50):

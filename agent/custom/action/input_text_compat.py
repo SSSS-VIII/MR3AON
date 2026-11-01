@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import base64
 import json
-import shutil
 import subprocess
 import time
 from typing import Any
@@ -23,27 +22,8 @@ _MAX_INPUT_LENGTH = 128
 
 
 def _adb_target() -> tuple[str, str]:
-    adb = shutil.which("adb") or "/usr/bin/adb"
-    result = subprocess.run(
-        [adb, "devices"],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=10,
-        check=False,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"无法执行 adb devices: {result.stderr.strip()}")
-
-    devices = []
-    for line in result.stdout.splitlines()[1:]:
-        fields = line.split()
-        if len(fields) >= 2 and fields[1] == "device":
-            devices.append(fields[0])
-    if len(devices) != 1:
-        raise RuntimeError(f"需要恰好一个 ADB 设备，当前发现: {devices!r}")
-    return adb, devices[0]
+    from utils.adb_device import adb_target
+    return adb_target()
 
 
 def _shell(adb: str, serial: str, *args: str) -> str:

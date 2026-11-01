@@ -35,7 +35,9 @@ if current_script_dir not in sys.path:
 from utils import logger
 from utils.runtime_paths import configure_runtime_paths, get_runtime_paths
 
-configure_runtime_paths(project_root=project_root_dir, work_root=project_root_dir)
+configure_runtime_paths(project_root=project_root_dir, work_root=os.environ.get("MR3A_WORK_ROOT", project_root_dir))
+if os.environ.get("MR3A_WORK_ROOT"):
+    os.chdir(str(get_runtime_paths().work_root))
 logger.debug(f"set cwd: {os.getcwd()}")
 
 VENV_NAME = ".venv"  # 虚拟环境目录的名称
@@ -385,8 +387,8 @@ def agent(is_dev_mode=False):
         from tui import run_agent_tui, tui_should_run
         from utils.agent_lifecycle import guard_agent_process
 
-        Tasker.set_log_dir("./debug")
-        Toolkit.init_option("./")
+        Tasker.set_log_dir(str(get_runtime_paths().debug_dir))
+        Toolkit.init_option(str(get_runtime_paths().work_root))
 
         if len(sys.argv) < 2:
             logger.error("缺少必要的 socket_id 参数")
@@ -476,7 +478,7 @@ def main():
 
     check_and_install_dependencies()
 
-    if is_dev_mode:
+    if is_dev_mode and not os.environ.get("MR3A_WORK_ROOT"):
         paths = configure_runtime_paths(
             project_root=project_root_dir,
             work_root=get_runtime_paths().assets_dir,

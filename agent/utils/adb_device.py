@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import os
 from typing import Optional
 
 
@@ -32,6 +33,11 @@ def list_adb_states() -> tuple[str, list[tuple[str, str]]]:
 
 def adb_target() -> tuple[str, str]:
     adb, rows = list_adb_states()
+    selected = os.environ.get("MR3A_ADB_SERIAL")
+    if selected:
+        if (selected, "device") not in rows:
+            raise RuntimeError(f"实例绑定的 ADB 设备未就绪：{selected}")
+        return adb, selected
     devices = [serial for serial, state in rows if state == "device"]
     if len(devices) != 1:
         raise RuntimeError(

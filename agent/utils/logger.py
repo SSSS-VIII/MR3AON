@@ -12,10 +12,10 @@ try:
             console_level: 控制台输出等级 (DEBUG, INFO, WARNING, ERROR)
         """
         if log_dir is None:
-            test_work = os.environ.get("MR3A_TEST_WORK")
+            runtime_root = os.environ.get("MR3A_WORK_ROOT") or os.environ.get("MR3A_TEST_WORK")
             log_dir = (
-                os.path.join(test_work, "debug", "custom")
-                if test_work
+                os.path.join(runtime_root, "debug", "custom")
+                if runtime_root
                 else "debug/custom"
             )
         os.makedirs(log_dir, exist_ok=True)

@@ -1,16 +1,50 @@
-# 测试环境
+# 运行与测试环境
 
-## 项目
+## 命名入口（当前约定）
 
-- 项目目录：`/home/linn/MR3A`
-- 设备连接：Waydroid + ADB
-- 启动入口：仓库根目录 `./run`。它先准备 Waydroid / ADB，再执行 `deps/bin/MaaPiCli -d`
-- 测试入口：`./run test`。工作目录是 `deps/.run-test`（已在 `deps/*` 忽略里）。配置、`maafw.log`、Agent 自定义日志和 `agent_task_state.json` 都写在这里，不回写 `deps/bin/config` 和 `debug/`
-- `deps/bin/MaaPiCli` 保持指向 `/home/linn/MaaPiCli/build/bin/RelWithDebInfo/MaaPiCli` 的符号链接，不改成包装脚本
-- 正式入口缓存：不修改、不覆盖
-- 运行验证：优先使用临时 MaaPiCli 副本，避免污染主入口配置
+```bash
+./run                         # main，复用当前配置、账号和 Android
+./run small                   # 创建或复用 small；新名不继承主账号凭据
+./run small --configure       # 配置 small 自己的任务与登录选项
+./run small --check           # 只准备/检查 Android，不运行游戏任务
+./run small --prepare         # 只初始化运行文件，不启动 Android
+./tools/run-weekly-reverse     # main 本次只跑每周逆袭，不改保存的任务计划
+./tools/run-3v3 small          # small 本次只跑完整 3v3
+```
 
-## 2026-08-27 错误恢复重构验证
+新名字初次使用进入独立配置菜单；非交互调用时若尚无任务会明确报错。新 Android 仍需安装游戏并登录自己的账号。名字可用中文、字母、数字、下划线和短横线。同一个名字完全复用，不同名字可并行；同名控制者重复启动会被拒绝。main 的旧脚本若还在运行，应先按 q 退出旧会话，再用新入口接管，不会强杀现有任务。
+
+`test` 现在只是普通实例名，不再表示复制测试环境。旧 `deps/.run-test` 入口已停用，旧文件保留、不清空；单任务工具改用同一实例和同一可执行文件，任务选择仅在内存中生效。
+
+## 文件归属
+
+- 项目与源码：`/home/linn/MR3A`。
+- 共用程序：`deps/bin/MaaPiCli` 仍是指向 `/home/linn/MaaPiCli/build/bin/RelWithDebInfo/MaaPiCli` 的软链接；没有复制二进制或动态库。
+- main：`deps/bin/config/` 保留原 PiCli 配置和 `agent_task_state.json`；`deps/bin/data/` 为可写缓存/学题，`deps/bin/debug/` 为新日志和奖励。原有 pip 设置也保留。
+- 其它名字：`.mr3a-instances/<名字>/{config,data,debug}/`；注册表 `.mr3a-instances/registry.json` 和各环境 `instance.json` 固定身份，目录不入库，配置和运行目录私有。
+- 资源、模型、图片共享只读；每个环境生成小型 interface 路径配置，不复制资源或源码。旧主奖励图首次正式接管时合并，冲突图保留历史版本；原图和旧日志不删除。
+- Android 状态由名字内部管理。包管理器的 Waydroid 文件保持不变；仅当前 1.6.3 经验证，版本升级后需要复核适配。主机重启尚未实测，重启后仍通过同一个名字启动。
+
+## 验证
+
+```bash
+PYTHONPATH=agent .venv/bin/python -m pytest tests/test_named_instances.py tests/test_instance_runtime.py tests/test_waydroid_instances.py -q
+# 显式选择已就绪的名字；只截图，不向游戏发送点击
+MR3A_LIVE_INSTANCES=main,small PYTHONPATH=agent .venv/bin/python -m pytest tests/test_named_instances_live.py -q
+# CLI 目录和临时任务选择（不连接游戏）
+cd /home/linn/MaaPiCli
+python3 dev/test_runtime_cli.py
+```
+
+受控设备冒烟使用独立测试夹具和同一程序，分别验证框架日志、Agent 日志、奖励图和状态落盘；不加入日常任务列表，不改主账号任务或密码。
+
+## 后续接口
+
+外部封装只选择名字，并使用 `runtime.InstanceSession` 的就绪、状态、截图和控制租约；不自行维护 Waydroid、ADB 或端口。接口边界见 `docs/develop/命名实例.md`。智能体服务和大小号协同业务尚未实现。
+
+## 历史验证记录（不是当前入口约定）
+
+### 2026-08-27 错误恢复重构验证
 
 - Python：3.14.6
 - MaaFramework Python binding：5.12.2
@@ -18,7 +52,7 @@
 - 已执行：全部资源 JSON 解析、Python `compileall`、恢复链静态断言、7 个错误恢复/流水线保护单元测试、MaaFramework `Resource.post_bundle` 整包加载、`git diff --check`
 - 本次未启动正式 `maapicli`，未执行真实设备重启，未修改运行缓存
 
-## 关键验证命令
+### 当时的验证命令
 
 ```bash
 PYTHONPATH=agent ./.venv/bin/python -m compileall -q agent tests
@@ -26,27 +60,3 @@ PYTHONPATH=agent ./.venv/bin/python -m unittest -v tests/test_error_recovery.py 
 PYTHONPATH=agent ./.venv/bin/python tools/ci/check_resource.py assets/resource
 git diff --check
 ```
-
-## 独立 Waydroid（2026-11-01）
-
-保留 RPM Waydroid 1.6.3，主实例仍使用普通 `waydroid` 命令和 ADB server 5037。次实例使用仓库启动适配层，无需自行构建 Waydroid。
-
-```bash
-# 桌面普通用户执行；首次自动 sudo 创建实例，再启动独立容器和窗口
-./tools/waydroid-instance --slot 1 start
-./tools/waydroid-instance --slot 1 status
-
-# 首次 Android 启动后，授权本机用户 ADB 公钥（不修改主 Android）
-sudo ./tools/waydroid-instance --slot 1 authorize-adb
-./tools/waydroid-instance --slot 1 adb connect
-adb -P 5038 devices
-
-# 仅停止次实例，保留数据；下次仍用 start
-./tools/waydroid-instance --slot 1 stop
-```
-
-当前 slot 1 已创建并授权，IP 为 `192.168.241.112:5555`（以 status 为准），分辨率 1280x720。`adb -P 5038 -s <地址> shell ...` 控制次实例；不带 `-P` 的 adb 仍控制主 server。
-
-系统数据/日志在 `/var/lib/waydroid-mr3a1/`，Android 用户数据在 `~/.local/share/waydroid-mr3a1/android-data/`。systemd 日志分别用 `journalctl -u mr3a-waydroid-1` 与 `journalctl --user -u mr3a-waydroid-session-1` 查看。两个服务按需创建，主机重启后手动 start 即可；主机重启场景尚未实测。
-
-适配目前限定已验证的 1.6.3，软件包版本变化需重新核对；更新共享 Android 镜像前先停止次实例。仅 Waydroid 双开已落地，MR3A 多实例运行目录接入尚未完成，不能直接认为两份脚本已可安全并跑。

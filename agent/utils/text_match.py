@@ -115,6 +115,10 @@ def extract_question_body(ocr_text: str) -> str:
 
 def _resolve_db_path(db_path: str) -> Path:
     rel = Path(db_path.strip())
+    import os
+    if os.environ.get("MR3A_WORK_ROOT") and not rel.is_absolute() and rel.parts[:2] == ("resource", "data"):
+        from utils.runtime_paths import get_runtime_paths
+        return get_runtime_paths().data_dir.joinpath(*rel.parts[2:])
     if rel.is_file():
         return rel.resolve()
 

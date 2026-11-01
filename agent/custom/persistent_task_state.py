@@ -339,6 +339,8 @@ class PersistentTaskStateStore:
             raise
 
 def _agent_task_state_path() -> Path:
+    if os.environ.get("MR3A_WORK_ROOT"):
+        return get_runtime_paths().config_dir / "agent_task_state.json"
     test_work = os.environ.get("MR3A_TEST_WORK")
     if test_work:
         return Path(test_work) / "config" / "agent_task_state.json"

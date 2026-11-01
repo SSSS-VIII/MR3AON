@@ -1,4 +1,4 @@
-"""从本地 resource/data/game-meta.json 读取键值对并覆盖流水线节点"""
+"""从当前环境 data/game-meta.json 读取键值对并覆盖流水线节点"""
 
 from __future__ import annotations
 
@@ -165,12 +165,12 @@ def _deep_merge_dict(dst: MutableMapping[str, Any], src: Mapping[str, Any]) -> N
 
 from utils.runtime_paths import get_runtime_paths
 
-_LOCAL_PATH = str(get_runtime_paths().resource_dir / "data" / "game-meta.json")
+_LOCAL_PATH = str(get_runtime_paths().data_dir / "game-meta.json")
 
 
 @AgentServer.custom_action("LoadGameMetaOverride")
 class LoadGameMetaOverride(CustomAction):
-    """从本地 resource/data/game-meta.json 取值，覆盖流水线节点字段。
+    """从当前环境 data/game-meta.json 取值，覆盖流水线节点字段。
 
     overrides 参数格式与 RemoteJsonOverrideExpected 完全一致：
     - 对象简写: {"节点名": "json键名"}

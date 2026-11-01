@@ -5,6 +5,7 @@ from __future__ import annotations
 import shutil
 import subprocess
 import time
+import os
 from typing import Optional
 
 from utils.adb_device import adb_shell, adb_target, pidof_package
@@ -14,11 +15,26 @@ from utils.logger import logger
 DISPLAY_SIZE = "1280x720"
 
 
+def _named_session():
+    name = os.environ.get("MR3A_INSTANCE_NAME")
+    if name:
+        from runtime.instances import InstanceSession
+        return InstanceSession(name)
+    return None
+
+
+def _bind_named(session) -> None:
+    serial = session.ensure_ready()
+    os.environ.update(MR3A_ADB_SERIAL=serial, ANDROID_SERIAL=serial)
+
+
 def waydroid_bin() -> str:
     return shutil.which("waydroid") or "/usr/bin/waydroid"
 
 
 def waydroid_status_text(wait_sec: float = 15) -> str:
+    if session := _named_session():
+        return session._backend("status", timeout=wait_sec)
     result = subprocess.run(
         [waydroid_bin(), "status"],
         capture_output=True,
@@ -63,6 +79,9 @@ def _run_waydroid(*args: str, wait_sec: float = 120) -> subprocess.CompletedProc
 
 
 def stop_session() -> None:
+    if session := _named_session():
+        session.stop()
+        return
     result = _run_waydroid("session", "stop", wait_sec=120)
     logger.info(
         f"waydroid session stop: code={result.returncode} "
@@ -72,6 +91,9 @@ def stop_session() -> None:
 
 def start_session_background() -> None:
     """session start 会常驻前台，因此后台拉起后轮询 status。"""
+    if session := _named_session():
+        _bind_named(session)
+        return
     subprocess.Popen(
         [waydroid_bin(), "session", "start"],
         stdout=subprocess.DEVNULL,
@@ -83,6 +105,9 @@ def start_session_background() -> None:
 
 def show_full_ui() -> None:
     """session start 不会开窗口。要看见画面必须再 show-full-ui。"""
+    if session := _named_session():
+        session._backend("show-full-ui", timeout=30)
+        return
     result = _run_waydroid("show-full-ui", wait_sec=30)
     logger.info(
         f"waydroid show-full-ui: code={result.returncode} "
@@ -123,6 +148,9 @@ def set_display_size(size: str = DISPLAY_SIZE) -> None:
 
 
 def connect_adb() -> None:
+    if session := _named_session():
+        session._backend("adb", "connect", timeout=60)
+        return
     # 不带 --details-to-stdout 时失败只剩一句提示，看不出 IP/adbd 是否就绪。
     result = _run_waydroid("--details-to-stdout", "adb", "connect", wait_sec=60)
     logger.info(
@@ -177,6 +205,11 @@ def ensure_waydroid_and_adb(
     deadline_sec: float = 120,
 ) -> None:
     """确保 Session 在跑、容器未冻结，且 ADB 和 Android 都已就绪。"""
+    if session := _named_session():
+        if not start_if_needed and session.status().get("session") != "RUNNING":
+            raise RuntimeError("当前名字的 Waydroid 未运行")
+        _bind_named(session)
+        return
     status = waydroid_status_text()
     if container_frozen(status):
         logger.warning("Waydroid container 已冻结，重启 session")
@@ -210,6 +243,10 @@ def ensure_waydroid_and_adb(
 
 def restart_waydroid_session(deadline_sec: float = 180) -> None:
     """停止并重新拉起 session，再恢复 ADB。不需要 root container restart。"""
+    if session := _named_session():
+        serial = session.restart()
+        os.environ.update(MR3A_ADB_SERIAL=serial, ANDROID_SERIAL=serial)
+        return
     logger.warning("正在重启 Waydroid session")
     try:
         stop_session()

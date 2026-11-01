@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import threading
 from dataclasses import dataclass
@@ -11,6 +12,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from utils.logger import logger
+from utils.runtime_paths import get_runtime_paths
 
 _DAILY_RESET_HOUR = 5
 _REGISTRY_NAME = "registry.json"
@@ -47,11 +49,9 @@ def daily_cycle_start(now: Optional[datetime] = None) -> datetime:
 
 
 def reward_shots_root() -> Path:
-    """相对进程 cwd 的 debug/reward_shots。
-
-    DEBUG 模式 main 会 chdir 到 assets/，故实机路径是 assets/debug/reward_shots。
-    """
-    return Path("debug") / "reward_shots"
+    """命名实例固定使用自己的 debug；兼容旧入口的相对 cwd 行为。"""
+    root = get_runtime_paths().debug_dir if os.environ.get("MR3A_WORK_ROOT") else Path("debug")
+    return root / "reward_shots"
 
 
 def sanitize_dir_name(name: str) -> str:

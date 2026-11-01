@@ -1,5 +1,6 @@
 from datetime import datetime
 from pathlib import Path
+import os
 from typing import Any, Optional, Union
 
 from maa.agent.agent_server import AgentServer
@@ -11,9 +12,10 @@ from PIL import Image
 from custom.pipeline_params import parse_pipeline_json_param
 from custom.loop_deadline.store import LoopDeadlineStore
 from utils import logger
+from utils.runtime_paths import get_runtime_paths
 
-# 相对进程 cwd（与 debug/on_error 同级约定）
-_EXPIRED_DUMP_DIR = Path("debug") / "loop_deadline_expired"
+# 命名实例使用自己的 debug，旧入口兼容相对 cwd
+_EXPIRED_DUMP_DIR = (get_runtime_paths().debug_dir if os.environ.get("MR3A_WORK_ROOT") else Path("debug")) / "loop_deadline_expired"
 # 目录内最多保留的超时截图数；超出则按修改时间删最旧的，避免撑爆磁盘。
 _EXPIRED_DUMP_MAX_FILES = 50
 

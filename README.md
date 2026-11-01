@@ -27,6 +27,11 @@ Powered by [MaaFramework](https://github.com/MaaXYZ/MaaFramework) & [MFAAvalonia
 
 ## Roadmap
 
+本地入口：`./run` 复用现有主账号；`./run 小号` 创建或复用独立环境。
+同名保留配置与 Android 数据，新名字不继承主账号密码。
+首次使用新环境进入独立任务配置；也可用 `./run 小号 --configure` 修改配置。
+详情见 [运行环境](.mr3a-records/test-environment.md) 和 [实例开发约定](docs/develop/命名实例.md)。
+
 - 🚧 强化错误处理 现在基本可以24小时一直跑了！
 - ✅ Agent 动态调度任务队列
   - 可以按时执行对应任务 比如在忍者小屋到点的时候准时去修炼～也可以重复执行一些任务，比如多次忍村试炼这样子～
@@ -45,6 +50,7 @@ Powered by [MaaFramework](https://github.com/MaaXYZ/MaaFramework) & [MFAAvalonia
 - ✅ 奖励截图记录
   - 不知道自己得到了什么奖励不是白打了吗， 每天的奖励可以记录在GUI上了！
 - ⬜ 多账号协同 
+  - ✅ 命名实例与运行隔离基础：共用程序，独立 Android、配置、状态与日志；大小号协同业务待开发。
   - 通过小号邀请大号实现MVP垄断 或者什么别的东西～ 但是需要一个解锁了A悬赏的小号，而且涉及到容器多实例，目前没有充足的测试环境只能测试waydroid～
 - ⬜ 🎇REALEASE🎇 真的可以到达这里吗?
 

@@ -61,6 +61,8 @@ class InstanceSpec:
         env.pop("MR3A_PICLI_PID", None)
         env.pop("MR3A_ADB_SERIAL", None)
         env.pop("ANDROID_SERIAL", None)
+        env.pop("ANDROID_ADB_SERVER_PORT", None)
+        env.pop("ADB_SERVER_PORT", None)
         env.update(
             MR3A_INSTANCE_NAME=self.name,
             MR3A_WORK_ROOT=str(self.work_root),
@@ -203,7 +205,7 @@ class InstanceSession:
     def _backend(self, *args: str, timeout: float = 200, root: bool = False):
         command = [str(self.spec.project_root / "tools/waydroid-instance"), "--slot", str(self.spec.slot), *args]
         if root:
-            command.insert(0, "sudo")
+            command[0:0] = ["sudo", "-n"]
         result = subprocess.run(command, capture_output=True, timeout=timeout, env=self.spec.environment())
         if result.returncode:
             raise RuntimeError(f"实例 {self.spec.name} 的 Waydroid 操作失败：{result.stderr.decode(errors='replace').strip()}")
@@ -219,7 +221,10 @@ class InstanceSession:
         if status.get("session") != "RUNNING" or address == "UNKNOWN":
             raise RuntimeError(f"实例 {self.spec.name} 的 Android 尚未运行或没有地址")
         import ipaddress
-        ipaddress.ip_address(address)
+        target = ipaddress.ip_address(address)
+        expected = ipaddress.ip_network(f"192.168.{240 + self.spec.slot}.0/24")
+        if target not in expected:
+            raise RuntimeError(f"实例 {self.spec.name} 返回了其它环境的地址，拒绝连接")
         return address + ":5555"
 
     def _adb(self, *args: str, timeout: float = 20, target: bool = True):
@@ -252,7 +257,18 @@ class InstanceSession:
         raise RuntimeError(f"等待实例 {self.spec.name} 就绪超时")
 
     def stop(self) -> None:
-        self._backend("stop")
+        try:
+            address = self._address()
+        except RuntimeError:
+            address = None
+        # Keep the instance's root manager alive. Normal script recovery then
+        # uses its D-Bus service without repeatedly requesting host privileges.
+        self._backend("session", "stop")
+        subprocess.run([
+            "systemctl", "--user", "stop", f"mr3a-waydroid-session-{self.spec.slot}",
+        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if address:
+            self._adb("disconnect", address, target=False)
         self._serial = None
 
     def restart(self) -> str:

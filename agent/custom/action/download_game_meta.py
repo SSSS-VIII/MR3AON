@@ -1,4 +1,4 @@
-"""从金山文档 GameData 表格下载 game-meta 到本地 resource/data/"""
+"""从金山文档 GameData 表格下载 game-meta 到当前环境的 data/"""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ _AIRSCRIPT_TOKEN = "1NKkJQNwt4yNsLNVTTmnVH"
 _SHEET_NAME = "GameMeta"
 # ======================
 
-_DATA_DIR = get_runtime_paths().resource_dir / "data"
+_DATA_DIR = get_runtime_paths().data_dir
 _FILE_NAME = "game-meta.json"
 _LOCAL_PATH = str(_DATA_DIR / _FILE_NAME)
 
@@ -113,7 +113,7 @@ def _load_local() -> Dict[str, Any] | None:
 
 @AgentServer.custom_action("DownloadGameMeta")
 class DownloadGameMeta(CustomAction):
-    """从金山文档 GameData 表格拉取键值对，存入本地 resource/data/game-meta.json。
+    """从金山文档 GameData 表格拉取键值对，存入当前环境的 data/game-meta.json。
 
     失败时保留已有本地文件。首次运行且无网络时写入兜底数据。
     """

@@ -4,7 +4,7 @@
 
 ## 当前任务：多实例运行隔离
 
-同一份程序/源码支持多个并行 Waydroid、独立 ADB 与全部可写运行数据；不再复制程序来构建 run-test。用户已明确使用包管理器版 Waydroid、不换容器。现已通过进程内适配实现主实例 + slot 1 双开、独立 ADB server，并验证次实例启停不影响主实例，见 [双实例落地](archived/2026-11-01-waydroid-package-multi-instance.md)；命令和路径见 `test-environment.md`。后续仍需接入 MR3A 运行目录、配置/缓存/奖励和进程退出隔离。早期调查保留在 [调查记录](archived/2026-11-01-multi-instance-investigation.md)，其中待定路线已由用户选择 Waydroid 解决。鬼族继续暂缓。
+命名设备层已在 `c52f41c` 独立提交；现已接入 `./run [名字]`，省略为复用现有账号的 main。新名空白凭据，同名完整复用；检查、恢复、ADB、配置/缓存/奖励、日志及退出按名字隔离，不再复制程序。当前 main 与 small 均已就绪，small 仍是空任务配置。见 [命名入口落地](archived/2026-11-01-named-run-isolation.md)、[设备会话层](archived/2026-11-01-named-device-session.md)；用法在 `test-environment.md`，后续 dsh 边界在 `docs/develop/命名实例.md`。大小号协同业务和智能体服务尚未实现，鬼族继续暂缓。
 
 ## 已按功能提交
 
@@ -32,7 +32,7 @@
 
 ## 2026-11-01 验证基线
 
-`PYTHONPATH=agent ./.venv/bin/python -m pytest tests agent/tests -q --tb=short`：**79 passed、5 failed、79 subtests passed**。
+`MR3A_LIVE_INSTANCES=main,small PYTHONPATH=agent .venv/bin/python -m pytest tests agent/tests -q --tb=short`：**107 passed、5 failed、79 subtests passed**，包括真实双实例只读截图冒烟。未指定实机名字时该冒烟默认跳过。
 
 | 失败测试 | 当前证据与处理方向 |
 | --- | --- |
@@ -42,4 +42,4 @@
 | `test_weekly_bounty_refresh_mode_button_default` | 引用了已不存在的独立「误入悬赏令商店点返回」节点；当前共享返回节点已联合识别店名和返回按钮，需据实际可达链路核对断言 |
 | `test_bounty_shop_alternates_swipe_direction` | 真实入口只进右滑计数链，左滑切换节点虽在但不在该路径；与 09-27 交替滑动记录不一致，需确认预期再修代码或记录，暂不能只改断言 |
 
-全部 56 个资源 JSON 可解析，两张讨伐鬼族 PNG 可解码。原 Wait 归档的三处行尾空白已清理。未启动游戏，未修改正式配置或任务状态，未做长睡断连、跨日或活动实机验证。
+资源 JSON 和鬼族图片的原检查结果保留。本轮已做两台 Android 并行只读截图、运行文件归属及次实例按名重启验证；未执行游戏点击或改主账号任务/密码，长睡、跨日与协同业务仍未验证。

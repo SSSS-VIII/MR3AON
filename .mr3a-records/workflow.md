@@ -14,7 +14,7 @@
 
 - 主要运行链是 `./run` → Waydroid / ADB 准备 → 本地定制 MaaPiCli → Agent 接管队列 → 业务流水线。GitHub Actions 是另一条检查/发布链，不能代替本地开发流程介绍。
 - 本机使用 `/home/linn/MaaPiCli` 的 `mr3a-managed-queue` 定制实现；官方二进制不能直接替代。框架绑定与本地二进制协议必须匹配。依据：[10-05 上游合并](archived/2026-10-05-upstream-merge-and-maapicli-5142.md)。
-- 测试优先 `./run test` 或现有 `tools/run-*` 的 `deps/.run-test` 隔离入口，不改正式配置、日志和任务状态，也不为单任务测试向日常列表添加假入口。具体使用前读 `test-environment.md`。
+- 正式与测试共用 `./run [名字]` 的实例管理，省略为保留现有账号的 main。同名复用环境，新名空白凭据；`tools/run-* [名字]` 只在内存中选择本次任务，不复制程序或覆盖保存计划。受控只读冒烟可用测试夹具加同一二进制，不向日常列表添加假入口；旧 `.run-test` 机制已停用。具体使用前读 `test-environment.md`。
 - 每个业务任务独立顶层提交；恢复重排交给 Agent，避免用嵌套 `context.run_task()` 继承停止状态与 JumpBack 栈。任务停止前推进队列；长期任务在安全点让出，不破坏抢队热路径。依据：[调度试点](archived/2026-08-27-deferred-task-scheduler.md)、[长时恢复](archived/2026-08-29-long-run-recovery-and-treasure-map.md)。
 - Tasker 事件回调不能直接发 Maa 请求；硬结束路径在另外线程推进。Wait 正常路径睡醒后经 StopTask sink 提交下一项；异常兜底及断连尚有待办，见交接页。依据：[RPC 回调问题](archived/2026-09-19-tasker-sink-ipc-stack.md)、[硬失败](archived/2026-10-25-tui-recover-after-managed-task-fail.md)、[Wait 修复](archived/2026-10-28-wait-post-task-abort.md)。
 - `enable` / `enabled` 双写是解决节点持久化禁用失效的兼容策略，不能仅因旧测试断言不同就撤销。依据：[10-11 双字段兼容](archived/2026-10-11-mirror-node-enable-disable.md)。

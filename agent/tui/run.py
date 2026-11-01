@@ -108,6 +108,17 @@ def find_maa_picli_pids() -> list[int]:
 
     Agent 常被 systemd 收养，getppid() 不可靠；Ctrl+C 能退是因为信号打到 PiCli。
     """
+    if os.environ.get("MR3A_INSTANCE_NAME"):
+        raw = os.environ.get("MR3A_PICLI_PID", "")
+        if not raw.isdigit():
+            return []
+        pid = int(raw)
+        try:
+            env = Path(f"/proc/{pid}/environ").read_bytes().split(b"\0")
+        except OSError:
+            return []
+        marker = ("MR3A_WORK_ROOT=" + os.environ.get("MR3A_WORK_ROOT", "")).encode()
+        return [pid] if marker in env and _is_maa_picli(pid) else []
     me = os.getpid()
     found: list[int] = []
     seen: set[int] = set()

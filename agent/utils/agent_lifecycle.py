@@ -140,7 +140,7 @@ def reap_orphan_agents() -> int:
         pid = int(entry.name)
         if pid == me:
             continue
-        if not _is_mr3a_agent(pid):
+        if not _is_mr3a_agent(pid) or not _same_instance(pid):
             continue
         parent = _ppid(pid)
         if not _is_reaper_ppid(parent):
@@ -161,7 +161,7 @@ def reap_orphan_agents() -> int:
             if not entry.name.isdigit():
                 continue
             pid = int(entry.name)
-            if pid == me or not _is_mr3a_agent(pid):
+            if pid == me or not _is_mr3a_agent(pid) or not _same_instance(pid):
                 continue
             if not _is_reaper_ppid(_ppid(pid)):
                 continue
@@ -170,6 +170,17 @@ def reap_orphan_agents() -> int:
             except (ProcessLookupError, PermissionError):
                 pass
     return killed
+
+
+def _same_instance(pid: int) -> bool:
+    try:
+        fields = Path(f"/proc/{pid}/environ").read_bytes().split(b"\0")
+    except OSError:
+        return False
+    root = os.environ.get("MR3A_WORK_ROOT")
+    if root:
+        return ("MR3A_WORK_ROOT=" + root).encode() in fields
+    return not any(field.startswith(b"MR3A_WORK_ROOT=") for field in fields)
 
 
 def register_socket_cleanup(socket_id: str) -> None:
@@ -227,6 +238,7 @@ def guard_agent_process(socket_id: str) -> None:
     n = reap_orphan_agents()
     if n:
         logger.info(f"启动前清理了 {n} 个孤儿 agent")
-    cleanup_stale_agent_sockets()
+    if not os.environ.get("MR3A_INSTANCE_NAME"):
+        cleanup_stale_agent_sockets()
     register_socket_cleanup(socket_id)
     start_parent_watchdog()
