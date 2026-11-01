@@ -164,7 +164,9 @@ class InstanceRegistry:
             return
         registry_path = target / "registry.json"
         registry = json.loads(registry_path.read_text()) if registry_path.exists() else {"version": 1, "dirs": []}
-        names = set(registry.get("dirs", []))
+        # A retained registry can contain obsolete names without directories.
+        # Keep real empty categories, but do not reintroduce phantom filters.
+        names = {path.name for path in target.iterdir() if path.is_dir()} if target.exists() else set()
         for image in source.glob("*/*.png"):
             category = image.parent.name
             destination = target / category / image.name

@@ -10,6 +10,8 @@
 
 只跑「启动游戏」的退出排查发现：子进程立即析构及无条件 SIGINT/os._exit 会打断 TUI 和日志队列。已调整为客户端等待 Agent 收尾、q 请求 Runner 正常停止、native 关闭限时；四种实机无点击退出回归通过，见 [启动任务收尾](archived/2026-11-01-startup-only-exit-cleanup.md)。新全量普通回归为 128 passed、5 skipped、5 failed、79 subtests passed，既有失败不变。
 
+奖励列表多余 S/SS 已定位为无实际目录的 `S_SS` 残留登记；列表及迁移增加有效性检查，当前登记已清理，正确的 `S_SS+` 和原图保留。主脚本未中断，运行中的旧 TUI 下次重启加载修复；见 [奖励幽灵分类](archived/2026-11-01-reward-phantom-category.md)。
+
 ## 已按功能提交
 
 | 工作 | 提交 | 记录与边界 |

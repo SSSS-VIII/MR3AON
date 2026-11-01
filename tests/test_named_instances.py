@@ -77,6 +77,20 @@ def test_main_reward_migration_preserves_both_conflicting_images(registry):
     assert old.read_bytes() == b"legacy-image"
 
 
+def test_main_reward_migration_drops_only_phantom_registry_entries(registry):
+    main = registry.get()
+    source = registry.project_root / "assets/debug/reward_shots/S_SS+/one.png"
+    source.parent.mkdir(parents=True)
+    source.write_bytes(b"reward")
+    target = main.work_root / "debug/reward_shots"
+    (target / "家族战").mkdir(parents=True)
+    (target / "registry.json").write_text(json.dumps({"dirs": ["S_SS", "家族战"]}))
+    registry.prepare(main, migrate_legacy=True)
+    assert json.loads((target / "registry.json").read_text())["dirs"] == ["S_SS+", "家族战"]
+    assert (target / "S_SS+/one.png").read_bytes() == b"reward"
+    assert (target / "家族战").is_dir()
+
+
 def test_control_lease_and_read_only_handles_share_the_same_name(registry):
     owner = InstanceSession("small", registry=registry)
     other = InstanceSession("small", registry=registry)

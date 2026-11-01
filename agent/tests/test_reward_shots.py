@@ -56,6 +56,23 @@ def test_sanitize_keeps_plus():
     assert rs.sanitize_dir_name("S_SS+") == "S_SS+"
 
 
+def test_gallery_ignores_stale_registry_names_but_keeps_real_empty_dirs(tmp_path, monkeypatch):
+    import json
+    monkeypatch.chdir(tmp_path)
+    rs._reset_for_tests()
+    root = rs.reward_shots_root()
+    (root / "S_SS+").mkdir(parents=True)
+    (root / "家族战").mkdir()
+    (root / "registry.json").write_text(json.dumps({"dirs": ["S_SS", "S_SS+", "家族战"]}))
+    assert rs.listed_dirs() == ["S_SS+", "家族战"]
+    # Even an entry already cached by the running TUI should disappear when
+    # its directory no longer exists; valid empty categories remain visible.
+    rs.register_dir("临时目录")
+    rs.dir_path("临时目录").rmdir()
+    assert rs.listed_dirs() == ["S_SS+", "家族战"]
+    rs._reset_for_tests()
+
+
 def test_burst_replace_keeps_last_within_gap(tmp_path: Path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     rs._reset_for_tests()

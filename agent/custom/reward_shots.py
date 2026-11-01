@@ -116,10 +116,10 @@ def register_dir(name: str) -> str:
 
 
 def listed_dirs() -> list[str]:
-    """已注册 + 磁盘上已有子目录。"""
+    """只列出实际存在的目录，忽略注册表中残留的旧分类。"""
     with _lock:
         _load_registry_unlocked()
-        found = set(_registered)
+        found = {name for name in _registered if dir_path(name).is_dir()}
         root = reward_shots_root()
         if root.is_dir():
             for child in root.iterdir():
