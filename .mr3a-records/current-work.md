@@ -1,0 +1,41 @@
+# 当前工作交接
+
+更新时间：2026-11-01。以工作记录、Git 提交历史和当前代码共同判断进展；已完成项按功能提交，未完成鬼族内容保留在工作区。
+
+## 已按功能提交
+
+| 工作 | 提交 | 记录与边界 |
+| --- | --- | --- |
+| 每周逆袭禁用时间：阶段1/2周日重置，阶段3按月 | `cf7cecb`（原有提交，未重写） | [阶段持久化](archived/2026-10-22-weekly-reverse-stage-persist.md) |
+| Wait 正常路径睡醒经 StopTask 推进队列 | `e6fa063` | [Wait 修复](archived/2026-10-28-wait-post-task-abort.md)；对应单测通过，异常兜底与长连断开仍有后续事项 |
+| 每周逆袭阶段1列表页优先停判 | `20336e3` | [阶段持久化](archived/2026-10-22-weekly-reverse-stage-persist.md)；保护测试通过，待实机 |
+| 家族战宝箱点击 OCR 命中框 | `02be319` | [奖励截图](archived/2026-10-08-reward-screenshots-tui.md)；保护测试通过，待实机 |
+
+## 留在工作区：讨伐鬼族（未提交）
+
+- 流水线：`assets/resource/pipeline/周末活动.json`、新增 `讨伐鬼族.json`。
+- 模板：`assets/resource/image/讨伐鬼族.png`、`讨伐鬼族主页面.png`。
+- 任务文案：`assets/resource/tasks/常驻任务.json`。
+- 草稿记录：`.mr3a-records/archived/2026-10-31-weekend-gui-zu-entry.md`，随未完成功能保留在工作区。
+- 状态：集会所 next 仍漏挂点击节点，内流程为返回占位；待继续开发，不算已支持该活动，也不为清空工作区而提交。
+
+## 收口前待办
+
+1. Wait 的 `override_pipeline` 异常分支仍回退 `dispatch_next(context.tasker)`，与记录所述「不在 Wait 回调直接 post」不完全一致。结合提交时已带 Stop 节点的实现核实异常策略；控制器长期断连另行验证，不能宣称已解决。
+2. `周末活动检查集会所主页.next` 没有 `[JumpBack]周末活动点击讨伐鬼族`。补接后验证入口和退回路径，再继续内流程；当前不算已支持该活动。
+3. 处理以下 5 项测试失败。不能为通过断言而撤销历史上有原因的兼容逻辑，也不能未经核实恢复旧业务路径。
+4. 后续继续按功能核对 diff 和验证结果；已完成项独立提交，鬼族等未完成项继续留在工作区。
+
+## 2026-11-01 验证基线
+
+`PYTHONPATH=agent ./.venv/bin/python -m pytest tests agent/tests -q --tb=short`：**79 passed、5 failed、79 subtests passed**。
+
+| 失败测试 | 当前证据与处理方向 |
+| --- | --- |
+| `test_normal_and_deferred_tasks_keep_their_own_override` | 实际覆盖含 `enable` / `enabled` 双字段，断言只含 `enabled`；对照 10-11 兼容修复更新断言并保留配置隔离检查 |
+| `test_node_override_applies_to_every_duplicate_without_mixing_base_config` | 同上；保留同入口多实例隔离与持久化禁用验证 |
+| `test_startup_override_comes_from_startup_task_template` | 同上；保留启动模板来源验证 |
+| `test_weekly_bounty_refresh_mode_button_default` | 引用了已不存在的独立「误入悬赏令商店点返回」节点；当前共享返回节点已联合识别店名和返回按钮，需据实际可达链路核对断言 |
+| `test_bounty_shop_alternates_swipe_direction` | 真实入口只进右滑计数链，左滑切换节点虽在但不在该路径；与 09-27 交替滑动记录不一致，需确认预期再修代码或记录，暂不能只改断言 |
+
+全部 56 个资源 JSON 可解析，两张讨伐鬼族 PNG 可解码。原 Wait 归档的三处行尾空白已清理。未启动游戏，未修改正式配置或任务状态，未做长睡断连、跨日或活动实机验证。
