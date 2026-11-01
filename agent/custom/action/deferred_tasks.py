@@ -46,6 +46,7 @@ _WRAPPER_ENTRY = "AgentSchedulerTaskWrapper"
 _SUBTASK_ENTRY = "AgentSchedulerTaskSubtask"
 _FINALIZE_ENTRY = "AgentSchedulerTaskFinalize"
 _WAIT_ENTRY = "AgentSchedulerWait"
+_WAIT_STOP_ENTRY = "AgentSchedulerWaitStop"
 _TIME_SLICE_SECONDS = {
     "藏宝图entry": 60 * 60,
     "每周逆袭悬赏entry": 60 * 60,
@@ -319,7 +320,14 @@ def dispatch_next(tasker: Any) -> bool:
                 "type": "Custom",
                 "param": {"custom_action": "ManagedTaskSchedulerWait"},
             },
-        }
+            # 睡醒后走 StopTask，由 ManagedTaskStopSink 再 post 下一项；
+            # 不能在 Wait 回调里直接 post_task（会返回无效 task_id）。
+            "next": [_WAIT_STOP_ENTRY],
+        },
+        _WAIT_STOP_ENTRY: {
+            "recognition": "DirectHit",
+            "action": "StopTask",
+        },
     }
     try:
         job = tasker.post_task(_WAIT_ENTRY, wait_override)
@@ -657,7 +665,7 @@ class ManagedTaskSchedulerYieldCurrent(CustomAction):
 
 @AgentServer.custom_action("ManagedTaskSchedulerWait")
 class ManagedTaskSchedulerWait(CustomAction):
-    """保持一个真实 Tasker task 运行，计时结束前提交到期项。"""
+    """保持一个真实 Tasker task 运行；睡醒后 StopTask，由 sink 提交到期项。"""
 
     def run(
         self,
@@ -681,4 +689,22 @@ class ManagedTaskSchedulerWait(CustomAction):
                 managed_task_yield_signal_store.clear()
                 request_tui_exit("wait_interrupted")
                 return CustomAction.RunResult(success=False)
-        return CustomAction.RunResult(success=dispatch_next(context.tasker))
+        # 不在此回调里 post_task：Wait 仍占着 Tasker 时会拿到无效 task_id，
+        # 随后 Default_on_error → AbortTasker 把整队掐死。交给 StopTask sink。
+        try:
+            context.override_pipeline(
+                {
+                    _WAIT_ENTRY: {"next": [_WAIT_STOP_ENTRY]},
+                    _WAIT_STOP_ENTRY: {
+                        "recognition": "DirectHit",
+                        "action": "StopTask",
+                    },
+                }
+            )
+        except Exception as exc:
+            logger.exception(
+                f"ManagedTaskSchedulerWait: 改道 StopTask 失败，回退直接调度: {exc}"
+            )
+            return CustomAction.RunResult(success=dispatch_next(context.tasker))
+        logger.info("Agent 等待结束，改道 StopTask 以提交下一项")
+        return CustomAction.RunResult(success=True)

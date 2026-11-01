@@ -243,13 +243,34 @@ class SchedulerOverrideTest(unittest.TestCase):
 
         tasker = self._bootstrap()
         self.assertEqual(tasker.posts[-1][0], "AgentSchedulerWait")
+        wait_override = tasker.posts[-1][1]
+        self.assertEqual(
+            wait_override["AgentSchedulerWait"]["next"],
+            ["AgentSchedulerWaitStop"],
+        )
+        self.assertEqual(
+            wait_override["AgentSchedulerWaitStop"]["action"],
+            "StopTask",
+        )
         _, pending, _ = managed_task_queue.snapshot()
         self.assertEqual(len(pending), len(self.task_plan))
 
         state_store.set("TaskAEntry", enabled=True, valid_until=None)
-        context = SimpleNamespace(tasker=tasker)
+        overrides: list[dict] = []
+        context = SimpleNamespace(
+            tasker=tasker,
+            override_pipeline=lambda pipeline: overrides.append(pipeline),
+        )
         result = ManagedTaskSchedulerWait().run(context, SimpleNamespace())
         self.assertTrue(result.success)
+        # Wait 回调里不能 post_task；只改道 StopTask，由 sink 再调度。
+        self.assertEqual(len(overrides), 1)
+        self.assertEqual(
+            overrides[0]["AgentSchedulerWait"]["next"],
+            ["AgentSchedulerWaitStop"],
+        )
+        self.assertEqual(tasker.posts[-1][0], "AgentSchedulerWait")
+        self.assertTrue(dispatch_next(tasker))
         self.assertEqual(
             tasker.posts[-1][1]["AgentSchedulerTaskSubtask"]["next"],
             ["TaskAEntry"],
