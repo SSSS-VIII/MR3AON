@@ -16,6 +16,8 @@
 
 ## 已按功能提交
 
+奖励列表的「历史_每周逆袭悬赏」来源已修复：迁移冲突图移至奖励根之外的 `debug/reward_shots_archive`，旧图合并增加一次性完成标记，旧历史目录自动迁出。当前 main 空历史分类及登记已清理，9 张奖励图路径/哈希不变；24 项相关测试通过，见 [历史奖励迁移](archived/2026-11-02-reward-history-migration.md)。
+
 每周逆袭阶段1列表停判已根据实际截图修正：改读奖励行的 S 剩余次数为 0，不再依赖「刷新」或准备页「次数上限」，阶段2/3显式关闭此判断。真实截图原生 OCR 回放通过；相关回归 30 passed、82 subtests passed、2 项既有失败。当前 main 未重启，在线阶段切换待验证，见 [列表 S 次数修复](archived/2026-11-02-weekly-bounty-list-s-count.md)。
 
 小鲤受限 game_control 新增显式 `takeover`：停止持有 xiaoli 控制锁的脚本、保留 Android，再截图操作。内核锁/pidfd 核验，拒绝停止还控制其它实例的进程；真实占锁脚本已停止，main 原脚本仍运行。见 [受限工具接管](archived/2026-11-01-xiaoli-control-takeover.md)。本轮普通全量回归 137 passed、5 skipped、5 failed、80 subtests passed，既有失败不变。

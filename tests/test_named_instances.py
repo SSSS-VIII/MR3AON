@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from unittest.mock import patch
 
@@ -61,7 +62,8 @@ def test_corrupt_registry_never_reassigns_an_account(registry):
 
 
 
-def test_main_reward_migration_preserves_both_conflicting_images(registry):
+@pytest.mark.parametrize("legacy_newer", [False, True])
+def test_main_reward_migration_preserves_both_conflicting_images(registry, legacy_newer):
     main = registry.get()
     old = registry.project_root / "assets/debug/reward_shots/reward/one.png"
     old.parent.mkdir(parents=True)
@@ -69,12 +71,48 @@ def test_main_reward_migration_preserves_both_conflicting_images(registry):
     current = main.work_root / "debug/reward_shots/reward/one.png"
     current.parent.mkdir(parents=True)
     current.write_bytes(b"newer-image")
+    os.utime(old, (200 if legacy_newer else 100,) * 2)
+    os.utime(current, (100 if legacy_newer else 200,) * 2)
     registry.prepare(main, migrate_legacy=True)
     registry.prepare(main, migrate_legacy=True)
-    files = list((main.work_root / "debug/reward_shots").rglob("*.png"))
+    files = list((main.work_root / "debug").rglob("*.png"))
     assert len(files) == 2
     assert {p.read_bytes() for p in files} == {b"legacy-image", b"newer-image"}
     assert old.read_bytes() == b"legacy-image"
+    assert current.read_bytes() == (b"legacy-image" if legacy_newer else b"newer-image")
+    assert not list((main.work_root / "debug/reward_shots").glob("历史_*"))
+    assert json.loads((main.work_root / "debug/reward_shots/registry.json").read_text())["dirs"] == ["reward"]
+
+
+def test_main_rewards_are_not_reimported_after_daily_pruning(registry):
+    main = registry.get()
+    old = registry.project_root / "assets/debug/reward_shots/reward/one.png"
+    old.parent.mkdir(parents=True)
+    old.write_bytes(b"legacy-image")
+    registry.prepare(main, migrate_legacy=True)
+    current = main.work_root / "debug/reward_shots/reward/one.png"
+    current.unlink()
+    registry.prepare(main, migrate_legacy=True)
+    assert not current.exists()
+    assert old.read_bytes() == b"legacy-image"
+
+
+def test_main_existing_history_is_archived_outside_rewards_even_without_source(registry):
+    main = registry.get()
+    target = main.work_root / "debug/reward_shots"
+    (target / "历史_每周逆袭悬赏").mkdir(parents=True)
+    (target / "历史_每日悬赏").mkdir()
+    (target / "每周逆袭悬赏").mkdir()
+    (target / "历史_每日悬赏/old.png").write_bytes(b"old-reward")
+    (target / "registry.json").write_text(json.dumps({"dirs": ["历史_每周逆袭悬赏", "历史_每日悬赏", "每周逆袭悬赏"]}))
+    registry.prepare(main, migrate_legacy=True)
+    registry.prepare(main, migrate_legacy=True)
+    assert not list(target.glob("历史_*"))
+    assert (target / "每周逆袭悬赏").is_dir()
+    assert json.loads((target / "registry.json").read_text())["dirs"] == ["每周逆袭悬赏"]
+    archived = list((main.work_root / "debug/reward_shots_archive").rglob("*.png"))
+    assert len(archived) == 1
+    assert archived[0].read_bytes() == b"old-reward"
 
 
 def test_main_reward_migration_drops_only_phantom_registry_entries(registry):

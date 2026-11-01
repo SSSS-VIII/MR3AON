@@ -33,7 +33,7 @@
 - 共用程序：`deps/bin/MaaPiCli` 仍是指向 `/home/linn/MaaPiCli/build/bin/RelWithDebInfo/MaaPiCli` 的软链接；没有复制二进制或动态库。
 - main：`deps/bin/config/` 保留原 PiCli 配置和 `agent_task_state.json`；`deps/bin/data/` 为可写缓存/学题，`deps/bin/debug/` 为新日志和奖励。原有 pip 设置也保留。
 - 其它名字：`.mr3a-instances/<名字>/{config,data,debug}/`；注册表 `.mr3a-instances/registry.json` 和各环境 `instance.json` 固定身份，目录不入库，配置和运行目录私有。
-- 资源、模型、图片共享只读；每个环境生成小型 interface 路径配置，不复制资源或源码。旧主奖励图首次正式接管时合并，冲突图保留历史版本；原图和旧日志不删除。
+- 资源、模型、图片共享只读；每个环境生成小型 interface 路径配置，不复制资源或源码。旧主奖励图首次正式接管时合并，以 `debug/legacy_rewards_migrated.json` 标记完成；冲突旧图保存在 `debug/reward_shots_archive/`，不作为奖励分类展示或参与日常清理；原图和旧日志不删除。
 - Android 状态由名字内部管理。包管理器的 Waydroid 文件保持不变；仅当前 1.6.3 经验证，版本升级后需要复核适配。主机重启尚未实测，重启后仍通过同一个名字启动。
 
 ## 验证

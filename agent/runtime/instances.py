@@ -160,14 +160,39 @@ class InstanceRegistry:
     def _merge_legacy_rewards(self, spec: InstanceSpec) -> None:
         source = spec.project_root / "assets/debug/reward_shots"
         target = spec.work_root / "debug/reward_shots"
-        if not source.exists():
-            return
+        archive_root = spec.work_root / "debug/reward_shots_archive"
+        marker = spec.work_root / "debug/legacy_rewards_migrated.json"
+
+        def archive_image(image: Path, category: str) -> None:
+            digest = hashlib.sha256(image.read_bytes()).hexdigest()
+            archive = archive_root / category / (image.stem + "-" + digest + image.suffix)
+            archive.parent.mkdir(parents=True, exist_ok=True)
+            if not archive.exists():
+                shutil.copy2(image, archive)
+
+        # Repair categories made by the old importer, including empty ones.
+        # Backups live outside the reward browser and its daily pruning tree.
+        for history in target.glob("历史_*"):
+            if not history.is_dir():
+                continue
+            for image in history.rglob("*"):
+                if image.is_file():
+                    archive_image(image, history.name.removeprefix("历史_"))
+                    image.unlink()
+            for directory in sorted(history.rglob("*"), key=lambda p: len(p.parts), reverse=True):
+                if directory.is_dir():
+                    directory.rmdir()
+            history.rmdir()
+
         registry_path = target / "registry.json"
         registry = json.loads(registry_path.read_text()) if registry_path.exists() else {"version": 1, "dirs": []}
         # A retained registry can contain obsolete names without directories.
         # Keep real empty categories, but do not reintroduce phantom filters.
         names = {path.name for path in target.iterdir() if path.is_dir()} if target.exists() else set()
-        for image in source.glob("*/*.png"):
+        # Reimporting after daily pruning resurrects old screenshots and creates
+        # conflicts with newer rewards. Mark completion only after all copies.
+        images = () if marker.exists() else source.glob("*/*.png")
+        for image in images:
             category = image.parent.name
             destination = target / category / image.name
             names.add(category)
@@ -178,17 +203,14 @@ class InstanceRegistry:
                 if incoming == existing:
                     continue
                 old = destination if image.stat().st_mtime > destination.stat().st_mtime else image
-                history = "历史_" + category
-                archive = target / history / (old.stem + "-" + hashlib.sha256(old.read_bytes()).hexdigest()[:12] + ".png")
-                archive.parent.mkdir(parents=True, exist_ok=True)
-                if not archive.exists():
-                    shutil.copy2(old, archive)
-                names.add(history)
+                archive_image(old, category)
                 if old == image:
                     continue
             shutil.copy2(image, destination)
         registry["dirs"] = sorted(names)
         write_json(registry_path, registry)
+        if source.exists() and not marker.exists():
+            write_json(marker, {"version": 1, "source": str(source)})
 
 
 class InstanceSession:
