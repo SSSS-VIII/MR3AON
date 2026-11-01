@@ -4,7 +4,7 @@
 
 ## 当前任务：多实例运行隔离
 
-同一份程序/源码支持多个并行 Waydroid、独立 ADB 与全部可写运行数据；不再复制程序来构建 run-test。用户尚无第二个 Waydroid。已完成可行性调查，发现本机 Waydroid 不原生支持双开，实验性上游补丁仍待兼容验证；尚未改系统或实现多实例。详细依据及待定路线见 [调查记录](archived/2026-11-01-multi-instance-investigation.md)。鬼族继续暂缓。
+同一份程序/源码支持多个并行 Waydroid、独立 ADB 与全部可写运行数据；不再复制程序来构建 run-test。用户已明确使用包管理器版 Waydroid、不换容器。现已通过进程内适配实现主实例 + slot 1 双开、独立 ADB server，并验证次实例启停不影响主实例，见 [双实例落地](archived/2026-11-01-waydroid-package-multi-instance.md)；命令和路径见 `test-environment.md`。后续仍需接入 MR3A 运行目录、配置/缓存/奖励和进程退出隔离。早期调查保留在 [调查记录](archived/2026-11-01-multi-instance-investigation.md)，其中待定路线已由用户选择 Waydroid 解决。鬼族继续暂缓。
 
 ## 已按功能提交
 

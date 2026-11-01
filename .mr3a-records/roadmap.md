@@ -1,5 +1,7 @@
 # Roadmap
 
+2026-11-01：包管理器版 Waydroid 已实现主实例与 slot 1 双开，独立 Binder/网络/D-Bus/数据与 ADB server 5038；启停隔离实测通过，MR3A 运行目录隔离尚待接入。见 `archived/2026-11-01-waydroid-package-multi-instance.md`。
+
 2026-11-01：调度、逆袭列表停判、家族战确认已按功能独立提交；鬼族未完成项留在工作区，当前交接与已知测试失败见 `current-work.md`。
 
 已完成错误恢复重构：默认错误与普通 `back` 分流；全局恢复回主页后每个 task 最多重试一次；重启使用启动 task 记录的实际包名；恢复耗尽后停止整个 Tasker。

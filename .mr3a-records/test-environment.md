@@ -26,3 +26,27 @@ PYTHONPATH=agent ./.venv/bin/python -m unittest -v tests/test_error_recovery.py 
 PYTHONPATH=agent ./.venv/bin/python tools/ci/check_resource.py assets/resource
 git diff --check
 ```
+
+## 独立 Waydroid（2026-11-01）
+
+保留 RPM Waydroid 1.6.3，主实例仍使用普通 `waydroid` 命令和 ADB server 5037。次实例使用仓库启动适配层，无需自行构建 Waydroid。
+
+```bash
+# 桌面普通用户执行；首次自动 sudo 创建实例，再启动独立容器和窗口
+./tools/waydroid-instance --slot 1 start
+./tools/waydroid-instance --slot 1 status
+
+# 首次 Android 启动后，授权本机用户 ADB 公钥（不修改主 Android）
+sudo ./tools/waydroid-instance --slot 1 authorize-adb
+./tools/waydroid-instance --slot 1 adb connect
+adb -P 5038 devices
+
+# 仅停止次实例，保留数据；下次仍用 start
+./tools/waydroid-instance --slot 1 stop
+```
+
+当前 slot 1 已创建并授权，IP 为 `192.168.241.112:5555`（以 status 为准），分辨率 1280x720。`adb -P 5038 -s <地址> shell ...` 控制次实例；不带 `-P` 的 adb 仍控制主 server。
+
+系统数据/日志在 `/var/lib/waydroid-mr3a1/`，Android 用户数据在 `~/.local/share/waydroid-mr3a1/android-data/`。systemd 日志分别用 `journalctl -u mr3a-waydroid-1` 与 `journalctl --user -u mr3a-waydroid-session-1` 查看。两个服务按需创建，主机重启后手动 start 即可；主机重启场景尚未实测。
+
+适配目前限定已验证的 1.6.3，软件包版本变化需重新核对；更新共享 Android 镜像前先停止次实例。仅 Waydroid 双开已落地，MR3A 多实例运行目录接入尚未完成，不能直接认为两份脚本已可安全并跑。
