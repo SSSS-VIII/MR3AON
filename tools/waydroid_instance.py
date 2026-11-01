@@ -26,8 +26,8 @@ SUPPORTED_VERSION = "1.6.3"
 
 class Instance:
     def __init__(self, slot: int):
-        if not 1 <= slot <= 14:
-            raise ValueError("实例编号须为 1–14；默认 Waydroid 不使用本工具")
+        if not 0 <= slot <= 14:
+            raise ValueError("实例编号须为 0–14；0 接管现有默认环境")
         self.slot = slot
         self.name = f"mr3a{slot}"
         self.work = Path(f"/var/lib/waydroid-{self.name}")
@@ -37,8 +37,17 @@ class Instance:
         self.container_bus = f"id.waydro.Container.{self.name}"
         self.session_bus = f"id.waydro.Session.{self.name}"
         self.adb_port = 5037 + slot
+        if slot == 0:
+            self.name = "main"
+            self.work = Path("/var/lib/waydroid")
+            self.bridge = "waydroid0"
+            self.binderfs = "/dev/binderfs"
+            self.container_bus = "id.waydro.Container"
+            self.session_bus = "id.waydro.Session"
 
     def adapt_source(self, source: str) -> str:
+        if self.slot == 0:
+            return source
         source = source.replace("/var/lib/waydroid", str(self.work))
         source = source.replace("/dev/binderfs", self.binderfs)
         source = source.replace("waydroid0", self.bridge)
@@ -53,6 +62,8 @@ class Instance:
         return source
 
     def network_script(self, source: str) -> str:
+        if self.slot == 0:
+            return source
         source = self.adapt_source(source)
         source = source.replace("/run/waydroid-lxc", f"/run/waydroid-{self.name}-lxc")
         source = source.replace("192.168.240.", self.subnet + ".")
@@ -92,6 +103,8 @@ def load_installed(instance):
     sys.path.insert(0, str(PACKAGE))
     sys.meta_path.insert(0, InstalledSourceFinder(instance))
     import tools
+    if instance.slot == 0:
+        return tools
 
     # Imports still resolve to the RPM tree; never copy or modify its modules.
     data_home = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
@@ -162,6 +175,8 @@ def load_installed(instance):
 
 
 def create(instance, tools):
+    if instance.slot == 0:
+        raise RuntimeError("默认实例直接复用已有环境，不允许重新创建")
     if os.geteuid() != 0:
         raise RuntimeError("创建实例需 sudo；会话和窗口须用普通用户运行")
     if instance.work.exists():
@@ -248,7 +263,7 @@ def manage(instance, action):
     if os.geteuid() == 0:
         raise RuntimeError("start/stop 必须在桌面普通用户下运行；工具自行提权启动容器")
     command = ["/usr/bin/python3", str(Path(__file__).resolve()), "--slot", str(instance.slot)]
-    system_unit = f"mr3a-waydroid-{instance.slot}"
+    system_unit = f"mr3a-waydroid-{instance.slot}" if instance.slot else "waydroid-container"
     user_unit = f"mr3a-waydroid-session-{instance.slot}"
     if action == "stop":
         # Stop only the named session, then its own daemon. No global Waydroid
@@ -258,19 +273,24 @@ def manage(instance, action):
             "/SessionManager", "id.waydro.SessionManager", "Stop",
         ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         for prefix, unit in ((["systemctl", "--user"], user_unit), (["sudo", "systemctl"], system_unit)):
+            if not instance.slot and prefix[0] == "sudo":
+                continue
             loaded = subprocess.check_output([*prefix, "show", "--property=LoadState", "--value", unit], text=True).strip()
             if loaded != "not-found":
                 subprocess.run([*prefix, "stop", unit], check=True)
         subprocess.run(["adb", "-P", str(instance.adb_port), "disconnect"], check=True)
         return
-    if not (instance.work / "instance.json").is_file():
+    if instance.slot and not (instance.work / "instance.json").is_file():
         subprocess.run(["sudo", *command, "create"], check=True)
     active = subprocess.run(["systemctl", "is-active", "--quiet", system_unit])
     if active.returncode:
-        subprocess.run([
-            "sudo", "systemd-run", "--unit=" + system_unit, "--collect",
-            *command, "container", "start",
-        ], check=True)
+        if instance.slot:
+            subprocess.run([
+                "sudo", "systemd-run", "--unit=" + system_unit, "--collect",
+                *command, "container", "start",
+            ], check=True)
+        else:
+            subprocess.run(["sudo", "systemctl", "start", system_unit], check=True)
     # Wait for the dedicated bus name rather than assuming systemd's exec means
     # the container daemon is ready to receive session requests.
     for _ in range(50):
@@ -306,7 +326,7 @@ def manage(instance, action):
         raise RuntimeError("等待次实例 Android 会话超时；请查看对应用户服务日志")
     subprocess.run([*command, "show-full-ui"], check=True, timeout=30)
     subprocess.run([*command, "status"], check=True)
-    print(f"ADB server: localhost:{instance.adb_port}（主实例仍使用 5037）")
+    print(f"ADB server: localhost:{instance.adb_port}")
 
 
 def main():
@@ -330,7 +350,7 @@ def main():
             parser.error("create 不接受额外参数")
         create(instance, tools)
         return 0
-    if not (instance.work / "instance.json").is_file():
+    if instance.slot and not (instance.work / "instance.json").is_file():
         raise RuntimeError("请先 sudo tools/waydroid-instance --slot N create")
     if args.action == "authorize-adb":
         if remaining:

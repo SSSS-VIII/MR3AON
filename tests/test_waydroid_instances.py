@@ -24,10 +24,20 @@ def test_instances_have_distinct_host_resources():
     assert all(instance.subnet != "192.168.240" for instance in instances)
 
 
-@pytest.mark.parametrize("slot", [0, -1, 15, 999])
+@pytest.mark.parametrize("slot", [-1, 15, 999])
 def test_invalid_slot_is_rejected(slot):
     with pytest.raises(ValueError):
         Instance(slot)
+
+
+def test_default_slot_adopts_existing_environment_unchanged():
+    instance = Instance(0)
+    source = '"/var/lib/waydroid" "id.waydro.Container" "waydroid0"'
+    assert instance.work == Path("/var/lib/waydroid")
+    assert instance.adb_port == 5037
+    assert instance.container_bus == "id.waydro.Container"
+    assert instance.adapt_source(source) == source
+    assert instance.network_script(source) == source
 
 
 def test_bus_names_are_isolated_without_changing_dbus_interfaces():
