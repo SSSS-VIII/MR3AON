@@ -50,7 +50,7 @@ python3 dev/test_runtime_cli.py
 
 ## 后续接口
 
-外部封装只选择名字，并使用 `runtime.InstanceSession` 的就绪、状态、截图和控制租约；不自行维护 Waydroid、ADB 或端口。接口边界见 `docs/develop/命名实例.md`。智能体服务和大小号协同业务尚未实现。
+外部封装只选择名字，并使用 `runtime.InstanceSession` 的就绪、状态、截图和控制租约；不自行维护 Waydroid、ADB 或端口。接口边界见 `docs/develop/命名实例.md`。小鲤已通过独立插件的 `game_control` 接入：启动调用 `~/xiaoli/run` → 本项目 `run xiaoli --task 启动游戏`，只在单条设备操作期间持有租约；配置为 OPPO、上次登录。账号尚未提供，仅验证到渠道账号页；大小号协同业务仍未实现。
 
 ## 历史验证记录（不是当前入口约定）
 

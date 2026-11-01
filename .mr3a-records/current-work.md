@@ -4,7 +4,7 @@
 
 ## 当前任务：多实例运行隔离
 
-命名设备层已在 `c52f41c` 独立提交；现已接入 `./run [名字]`，省略为复用现有账号的 main。新名空白凭据，同名完整复用；检查、恢复、ADB、配置/缓存/奖励、日志及退出按名字隔离，不再复制程序。当前 main 与新建 xiaoli 已就绪，small 经关闭/恢复验证后保持关闭；两个次实例均为空任务配置。新增 `./run [名字] --stop` 关闭窗口及对应 Waydroid 后台，先退出同名脚本，保留数据；冷启动等待 DHCP。见 [关闭入口与 xiaoli](archived/2026-11-01-named-instance-shutdown.md)、[命名入口落地](archived/2026-11-01-named-run-isolation.md)、[设备会话层](archived/2026-11-01-named-device-session.md)；用法在 `test-environment.md`，后续 dsh 边界在 `docs/develop/命名实例.md`。小鲤固定控制服务现由 `~/xiaoli/run` 接入，公共设备 ADB 接口见 [接入记录](archived/2026-11-01-xiaoli-device-adb-api.md)；大小号协同业务尚未实现，鬼族继续暂缓。
+命名设备层已在 `c52f41c` 独立提交；现已接入 `./run [名字]`，省略为复用现有账号的 main。新名空白凭据，同名完整复用；检查、恢复、ADB、配置/缓存/奖励、日志及退出按名字隔离，不再复制程序。当前 main 与新建 xiaoli 已就绪，small 经关闭/恢复验证后保持关闭；small 保持空任务；xiaoli 已配置唯一启动游戏任务（OPPO、上次登录）。新增 `./run [名字] --stop` 关闭窗口及对应 Waydroid 后台，先退出同名脚本，保留数据；冷启动等待 DHCP。见 [关闭入口与 xiaoli](archived/2026-11-01-named-instance-shutdown.md)、[命名入口落地](archived/2026-11-01-named-run-isolation.md)、[设备会话层](archived/2026-11-01-named-device-session.md)；用法在 `test-environment.md`，后续 dsh 边界在 `docs/develop/命名实例.md`。小鲤独立游戏插件经 `~/xiaoli/run` 调用原启动任务，完成后交还设备，不再常驻占用租约；账号未提供，实测到 OPPO 账号页，见 [启动任务交接](archived/2026-11-01-xiaoli-startup-task-handoff.md)。公共设备 ADB 接口见 [接入记录](archived/2026-11-01-xiaoli-device-adb-api.md)；大小号协同业务尚未实现，鬼族继续暂缓。
 
 脚本接入提交为 `ef15765`。截图/录制工具也已按名接入同一设备对象与控制租约，见 [调试工具归档](archived/2026-11-01-instance-debug-tools.md)。MaaPiCli 独立提交为 `7fa3bf2c`（目录参数/临时任务）和 `f42934de`（控制器初始化失败返回错误）。
 
