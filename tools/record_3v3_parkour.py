@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 import select
-import subprocess
+import argparse
 import sys
 import termios
 import time
@@ -26,6 +26,8 @@ from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "agent"))
+from runtime import InstanceSession
 
 JUMP = (1100, 620)
 DOWN = (200, 620)
@@ -41,16 +43,8 @@ KEYS = {
 }
 
 
-def adb_tap(x: int, y: int) -> None:
-    r = subprocess.run(
-        ["adb", "shell", "input", "tap", str(x), str(y)],
-        capture_output=True,
-        text=True,
-        timeout=5,
-        check=False,
-    )
-    if r.returncode != 0:
-        raise RuntimeError((r.stderr or r.stdout or "adb tap failed").strip())
+def adb_tap(session: InstanceSession, x: int, y: int) -> None:
+    session.tap(x, y)
 
 
 def read_key(timeout: float = 0.05) -> str | None:
@@ -63,8 +57,8 @@ def read_key(timeout: float = 0.05) -> str | None:
     return ch
 
 
-def main() -> int:
-    out_dir = ROOT / "debug" / "3v3-record"
+def record(session: InstanceSession) -> int:
+    out_dir = session.spec.work_root / "debug" / "3v3-record"
     out_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     log_path = out_dir / f"{stamp}.log"
@@ -78,19 +72,6 @@ def main() -> int:
         print(line, flush=True)
         with log_path.open("a", encoding="utf-8") as fh:
             fh.write(line + "\n")
-
-    # 确认 adb 还能 tap
-    try:
-        subprocess.run(
-            ["adb", "get-state"],
-            capture_output=True,
-            text=True,
-            timeout=5,
-            check=True,
-        )
-    except Exception as exc:
-        print(f"adb 不可用: {exc}", file=sys.stderr)
-        return 1
 
     log(f"log={log_path}")
     log(f"out={py_path}")
@@ -107,10 +88,10 @@ def main() -> int:
     def record_event(name: str, call: str, x: int, y: int) -> bool:
         t = time.monotonic()
         try:
-            adb_tap(x, y)
+            adb_tap(session, x, y)
             if call == "doubleclick":
                 # 与 interruptible_double_click 一致：背靠背再点一次，中间不 sleep
-                adb_tap(x, y)
+                adb_tap(session, x, y)
         except Exception as exc:
             log(f"tap 失败 {name}: {exc}")
             return False
@@ -168,9 +149,25 @@ def main() -> int:
     return 0
 
 
+def main() -> int:
+    parser = argparse.ArgumentParser(description="按实例名字录制 3v3 按键")
+    parser.add_argument("name", nargs="?", default="main")
+    args = parser.parse_args()
+    if not sys.stdin.isatty():
+        raise RuntimeError("按键录制需要交互终端")
+    session = InstanceSession(args.name)
+    with session.control():
+        session.registry.prepare(session.spec)
+        session.ensure_ready()
+        return record(session)
+
+
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except KeyboardInterrupt:
         print("\n中断", file=sys.stderr)
         raise SystemExit(130)
+    except RuntimeError as exc:
+        print(f"错误：{exc}", file=sys.stderr)
+        raise SystemExit(1)

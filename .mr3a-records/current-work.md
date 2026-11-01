@@ -6,6 +6,8 @@
 
 命名设备层已在 `c52f41c` 独立提交；现已接入 `./run [名字]`，省略为复用现有账号的 main。新名空白凭据，同名完整复用；检查、恢复、ADB、配置/缓存/奖励、日志及退出按名字隔离，不再复制程序。当前 main 与 small 均已就绪，small 仍是空任务配置。见 [命名入口落地](archived/2026-11-01-named-run-isolation.md)、[设备会话层](archived/2026-11-01-named-device-session.md)；用法在 `test-environment.md`，后续 dsh 边界在 `docs/develop/命名实例.md`。大小号协同业务和智能体服务尚未实现，鬼族继续暂缓。
 
+脚本接入提交为 `ef15765`。截图/录制工具也已按名接入同一设备对象与控制租约，见 [调试工具归档](archived/2026-11-01-instance-debug-tools.md)。MaaPiCli 独立提交为 `7fa3bf2c`（目录参数/临时任务）和 `f42934de`（控制器初始化失败返回错误）。
+
 ## 已按功能提交
 
 | 工作 | 提交 | 记录与边界 |
@@ -32,7 +34,7 @@
 
 ## 2026-11-01 验证基线
 
-`MR3A_LIVE_INSTANCES=main,small PYTHONPATH=agent .venv/bin/python -m pytest tests agent/tests -q --tb=short`：**107 passed、5 failed、79 subtests passed**，包括真实双实例只读截图冒烟。未指定实机名字时该冒烟默认跳过。
+`MR3A_LIVE_INSTANCES=main,small PYTHONPATH=agent .venv/bin/python -m pytest tests agent/tests -q --tb=short`：**110 passed、5 failed、79 subtests passed**，包括真实双实例只读截图冒烟和 3 项调试工具路由验证。未指定实机名字时该冒烟默认跳过。
 
 | 失败测试 | 当前证据与处理方向 |
 | --- | --- |

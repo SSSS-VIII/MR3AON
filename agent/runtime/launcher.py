@@ -35,7 +35,7 @@ def main():
         session.ensure_ready()
         session.bind_config()
         binary = session.spec.project_root / "deps/bin/MaaPiCli"
-        support = subprocess.run([str(binary), "--help"], capture_output=True, text=True, check=True)
+        support = subprocess.run([str(binary), "--help"], cwd=session.spec.work_root, capture_output=True, text=True, check=True)
         if "--user-dir" not in support.stdout:
             raise RuntimeError("共享 MaaPiCli 尚未支持实例目录，请先重编本地定制版本")
         command = [str(binary), "--user-dir", str(session.spec.work_root), "--resource-dir", str(session.spec.work_root)]

@@ -1,20 +1,6 @@
 #!/usr/bin/env bash
-# ADB 截当前屏 → debug/adb-shots/
-# 不用 exec-out：设备 stderr 会混进 PNG 把头弄坏。
-#
-#   ./tools/adb-screencap
-#   ./tools/adb-screencap foo
+# 按名字截图，不向调用者暴露 ADB 或端口。
 set -euo pipefail
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-OUT_DIR="${ROOT}/debug/adb-shots"
-REMOTE="/data/local/tmp/mr3a-adb-screencap.png"
-mkdir -p "${OUT_DIR}"
-
-stamp="$(date +%Y%m%d-%H%M%S)"
-base="$(basename "${1:-${stamp}}")"
-base="${base%.png}"
-out="${OUT_DIR}/${base}.png"
-
-adb shell screencap -p "$REMOTE" >/dev/null 2>&1
-adb pull "$REMOTE" "$out" >/dev/null 2>&1
-echo "saved ${out}"
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+export PYTHONPATH="${ROOT}/agent${PYTHONPATH:+:${PYTHONPATH}}"
+exec "${ROOT}/.venv/bin/python" -m runtime.diagnostics "$@"

@@ -230,7 +230,8 @@ class InstanceSession:
     def _adb(self, *args: str, timeout: float = 20, target: bool = True):
         command = [shutil.which("adb") or "/usr/bin/adb", "-P", str(self.spec.adb_port)]
         if target:
-            self._serial = self._address()
+            if not self._serial:
+                self._serial = self._address()
             command.extend(["-s", self._serial])
         command.extend(args)
         result = subprocess.run(command, capture_output=True, timeout=timeout, env=self.spec.environment(self._serial))

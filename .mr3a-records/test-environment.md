@@ -10,11 +10,15 @@
 ./run small --prepare         # 只初始化运行文件，不启动 Android
 ./tools/run-weekly-reverse     # main 本次只跑每周逆袭，不改保存的任务计划
 ./tools/run-3v3 small          # small 本次只跑完整 3v3
+./tools/adb-screencap small    # 截图到 small/debug/adb-shots
+./tools/record-3v3-parkour small # small 的交互按键录制，需要独占该名字
 ```
 
 新名字初次使用进入独立配置菜单；非交互调用时若尚无任务会明确报错。新 Android 仍需安装游戏并登录自己的账号。名字可用中文、字母、数字、下划线和短横线。同一个名字完全复用，不同名字可并行；同名控制者重复启动会被拒绝。main 的旧脚本若还在运行，应先按 q 退出旧会话，再用新入口接管，不会强杀现有任务。
 
 `test` 现在只是普通实例名，不再表示复制测试环境。旧 `deps/.run-test` 入口已停用，旧文件保留、不清空；单任务工具改用同一实例和同一可执行文件，任务选择仅在内存中生效。
+
+截图可在同名脚本运行时读取；录制会要求该名字的独占控制权，不能和脚本同时点击。录制结果写在实例自己的 `debug/3v3-record`。
 
 ## 文件归属
 
