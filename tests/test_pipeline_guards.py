@@ -329,7 +329,7 @@ class PipelineGuardTest(unittest.TestCase):
         )
 
     def test_weekly_bounty_three_stage_stop_logic(self):
-        """列表页只切筛选；停判在准备页，ROI 与每日逆袭刷出A一致。"""
+        """阶段1列表/刷新页先认次数上限；阶段2/3仍在准备页停判。"""
         pipeline = json.loads(
             (RESOURCE / "pipeline" / "每周逆袭悬赏.json").read_text(encoding="utf-8")
         )
@@ -349,15 +349,32 @@ class PipelineGuardTest(unittest.TestCase):
             gate = pipeline[f"每周逆袭悬赏阶段{stage}进行中"]
             self.assertTrue(gate.get("enabled", False), stage)
 
-        # 列表页应用筛选后直接进筛选，不在逆袭列表认顶栏
         self.assertEqual(
             pipeline["每周逆袭悬赏阶段1应用S筛选"]["next"],
             ["每周逆袭悬赏筛选模块"],
         )
+        core_next = pipeline["每周逆袭悬赏抢悬赏核心节点"]["next"]
+        self.assertEqual(
+            core_next[1],
+            "[JumpBack]每周逆袭悬赏列表页识别到次数上限_阶段1",
+        )
+        list_cap = pipeline["每周逆袭悬赏列表页识别到次数上限_阶段1"]
+        self.assertFalse(list_cap.get("enabled", True))
+        self.assertEqual(list_cap["recognition"]["type"], "And")
+        self.assertEqual(
+            list_cap["next"],
+            ["每周逆袭悬赏阶段1完成禁用"],
+        )
+        s1_cfg = pipeline["每周逆袭悬赏阶段1应用S筛选"]["action"]["param"][
+            "custom_action_param"
+        ]
+        self.assertTrue(
+            s1_cfg["每周逆袭悬赏列表页识别到次数上限_阶段1"]["enabled"]
+        )
 
         drop = daily["每日逆袭悬赏刷出A识别到概率掉落"]["recognition"]["param"]
         cap = daily["每日逆袭悬赏刷出自己的逆袭A已完成"]["recognition"]["param"]
-        # 准备页停判挂在「识别到准备」之后
+        # 准备页停判仍作阶段1兜底
         self.assertEqual(
             pipeline["每周逆袭悬赏识别到准备"]["next"][0],
             "每周逆袭悬赏准备页识别到次数上限_阶段1",
@@ -367,7 +384,6 @@ class PipelineGuardTest(unittest.TestCase):
         ]
         self.assertEqual(s1["roi"], [570, 50, 360, 50])
         self.assertIn("次数上限", s1["expected"])
-        # 宽匹配次数上限；每日逆袭刷出A 仍用整句，ROI 对齐即可
         self.assertEqual(s1["roi"], cap["roi"])
 
         level_expected = {2: "80", 3: "90"}
