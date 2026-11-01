@@ -20,6 +20,26 @@ _watchdog_started = False
 _socket_id: str | None = None
 
 
+def close_agent_server(server, timeout: float = 2.0) -> bool:
+    """A stuck native shutdown must not keep the terminal's Python alive."""
+    done = threading.Event()
+    errors = []
+
+    def close():
+        try:
+            server.shut_down()
+        except Exception as exc:
+            errors.append(exc)
+            logger.warning(f"AgentServer 关闭失败: {exc}")
+        finally:
+            done.set()
+
+    threading.Thread(target=close, name="mr3a-agent-close", daemon=True).start()
+    completed = done.wait(timeout)
+    _cleanup_socket_file()
+    return completed and not errors
+
+
 def _cmdline(pid: int) -> str:
     try:
         raw = Path(f"/proc/{pid}/cmdline").read_bytes()

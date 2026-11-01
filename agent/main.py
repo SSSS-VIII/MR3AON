@@ -385,7 +385,7 @@ def agent(is_dev_mode=False):
 
         import custom
         from tui import run_agent_tui, tui_should_run
-        from utils.agent_lifecycle import guard_agent_process
+        from utils.agent_lifecycle import guard_agent_process, close_agent_server
 
         Tasker.set_log_dir(str(get_runtime_paths().debug_dir))
         Toolkit.init_option(str(get_runtime_paths().work_root))
@@ -408,6 +408,7 @@ def agent(is_dev_mode=False):
             import threading
 
             from tui import request_tui_exit, terminate_parent_maa_picli
+            from tui.run import request_parent_maa_picli_stop
 
             def _join_and_signal_tui() -> None:
                 # PiCli 先跑完/断开时，join 返回；先让 Textual 退出并恢复终端。
@@ -425,8 +426,6 @@ def agent(is_dev_mode=False):
             try:
                 run_agent_tui()
             finally:
-                # TUI 已退：必须结束占着 TTY 的 PiCli，否则 q 后退不回 shell。
-                # shut_down 常卡住，所以先杀 PiCli 再 os._exit，别等它。
                 reason = ""
                 try:
                     from tui.status import runtime_status
@@ -437,19 +436,27 @@ def agent(is_dev_mode=False):
                 msg = "info:TUI 已退出"
                 if reason:
                     msg += f"（{reason}）"
-                msg += "，结束 MaaPiCli 以回到 shell\n"
+                msg += "，等待当前实例退出\n"
                 sys.stderr.write(msg)
                 sys.stderr.flush()
-                terminate_parent_maa_picli()
-                try:
-                    AgentServer.shut_down()
-                except Exception:
-                    pass
-                join_thread.join(timeout=1)
-                os._exit(0)
+                if reason not in {"queue_finished", "agent_disconnected"}:
+                    request_parent_maa_picli_stop()
+                # Let the final StopTask and the client's disconnect complete;
+                # killing PiCli here bypasses its controller/child destructors.
+                join_thread.join(timeout=5)
+                if join_thread.is_alive():
+                    logger.warning("等待当前实例断开超时，结束绑定的 MaaPiCli")
+                    terminate_parent_maa_picli()
+                if not close_agent_server(AgentServer):
+                    logger.warning("AgentServer 关闭超时，强制结束 Agent")
+                    logger.remove()
+                    os._exit(0)
         else:
             AgentServer.join()
-            AgentServer.shut_down()
+            if not close_agent_server(AgentServer):
+                logger.warning("AgentServer 关闭超时，强制结束 Agent")
+                logger.remove()
+                os._exit(0)
 
         logger.info("AgentServer关闭")
     except ImportError as e:

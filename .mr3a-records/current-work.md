@@ -8,6 +8,8 @@
 
 脚本接入提交为 `ef15765`。截图/录制工具也已按名接入同一设备对象与控制租约，见 [调试工具归档](archived/2026-11-01-instance-debug-tools.md)。MaaPiCli 独立提交为 `7fa3bf2c`（目录参数/临时任务）和 `f42934de`（控制器初始化失败返回错误）。
 
+只跑「启动游戏」的退出排查发现：子进程立即析构及无条件 SIGINT/os._exit 会打断 TUI 和日志队列。已调整为客户端等待 Agent 收尾、q 请求 Runner 正常停止、native 关闭限时；四种实机无点击退出回归通过，见 [启动任务收尾](archived/2026-11-01-startup-only-exit-cleanup.md)。新全量普通回归为 128 passed、5 skipped、5 failed、79 subtests passed，既有失败不变。
+
 ## 已按功能提交
 
 | 工作 | 提交 | 记录与边界 |

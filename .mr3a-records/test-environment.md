@@ -39,6 +39,8 @@
 PYTHONPATH=agent .venv/bin/python -m pytest tests/test_named_instances.py tests/test_instance_runtime.py tests/test_waydroid_instances.py -q
 # 显式选择已就绪的名字；只截图，不向游戏发送点击
 MR3A_LIVE_INSTANCES=main,small PYTHONPATH=agent .venv/bin/python -m pytest tests/test_named_instances_live.py -q
+# main 的无点击退出检查：含真实 TUI、终端模式、q 和子进程回收
+MR3A_EXIT_LIVE=1 PYTHONPATH=agent .venv/bin/python -m pytest tests/test_agent_exit_live.py -q
 # CLI 目录和临时任务选择（不连接游戏）
 cd /home/linn/MaaPiCli
 python3 dev/test_runtime_cli.py

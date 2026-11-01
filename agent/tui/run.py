@@ -168,6 +168,17 @@ def find_maa_picli_pids() -> list[int]:
     return found
 
 
+def request_parent_maa_picli_stop() -> None:
+    """Ask the paired local CLI to stop from its runner thread, not an RPC sink."""
+    if not hasattr(signal, "SIGUSR1"):
+        return
+    for pid in find_maa_picli_pids():
+        try:
+            os.kill(pid, signal.SIGUSR1)
+        except ProcessLookupError:
+            pass
+
+
 def terminate_parent_maa_picli() -> None:
     """结束占着 TTY 的 MaaPiCli，把提示符还给 shell（等同 Ctrl+C）。"""
     targets = find_maa_picli_pids()
