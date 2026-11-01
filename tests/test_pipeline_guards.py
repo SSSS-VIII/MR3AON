@@ -508,6 +508,23 @@ class PipelineGuardTest(unittest.TestCase):
                 self.assertEqual(click["action"]["type"], "Click")
                 self.assertNotIn("target", click["action"].get("param", {}))
 
+    def test_family_war_chest_confirm_clicks_ocr_hit(self):
+        """族战宝箱确定点 OCR「确定」命中框，不大块 DirectHit。"""
+        pipeline = json.loads(
+            (RESOURCE / "pipeline" / "家族战.json").read_text(encoding="utf-8")
+        )
+        shot = pipeline["族战宝箱确定截图"]
+        click = pipeline["族战宝箱确定"]
+        self.assertEqual(shot["next"], ["族战宝箱确定"])
+        self.assertEqual(click["recognition"]["type"], "OCR")
+        self.assertEqual(click["recognition"]["param"]["expected"], ["确定"])
+        self.assertEqual(
+            click["recognition"]["param"]["roi"],
+            shot["recognition"]["param"]["roi"],
+        )
+        self.assertEqual(click["action"]["type"], "Click")
+        self.assertNotIn("target", click["action"].get("param", {}))
+
     def test_default_timeout_and_error_route_are_explicit(self):
         defaults = json.loads(
             (RESOURCE / "default_pipeline.json").read_text(encoding="utf-8")

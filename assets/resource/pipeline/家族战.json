@@ -822,19 +822,25 @@
         "focus": "家族战：认出确定后等1s截图"
     },
     "族战宝箱确定": {
-        "recognition": "DirectHit",
-        "action": {
-            "type": "Click",
+        "recognition": {
+            "type": "OCR",
             "param": {
-                "target": [
+                "roi": [
                     465,
                     546,
                     358,
                     163
+                ],
+                "expected": [
+                    "确定"
                 ]
             }
         },
-        "post_delay": 3000
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 3000,
+        "focus": "点 OCR「确定」命中框，不大块 DirectHit 乱点"
     },
     "族战战报结算确定": {
         "recognition": {
