@@ -485,7 +485,8 @@
         },
         "action": {
             "type": "Click"
-        }
+        },
+        "post_delay": 1500
     },
     "每日逆袭悬赏刷出A识别到概率掉落": {
         "recognition": {
@@ -986,7 +987,8 @@
         },
         "action": {
             "type": "Click"
-        }
+        },
+        "post_delay": 1500
     },
     "每日逆袭悬赏悬赏识别到进入了战斗": {
         "recognition": {
@@ -1553,7 +1555,8 @@
         },
         "action": {
             "type": "Click"
-        }
+        },
+        "post_delay": 1500
     },
     "每日逆袭悬赏清A识别到进入了战斗": {
         "recognition": {

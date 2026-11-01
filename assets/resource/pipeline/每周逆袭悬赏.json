@@ -659,7 +659,8 @@
         },
         "action": {
             "type": "Click"
-        }
+        },
+        "post_delay": 1500
     },
     "每周逆袭悬赏悬赏识别到进入了战斗": {
         "recognition": {

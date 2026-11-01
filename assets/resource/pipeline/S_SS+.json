@@ -936,7 +936,8 @@
         },
         "action": {
             "type": "Click"
-        }
+        },
+        "post_delay": 1500
     },
     "S_SS+悬赏调用fight": {
         "recognition": {

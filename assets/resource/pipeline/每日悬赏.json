@@ -1200,7 +1200,8 @@
         },
         "action": {
             "type": "Click"
-        }
+        },
+        "post_delay": 1500
     },
     "每日悬赏识别到进入了战斗": {
         "recognition": {
