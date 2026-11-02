@@ -14,14 +14,30 @@ def _key(stat):
 
 
 def _locks():
-    result = []
-    for line in Path('/proc/locks').read_text().splitlines():
-        fields = line.split()
-        if len(fields) < 6 or fields[1:4] != ['FLOCK', 'ADVISORY', 'WRITE']:
+    # FLOCK 会随 fd 继承，/proc/locks 却仍可能记已退出的最初持锁 PID；
+    # 容器/挂载命名空间的内核设备号也可能与本进程 stat 不同。
+    # 以真实持有 fd 的进程为准：fdinfo 证明该 fd 有锁，fd 的 stat 做同命名空间比较。
+    result = set()
+    for proc in Path('/proc').iterdir():
+        if not proc.name.isdigit():
             continue
-        major, minor, inode = fields[5].split(':')
-        result.append((int(fields[4]), (int(major, 16), int(minor, 16), int(inode))))
-    return result
+        try:
+            infos = list((proc / 'fdinfo').iterdir())
+        except OSError:
+            continue
+        for info in infos:
+            try:
+                rows = [line.split() for line in info.read_text().splitlines() if line.startswith('lock:')]
+                if not any(row[2:5] == ['FLOCK', 'ADVISORY', 'WRITE'] for row in rows):
+                    continue
+                stat = (proc / 'fd' / info.name).stat()
+                # 防止扫描时 fd 被关闭重用成另一个文件；不能只凭存在一行 lock 就信任。
+                if not any(row[2:5] == ['FLOCK', 'ADVISORY', 'WRITE'] and int(row[6].split(':')[-1]) == stat.st_ino for row in rows):
+                    continue
+                result.add((int(proc.name), _key(stat)))
+            except (OSError, ValueError, IndexError):
+                continue
+    return sorted(result)
 
 
 def _other_instance_keys(spec):
@@ -102,7 +118,9 @@ def acquire_by_stopping_controller(lock, spec, timeout):
                 continue
             if Path(f'/proc/{owner}').stat().st_uid != os.getuid():
                 raise RuntimeError('不能接管其它用户的控制进程')
-            descendants = _children(owner)
+            # 同一排他锁可能被已过继的多个子进程共享，不能只跟随已退出父进程的树。
+            holders = {pid for pid, entry in locks if entry == key}
+            descendants = set().union(*(_children(pid) for pid in holders)) | (holders - {owner})
             family = descendants | {owner}
             other = _other_instance_keys(spec)
             if any(pid in family and entry in other for pid, entry in locks):
@@ -115,7 +133,13 @@ def acquire_by_stopping_controller(lock, spec, timeout):
                     continue
                 stack.callback(os.close, child_fd)
                 # Only retain handles still in this owner's process tree.
-                if pid in _children(owner):
+                if pid in _children(owner) or (pid, key) in _locks():
+                    try:
+                        uid = Path(f'/proc/{pid}').stat().st_uid
+                    except FileNotFoundError:
+                        continue
+                    if uid != os.getuid():
+                        raise RuntimeError('不能接管其它用户的控制进程')
                     children.append(child_fd)
             try:
                 executable = Path(os.readlink(f'/proc/{owner}/exe')).name.removesuffix(' (deleted)')
@@ -148,7 +172,7 @@ def acquire_by_stopping_controller(lock, spec, timeout):
         while time.monotonic() < deadline:
             if _acquire(lock):
                 return
-            if any(pid != owner and entry == key for pid, entry in _locks()):
+            if any(pid not in family and entry == key for pid, entry in _locks()):
                 raise RuntimeError('控制权已被新的请求取得，请重新检查状态')
             time.sleep(0.05)
         break

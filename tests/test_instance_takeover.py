@@ -117,3 +117,32 @@ def test_changed_kernel_owner_is_rechecked_before_signalling(registry, controlle
         with session.control(takeover=True, timeout=1):
             pass
     assert target.poll() is None
+
+
+def test_takeover_recovers_orphan_that_inherited_the_lock(registry, controllers):
+    target, ready = controllers('xiaoli', child=True)
+    main, _ = controllers('main')
+    child = int(Path(str(ready) + '-child').read_text())
+    target.terminate()
+    target.wait(timeout=3)
+    session = InstanceSession('xiaoli', registry=registry)
+    key = control_takeover._key((session.spec.work_root / 'control.lock').stat())
+    # 内核原持锁者可能已经退出，真正阻塞下一次启动的是继承 fd 的子进程。
+    assert (child, key) in control_takeover._locks()
+    assert (target.pid, key) not in control_takeover._locks()
+    with session.control(takeover=True, timeout=5):
+        assert session._owns_control
+        assert main.poll() is None
+    with session.control():
+        pass
+
+
+def test_orphan_inheriting_multiple_instances_is_not_stopped(registry, controllers):
+    target, ready = controllers('xiaoli', dual=True, child=True)
+    child = int(Path(str(ready) + '-child').read_text())
+    target.terminate()
+    target.wait(timeout=3)
+    with pytest.raises(RuntimeError, match='其它实例'):
+        with InstanceSession('xiaoli', registry=registry).control(takeover=True):
+            pytest.fail('不应接管同时持有其它实例的残留进程')
+    assert Path(f'/proc/{child}').exists()
