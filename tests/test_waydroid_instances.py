@@ -120,9 +120,36 @@ def test_background_start_still_starts_session_but_only_opens_window_when_reques
         elif command[-1] == "Ping":
             code = next(pings)
         return subprocess.CompletedProcess(command, code)
-    with patch.object(module.os, "geteuid", return_value=1000), patch.object(module.Path, "is_file", return_value=True), patch.object(module.subprocess, "run", side_effect=result) as run:
+    with patch.object(module, "session_environment", return_value=["--setenv=WAYLAND_DISPLAY=wayland-1", "--setenv=XDG_RUNTIME_DIR=/run/user/1000"]), patch.object(module.os, "geteuid", return_value=1000), patch.object(module.Path, "is_file", return_value=True), patch.object(module.subprocess, "run", side_effect=result) as run:
         module.manage(Instance(1), "start", show_window=show_window)
     commands = [call.args[0] for call in run.call_args_list]
     assert any(command[:2] == ["systemd-run", "--user"] and command[-2:] == ["session", "start"] for command in commands)
+    session_command = next(command for command in commands if command[:2] == ["systemd-run", "--user"])
+    assert "--setenv=WAYLAND_DISPLAY=wayland-1" in session_command
+    assert "--setenv=XDG_RUNTIME_DIR=/run/user/1000" in session_command
     assert any(command[-1] == "show-full-ui" for command in commands) == show_window
     assert any(command[-1] == "status" for command in commands)
+
+
+@pytest.mark.parametrize("local_display", [None, "stale-wayland"])
+def test_session_environment_recovers_current_desktop_after_early_service_start(local_display):
+    env = {"XDG_RUNTIME_DIR": "/run/user/1000"}
+    if local_display:
+        env["WAYLAND_DISPLAY"] = local_display
+    result = subprocess.CompletedProcess([], 0, "WAYLAND_DISPLAY=wayland-1\nXDG_RUNTIME_DIR=/run/user/1000\n")
+    with patch.dict(module.os.environ, env, clear=True), patch.object(module.subprocess, "run", return_value=result), patch.object(module.Path, "is_socket", side_effect=[False, True]):
+        assert module.session_environment() == ["--setenv=WAYLAND_DISPLAY=wayland-1", "--setenv=XDG_RUNTIME_DIR=/run/user/1000"]
+
+
+def test_session_environment_keeps_valid_explicit_display():
+    env = {"WAYLAND_DISPLAY": "/run/user/1000/custom-wayland", "XDG_RUNTIME_DIR": "/run/user/1000"}
+    result = subprocess.CompletedProcess([], 0, "WAYLAND_DISPLAY=wayland-1\n")
+    with patch.dict(module.os.environ, env, clear=True), patch.object(module.subprocess, "run", return_value=result), patch.object(module.Path, "is_socket", return_value=True):
+        assert module.session_environment() == ["--setenv=WAYLAND_DISPLAY=/run/user/1000/custom-wayland", "--setenv=XDG_RUNTIME_DIR=/run/user/1000"]
+
+
+def test_session_environment_does_not_guess_nonexistent_display():
+    result = subprocess.CompletedProcess([], 0, "WAYLAND_DISPLAY=wayland-1\n")
+    with patch.dict(module.os.environ, {}, clear=True), patch.object(module.subprocess, "run", return_value=result), patch.object(module.Path, "is_socket", return_value=False):
+        with pytest.raises(RuntimeError, match="没有可用的 Wayland"):
+            module.session_environment()

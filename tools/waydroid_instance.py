@@ -259,6 +259,23 @@ def authorize_adb(instance):
     print(f"已为次实例 {instance.name} 授权当前用户的 ADB 公钥")
 
 
+def session_environment():
+    """后台调用者可能早于桌面启动；从用户管理器读取当前显示连接。"""
+    candidates = [os.environ]
+    result = subprocess.run(
+        ["systemctl", "--user", "show-environment"],
+        capture_output=True, text=True, timeout=5,
+    )
+    if result.returncode == 0:
+        candidates.append(dict(line.split("=", 1) for line in result.stdout.splitlines() if "=" in line))
+    for env in candidates:
+        runtime = env.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}"
+        display = env.get("WAYLAND_DISPLAY", "wayland-0")
+        if display and (Path(runtime) / display).is_socket():
+            return [f"--setenv=WAYLAND_DISPLAY={display}", f"--setenv=XDG_RUNTIME_DIR={runtime}"]
+    raise RuntimeError("没有可用的 Wayland 显示连接；请先启动当前用户的桌面会话")
+
+
 def manage(instance, action, *, show_window=True):
     if os.geteuid() == 0:
         raise RuntimeError("start/stop 必须在桌面普通用户下运行；工具自行提权启动容器")
@@ -324,7 +341,7 @@ def manage(instance, action, *, show_window=True):
     if active.returncode and not session_ready():
         subprocess.run([
             "systemd-run", "--user", "--unit=" + user_unit, "--collect",
-            "--setenv=WAYLAND_DISPLAY", "--setenv=XDG_RUNTIME_DIR",
+            *session_environment(),
             *command, "session", "start",
         ], check=True)
     # show-full-ui starts a session itself when its D-Bus object is not ready.
