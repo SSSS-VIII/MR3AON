@@ -517,9 +517,40 @@
         },
         "next": [
             "选择巡逻关卡",
-            "[JumpBack]巡逻下滑",
-            "[JumpBack]巡逻上滑"
-        ]
+            "[JumpBack]巡逻下滑计数"
+        ],
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    630,
+                    171,
+                    51,
+                    46
+                ],
+                "end": [
+                    [
+                        633,
+                        536,
+                        62,
+                        43
+                    ]
+                ],
+                "end_hold": [
+                    500
+                ]
+            }
+        },
+        "post_delay": 700,
+        "post_wait_freezes": {
+            "time": 300,
+            "target": [
+                592,
+                192,
+                300,
+                189
+            ]
+        }
     },
     "退出巡逻页面再次运行": {
         "recognition": {
@@ -893,5 +924,39 @@
         "next": [
             "通灵巡逻完成回到主页面"
         ]
+    },
+    "巡逻下滑计数": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 5
+                }
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    650,
+                    510,
+                    73,
+                    47
+                ],
+                "end": [
+                    [
+                        668,
+                        320,
+                        65,
+                        52
+                    ]
+                ],
+                "end_hold": [
+                    500
+                ]
+            }
+        },
+        "post_delay": 500
     }
 }
