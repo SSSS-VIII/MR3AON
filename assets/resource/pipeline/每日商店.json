@@ -493,13 +493,15 @@
                     2,
                     106,
                     1091,
-                    143
+                    103
                 ],
                 "expected": [
                     "D级悬赏奖册"
                 ]
             }
-        }
+        },
+        "pre_delay": 0,
+        "post_delay": 0
     },
     "悬赏商店识别到购买": {
         "recognition": {
@@ -507,9 +509,9 @@
             "param": {
                 "roi": [
                     406,
-                    408,
+                    618,
                     455,
-                    311
+                    91
                 ],
                 "expected": [
                     "^购买$"
@@ -1927,5 +1929,41 @@
             "type": "Click"
         },
         "post_delay": 1000
+    },
+    "悬赏商店点击未购买的D级悬赏奖册": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "悬赏商店识别到D级悬赏奖册",
+                    "悬赏商店D级悬赏奖册下方有剩余次数"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000
+    },
+    "悬赏商店D级悬赏奖册下方有剩余次数": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "悬赏商店识别到D级悬赏奖册",
+                "roi_offset": [
+                    -49,
+                    374,
+                    69,
+                    99
+                ],
+                "expected": [
+                    "今日剩余2次",
+                    "今日剩余1次"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0
     }
 }
