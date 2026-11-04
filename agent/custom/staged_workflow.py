@@ -50,8 +50,20 @@ class StageStore:
         if not self.path.exists():
             return {"version": 1, "workflows": {}}
         data = json.loads(self.path.read_text(encoding="utf-8"))
-        if data.get("version") != 1 or not isinstance(data.get("workflows"), dict):
+        if not isinstance(data, dict) or data.get("version") != 1 or not isinstance(data.get("workflows"), dict):
             raise ValueError("工作流进度文件格式错误，拒绝覆盖")
+        for key, item in data["workflows"].items():
+            if not isinstance(item, dict):
+                raise ValueError("工作流进度条目格式错误")
+            identity = [item.get(field) for field in ("workflow", "account", "revision")]
+            if not all(isinstance(value, str) and value.strip() for value in identity):
+                raise ValueError("工作流进度缺少账号或版本")
+            expected_key = hashlib.sha256(json.dumps(identity, ensure_ascii=False).encode()).hexdigest()
+            if key != expected_key or not isinstance(item.get("stages"), dict):
+                raise ValueError("工作流进度身份或阶段格式错误")
+            for number, stage in item["stages"].items():
+                if not number.isdecimal() or int(number) < 1 or str(int(number)) != number or not isinstance(stage, dict) or stage.get("status") not in ("running", "completed", "paused"):
+                    raise ValueError("工作流阶段状态损坏，拒绝重新执行")
         return data
 
     def _write(self, data):

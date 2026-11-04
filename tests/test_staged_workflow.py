@@ -48,6 +48,20 @@ def test_corrupt_progress_is_not_overwritten(tmp_path):
     assert p.read_text() == 'broken'
 
 
+def test_unknown_persisted_status_cannot_be_treated_as_a_new_stage(tmp_path):
+    p = tmp_path / 'state.json'
+    stage = Stage('tutorial', 'account', '1', 1)
+    store = StageStore(p)
+    store.begin(stage)
+    data = json.loads(p.read_text())
+    next(iter(data['workflows'].values()))['stages']['1']['status'] = 'unknown'
+    p.write_text(json.dumps(data))
+    before = p.read_bytes()
+    with pytest.raises(ValueError, match='状态损坏'):
+        store.begin(stage, retry=True)
+    assert p.read_bytes() == before
+
+
 @pytest.fixture
 def workflow(tmp_path, monkeypatch):
     managed_task_queue.finish()
@@ -149,3 +163,23 @@ def test_bootstrap_rejects_mixed_or_out_of_order_plan_before_any_task(stages):
         start.assert_not_called()
         dispatch.assert_not_called()
         context.override_next.assert_called_once_with('bootstrap', ['AgentSchedulerRejectedPlan'])
+
+
+def test_bootstrap_accepts_readme_followed_by_ordered_stages():
+    from custom.action.deferred_tasks import ManagedTaskSchedulerBootstrap
+    nodes = {
+        'readme': {'attach': {'workflow': 'tutorial'}},
+        'one': {'attach': {'workflow': 'tutorial', 'stage': 1}},
+        'two': {'attach': {'workflow': 'tutorial', 'stage': 2}},
+    }
+    context = SimpleNamespace(get_node_data=nodes.get, tasker=object())
+    argv = SimpleNamespace(node_name='bootstrap', task_detail=SimpleNamespace(task_id=56), custom_action_param={
+        'tasks': [{'name': name, 'entry': name} for name in nodes],
+    })
+    try:
+        with patch('custom.action.deferred_tasks.persistent_task_state_store.start'), patch('custom.action.deferred_tasks.persistent_task_state_store.is_enabled', return_value=True), patch('custom.action.deferred_tasks.dispatch_next', return_value=True) as dispatch:
+            assert ManagedTaskSchedulerBootstrap().run(context, argv).success
+            dispatch.assert_called_once_with(context.tasker)
+            assert managed_task_queue.plan_order() == ['readme', 'one', 'two']
+    finally:
+        managed_task_queue.finish()
