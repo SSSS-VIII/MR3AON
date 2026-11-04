@@ -1,4 +1,5 @@
 from .download_game_meta import DownloadGameMeta
+from .staged_workflow import BeginWorkflowStage, CompleteWorkflowStage, PauseWorkflowStage
 from .deferred_tasks import (
     ManagedTaskSchedulerBootstrap,
     ManagedTaskSchedulerFinalize,
@@ -37,6 +38,9 @@ from .waydroid_runtime import (
 )
 
 __all__ = [
+    "BeginWorkflowStage",
+    "CompleteWorkflowStage",
+    "PauseWorkflowStage",
     "DownloadGameMeta",
     "ScheduleDeferredTask",
     "SetManagedTaskPersistentState",

@@ -40,6 +40,10 @@ def _advance_after_hard_end(
     """等 Tasker 回调栈退干净后再调度，避免 send_and_recv 重入。"""
     # 给 Failed/Succeeded 通知完全返回留一点时间
     time.sleep(0.05)
+    if managed_task_queue.active_for(task_id):
+        from custom.action.staged_workflow import pause_workflow
+        if pause_workflow(task_id, f"阶段异常结束：{outcome}"):
+            return
     abandoned = managed_task_queue.abandon_current(task_id)
     if abandoned is None:
         # StopTask 路径已 release+dispatch，或队列已切到下一项
