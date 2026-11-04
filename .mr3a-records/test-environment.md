@@ -53,6 +53,8 @@ python3 dev/test_runtime_cli.py
 
 ## 后续接口
 
+新号起号使用独立名字与起号预设，不与日常计划混跑；必填账号代号，状态保存在该实例的 `config/staged_workflows.json`，不是每日重置状态。本轮仅离线验证，尚未使用新号实跑。入口和中断重试边界见 `docs/develop/新号起号.md`，不要用main/xiaoli已有账号验证教程。
+
 外部封装只选择名字，并使用 `runtime.InstanceSession` 的就绪、状态、截图和控制租约；不自行维护 Waydroid、ADB 或端口。接口边界见 `docs/develop/命名实例.md`。小鲤已通过独立插件的 `game_control` 接入：启动调用 `~/xiaoli/run` → 本项目 `run xiaoli --task 启动游戏`，只在单条设备操作期间持有租约；配置为 OPPO、上次登录。账号尚未提供，仅验证到渠道账号页；大小号协同业务仍未实现。
 
 ## 小鲤当前游戏渠道

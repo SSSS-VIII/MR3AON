@@ -1,3 +1,13 @@
+from .qh_level_1_3 import qh_level_1_3
+from .qh_level_1_4 import qh_level_1_4
+from .qh_level_2_1 import qh_level_2_1
+from .qh_level_2_2 import qh_level_2_2
+from .qh_level_2_3 import qh_level_2_3
+from .qh_level_2_4 import qh_level_2_4
+from .qh_level_2_6 import qh_level_2_6
+from .qh_level_2_7 import qh_level_2_7
+from .qh_level_2_8 import qh_level_2_8
+from .qh_level_2_9 import qh_level_2_9
 from .download_game_meta import DownloadGameMeta
 from .staged_workflow import BeginWorkflowStage, CompleteWorkflowStage, PauseWorkflowStage
 from .deferred_tasks import (
@@ -38,6 +48,17 @@ from .waydroid_runtime import (
 )
 
 __all__ = [
+    "qh_level_1_3",
+    "qh_level_1_4",
+    "qh_level_2_1",
+    "qh_level_2_2",
+    "qh_level_2_3",
+    "qh_level_2_4",
+    "qh_level_2_6",
+    "qh_level_2_7",
+    "qh_level_2_8",
+    "qh_level_2_9",
+
     "BeginWorkflowStage",
     "CompleteWorkflowStage",
     "PauseWorkflowStage",

@@ -1,0 +1,363 @@
+{
+    "起号08点击赤面酒鬼": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    335,
+                    139,
+                    181,
+                    432
+                ],
+                "expected": [
+                    "赤面酒鬼"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 2000,
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号08点击出发": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    868,
+                    543,
+                    333,
+                    159
+                ],
+                "expected": [
+                    "出发"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 2000,
+        "next": [
+            "起号08点击出发",
+            "起号08进入关卡"
+        ],
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号08发现下滑按钮": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "roi": [
+                    230,
+                    612,
+                    1,
+                    1
+                ],
+                "lower": [
+                    [
+                        255,
+                        255,
+                        255
+                    ]
+                ],
+                "upper": [
+                    [
+                        255,
+                        255,
+                        255
+                    ]
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "qh_level_2_3",
+                "target": [
+                    230,
+                    612,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 0,
+        "timeout": 60000,
+        "next": [
+            "[JumpBack]起号08boss存活",
+            "起号08死亡再来一次",
+            "起号08结束",
+            "[JumpBack]起号08通关确定",
+            "[JumpBack]起号08首次通关奖励"
+        ],
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号08进入关卡": {
+        "timeout": 90000,
+        "rate_limit": 30,
+        "next": [
+            "起号08发现下滑按钮"
+        ],
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号08首次通关奖励": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    461,
+                    40,
+                    351,
+                    160
+                ],
+                "expected": [
+                    "首次通关奖励"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号08通关确定": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    392,
+                    541,
+                    503,
+                    174
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号08结束": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    894,
+                    8,
+                    235,
+                    126
+                ],
+                "expected": [
+                    "第五关"
+                ]
+            }
+        },
+        "next": [
+            "起号阶段完成登记"
+        ],
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号08二段跳": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1068,
+                    596,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 100,
+        "next": [
+            "起号08大招"
+        ],
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号08武器": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    381,
+                    621,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 50,
+        "next": [
+            "起号08二段跳2"
+        ],
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号08大招": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    76,
+                    347,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 50,
+        "next": [
+            "起号08武器"
+        ],
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号08boss存活": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    780,
+                    43,
+                    112,
+                    55
+                ],
+                "expected": [
+                    "×\\d",
+                    "x\\d",
+                    "X\\d"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1068,
+                    596,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 150,
+        "next": [
+            "起号08二段跳"
+        ],
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号08二段跳2": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1068,
+                    596,
+                    1,
+                    1
+                ]
+            }
+        },
+        "repeat": 12,
+        "repeat_delay": 200,
+        "post_delay": 0,
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号08死亡再来一次": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    643,
+                    512,
+                    339,
+                    168
+                ],
+                "expected": [
+                    "再来一次"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "起号08死亡再来一次",
+            "起号08进入关卡"
+        ],
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号08阶段入口": {
+        "next": [
+            "起号08点击出发",
+            "[JumpBack]起号08点击赤面酒鬼"
+        ],
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号08entry": {
+        "recognition": "DirectHit",
+        "attach": {
+            "workflow": "新号起号",
+            "stage": 8
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BeginWorkflowStage",
+                "custom_action_param": {
+                    "workflow": "新号起号",
+                    "revision": "v1.6.2-1",
+                    "stage": 8,
+                    "config_node": "起号工作流配置",
+                    "failure_node": "起号流程失败",
+                    "skip_node": "起号阶段停止"
+                }
+            }
+        },
+        "next": [
+            "起号08阶段入口"
+        ],
+        "focus": "起号08：核对账号与阶段进度",
+        "on_error": [
+            "起号流程失败"
+        ]
+    }
+}

@@ -1,6 +1,6 @@
 # 当前工作交接
 
-2026-11-04：上游 v1.6.2 合入评估已完成，尚未实施。建议优先在当前5.14.2/定制MaaPiCli上接起号：15份资源离线加载、10个动作注册均通过；补一次性阶段进度/恢复及时序适配，热点业务按节点语义移植。上游实际回退至5.12.2，依赖/打包调整应单独评估，不能直接照搬；详见 [v1.6.2 评估](archived/2026-11-04-upstream-v162-integration-assessment.md)。
+2026-11-04：v1.6.2已在 `integrate/upstream-v162` 按功能实施：7项bug修复、一次性阶段进度/暂停与计划校验、独立时序能力、新号14段及10个动作接入，框架保留5.14.2/定制MaaPiCli。最终离线回归172 passed、5 skipped、5项既有失败、85 subtests passed，原生资源及CLI加载通过。用户明确本轮不实跑，新号全流程待后续验收；运行实例未动，详见 [分批实施收口](archived/2026-11-04-v162-onboarding-integration.md)、[起号用法](../docs/develop/新号起号.md)。前期判断保留在 [v1.6.2评估](archived/2026-11-04-upstream-v162-integration-assessment.md)。
 
 2026-11-04：小鲤清晨首轮启动因设备截图不返回触发 600 秒外层超时，第二轮启动检查也超时；她自行 stop/start 后恢复。底层阻塞原因尚未确定，未修改 MR3A 运行逻辑；模型侧故障编号与转述要求在 xiaoli 仓库清理，见 [清晨截图阻塞](archived/2026-11-04-xiaoli-startup-screencap-hang.md)。
 

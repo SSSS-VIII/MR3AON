@@ -1,0 +1,61 @@
+{
+    "起号工作流配置": {
+        "recognition": "DirectHit",
+        "attach": {
+            "account": "",
+            "retry": false,
+            "timing_mode": "post_click",
+            "initial_delay_ms": 0,
+            "interval_offset_ms": 0
+        }
+    },
+    "起号必读entry": {
+        "recognition": "DirectHit",
+        "attach": {
+            "workflow": "新号起号"
+        },
+        "next": [
+            "起号阶段停止"
+        ],
+        "focus": "起号前请阅读说明并配置账号标识；不自动注册或登录渠道账号"
+    },
+    "起号阶段完成登记": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "CompleteWorkflowStage"
+            }
+        },
+        "next": [
+            "起号阶段停止"
+        ],
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号阶段停止": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "StopTask"
+        },
+        "next": [],
+        "on_error": []
+    },
+    "起号流程失败": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "PauseWorkflowStage"
+            }
+        },
+        "next": [
+            "起号阶段停止"
+        ],
+        "on_error": [
+            "起号阶段停止"
+        ],
+        "focus": "起号暂停：请核对现场与资源步骤，不自动重启重放"
+    }
+}

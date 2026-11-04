@@ -1,0 +1,215 @@
+{
+    "起号07点击黑暗骨林": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    155,
+                    139,
+                    181,
+                    432
+                ],
+                "expected": [
+                    "黑暗",
+                    "骨林"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 4000,
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号07点击出发": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    868,
+                    543,
+                    333,
+                    159
+                ],
+                "expected": [
+                    "出发"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 2000,
+        "next": [
+            "起号07点击出发",
+            "起号07进入关卡"
+        ],
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号07发现下滑按钮": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "roi": [
+                    230,
+                    612,
+                    1,
+                    1
+                ],
+                "lower": [
+                    [
+                        255,
+                        255,
+                        255
+                    ]
+                ],
+                "upper": [
+                    [
+                        255,
+                        255,
+                        255
+                    ]
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "qh_level_2_2",
+                "target": [
+                    230,
+                    612,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "起号07结束",
+            "[JumpBack]起号07首次通关奖励",
+            "[JumpBack]起号07通关确定"
+        ],
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号07进入关卡": {
+        "timeout": 90000,
+        "rate_limit": 30,
+        "next": [
+            "起号07发现下滑按钮"
+        ],
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号07首次通关奖励": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    461,
+                    40,
+                    351,
+                    160
+                ],
+                "expected": [
+                    "首次通关奖励"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号07通关确定": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    392,
+                    541,
+                    503,
+                    174
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号07结束": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    894,
+                    8,
+                    235,
+                    126
+                ],
+                "expected": [
+                    "第三关"
+                ]
+            }
+        },
+        "next": [
+            "起号阶段完成登记"
+        ],
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号07阶段入口": {
+        "next": [
+            "起号07点击出发",
+            "[JumpBack]起号07点击黑暗骨林"
+        ],
+        "on_error": [
+            "起号流程失败"
+        ]
+    },
+    "起号07entry": {
+        "recognition": "DirectHit",
+        "attach": {
+            "workflow": "新号起号",
+            "stage": 7
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BeginWorkflowStage",
+                "custom_action_param": {
+                    "workflow": "新号起号",
+                    "revision": "v1.6.2-1",
+                    "stage": 7,
+                    "config_node": "起号工作流配置",
+                    "failure_node": "起号流程失败",
+                    "skip_node": "起号阶段停止"
+                }
+            }
+        },
+        "next": [
+            "起号07阶段入口"
+        ],
+        "focus": "起号07：核对账号与阶段进度",
+        "on_error": [
+            "起号流程失败"
+        ]
+    }
+}

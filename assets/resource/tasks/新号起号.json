@@ -1,0 +1,307 @@
+{
+    "task": [
+        {
+            "name": "起号必读",
+            "entry": "起号必读entry",
+            "group": [
+                "新号起号"
+            ],
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">此系列用于从创号一路升至<strong>中忍</strong>，创号推荐使用九游。<br>起号01~14 可按顺序依次运行；若某个任务出错，可手动干预后在对应页面单独运行后续任务。<br><strong>注意</strong>：部分跑图依赖严格的时序点击操作，请尽量保持后台不运行其他占用性能的软件或游戏。</span><br>本地版按账号标识记录一次性阶段，不能与日常计划混跑。失败会暂停；请核对页面及已消费步骤后才开启手动重试。账号标识仅作本地分组，不会自动验证游戏内账号；换号必须更改。"
+        },
+        {
+            "name": "起号01",
+            "entry": "起号01entry",
+            "group": [
+                "新号起号"
+            ],
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">此任务请在创号成功后播放忍三动画至屏幕显示「六个月前，忍之谷」之间使用</span>",
+            "option": [
+                "起号账号标识",
+                "起号动作时序",
+                "起号校准参数",
+                "起号手动确认重试"
+            ]
+        },
+        {
+            "name": "起号02",
+            "entry": "起号02entry",
+            "group": [
+                "新号起号"
+            ],
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">此任务仅在此页面使用</span><br><img src=\"resource/tasks/images/起号02使用场景.jpg\" style=\"width:50%;height:auto\" />",
+            "option": [
+                "起号账号标识",
+                "起号动作时序",
+                "起号校准参数",
+                "起号手动确认重试"
+            ]
+        },
+        {
+            "name": "起号03",
+            "entry": "起号03entry",
+            "group": [
+                "新号起号"
+            ],
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">此任务仅在此页面使用</span><br><img src=\"resource/tasks/images/起号03使用场景.jpg\" style=\"width:50%;height:auto\" />",
+            "option": [
+                "起号账号标识",
+                "起号动作时序",
+                "起号校准参数",
+                "起号手动确认重试"
+            ]
+        },
+        {
+            "name": "起号04",
+            "entry": "起号04entry",
+            "group": [
+                "新号起号"
+            ],
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">此任务仅在此页面使用</span><br><img src=\"resource/tasks/images/起号04使用场景.jpg\" style=\"width:50%;height:auto\" />",
+            "option": [
+                "起号账号标识",
+                "起号动作时序",
+                "起号校准参数",
+                "起号手动确认重试"
+            ]
+        },
+        {
+            "name": "起号05",
+            "entry": "起号05entry",
+            "group": [
+                "新号起号"
+            ],
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">此任务仅在此页面使用</span><br><img src=\"resource/tasks/images/起号05使用场景.jpg\" style=\"width:50%;height:auto\" />",
+            "option": [
+                "起号账号标识",
+                "起号动作时序",
+                "起号校准参数",
+                "起号手动确认重试"
+            ]
+        },
+        {
+            "name": "起号06",
+            "entry": "起号06entry",
+            "group": [
+                "新号起号"
+            ],
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">此任务仅在此页面使用</span><br><img src=\"resource/tasks/images/起号06使用场景.jpg\" style=\"width:50%;height:auto\" />",
+            "option": [
+                "起号账号标识",
+                "起号动作时序",
+                "起号校准参数",
+                "起号手动确认重试"
+            ]
+        },
+        {
+            "name": "起号07",
+            "entry": "起号07entry",
+            "group": [
+                "新号起号"
+            ],
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">此任务仅在此页面使用</span><br><img src=\"resource/tasks/images/起号07使用场景.jpg\" style=\"width:50%;height:auto\" />",
+            "option": [
+                "起号账号标识",
+                "起号动作时序",
+                "起号校准参数",
+                "起号手动确认重试"
+            ]
+        },
+        {
+            "name": "起号08",
+            "entry": "起号08entry",
+            "group": [
+                "新号起号"
+            ],
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">此任务仅在此页面使用</span><br><img src=\"resource/tasks/images/起号08使用场景.jpg\" style=\"width:50%;height:auto\" />",
+            "option": [
+                "起号账号标识",
+                "起号动作时序",
+                "起号校准参数",
+                "起号手动确认重试"
+            ]
+        },
+        {
+            "name": "起号09",
+            "entry": "起号09entry",
+            "group": [
+                "新号起号"
+            ],
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">此任务仅在此页面使用</span><br><img src=\"resource/tasks/images/起号09使用场景.jpg\" style=\"width:50%;height:auto\" />",
+            "option": [
+                "起号账号标识",
+                "起号动作时序",
+                "起号校准参数",
+                "起号手动确认重试"
+            ]
+        },
+        {
+            "name": "起号10",
+            "entry": "起号10entry",
+            "group": [
+                "新号起号"
+            ],
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">此任务仅在此页面使用</span><br><img src=\"resource/tasks/images/起号10使用场景.jpg\" style=\"width:50%;height:auto\" />",
+            "option": [
+                "起号账号标识",
+                "起号动作时序",
+                "起号校准参数",
+                "起号手动确认重试"
+            ]
+        },
+        {
+            "name": "起号11",
+            "entry": "起号11entry",
+            "group": [
+                "新号起号"
+            ],
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">此任务仅在此页面使用</span><br><img src=\"resource/tasks/images/起号11使用场景.jpg\" style=\"width:50%;height:auto\" />",
+            "option": [
+                "起号账号标识",
+                "起号动作时序",
+                "起号校准参数",
+                "起号手动确认重试"
+            ]
+        },
+        {
+            "name": "起号12",
+            "entry": "起号12entry",
+            "group": [
+                "新号起号"
+            ],
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">此任务仅在此页面使用</span><br><img src=\"resource/tasks/images/起号12使用场景.jpg\" style=\"width:50%;height:auto\" />",
+            "option": [
+                "起号账号标识",
+                "起号动作时序",
+                "起号校准参数",
+                "起号手动确认重试"
+            ]
+        },
+        {
+            "name": "起号13",
+            "entry": "起号13entry",
+            "group": [
+                "新号起号"
+            ],
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">此任务仅在此页面使用</span><br><img src=\"resource/tasks/images/起号13使用场景.jpg\" style=\"width:50%;height:auto\" />",
+            "option": [
+                "起号账号标识",
+                "起号动作时序",
+                "起号校准参数",
+                "起号手动确认重试"
+            ]
+        },
+        {
+            "name": "起号14",
+            "entry": "起号14entry",
+            "group": [
+                "新号起号"
+            ],
+            "description": "<span style=\"color:deepskyblue;font-size:15px\">此任务仅在此页面使用</span><br><img src=\"resource/tasks/images/起号14使用场景.jpg\" style=\"width:50%;height:auto\" />",
+            "option": [
+                "起号账号标识",
+                "起号动作时序",
+                "起号校准参数",
+                "起号手动确认重试"
+            ]
+        }
+    ],
+    "option": {
+        "起号账号标识": {
+            "type": "input",
+            "description": "必填非敏感账号代号；同实例换号必须修改。不是密码，也不会用于自动登录。",
+            "inputs": [
+                {
+                    "name": "起号账号代号",
+                    "default": "",
+                    "pipeline_type": "string"
+                }
+            ],
+            "pipeline_override": {
+                "起号工作流配置": {
+                    "attach": {
+                        "account": "{起号账号代号}"
+                    }
+                }
+            }
+        },
+        "起号动作时序": {
+            "type": "select",
+            "default_case": "上游等待",
+            "cases": [
+                {
+                    "name": "上游等待",
+                    "label": "上游时序（默认）",
+                    "pipeline_override": {
+                        "起号工作流配置": {
+                            "attach": {
+                                "timing_mode": "post_click"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "绝对时间轴",
+                    "label": "绝对时间轴（需要逐关校准）",
+                    "pipeline_override": {
+                        "起号工作流配置": {
+                            "attach": {
+                                "timing_mode": "absolute"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "起号校准参数": {
+            "type": "input",
+            "description": "首段等待0～10000ms，间隔偏移-500～500ms；默认不做修正，不套用3v3参数。",
+            "inputs": [
+                {
+                    "name": "起号首段等待",
+                    "default": "0",
+                    "pipeline_type": "int"
+                },
+                {
+                    "name": "起号间隔偏移",
+                    "default": "0",
+                    "pipeline_type": "int"
+                }
+            ],
+            "pipeline_override": {
+                "起号工作流配置": {
+                    "attach": {
+                        "initial_delay_ms": "{起号首段等待}",
+                        "interval_offset_ms": "{起号间隔偏移}"
+                    }
+                }
+            }
+        },
+        "起号手动确认重试": {
+            "type": "switch",
+            "default_case": "No",
+            "description": "仅在人工核对当前页面、召唤/强化等步骤后开启；将重跑未完成阶段入口。不要长期保持开启。已完成阶段仍不会重跑。",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "起号工作流配置": {
+                            "attach": {
+                                "retry": false
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "起号工作流配置": {
+                            "attach": {
+                                "retry": true
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}
