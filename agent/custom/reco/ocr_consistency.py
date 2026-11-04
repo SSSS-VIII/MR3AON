@@ -46,6 +46,16 @@ def _fuzzy_equal(a: str, b: str) -> bool:
     return diff <= allowed
 
 
+def texts_match(a: str, b: str, *, strict: bool = False, prefix_len=None) -> bool:
+    """默认维持全文比较，前缀匹配仅对明确指定长度的调用启用。"""
+    a, b = (a.strip(), b.strip()) if strict else (normalize_text(a), normalize_text(b))
+    if prefix_len is not None:
+        if type(prefix_len) is not int or prefix_len <= 0:
+            raise ValueError("prefix_len 必须为正整数")
+        return min(len(a), len(b)) >= prefix_len and a[:prefix_len] == b[:prefix_len]
+    return a == b if strict else _fuzzy_equal(a, b)
+
+
 
 def _collect_text(detail: Optional[RecognitionDetail]) -> str:
     """从 OCR 识别详情中按顺序拼接所有文本。"""
@@ -117,10 +127,9 @@ class OcrConsistency(CustomRecognition):
                 )
                 return None
 
-            if strict:
-                matched = text_a.strip() == text_b.strip()
-            else:
-                matched = _fuzzy_equal(normalize_text(text_a), normalize_text(text_b))
+            matched = texts_match(
+                text_a, text_b, strict=strict, prefix_len=param.get("prefix_len")
+            )
 
             if not matched:
                 logger.info(f"OcrConsistency: 不一致 a={text_a!r} b={text_b!r}")

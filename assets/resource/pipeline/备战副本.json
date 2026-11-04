@@ -264,7 +264,8 @@
                     ],
                     "threshold": 0.3,
                     "strict": false,
-                    "return_box": "a"
+                    "return_box": "a",
+                    "prefix_len": 3
                 }
             }
         },
@@ -343,7 +344,8 @@
                     ],
                     "threshold": 0.3,
                     "strict": false,
-                    "return_box": "a"
+                    "return_box": "a",
+                    "prefix_len": 3
                 }
             }
         },
@@ -398,7 +400,8 @@
                     ],
                     "threshold": 0.3,
                     "strict": false,
-                    "return_box": "a"
+                    "return_box": "a",
+                    "prefix_len": 3
                 }
             }
         },
