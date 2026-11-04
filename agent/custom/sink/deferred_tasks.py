@@ -88,6 +88,10 @@ class ManagedTaskStopSink(ContextEventSink):
         if not node_data or _action_type(node_data.get("action")) != "StopTask":
             return
 
+        from custom.action.staged_workflow import pause_workflow
+        if pause_workflow(detail.task_id, "阶段未经过成功登记就停止"):
+            return
+
         current = managed_task_queue.current()
         entry = current.entry if current is not None else detail.name
         logger.info(

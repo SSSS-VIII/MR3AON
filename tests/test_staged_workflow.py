@@ -116,3 +116,14 @@ def test_hard_end_cannot_silently_advance_to_the_next_stage(workflow, outcome):
         _advance_after_hard_end(None, 123, "entry", outcome=outcome)
         dispatch.assert_not_called()
     assert not managed_task_queue.has_pending()
+
+
+def test_wrapper_finalize_cannot_bypass_stage_completion(workflow):
+    from custom.action.deferred_tasks import ManagedTaskSchedulerFinalize
+    context, argv, store, nodes = workflow
+    assert BeginWorkflowStage().run(context, argv).success
+    with patch('custom.action.staged_workflow.request_tui_exit'), patch('custom.action.deferred_tasks.dispatch_next') as dispatch:
+        assert ManagedTaskSchedulerFinalize().run(context, argv).success
+        dispatch.assert_not_called()
+    data = json.loads(store.path.read_text())
+    assert next(iter(data['workflows'].values()))['stages']['1']['status'] == 'paused'

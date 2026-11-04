@@ -621,6 +621,9 @@ class ManagedTaskSchedulerFinalize(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> CustomAction.RunResult:
+        from custom.action.staged_workflow import pause_workflow
+        if pause_workflow(argv.task_detail.task_id, "阶段未经过成功登记就结束"):
+            return CustomAction.RunResult(success=True)
         current = managed_task_queue.current()
         if current is not None:
             retained = managed_task_queue.release_recurring_current(
