@@ -589,6 +589,26 @@ class ManagedTaskSchedulerBootstrap(CustomAction):
                 )
             )
 
+        get_node = getattr(context, "get_node_data", None)
+        metadata = [
+            ((get_node(task.entry) or {}).get("attach", {}) if callable(get_node) else {})
+            for task in tasks
+        ]
+        workflows = [item.get("workflow") for item in metadata]
+        if any(workflows):
+            stages = [item["stage"] for item in metadata if "stage" in item]
+            valid_stages = all(type(number) is int and number > 0 for number in stages)
+            if not all(name == workflows[0] and name for name in workflows) or not valid_stages or stages != sorted(set(stages)):
+                logger.error("阶段工作流必须使用独立、按顺序且不重复的任务计划")
+                if not context.override_pipeline({
+                    "AgentSchedulerRejectedPlan": {
+                        "recognition": "DirectHit", "action": "StopTask", "on_error": [],
+                    }
+                }) or not context.override_next(argv.node_name, ["AgentSchedulerRejectedPlan"]):
+                    return CustomAction.RunResult(success=False)
+                request_tui_exit("invalid_staged_plan")
+                return CustomAction.RunResult(success=True)
+
         persistent_task_state_store.start()
         disabled_entries: set[str] = set()
         for task in tasks:

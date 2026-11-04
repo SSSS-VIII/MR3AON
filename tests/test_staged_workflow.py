@@ -127,3 +127,25 @@ def test_wrapper_finalize_cannot_bypass_stage_completion(workflow):
         dispatch.assert_not_called()
     data = json.loads(store.path.read_text())
     assert next(iter(data['workflows'].values()))['stages']['1']['status'] == 'paused'
+
+
+@pytest.mark.parametrize('stages', [[None, 1], [2, 1], [1, 1]])
+def test_bootstrap_rejects_mixed_or_out_of_order_plan_before_any_task(stages):
+    from custom.action.deferred_tasks import ManagedTaskSchedulerBootstrap
+    from unittest.mock import Mock
+    nodes = {
+        f'entry{i}': {'attach': {'workflow': 'tutorial', 'stage': stage}} if stage is not None else {}
+        for i, stage in enumerate(stages)
+    }
+    context = SimpleNamespace(
+        get_node_data=nodes.get, tasker=None,
+        override_pipeline=Mock(return_value=True), override_next=Mock(return_value=True),
+    )
+    argv = SimpleNamespace(node_name='bootstrap', task_detail=SimpleNamespace(task_id=55), custom_action_param={
+        'tasks': [{'name': name, 'entry': name} for name in nodes],
+    })
+    with patch('custom.action.deferred_tasks.persistent_task_state_store.start') as start, patch('custom.action.deferred_tasks.dispatch_next') as dispatch, patch('custom.action.deferred_tasks.request_tui_exit'):
+        assert ManagedTaskSchedulerBootstrap().run(context, argv).success
+        start.assert_not_called()
+        dispatch.assert_not_called()
+        context.override_next.assert_called_once_with('bootstrap', ['AgentSchedulerRejectedPlan'])
