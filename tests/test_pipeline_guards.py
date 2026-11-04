@@ -185,7 +185,7 @@ class PipelineGuardTest(unittest.TestCase):
             (RESOURCE / "pipeline" / "每周逆袭悬赏.json").read_text(encoding="utf-8")
         )
         self.assertEqual(
-            pipeline["每周逆袭悬赏筛选模块"]["next"],
+            pipeline["每周逆袭悬赏筛选"]["next"],
             [
                 "[JumpBack]每周逆袭悬赏S选项",
                 "[JumpBack]每周逆袭悬赏A选项",
@@ -203,7 +203,7 @@ class PipelineGuardTest(unittest.TestCase):
             for case in boss_opt["cases"]
         }
         self.assertEqual(
-            cases["仅逆袭A"]["每周逆袭悬赏筛选模块"]["next"],
+            cases["仅逆袭A"]["每周逆袭悬赏筛选"]["next"],
             [
                 "[JumpBack]每周逆袭悬赏A选项",
                 "[JumpBack]每周逆袭悬赏S选项",
@@ -213,8 +213,8 @@ class PipelineGuardTest(unittest.TestCase):
         )
         for case_name in ("仅逆袭S", "逆袭A和逆袭S"):
             self.assertEqual(
-                cases[case_name]["每周逆袭悬赏筛选模块"]["next"],
-                pipeline["每周逆袭悬赏筛选模块"]["next"],
+                cases[case_name]["每周逆袭悬赏筛选"]["next"],
+                pipeline["每周逆袭悬赏筛选"]["next"],
                 case_name,
             )
         for case_name, want_a, want_s in (
@@ -230,6 +230,29 @@ class PipelineGuardTest(unittest.TestCase):
                 patch = cases[case_name][node]
                 self.assertEqual(patch.get("enable"), want, case_name)
                 self.assertEqual(patch.get("enabled"), want, case_name)
+
+        self.assertEqual(
+            pipeline["每周逆袭悬赏筛选模块"]["next"],
+            ["[JumpBack]每周逆袭悬赏开启所有筛选", "每周逆袭悬赏筛选"],
+        )
+        # 各阶段只能覆写内层筛选，不能绕过外层复位。
+        for stage, grade in ((1, "S"), (2, "A"), (3, "S")):
+            cfg = pipeline[f"每周逆袭悬赏阶段{stage}应用{grade}筛选"]["action"]["param"]["custom_action_param"]
+            self.assertNotIn("每周逆袭悬赏筛选模块", cfg)
+            self.assertIn("每周逆袭悬赏筛选", cfg)
+            # 复位会逐项补上未选项；之后按阶段模板保留唯一目标。
+            for mask in range(1, 8):
+                selected = {g for i, g in enumerate(("A", "S", "SS+")) if mask & (1 << i)}
+                selected.update(("A", "S", "SS+"))
+                for g in ("A", "S", "SS+"):
+                    node = f"每周逆袭悬赏{g}选项"
+                    template = cfg.get(node, {}).get("template", pipeline[node]["recognition"]["param"]["template"])
+                    template = template[0] if isinstance(template, list) else template
+                    if "未选择" in template:
+                        selected.add(g)
+                    else:
+                        selected.discard(g)
+                self.assertEqual(selected, {grade})
 
     def test_weekly_bounty_refresh_mode_button_default(self):
         """默认右上角刷新；残卷：点返回后 100ms 再狂点 2s。"""

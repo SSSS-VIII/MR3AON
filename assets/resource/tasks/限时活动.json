@@ -570,14 +570,6 @@
                             "enable": false,
                             "enabled": false
                         },
-                        "每周逆袭悬赏筛选模块": {
-                            "next": [
-                                "[JumpBack]每周逆袭悬赏A选项",
-                                "[JumpBack]每周逆袭悬赏S选项",
-                                "[JumpBack]每周逆袭悬赏SS+选项",
-                                "每周逆袭悬赏抢悬赏模块"
-                            ]
-                        },
                         "每周逆袭悬赏A选项": {
                             "template": "召令悬赏未选择.png"
                         },
@@ -595,6 +587,14 @@
                         "每周逆袭悬赏需要刷逆袭SS+": {
                             "enable": false,
                             "enabled": false
+                        },
+                        "每周逆袭悬赏筛选": {
+                            "next": [
+                                "[JumpBack]每周逆袭悬赏A选项",
+                                "[JumpBack]每周逆袭悬赏S选项",
+                                "[JumpBack]每周逆袭悬赏SS+选项",
+                                "每周逆袭悬赏抢悬赏模块"
+                            ]
                         }
                     }
                 },
@@ -613,14 +613,6 @@
                             "enable": true,
                             "enabled": true
                         },
-                        "每周逆袭悬赏筛选模块": {
-                            "next": [
-                                "[JumpBack]每周逆袭悬赏S选项",
-                                "[JumpBack]每周逆袭悬赏A选项",
-                                "[JumpBack]每周逆袭悬赏SS+选项",
-                                "每周逆袭悬赏抢悬赏模块"
-                            ]
-                        },
                         "每周逆袭悬赏A选项": {
                             "template": "召令悬赏已选择.png"
                         },
@@ -638,6 +630,14 @@
                         "每周逆袭悬赏需要刷逆袭SS+": {
                             "enable": false,
                             "enabled": false
+                        },
+                        "每周逆袭悬赏筛选": {
+                            "next": [
+                                "[JumpBack]每周逆袭悬赏S选项",
+                                "[JumpBack]每周逆袭悬赏A选项",
+                                "[JumpBack]每周逆袭悬赏SS+选项",
+                                "每周逆袭悬赏抢悬赏模块"
+                            ]
                         }
                     }
                 },
@@ -656,14 +656,6 @@
                             "enable": true,
                             "enabled": true
                         },
-                        "每周逆袭悬赏筛选模块": {
-                            "next": [
-                                "[JumpBack]每周逆袭悬赏S选项",
-                                "[JumpBack]每周逆袭悬赏A选项",
-                                "[JumpBack]每周逆袭悬赏SS+选项",
-                                "每周逆袭悬赏抢悬赏模块"
-                            ]
-                        },
                         "每周逆袭悬赏A选项": {
                             "template": "召令悬赏已选择.png"
                         },
@@ -681,6 +673,14 @@
                         "每周逆袭悬赏需要刷逆袭SS+": {
                             "enable": false,
                             "enabled": false
+                        },
+                        "每周逆袭悬赏筛选": {
+                            "next": [
+                                "[JumpBack]每周逆袭悬赏S选项",
+                                "[JumpBack]每周逆袭悬赏A选项",
+                                "[JumpBack]每周逆袭悬赏SS+选项",
+                                "每周逆袭悬赏抢悬赏模块"
+                            ]
                         }
                     }
                 }

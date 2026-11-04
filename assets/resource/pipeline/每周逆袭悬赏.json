@@ -379,10 +379,8 @@
         "pre_delay": 0,
         "post_delay": 0,
         "next": [
-            "[JumpBack]每周逆袭悬赏S选项",
-            "[JumpBack]每周逆袭悬赏A选项",
-            "[JumpBack]每周逆袭悬赏SS+选项",
-            "每周逆袭悬赏抢悬赏模块"
+            "[JumpBack]每周逆袭悬赏开启所有筛选",
+            "每周逆袭悬赏筛选"
         ]
     },
     "每周逆袭悬赏抢悬赏核心节点": {
@@ -850,7 +848,7 @@
             "type": "Click",
             "param": {
                 "target": [
-                    400,
+                    375,
                     305,
                     1,
                     1
@@ -1128,7 +1126,7 @@
             "type": "Click",
             "param": {
                 "target": [
-                    400,
+                    375,
                     305,
                     1,
                     1
@@ -1137,7 +1135,7 @@
         },
         "repeat": 8,
         "repeat_delay": 100,
-        "post_delay": 100
+        "post_delay": 0
     },
     "每周逆袭悬赏残卷兑换刷新": {
         "recognition": {
@@ -1317,14 +1315,6 @@
             "param": {
                 "custom_action": "NodeOverride",
                 "custom_action_param": {
-                    "每周逆袭悬赏筛选模块": {
-                        "next": [
-                            "[JumpBack]每周逆袭悬赏S选项",
-                            "[JumpBack]每周逆袭悬赏A选项",
-                            "[JumpBack]每周逆袭悬赏SS+选项",
-                            "每周逆袭悬赏抢悬赏模块"
-                        ]
-                    },
                     "每周逆袭悬赏A选项": {
                         "template": "召令悬赏已选择.png"
                     },
@@ -1350,6 +1340,14 @@
                             "每周逆袭悬赏进入队伍后识别到逆袭S悬赏",
                             "每周逆袭悬赏进入队伍后识别到逆袭SS+悬赏",
                             "每周逆袭悬赏进入队伍后没识别到目标悬赏"
+                        ]
+                    },
+                    "每周逆袭悬赏筛选": {
+                        "next": [
+                            "[JumpBack]每周逆袭悬赏S选项",
+                            "[JumpBack]每周逆袭悬赏A选项",
+                            "[JumpBack]每周逆袭悬赏SS+选项",
+                            "每周逆袭悬赏抢悬赏模块"
                         ]
                     }
                 }
@@ -1402,14 +1400,6 @@
             "param": {
                 "custom_action": "NodeOverride",
                 "custom_action_param": {
-                    "每周逆袭悬赏筛选模块": {
-                        "next": [
-                            "[JumpBack]每周逆袭悬赏A选项",
-                            "[JumpBack]每周逆袭悬赏S选项",
-                            "[JumpBack]每周逆袭悬赏SS+选项",
-                            "每周逆袭悬赏抢悬赏模块"
-                        ]
-                    },
                     "每周逆袭悬赏A选项": {
                         "template": "召令悬赏未选择.png"
                     },
@@ -1437,6 +1427,14 @@
                     },
                     "每周逆袭悬赏列表页识别到次数上限_阶段1": {
                         "enabled": false
+                    },
+                    "每周逆袭悬赏筛选": {
+                        "next": [
+                            "[JumpBack]每周逆袭悬赏A选项",
+                            "[JumpBack]每周逆袭悬赏S选项",
+                            "[JumpBack]每周逆袭悬赏SS+选项",
+                            "每周逆袭悬赏抢悬赏模块"
+                        ]
                     }
                 }
             }
@@ -1488,14 +1486,6 @@
             "param": {
                 "custom_action": "NodeOverride",
                 "custom_action_param": {
-                    "每周逆袭悬赏筛选模块": {
-                        "next": [
-                            "[JumpBack]每周逆袭悬赏S选项",
-                            "[JumpBack]每周逆袭悬赏A选项",
-                            "[JumpBack]每周逆袭悬赏SS+选项",
-                            "每周逆袭悬赏抢悬赏模块"
-                        ]
-                    },
                     "每周逆袭悬赏A选项": {
                         "template": "召令悬赏已选择.png"
                     },
@@ -1523,6 +1513,14 @@
                     },
                     "每周逆袭悬赏列表页识别到次数上限_阶段1": {
                         "enabled": false
+                    },
+                    "每周逆袭悬赏筛选": {
+                        "next": [
+                            "[JumpBack]每周逆袭悬赏S选项",
+                            "[JumpBack]每周逆袭悬赏A选项",
+                            "[JumpBack]每周逆袭悬赏SS+选项",
+                            "每周逆袭悬赏抢悬赏模块"
+                        ]
                     }
                 }
             }
@@ -1751,5 +1749,36 @@
         ],
         "focus": "准备页：S等级在且无概率掉落 → 阶段3完成",
         "recognition": "DirectHit"
+    },
+    "每周逆袭悬赏筛选": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]每周逆袭悬赏S选项",
+            "[JumpBack]每周逆袭悬赏A选项",
+            "[JumpBack]每周逆袭悬赏SS+选项",
+            "每周逆袭悬赏抢悬赏模块"
+        ]
+    },
+    "每周逆袭悬赏开启所有筛选": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    673,
+                    97,
+                    405,
+                    150
+                ],
+                "template": [
+                    "召令悬赏未选择.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 1000
     }
 }
