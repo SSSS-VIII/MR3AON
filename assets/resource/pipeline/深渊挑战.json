@@ -72,12 +72,9 @@
     "停止深渊挑战任务": {
         "enabled": false,
         "action": {
-            "type": "DoNothing"
+            "type": "StopTask"
         },
-        "focus": "深渊挑战未到20:00，按配置跳过本次任务",
-        "next": [
-            "登记深渊挑战每日完成"
-        ]
+        "focus": "任务完成：深渊挑战✅"
     },
     "关闭节点深渊挑战寻找队伍右滑": {
         "pre_delay": 0,
@@ -499,7 +496,8 @@
         },
         "next": [
             "深渊挑战当前时间大于21点00",
-            "深渊挑战当前时间小于20点",
+            "深渊挑战调度未到八点",
+            "[JumpBack]深渊挑战当前时间小于20点",
             "深渊挑战在目标时间范围开始深渊挑战"
         ]
     },
@@ -524,15 +522,14 @@
             "param": {
                 "custom_recognition": "TimeBefore",
                 "custom_recognition_param": {
-                    "time": "20:00"
+                    "time": "19:56"
                 }
             }
         },
         "next": [
-            "停止深渊挑战任务",
-            "深渊挑战挂起到八点"
-        ],
-        "focus": "深渊挑战未到20:00，检查等待选项"
+            "[JumpBack]深渊挑战等待提示",
+            "深渊挑战等待5秒"
+        ]
     },
     "深渊挑战时间大于21点结束": {
         "recognition": {
@@ -1114,5 +1111,40 @@
         "action": {
             "type": "StopTask"
         }
+    },
+    "深渊挑战等待提示": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        },
+        "focus": "挂机等待至19:56深渊挑战开启",
+        "next": [
+            "停止深渊挑战任务",
+            "不停止深渊挑战任务"
+        ]
+    },
+    "深渊挑战等待5秒": {
+        "post_delay": 5000
+    },
+    "不停止深渊挑战任务": {},
+    "深渊挑战调度未到八点": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "TimeBefore",
+                "custom_recognition_param": {
+                    "time": "20:00"
+                }
+            }
+        },
+        "next": [
+            "深渊挑战挂起到八点"
+        ],
+        "focus": "深渊挑战未到周五20:00，交回调度队列等待"
     }
 }

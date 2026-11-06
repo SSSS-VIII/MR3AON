@@ -1,6 +1,6 @@
 # 当前工作交接
 
-2026-11-06：用户反馈深渊未挂起，确认 main 保存的等待开关为 No，12:37 提前跳过并禁用到明日05:00，13:07重启再次加载该状态。需开启等待，并在停止当前会话后仅清理深渊跳过状态再重启；本次只读排查，尚未恢复，见 [主环境等待关闭](archived/2026-11-06-abyss-main-wait-disabled.md)。
+2026-11-06：用户澄清深渊旧开关只控制原地长挂机，main 的 No 配置符合预期。已将周五20:00前的 Agent 调度门独立于旧开关，Yes/No 均挂起，恢复旧等待路径兼容语义；18项相关回归和原生资源加载通过。当前主会话仍持有初版误写的深渊禁用状态，待停止当前TUI后仅清理深渊条目并重新加载，见 [调度与挂机分离](archived/2026-11-06-abyss-scheduler-independent-of-idle.md)。
 
 2026-11-06：外部任务调用现支持 `--task-options` 本次覆盖与 `--once` 单次执行。完成/已完成跳过返回0，失败1，参数错误2，周期延后3，一小时让出4，SIGINT/q中断130，SIGTERM143；退出释放控制权并保留 Android。small 无点击真实进程9项通过，普通回归205 passed、14 skipped、5项既有失败、85 subtests passed；未实跑逆袭/备战业务。small 保留运行，main 未接管，xiaoli 保持停止。详见 [单次退出](archived/2026-11-06-single-run-exit.md) 和 `test-environment.md`。
 

@@ -20,7 +20,9 @@ RESOURCE = Path(__file__).resolve().parents[1] / 'assets/resource'
     ('2026-11-06T20:00:00', True, '深渊挑战在目标时间范围开始深渊挑战', None),
     ('2026-11-06T20:59:59', True, '深渊挑战在目标时间范围开始深渊挑战', None),
     ('2026-11-06T21:00:00', True, '深渊挑战当前时间大于21点00', None),
-    ('2026-11-06T19:30:00', False, '停止深渊挑战任务', None),
+    ('2026-11-06T19:30:00', False, '深渊挑战挂起到八点', 1800),
+    ('2026-11-06T19:59:59', False, '深渊挑战挂起到八点', 1),
+    ('2026-11-06T20:00:00', False, '深渊挑战在目标时间范围开始深渊挑战', None),
     ('2026-11-05T19:30:00', True, '深渊挑战当前不为周五', None),
     ('2026-11-07T19:30:00', True, '深渊挑战当前不为周五', None),
 ])
@@ -64,7 +66,7 @@ def test_calendar_routes_release_queue_and_preserve_task_options(monkeypatch, wh
         if action.get('custom_action') == 'ScheduleDeferredTask':
             result = scheduler.ScheduleDeferredTask().run(None, SimpleNamespace(custom_action_param=action['custom_action_param']))
             assert result.success
-        name = next(n for n in node['next'] if matches(n))
+        name = next(n.removeprefix('[JumpBack]') for n in node['next'] if matches(n.removeprefix('[JumpBack]')))
     assert expected in route
     if delay is not None:
         arm.assert_called_once_with(key='深渊挑战等待八点', entry='深渊挑战entry', delay_seconds=delay, pipeline_override=override)
@@ -76,4 +78,7 @@ def test_calendar_routes_release_queue_and_preserve_task_options(monkeypatch, wh
             assert '登记深渊挑战每日完成' in route
             completion = pipeline['登记深渊挑战每日完成']['action']['param']['custom_action_param']
             assert completion == {'entry': '深渊挑战entry', 'enabled': False, 'valid_until': 'next_daily_reset'}
-    assert '深渊挑战等待5秒' not in pipeline
+    assert pipeline['深渊挑战调度未到八点']['next'] == ['深渊挑战挂起到八点']
+    assert pipeline['深渊挑战当前时间小于20点']['recognition']['param']['custom_recognition_param']['time'] == '19:56'
+    assert pipeline['停止深渊挑战任务']['action']['type'] == 'StopTask'
+    assert pipeline['停止深渊挑战任务']['enabled'] is (not wait)
