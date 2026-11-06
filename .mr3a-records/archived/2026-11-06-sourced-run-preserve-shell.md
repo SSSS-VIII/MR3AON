@@ -1,0 +1,24 @@
+# 修复加载 run 后按 q 导致 Kitty 窗口关闭
+
+## 现象与原因
+
+用户反馈在已有 shell 启动 MR3A 后，按 q 退出连 shell 和 Kitty 窗口也一起关闭。
+
+核对本机 shell 历史，最近两次启动实际记录为 `. run`。Bash 的点号命令会在当前 shell 加载脚本。原入口随即执行 `set -euo pipefail`、导出变量和 `exec Python`，后续 launcher 再 exec MaaPiCli，当前 shell 进程已被整个替换。q 结束脚本后，终端的这条会话直接结束，Kitty 随之关闭。13:17:08 Agent 正常关闭，13:17:09 对应 Kitty scope 退出的日志与此机制吻合。
+
+此前退出回归检查框架/Agent、termios、备用屏和锁回收，缺少加载实际 run 后父 shell 继续执行的检查。
+
+## 改动
+
+`run` 在修改 shell 选项之前检测被加载的情况。`. run` / `source ./run` 时，通过子 Bash 执行同一份入口，再将退出状态返回调用者。正常 `./run` 路径继续使用原有 exec 链。父 shell 的选项、ROOT/PYTHONPATH 和参数作用域保留。
+
+增加实际入口回归，分别验证 `. run`、`source ./run`、`./run` 的正常帮助退出和参数失败后，父 shell 继续执行，退出码正确且变量/选项保留。另验证未设置的变量不会因加载入口而被导出。
+
+普通和单次无点击实机退出测试增加父 Bash 包装及结束后的存活标记。普通退出夹具可用 `MR3A_EXIT_LIVE_INSTANCE` 指定空闲的命名实例，默认 main 的既有验证方式保留。
+
+## 验证
+
+- 实际 run 的7项 Bash 回归通过，`bash -n run` 通过。
+- small 真实 MaaPiCli/Agent 无点击回归3项通过，包括普通 q、单次 q（130）和单次 TUI 自动结束（0）。父 Bash 在子进程退出后输出存活标记，termios 和备用屏恢复，控制锁释放，Android 保留，无 semaphore 警告。
+- small 复用原命名就绪与租约，没有运行游戏任务。本次未通过实际 Kitty GUI 自动化复现窗口，只验证导致窗口关闭的 shell 替换机制及修复后的父 shell 存活。
+- 入口、命名运行层及单次监督进程共24项相关回归通过，diff检查通过。用户保存计划与当前其它工作区改动分别保留。

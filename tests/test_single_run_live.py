@@ -108,7 +108,12 @@ def test_native_once_completion_failure_and_lease_release(tmp_path, mode, code):
     before_terminal = termios.tcgetattr(slave)
     fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack('HHHH', 24, 90, 0, 0))
     with (work / 'console.log').open('w+') as output:
-        process = subprocess.Popen([str(ROOT / '.venv/bin/python'), '-c', _LAUNCH, session.spec.name, str(work)], env=env, stdin=slave if use_tui else subprocess.DEVNULL, stdout=slave if use_tui else output, stderr=subprocess.STDOUT, start_new_session=True)
+        command = [str(ROOT / '.venv/bin/python'), '-c', _LAUNCH, session.spec.name, str(work)]
+        if use_tui:
+            command = ['bash', '--noprofile', '--norc', '-c',
+                       '"$@"; status=$?; printf "\\nPARENT_SHELL_ALIVE=%s\\n" "$status"; exit "$status"',
+                       'mr3a-once-shell', *command]
+        process = subprocess.Popen(command, env=env, stdin=slave if use_tui else subprocess.DEVNULL, stdout=slave if use_tui else output, stderr=subprocess.STDOUT, start_new_session=True)
         try:
             if use_tui:
                 captured = bytearray()
@@ -125,6 +130,7 @@ def test_native_once_completion_failure_and_lease_release(tmp_path, mode, code):
                     captured.extend(os.read(master, 65536))
                 output.write(captured.decode(errors='replace'))
                 output.flush()
+                assert f'PARENT_SHELL_ALIVE={code}'.encode() in captured
                 assert b'\x1b[?1049l' in captured
                 assert termios.tcgetattr(slave) == before_terminal
             if mode in {'interrupt', 'terminate'}:
