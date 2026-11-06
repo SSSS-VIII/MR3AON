@@ -26,12 +26,14 @@ def wait_for(predicate, timeout=5):
     assert predicate()
 
 
-def test_request_is_private_short_lived_and_carries_account_identity(tmp_path, monkeypatch):
+def test_request_is_private_short_lived_and_uses_instance_and_live_nickname(tmp_path, monkeypatch):
     monkeypatch.setenv("MR3A_COMPANION_DIR", str(tmp_path))
-    write_json(tmp_path / "session.json", {"game_id": "100123", "name": "small"})
-    assert companion.read_session()["game_id"] == "100123"
-    assert companion.publish_state("ready", account_id="100123")
-    assert companion._read(tmp_path / "state.json")["state"] == "ready"
+    write_json(tmp_path / "session.json", {"name": "small", "task_id": 42})
+    assert companion.read_session() == {"name": "small", "task_id": 42}
+    assert companion.publish_state("ready", nickname="小号现场昵称")
+    state = companion._read(tmp_path / "state.json")
+    assert state["state"] == "ready"
+    assert state["nickname"] == "小号现场昵称"
     write_json(tmp_path / "request.json", {"token": "round1", "expires_at": time.monotonic() + 5,
                                            "leader_name": "大号"})
     assert companion.read_request()["leader_name"] == "大号"
@@ -43,14 +45,14 @@ def test_request_is_private_short_lived_and_carries_account_identity(tmp_path, m
     assert not companion.publish_state("ready")
 
 
-@pytest.mark.parametrize("name,game_id,reason", [
-    ("main", "123", "相同"), ("../main", "123", "实例名"),
-    ("small", "account", "数字"), ("small", "123", "启动游戏配置"),
+@pytest.mark.parametrize("name,reason", [
+    ("main", "相同"), ("../main", "实例名"),
+    ("", "实例名"), ("small", "启动游戏配置"),
 ])
-def test_invalid_companion_never_launches_worker(registry, name, game_id, reason):
+def test_invalid_companion_never_launches_worker(registry, name, reason):
     manager = companion.CompanionManager(registry=registry)
     with patch.object(companion.subprocess, "Popen", side_effect=AssertionError("must not start")):
-        assert not manager.start(name, game_id, 1)
+        assert not manager.start(name, 1)
     assert reason in manager.status()["reason"]
 
 
@@ -87,7 +89,7 @@ if receipt: Path(receipt).write_text(json.dumps({'cleanup_complete':True}))
         monkeypatch.setenv("MR3A_RUN_ONCE", "1")
         monkeypatch.setenv("MR3A_RUN_CLEANUP_DIR", str(tmp_path / "receipts"))
         with patch.object(companion.subprocess, "Popen", side_effect=fake_worker):
-            assert manager.start("small", "123", 42)
+            assert manager.start("small", 42)
         assert manager.wait_ready(3)
         env = captured["kwargs"]["env"]
         assert env["MR3A_INSTANCE_NAME"] == "small"
@@ -96,7 +98,10 @@ if receipt: Path(receipt).write_text(json.dumps({'cleanup_complete':True}))
         assert "MR3A_RUN_CLEANUP_DIR" not in env
         assert "MR3A_RUN_ONCE" not in env
         assert parent_lock.fileno() not in captured["kwargs"]["pass_fds"]
-        token = manager.permit_invitation(10, leader_name="大号", expected_game_id="123")
+        session = companion._read(manager._current.directory / "session.json")
+        assert session['name'] == 'small' and session['task_id'] == 42
+        assert 'game_id' not in session
+        token = manager.permit_invitation(10, leader_name="大号")
         assert token
         request = companion._read(manager._current.directory / "request.json")
         assert request["token"] == token and request["leader_name"] == "大号"
@@ -289,7 +294,7 @@ receipt.write_text(json.dumps(result))
 
     with patch.object(companion.subprocess, 'Popen', side_effect=fake_worker), \
          patch.object(companion.threading.Thread, 'start', side_effect=RuntimeError('cannot start new thread')) as thread_start:
-        assert manager.start('small', '123', 99) is False
+        assert manager.start('small', 99) is False
     thread_start.assert_called_once()  # No replacement thread is used as a fallback.
     assert observed.is_file()
     assert len(processes) == 1 and processes[0].returncode == 0
@@ -345,7 +350,7 @@ receipt.write_text(json.dumps(result))
     try:
         with patch.object(companion.subprocess, 'Popen', side_effect=fake_worker), \
              patch.object(companion.threading.Thread, 'start', side_effect=RuntimeError('cannot start new thread')):
-            assert manager.start('small', '123', 99) is False
+            assert manager.start('small', 99) is False
         handle = manager._handles[0]
         assert handle.parent_fd is None
         assert (handle.directory / 'session.json').exists()

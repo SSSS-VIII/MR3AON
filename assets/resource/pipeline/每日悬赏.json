@@ -2417,7 +2417,6 @@
     "每日悬赏小号配置": {
         "attach": {
             "enabled": false,
-            "game_id": "",
             "instance": ""
         }
     },

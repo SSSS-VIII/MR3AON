@@ -17,17 +17,11 @@ from utils.logger import logger
 
 INVITE_ENTRY = '每日悬赏展开了邀请页面'
 DRAGON_NODES = ('每日悬赏家族组队任务', '每日悬赏好友组队任务')
-PROFILE_ID = [928, 202, 190, 48]
-PROFILE_NAME = [786, 155, 190, 45]
+HOME_NAME = [140, 24, 210, 46]
 
 
 def normalized_name(text):
     return re.sub(r'\s+', '', text)
-
-
-def exact_game_id(text):
-    match = re.fullmatch(r'(?:ID[:：]?)?([0-9]{1,20})', re.sub(r'\s+', '', text), re.I)
-    return match.group(1) if match else None
 
 
 def _frame(context):
@@ -82,38 +76,10 @@ def _swipe(context, upward=True):
     time.sleep(.35)
 
 
-def _profile(context):
-    # 邀请列表点头像默认进入“搭配”；必须先切到个人信息，再读完整ID。
-    deadline = time.monotonic() + 4
-    opened = False
-    while time.monotonic() < deadline and not context.tasker.stopping:
-        image = _frame(context)
-        if _click_text(context, image, [78, 48, 205, 80], '个人信息'):
-            opened = True
-            break
-        time.sleep(.2)
-    if not opened:
-        raise RuntimeError('未打开个人信息')
-    deadline = time.monotonic() + 4
-    game_id, nickname = None, ''
-    while time.monotonic() < deadline and not context.tasker.stopping:
-        image = _frame(context)
-        game_id = exact_game_id(_text(context, image, PROFILE_ID))
-        nickname = _text(context, image, PROFILE_NAME).strip()
-        if game_id and nickname:
-            break
-        time.sleep(.2)  # 好友资料需要网络加载，不能把翻页中的背景当作ID。
-    _tap(context, 1165, 87)
-    if not game_id or not nickname:
-        raise RuntimeError('个人信息ID或昵称识别失败')
-    return game_id, nickname
-
-
 @dataclass
 class _MainSession:
     task_id: int = 0
     enabled: bool = False
-    game_id: str = ''
     leader: str = ''
     restore: dict = field(default_factory=dict)
     started_at: float = 0
@@ -147,8 +113,7 @@ class PrepareBountyCompanion(CustomAction):
             config = (context.get_node_data('每日悬赏小号配置') or {}).get('attach', {})
             if config.get('enabled') is not True:
                 return True
-            _main.game_id = str(config.get('game_id', '')).strip()
-            if not companion_manager.start(str(config.get('instance', '')), _main.game_id, task_id):
+            if not companion_manager.start(str(config.get('instance', '')), task_id):
                 logger.warning(f'每日悬赏小号无法启动，沿用原流程，原因={companion_manager.status().get("reason")}')
                 return True
             # 只覆盖本次任务。回退时恢复该账号原来的龙血开关及邀请顺序。
@@ -178,7 +143,7 @@ class CaptureBountyLeader(CustomAction):
         if _main.enabled:
             try:
                 # 主页固定昵称区域，与邀请弹窗中的邀请人交叉确认。
-                _main.leader = _text(context, _frame(context), [140, 24, 210, 46]).strip()
+                _main.leader = _text(context, _frame(context), HOME_NAME).strip()
                 if not _main.leader:
                     _fallback(context, '未识别大号昵称')
             except Exception as exc:
@@ -186,8 +151,8 @@ class CaptureBountyLeader(CustomAction):
         return True
 
 
-def _find_friend(context, game_id, nickname, deadline):
-    """查在线候选，点头像核对ID，再验证原行未变化；不群邀、不加好友。"""
+def _find_friend(context, nickname, deadline):
+    """按小号主页现读昵称查找，再核对同一行；不打开好友资料。"""
     expected_name = normalized_name(nickname)
     if not expected_name:
         return None
@@ -201,35 +166,40 @@ def _find_friend(context, game_id, nickname, deadline):
             return None
         image = _frame(context)
         buttons = _ocr(context, image, [1150, 90, 125, 580], '^邀请$')
-        fingerprint = tuple((text, tuple(box_xywh(box))) for text, box in _ocr(context, image, [915, 90, 165, 580]))
+        names = _ocr(context, image, [915, 90, 165, 580])
+        fingerprint = tuple((text, tuple(box_xywh(box))) for text, box in names)
         if fingerprint == previous_page:
             return None
         previous_page = fingerprint
-        for _, box in buttons:
-            if time.monotonic() >= deadline:
+        matches = [box for text, box in names if normalized_name(text) == expected_name]
+        if len(matches) > 1:
+            logger.warning(f'好友列表出现多个同名候选 {nickname!r}，回退原流程')
+            return None
+        if matches:
+            _, y, _, h = box_xywh(matches[0])
+            name_y = y + h // 2
+            candidates = [box for _, box in buttons
+                          if abs(box_xywh(box)[1] + box_xywh(box)[3] // 2 - name_y) <= 28]
+            if len(candidates) != 1:
                 return None
-            x, y, w, h = box_xywh(box)
+            _, y, _, h = box_xywh(candidates[0])
             cy = y + h // 2
             if not 105 <= cy <= 648:
-                continue  # 部分露出的行不做头像/邀请配对。
-            before = _frame(context)
-            row_name = normalized_name(_text(context, before, [916, cy - 24, 162, 48]))
-            # 备注、截断或空白 OCR 都不能证明该行对应小号；只检查昵称完整匹配的候选。
-            if not row_name or row_name != expected_name:
-                continue
-            _tap(context, 852, cy)
-            found_id, profile_name = _profile(context)
-            if found_id != game_id or normalized_name(profile_name) != expected_name:
-                continue
+                return None  # 部分露出的行不做头像/邀请配对。
+            # 备注、截断或空白 OCR 都不视为匹配；重新读同一行防止列表在线排序变化。
+            if normalized_name(_text(context, image, [916, cy - 24, 162, 48])) != expected_name:
+                return None
             after = _frame(context)
-            # 列表在线排序可变化，个人信息关闭后必须确认仍是同一行。
+            after_names = _ocr(context, after, [915, 90, 165, 580])
+            if sum(normalized_name(text) == expected_name for text, _ in after_names) != 1:
+                return None
             if normalized_name(_text(context, after, [916, cy - 24, 162, 48])) != expected_name:
-                continue
-            a, b = before[cy-32:cy+32, 824:886], after[cy-32:cy+32, 824:886]
+                return None
+            a, b = image[cy-32:cy+32, 824:886], after[cy-32:cy+32, 824:886]
             if a.shape != b.shape or np.mean(np.abs(a.astype(float) - b.astype(float))) > 12:
-                continue
+                return None
             current = _ocr(context, after, [1150, cy-28, 125, 56], '^邀请$')
-            if current:
+            if len(current) == 1 and time.monotonic() < deadline:
                 return current[0][1]
         if not buttons:
             return None
@@ -250,16 +220,17 @@ class InviteBountyCompanion(CustomAction):
             if not companion_manager.wait_ready(remaining, cancelled=lambda: context.tasker.stopping, states={'ready'}):
                 raise RuntimeError(f'小号未就绪 {companion_manager.status().get("reason", "等待超时")}')
             status = companion_manager.status()
-            if status.get('game_id') != _main.game_id:
-                raise RuntimeError('小号实际登录ID与配置不一致')
+            nickname = str(status.get('nickname', '')).strip()
+            if not normalized_name(nickname):
+                raise RuntimeError('未读取到小号当前昵称')
             # 小号冷启动期间，列表可能仍保留离线结果。关开一次刷新。
             _tap(context, 703, 44)
             image = _frame(context)
             if not _click_text(context, image, [517, 233, 244, 251], '点击邀请好友', .7):
                 raise RuntimeError('主队伍邀请入口未出现')
-            box = _find_friend(context, _main.game_id, status.get('nickname', ''), time.monotonic() + 30)
+            box = _find_friend(context, nickname, time.monotonic() + 30)
             if box is None:
-                raise RuntimeError('未在好友列表找到可邀请的目标ID')
+                raise RuntimeError(f'未在好友列表找到可邀请的小号昵称 {nickname!r}')
             token = companion_manager.permit_invitation(25, leader_name=_main.leader)
             if not token:
                 raise RuntimeError('小号已退出')
@@ -271,7 +242,7 @@ class InviteBountyCompanion(CustomAction):
                 if status.get('state') == 'teamed' and status.get('token') == token:
                     companion_manager.revoke_invitation()
                     _main.has_invited = True
-                    logger.info(f'每日悬赏小号已按ID {_main.game_id} 加入并准备')
+                    logger.info(f'每日悬赏小号 {nickname!r} 已加入并准备')
                     return True
                 if status.get('state') in {'failed', 'stopped', 'stopping'}:
                     break
@@ -288,11 +259,8 @@ class FallbackBountyCompanion(CustomAction):
         if argv.task_detail.task_id != _main.task_id:
             return True
         _fallback(context, '定向组队未完成')
-        # 只收起已确认的信息/邀请面板，然后交原“退出队伍”链回任务页重建龙血时限。
+        # 收起邀请面板，再交原“退出队伍”链回任务页重建龙血时限。
         image = _frame(context)
-        if _ocr(context, image, [78, 48, 205, 80], '个人信息'):
-            _tap(context, 1165, 87)
-            image = _frame(context)
         if _hit(context, image, '每日悬赏展开了邀请页面'):
             _tap(context, 703, 44)
         return True
@@ -300,7 +268,6 @@ class FallbackBountyCompanion(CustomAction):
 
 @dataclass
 class _SmallSession:
-    game_id: str = ''
     nickname: str = ''
     token: str = ''
     leader: str = ''
@@ -316,7 +283,7 @@ def _publish(state, **details):
         _small.progress_at = time.monotonic()
         logger.info(f'每日悬赏小号状态 {_small.phase} -> {state}')
     _small.phase = state
-    return publish_state(state, game_id=_small.game_id, nickname=_small.nickname,
+    return publish_state(state, nickname=_small.nickname,
                          token=_small.token, **details)
 
 
@@ -356,14 +323,15 @@ class InitializeBountyCompanion(CustomAction):
         _small = _SmallSession(progress_at=time.monotonic())
         try:
             session = read_session()
-            if not session.get('game_id'):
+            if not session.get('name'):
                 raise RuntimeError('此任务由每日悬赏拉小号模式管理，请从大号启用')
-            if not _hit(context, _frame(context), '每日悬赏确认在主页面'):
+            image = _frame(context)
+            if not _hit(context, image, '每日悬赏确认在主页面'):
                 raise RuntimeError('小号启动未到主页')
-            _tap(context, 230, 45)
-            _small.game_id, _small.nickname = _profile(context)
-            if _small.game_id != session['game_id']:
-                raise RuntimeError('实例当前登录账号ID与配置小号ID不一致')
+            _small.nickname = _text(context, image, HOME_NAME).strip()
+            if not normalized_name(_small.nickname):
+                raise RuntimeError('未读取到小号主页昵称')
+            logger.info(f'每日悬赏小号实例 {session["name"]} 当前昵称 {_small.nickname!r}')
             _unblock_invites(context)
             if not _hit(context, _frame(context), '每日悬赏确认在主页面'):
                 raise RuntimeError('小号设置后未返回主页')

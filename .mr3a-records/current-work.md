@@ -1,6 +1,6 @@
 # 当前工作交接
 
-2026-11-07：每日悬赏已增加默认关闭的拉小号模式，配置游戏ID与命名实例；自动启动、定向邀请、准备、战斗结算及任务结束回收已接通，异常回退原组队流程。main带xiaoli连续两轮实机通过，双方奖励按环境保存，主配置与正式完成账本保留；现main运行、xiaoli停止，双方控制锁空闲。协同期间按大号剩余奖励次数结束，不额外补打龙血组队轮次。全量346 passed、14 skipped、5项既有失败、85 subtests passed。详见 [每日悬赏协同](archived/2026-11-07-daily-bounty-companion.md)、[配置与边界](../docs/develop/每日悬赏协同.md)。冷启动OPPO可币券弹窗已单独修复，见 [渠道启动弹窗](archived/2026-11-07-oppo-startup-coupon-popup.md)。
+2026-11-07：每日悬赏拉小号现只填写实例名称；按用户纠正移除多余UID配置和个人资料校验，小号在主页现场读取昵称，大号匹配好友昵称直接邀请。152项相关测试、原生资源及main/xiaoli仅邀请实机通过，旧保存UID自动忽略；小号已回收，main保留，控制权释放。见 [移除多余UID](archived/2026-11-07-bounty-companion-nickname-only.md)、[当前配置用法](../docs/develop/每日悬赏协同.md)。此前连续两轮战斗、奖励隔离及回收验证见 [协同首版](archived/2026-11-07-daily-bounty-companion.md)，冷启动OPPO弹窗修复见 [渠道启动弹窗](archived/2026-11-07-oppo-startup-coupon-popup.md)。
 
 2026-11-07：深渊结束后误用每日重置已修正，完成/非周五/超时出口现持久禁用至下一周五05:00，到期再由独立门挂起到20:00。31项相关回归与原生资源加载通过，未实跑活动。main 当前仍运行旧规则，需退出后更新既有05:00完成记录再重启，本次未在线改状态，见 [深渊每周完成](archived/2026-11-07-abyss-weekly-completion.md)。
 

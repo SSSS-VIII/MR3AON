@@ -12,7 +12,6 @@ import json
 import math
 import os
 from pathlib import Path
-import re
 import shutil
 import subprocess
 import sys
@@ -48,7 +47,7 @@ def _directory() -> Path | None:
 
 
 def read_session() -> dict:
-    """Return this invocation's expected account ID; never infer login details."""
+    """Return this invocation's named-instance and lifecycle metadata."""
     directory = _directory()
     return _read(directory / "session.json") if directory else {}
 
@@ -102,7 +101,7 @@ class CompanionManager:
         self._handles: list[_Handle] = []
         self._last = {"state": "stopped", "reason": "not_started"}
 
-    def start(self, name: str, game_id: str, task_id: int) -> bool:
+    def start(self, name: str, task_id: int) -> bool:
         """Start without waiting for Android; invalid/busy environments fall back."""
         with self._lock:
             if self._current is not None and self._current.process.poll() is None:
@@ -115,11 +114,8 @@ class CompanionManager:
             read_fd = write_fd = None
             try:
                 name = unicodedata.normalize("NFC", name.strip())
-                game_id = str(game_id).strip()
                 if name == os.environ.get("MR3A_INSTANCE_NAME", "main"):
                     raise ValueError("小号实例不能与当前实例相同")
-                if not re.fullmatch(r"[0-9]{1,20}", game_id):
-                    raise ValueError("小号游戏 ID 必须为数字")
                 spec = self.registry.get(name)
                 if not _has_startup(spec.config_path):
                     raise ValueError("小号实例尚未保存自己的启动游戏配置")
@@ -131,7 +127,7 @@ class CompanionManager:
                     receipt = Path(receipts) / f"{uuid.uuid4().hex}.json"
                     write_json(receipt, {"state": "pending", "name": spec.name})
                 write_json(directory / "session.json", {
-                    "name": spec.name, "game_id": game_id, "task_id": task_id,
+                    "name": spec.name, "task_id": task_id,
                     "parent_instance": os.environ.get("MR3A_INSTANCE_NAME", "main"),
                     "cleanup_receipt": str(receipt) if receipt else None,
                 })

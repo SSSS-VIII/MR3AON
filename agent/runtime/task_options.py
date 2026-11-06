@@ -89,10 +89,17 @@ def build_task_config(interface: dict, config: dict, names: list[str], overrides
             previous = saved.get(option_name, {})
             field = "inputs" if kind == "input" else ("values" if kind == "checkbox" else "value")
             value = previous.get(field, fallback)
+            if kind == "input" and isinstance(value, dict):
+                # 保存配置可能来自旧接口。与原生 Configurator 一样只读取
+                # 当前输入定义；本次显式传入的未知字段仍交给校验拒绝。
+                active_fields = {item["name"] for item in definition.get("inputs", [])}
+                value = {key: item for key, item in value.items() if key in active_fields}
             if option_name in patch:
-                value = patch[option_name]
-                if kind == "input" and isinstance(value, dict):
-                    value = {**previous.get("inputs", {}), **value}
+                provided = patch[option_name]
+                if kind == "input" and isinstance(provided, dict):
+                    value = {**(value if isinstance(value, dict) else {}), **provided}
+                else:
+                    value = provided
                 for scope, selected in (("controller", config.get("controller", {}).get("name")), ("resource", config.get("resource"))):
                     if definition.get(scope) and selected not in definition[scope]:
                         raise ValueError(f"选项 {option_name} 不适用于当前 {scope}")

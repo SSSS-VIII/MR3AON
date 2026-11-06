@@ -33,7 +33,7 @@ def scene(monkeypatch):
     manager = SimpleNamespace(
         start=Mock(return_value=True), stop=Mock(return_value=True),
         wait_ready=Mock(return_value=True),
-        status=Mock(return_value={'state': 'ready', 'game_id': '123', 'nickname': '小号'}),
+        status=Mock(return_value={'state': 'ready', 'nickname': '小号'}),
         permit_invitation=Mock(return_value='new-token'), revoke_invitation=Mock(),
     )
     monkeypatch.setattr(bounty, '_main', bounty._MainSession())
@@ -43,7 +43,7 @@ def scene(monkeypatch):
     monkeypatch.setattr(bounty, 'publish_state', Mock(return_value=True))
     monkeypatch.setattr(bounty, 'save_image_array', Mock(return_value=Path('/test/reward.png')))
     monkeypatch.setattr(bounty, 'read_request', Mock(return_value=None))
-    monkeypatch.setattr(bounty, 'read_session', Mock(return_value={'game_id': '123'}))
+    monkeypatch.setattr(bounty, 'read_session', Mock(return_value={'name': 'small'}))
     monkeypatch.setattr(bounty, '_frame', Mock(return_value=np.zeros((720, 1280, 3), dtype=np.uint8)))
     for name in ('_tap', '_click_box', '_swipe'):
         monkeypatch.setattr(bounty, name, Mock())
@@ -52,7 +52,7 @@ def scene(monkeypatch):
     monkeypatch.setattr(bounty, '_hit', Mock(return_value=None))
     monkeypatch.setattr(bounty, '_click_text', Mock(return_value=False))
     nodes = {
-        '每日悬赏小号配置': {'attach': {'enabled': True, 'game_id': '123', 'instance': 'small'}},
+        '每日悬赏小号配置': {'attach': {'enabled': True, 'instance': 'small'}},
         bounty.INVITE_ENTRY: {'next': ['原有自定义邀请', '每日悬赏地区组队']},
         bounty.DRAGON_NODES[0]: {'enabled': False},
         bounty.DRAGON_NODES[1]: {'enable': True},
@@ -97,7 +97,7 @@ def test_disabled_mode_leaves_original_pipeline_untouched(scene):
     assert scene.nodes == before
 
 
-@pytest.mark.parametrize('reason', ['非法实例名', '游戏ID为空', '实例被另一控制者占用'])
+@pytest.mark.parametrize('reason', ['非法实例名', '实例名为空', '实例被另一控制者占用'])
 def test_rejected_start_preserves_main_flow_without_repeated_attempts(scene, reason):
     scene.manager.start.return_value = False
     scene.manager.status.return_value = {'state': 'failed', 'reason': reason}
@@ -105,7 +105,7 @@ def test_rejected_start_preserves_main_flow_without_repeated_attempts(scene, rea
     prepare(scene)
     prepare(scene)
     assert not bounty._main.enabled
-    scene.manager.start.assert_called_once_with('small', '123', 7)
+    scene.manager.start.assert_called_once_with('small', 7)
     scene.context.override_pipeline.assert_not_called()
     assert scene.nodes == before
 
@@ -128,83 +128,109 @@ def test_prepare_restores_effective_account_options_and_does_not_restart_same_ta
     scene.manager.start.assert_called_once()
 
 
-@pytest.mark.parametrize('text,expected', [
-    ('ID:123', '123'), ('id： 00123', '00123'), ('123', '123'),
-    ('ID:1234', '1234'), ('账号123', None), ('ID:123/456', None),
-    ('123号', None), ('', None), ('1' * 21, None),
-])
-def test_game_id_requires_complete_numeric_identity(text, expected):
-    assert bounty.exact_game_id(text) == expected
+def friend_page(nickname='小号', *, second_name=None):
+    names = [(nickname, [920, 250, 90, 36])]
+    if second_name is not None:
+        names.append((second_name, [920, 350, 90, 36]))
 
-
-@pytest.mark.parametrize('actual,expected', [('123', BOX), ('1234', None), ('0123', None)])
-def test_friend_search_checks_complete_id_after_opening_profile(scene, monkeypatch, actual, expected):
     def ocr(context, image, roi, pattern='.'):
-        return [('邀请', BOX)] if pattern == '^邀请$' else [('小号', [920, 250, 90, 36])]
-    bounty._ocr.side_effect = ocr
-    bounty._text.return_value = '小号'
-    profile = Mock(return_value=(actual, '小号'))
-    monkeypatch.setattr(bounty, '_profile', profile)
-    result = bounty._find_friend(scene.context, '123', '小号', scene.clock.now + 30)
-    assert result == expected
-    profile.assert_called_once()
-    bounty._click_box.assert_not_called()  # 搜索只返回核验过的按钮，许可后才邀请。
+        if pattern == '^邀请$':
+            return [('邀请', BOX)]
+        return names
+
+    return ocr
 
 
-def test_friend_remark_without_matching_visible_nickname_is_not_invited(scene, monkeypatch):
-    bounty._ocr.side_effect = lambda context, image, roi, pattern='.': (
-        [('邀请', BOX)] if pattern == '^邀请$' else [('我的小号备注', BOX)])
-    bounty._text.return_value = '我的小号备注'
-    profile = Mock(return_value=('123', '真实昵称'))
-    monkeypatch.setattr(bounty, '_profile', profile)
-    assert bounty._find_friend(scene.context, '123', '真实昵称', scene.clock.now + 30) is None
-    profile.assert_not_called()
-    bounty._click_box.assert_not_called()
+@pytest.mark.parametrize('nickname', ['小卫鲤', '今天换个名字', 'Player 42'])
+def test_friend_search_uses_live_nickname_without_opening_profiles(scene, nickname):
+    bounty._ocr.side_effect = friend_page(nickname)
+    bounty._text.return_value = nickname
+    assert bounty._find_friend(scene.context, nickname, scene.clock.now + 30) == BOX
+    bounty._tap.assert_called_once_with(scene.context, 885, 57)  # 只选择好友页签。
+    bounty._click_text.assert_not_called()
+    bounty._click_box.assert_not_called()  # 搜索只返回按钮，许可后才邀请。
 
 
-@pytest.mark.parametrize('ready,before,profile_name,after,allowed', [
-    ('小号', '小号', '小号', '小号', True),
-    ('小 号', '小号', '小 号', '小号', True),
-    ('', '小号', '小号', '小号', False),
-    ('小号', '', '小号', '', False),
-    ('小号', '小', '小号', '小', False),
-    ('小号', '小号', '上一个好友', '小号', False),
-    ('小号', '小号', '', '小号', False),
-    ('小号', '小号', '小号', '', False),
-    ('小号', '小号', '小号', '新上线好友', False),
+@pytest.mark.parametrize('ready,before,after,allowed', [
+    ('小号', '小号', '小号', True),
+    ('小 号', '小号', '小 号', True),
+    ('', '小号', '小号', False),
+    ('小号', '', '', False),
+    ('小号', '小', '小', False),
+    ('小号', '小号', '', False),
+    ('小号', '小号', '新上线好友', False),
 ])
-def test_friend_invitation_requires_four_matching_nonempty_names(
-    scene, monkeypatch, ready, before, profile_name, after, allowed,
-):
-    bounty._ocr.side_effect = lambda context, image, roi, pattern='.': (
-        [('邀请', BOX)] if pattern == '^邀请$' else [('小号', BOX)])
+def test_friend_invitation_rechecks_matching_nonempty_row_names(scene, ready, before, after, allowed):
+    bounty._ocr.side_effect = friend_page('小号')
     bounty._text.side_effect = [before, after]
-    profile = Mock(return_value=('123', profile_name))
-    monkeypatch.setattr(bounty, '_profile', profile)
-    assert bounty._find_friend(scene.context, '123', ready, scene.clock.now + 30) == (BOX if allowed else None)
-    if not ready or not before or bounty.normalized_name(before) != bounty.normalized_name(ready):
-        profile.assert_not_called()
+    assert bounty._find_friend(scene.context, ready, scene.clock.now + 30) == (BOX if allowed else None)
+    bounty._click_box.assert_not_called()
+    assert all(call.args[1:] == (885, 57) for call in bounty._tap.call_args_list)
+
+
+def test_friend_remark_without_matching_visible_nickname_is_not_invited(scene):
+    bounty._ocr.side_effect = friend_page('我的小号备注')
+    bounty._text.return_value = '我的小号备注'
+    assert bounty._find_friend(scene.context, '真实昵称', scene.clock.now + 30) is None
+    bounty._text.assert_not_called()
     bounty._click_box.assert_not_called()
 
 
-def test_friend_row_change_after_profile_is_not_invited(scene, monkeypatch):
-    bounty._ocr.side_effect = lambda context, image, roi, pattern='.': (
-        [('邀请', BOX)] if pattern == '^邀请$' else [('小号', BOX)])
+def test_reordered_friend_row_is_not_invited(scene):
+    bounty._ocr.side_effect = friend_page()
     bounty._text.side_effect = ['小号', '新上线好友']
-    monkeypatch.setattr(bounty, '_profile', Mock(return_value=('123', '小号')))
-    assert bounty._find_friend(scene.context, '123', '小号', scene.clock.now + 30) is None
+    assert bounty._find_friend(scene.context, '小号', scene.clock.now + 30) is None
     bounty._click_box.assert_not_called()
 
 
-@pytest.mark.parametrize('failure', ['not_ready', 'wrong_account', 'worker_failed', 'old_token', 'no_ack'])
+def test_changed_avatar_in_same_named_row_is_not_invited(scene):
+    before = bounty._frame.return_value
+    after = before.copy()
+    after[236:300, 824:886] = 255
+    bounty._frame.side_effect = [before, after]
+    bounty._ocr.side_effect = friend_page()
+    bounty._text.return_value = '小号'
+    assert bounty._find_friend(scene.context, '小号', scene.clock.now + 30) is None
+    bounty._click_box.assert_not_called()
+
+
+def test_duplicate_visible_nicknames_are_rejected(scene):
+    bounty._ocr.side_effect = friend_page(second_name='小 号')
+    bounty._text.return_value = '小号'
+    assert bounty._find_friend(scene.context, '小号', scene.clock.now + 30) is None
+    bounty._text.assert_not_called()
+    bounty._click_box.assert_not_called()
+
+
+def test_new_duplicate_before_click_is_rejected(scene):
+    before = bounty._frame.return_value
+    after = before.copy()
+    bounty._frame.side_effect = [before, after]
+    bounty._ocr.side_effect = lambda context, image, roi, pattern='.': friend_page(
+        second_name='小号' if image is after else None)(context, image, roi, pattern)
+    bounty._text.return_value = '小号'
+    assert bounty._find_friend(scene.context, '小号', scene.clock.now + 30) is None
+    bounty._click_box.assert_not_called()
+
+
+@pytest.mark.parametrize('reason', ['deadline', 'stopping'])
+def test_friend_search_stops_without_scanning_when_cancelled_or_expired(scene, reason):
+    deadline = scene.clock.now - 1 if reason == 'deadline' else scene.clock.now + 30
+    scene.context.tasker.stopping = reason == 'stopping'
+    assert bounty._find_friend(scene.context, '小号', deadline) is None
+    bounty._frame.assert_not_called()
+    bounty._click_box.assert_not_called()
+
+
+@pytest.mark.parametrize('failure', ['not_ready', 'missing_nickname', 'worker_failed', 'old_token', 'no_ack'])
 def test_invite_failure_restores_main_flow_and_releases_owner(scene, monkeypatch, failure):
     invitation(scene, monkeypatch)
-    ready = {'state': 'ready', 'game_id': '123', 'nickname': '小号'}
+    ready = {'state': 'ready', 'nickname': '小号'}
     if failure == 'not_ready':
         scene.manager.wait_ready.return_value = False
         scene.manager.status.return_value = {'state': 'failed', 'reason': 'instance busy'}
-    elif failure == 'wrong_account':
-        scene.manager.status.return_value = {**ready, 'game_id': '1234'}
+    elif failure == 'missing_nickname':
+        scene.manager.status.return_value = {**ready, 'nickname': '  '}
     elif failure == 'worker_failed':
         scene.manager.status.side_effect = [ready, {'state': 'failed', 'reason': 'disconnected'}]
     elif failure == 'old_token':
@@ -214,7 +240,7 @@ def test_invite_failure_restores_main_flow_and_releases_owner(scene, monkeypatch
     scene.manager.stop.assert_called_with(task_id=7)
     assert scene.nodes[bounty.INVITE_ENTRY]['next'] == ['原有自定义邀请', '每日悬赏地区组队']
     assert scene.nodes[bounty.DRAGON_NODES[1]]['enabled'] is True
-    if failure in {'not_ready', 'wrong_account'}:
+    if failure in {'not_ready', 'missing_nickname'}:
         bounty._find_friend.assert_not_called()
         scene.manager.permit_invitation.assert_not_called()
     assert scene.clock.now < 126
@@ -245,7 +271,7 @@ def test_invite_wait_uses_only_remaining_startup_budget(scene, monkeypatch):
 def test_matching_ack_token_completes_invitation(scene, monkeypatch):
     invitation(scene, monkeypatch)
     scene.manager.status.side_effect = [
-        {'state': 'ready', 'game_id': '123', 'nickname': '小号'},
+        {'state': 'ready', 'nickname': '小号'},
         {'state': 'teamed', 'token': 'new-token'},
     ]
     assert bounty.InviteBountyCompanion().run(scene.context, args()) is True
@@ -302,22 +328,43 @@ def test_other_invitation_type_never_receives_accept_click(scene):
     bounty.publish_state.assert_not_called()
 
 
-@pytest.mark.parametrize('actual', ['123', '1234'])
-def test_small_ready_requires_matching_logged_in_id(scene, monkeypatch, actual):
+@pytest.mark.parametrize('nickname', ['小卫鲤', '临时更名', 'Player 42'])
+def test_small_reads_current_home_nickname_without_opening_profile(scene, monkeypatch, nickname):
     bounty._hit.return_value = SimpleNamespace(box=BOX)
-    monkeypatch.setattr(bounty, '_profile', Mock(return_value=(actual, '小号')))
+    bounty._text.return_value = nickname
     unblock = Mock()
     monkeypatch.setattr(bounty, '_unblock_invites', unblock)
-    result = bounty.InitializeBountyCompanion().run(scene.context, args())
-    states = [call.args[0] for call in bounty.publish_state.call_args_list]
-    assert result is (actual == '123')
-    assert states == (['ready'] if actual == '123' else ['failed'])
-    assert unblock.call_count == (1 if actual == '123' else 0)
+    assert bounty.InitializeBountyCompanion().run(scene.context, args()) is True
+    bounty._text.assert_called_once_with(scene.context, bounty._frame.return_value, [140, 24, 210, 46])
+    assert bounty._small.nickname == nickname
+    bounty.publish_state.assert_called_once_with('ready', nickname=nickname, token='')
+    unblock.assert_called_once_with(scene.context)
+    bounty._tap.assert_not_called()
+    bounty._click_text.assert_not_called()
+    bounty._click_box.assert_not_called()
+
+
+@pytest.mark.parametrize('failure', ['unmanaged', 'not_home', 'empty_nickname'])
+def test_small_readiness_requires_managed_session_home_and_nickname(scene, monkeypatch, failure):
+    bounty._hit.return_value = SimpleNamespace(box=BOX)
+    bounty._text.return_value = '小号'
+    if failure == 'unmanaged':
+        bounty.read_session.return_value = {}
+    elif failure == 'not_home':
+        bounty._hit.return_value = None
+    else:
+        bounty._text.return_value = '  '
+    unblock = Mock()
+    monkeypatch.setattr(bounty, '_unblock_invites', unblock)
+    assert bounty.InitializeBountyCompanion().run(scene.context, args()) is False
+    assert [call.args[0] for call in bounty.publish_state.call_args_list] == ['failed']
+    unblock.assert_not_called()
+    bounty._tap.assert_not_called()
 
 
 def test_unconfirmed_invitation_setting_does_not_publish_ready(scene, monkeypatch):
     bounty._hit.return_value = SimpleNamespace(box=BOX)
-    monkeypatch.setattr(bounty, '_profile', Mock(return_value=('123', '小号')))
+    bounty._text.return_value = '小号'
     monkeypatch.setattr(bounty, '_unblock_invites', Mock(side_effect=RuntimeError('屏蔽仍然勾选')))
     assert bounty.InitializeBountyCompanion().run(scene.context, args()) is False
     assert [call.args[0] for call in bounty.publish_state.call_args_list] == ['failed']
@@ -439,11 +486,11 @@ def test_real_options_default_off_and_enable_only_transient_small_configuration(
     assert options['拉小号模式']['value'] == 'No'
     assert '小号配置' not in options
     enabled = build_task_config(interface, original, ['每日悬赏'], {'每日悬赏': {
-        '拉小号模式': True, '小号配置': {'游戏ID': '123', '实例名称': 'small'},
+        '拉小号模式': True, '小号配置': {'实例名称': 'small'},
     }})[0]
     options = {item['name']: item for item in enabled['option']}
     assert options['拉小号模式']['value'] == 'Yes'
-    assert options['小号配置']['inputs'] == {'游戏ID': '123', '实例名称': 'small'}
+    assert options['小号配置']['inputs'] == {'实例名称': 'small'}
     assert options['完成每日龙血任务']['value'] == 'No'
     assert original == before
 
@@ -452,28 +499,7 @@ def test_real_enabled_options_allow_empty_fields_for_runtime_fallback():
     interface = load_task_interface(ROOT / 'assets/interface.json')
     task = build_task_config(interface, {}, ['每日悬赏'], {'每日悬赏': {'拉小号模式': True}})[0]
     options = {item['name']: item for item in task['option']}
-    assert options['小号配置']['inputs'] == {'游戏ID': '', '实例名称': ''}
-    with pytest.raises(ValueError, match='格式校验'):
-        build_task_config(interface, {}, ['每日悬赏'], {'每日悬赏': {
-            '拉小号模式': True, '小号配置': {'游戏ID': 'ID:123'},
-        }})
-
-
-def test_friend_profile_waits_for_network_loaded_identity(scene):
-    bounty._click_text.return_value = True
-    bounty._text.side_effect = ['请稍候', '', 'ID：123', '小号']
-    assert bounty._profile(scene.context) == ('123', '小号')
-    assert scene.clock.now == pytest.approx(100.2)
-    bounty._tap.assert_called_once_with(scene.context, 1165, 87)
-
-
-def test_friend_profile_loading_timeout_is_bounded(scene):
-    bounty._click_text.return_value = True
-    bounty._text.return_value = '请稍候'
-    with pytest.raises(RuntimeError, match='ID或昵称识别失败'):
-        bounty._profile(scene.context)
-    assert 104 <= scene.clock.now < 104.3
-    bounty._tap.assert_called_once_with(scene.context, 1165, 87)
+    assert options['小号配置']['inputs'] == {'实例名称': ''}
 
 
 def test_standalone_companion_failure_is_not_reported_as_completed(scene, monkeypatch):
@@ -492,20 +518,6 @@ def test_next_round_waits_for_return_home_independent_of_cold_start_budget(scene
     assert not bounty.InviteBountyCompanion().run(scene.context, args())
     assert scene.manager.wait_ready.call_args.args == (30,)
     assert scene.manager.wait_ready.call_args.kwargs['states'] == {'ready'}
-
-
-def test_friend_profile_waits_until_profile_tab_is_visible(scene):
-    bounty._click_text.side_effect = [False, False, True]
-    bounty._text.side_effect = ['ID：123', '小号']
-    assert bounty._profile(scene.context) == ('123', '小号')
-    assert scene.clock.now == pytest.approx(100.4)
-
-
-def test_unopened_friend_profile_times_out_without_clicking_random_screen(scene):
-    bounty._click_text.return_value = False
-    with pytest.raises(RuntimeError, match='未打开个人信息'):
-        bounty._profile(scene.context)
-    bounty._tap.assert_not_called()
 
 
 @pytest.mark.parametrize('phase,elapsed', [
