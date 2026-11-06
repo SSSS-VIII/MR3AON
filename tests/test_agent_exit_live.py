@@ -35,7 +35,7 @@ def _owned_processes(work):
 
 @pytest.mark.parametrize("mode", ["headless", "tui", "early", "quit"])
 def test_real_agent_restores_terminal_and_reaps_children(tmp_path, mode):
-    session = InstanceSession(os.environ.get("MR3A_EXIT_LIVE_INSTANCE", "main"))
+    session = InstanceSession("main")
     serial = session._address()
     work = tmp_path / mode
     (work / "resource/pipeline").mkdir(parents=True)
@@ -67,15 +67,10 @@ def test_real_agent_restores_terminal_and_reaps_children(tmp_path, mode):
     output = bytearray()
     sent_quit = False
     with session.control():
-        command = [
+        process = subprocess.Popen([
             str(ROOT / ".venv/bin/python"), "-c", wrapper, str(ROOT / "deps/bin/MaaPiCli"),
             "--user-dir", str(work), "--resource-dir", str(work), "-d",
-        ]
-        if mode == "quit":
-            command = ["bash", "--noprofile", "--norc", "-c",
-                       '"$@"; status=$?; printf "\\nPARENT_SHELL_ALIVE=%s\\n" "$status"; exit "$status"',
-                       "mr3a-exit-shell", *command]
-        process = subprocess.Popen(command, cwd=work, env=env, stdin=slave, stdout=slave, stderr=slave, start_new_session=True)
+        ], cwd=work, env=env, stdin=slave, stdout=slave, stderr=slave, start_new_session=True)
         try:
             deadline = time.monotonic() + 35
             while time.monotonic() < deadline:
@@ -92,8 +87,6 @@ def test_real_agent_restores_terminal_and_reaps_children(tmp_path, mode):
                     break
             assert process.poll() is not None, f"实例退出超时，日志位于 {work}"
             assert process.returncode == 0
-            if mode == "quit":
-                assert b"PARENT_SHELL_ALIVE=0" in output, "q ended the parent shell"
             if mode != "headless":
                 assert b"\x1b[?1049l" in output, "未退出备用屏"
                 assert termios.tcgetattr(slave) == before, "终端输入模式未恢复"

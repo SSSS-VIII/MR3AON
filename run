@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
 # 同一份程序与源码；不带名字复用现有 main，run 名字复用独立环境。
-# Sourcing must keep the caller's shell, options and environment intact.
-if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
-    bash -- "${BASH_SOURCE[0]}" "$@"
-    return $?
-fi
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 export PYTHONPATH="${ROOT}/agent${PYTHONPATH:+:${PYTHONPATH}}"

@@ -1,6 +1,6 @@
 # 当前工作交接
 
-2026-11-06：q 后 Kitty 关闭定位为最近使用 `. run` 加载入口，原 exec 替换了当前 shell。入口现隔离为子 Bash 执行，父 shell 选项/环境保留；7项实际入口回归、3项 small 无点击父 shell/TUI 退出实测通过，见 [加载入口保留 shell](archived/2026-11-06-sourced-run-preserve-shell.md)。
+2026-11-06：用户确认 `. run` 属于调用写法问题，要求撤回兼容处理。已恢复原入口与退出测试，移除新增 source 兼容测试及用法声明。正常入口使用 `./run`，见 [调用方式排查与撤回](archived/2026-11-06-sourced-run-preserve-shell.md)。
 
 2026-11-06：用户澄清深渊旧开关只控制原地长挂机，main 的 No 配置符合预期。已将周五20:00前的 Agent 调度门独立于旧开关，Yes/No 均挂起，恢复旧等待路径兼容语义；18项相关回归和原生资源加载通过。用户退出主脚本后，已在 main 独占租约内仅清理初版误写的深渊禁用条目，其余状态保留；下次启动加载独立调度门，见 [调度与挂机分离](archived/2026-11-06-abyss-scheduler-independent-of-idle.md)。
 
