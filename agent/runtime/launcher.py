@@ -7,6 +7,7 @@ import subprocess
 import sys
 
 from runtime.instances import InstanceRegistry, InstanceSession
+from runtime.task_options import build_task_config, load_task_interface
 
 
 def main():
@@ -16,12 +17,17 @@ def main():
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--configure", action="store_true", help="配置当前名字的任务和账号选项")
     parser.add_argument("--task", action="append", default=[], help="仅本次运行指定任务，不改保存的任务计划")
+    parser.add_argument("--task-options", type=json.loads, help='本次任务选项 JSON，例如 {"备战副本":{"免费接力":true}}；需配合 --task')
     mode.add_argument("--prepare", action="store_true", help="初始化运行文件，不启动 Android 或游戏")
     mode.add_argument("--check", action="store_true", help="准备并检查 Android 连接，不运行游戏任务")
     mode.add_argument("--stop", action="store_true", help="关闭该实例窗口及 Waydroid 后台，保留配置和账号数据；请先退出同名脚本")
     args = parser.parse_args()
     # 明确覆盖继承值，避免其它名字从后台启动者那里继承无窗口策略；子进程恢复沿用本次选择。
     os.environ["MR3A_SHOW_WINDOW"] = "0" if args.no_window else "1"
+    if args.task_options is not None and not args.task:
+        parser.error("--task-options 需要 --task")
+    if args.task and (args.prepare or args.check):
+        parser.error("--task 不能与 --prepare 或 --check 同时使用")
     if args.configure and args.task:
         parser.error("--task 仅用于本次执行，不能与 --configure 同时使用")
     if args.stop and args.task:
@@ -43,6 +49,15 @@ def main():
         return 0
     with session.control():
         registry.prepare(session.spec)
+        temporary_tasks = None
+        if args.task_options is not None:
+            try:
+                temporary_tasks = build_task_config(
+                    load_task_interface(session.spec.work_root / "interface.json"),
+                    json.loads(session.spec.config_path.read_text()), args.task, args.task_options,
+                )
+            except ValueError as exc:
+                parser.error(str(exc))
         session.ensure_ready()
         session.bind_config()
         binary = session.spec.project_root / "deps/bin/MaaPiCli"
@@ -55,8 +70,13 @@ def main():
             command.append("-d")
         elif not sys.stdin.isatty():
             raise RuntimeError(f"实例 {session.spec.name} 尚无任务，请在终端执行 ./run {session.spec.name} --configure")
-        for task in args.task:
-            command.extend(["--task", task])
+        if temporary_tasks is not None:
+            if "--task-config" not in support.stdout:
+                raise RuntimeError("共享 MaaPiCli 尚未支持临时选项，请重编本地定制版本")
+            command.extend(["--task-config", json.dumps(temporary_tasks, ensure_ascii=False)])
+        else:
+            for task in args.task:
+                command.extend(["--task", task])
         env = session.environment()
         env["MR3A_PICLI_PID"] = str(os.getpid())
         os.chdir(session.spec.work_root)
