@@ -2,7 +2,7 @@
 
 2026-11-06：q 后 Kitty 关闭定位为最近使用 `. run` 加载入口，原 exec 替换了当前 shell。入口现隔离为子 Bash 执行，父 shell 选项/环境保留；7项实际入口回归、3项 small 无点击父 shell/TUI 退出实测通过，见 [加载入口保留 shell](archived/2026-11-06-sourced-run-preserve-shell.md)。
 
-2026-11-06：用户澄清深渊旧开关只控制原地长挂机，main 的 No 配置符合预期。已将周五20:00前的 Agent 调度门独立于旧开关，Yes/No 均挂起，恢复旧等待路径兼容语义；18项相关回归和原生资源加载通过。当前主会话仍持有初版误写的深渊禁用状态，待停止当前TUI后仅清理深渊条目并重新加载，见 [调度与挂机分离](archived/2026-11-06-abyss-scheduler-independent-of-idle.md)。
+2026-11-06：用户澄清深渊旧开关只控制原地长挂机，main 的 No 配置符合预期。已将周五20:00前的 Agent 调度门独立于旧开关，Yes/No 均挂起，恢复旧等待路径兼容语义；18项相关回归和原生资源加载通过。用户退出主脚本后，已在 main 独占租约内仅清理初版误写的深渊禁用条目，其余状态保留；下次启动加载独立调度门，见 [调度与挂机分离](archived/2026-11-06-abyss-scheduler-independent-of-idle.md)。
 
 2026-11-06：外部任务调用现支持 `--task-options` 本次覆盖与 `--once` 单次执行。完成/已完成跳过返回0，失败1，参数错误2，周期延后3，一小时让出4，SIGINT/q中断130，SIGTERM143；退出释放控制权并保留 Android。small 无点击真实进程9项通过，普通回归205 passed、14 skipped、5项既有失败、85 subtests passed；未实跑逆袭/备战业务。small 保留运行，main 未接管，xiaoli 保持停止。详见 [单次退出](archived/2026-11-06-single-run-exit.md) 和 `test-environment.md`。
 

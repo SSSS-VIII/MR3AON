@@ -1,6 +1,6 @@
 # Roadmap
 
-2026-11-06：深渊周五20:00调度已与旧原地挂机开关分离，保留 main 的 No；18项相关回归及资源加载通过，当前会话误写状态待退出后清理，见 `archived/2026-11-06-abyss-scheduler-independent-of-idle.md`。
+2026-11-06：深渊周五20:00调度已与旧原地挂机开关分离，保留 main 的 No；18项相关回归及资源加载通过，主脚本退出后已仅清理误写的深渊禁用条目，等待下次启动加载，见 `archived/2026-11-06-abyss-scheduler-independent-of-idle.md`。
 
 2026-11-06：外部命名任务的临时选项、单次执行及可靠退出结果已落地，small 无点击真实进程9项通过；游戏业务实跑待后续，见 `archived/2026-11-06-single-run-exit.md`。
 
