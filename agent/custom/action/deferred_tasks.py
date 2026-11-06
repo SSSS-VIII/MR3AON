@@ -27,6 +27,7 @@ from custom.persistent_task_state import (
     next_weekly_reset,
     persistent_task_state_store,
 )
+from runtime.run_result import single_run, invocation_result
 from tui.run import request_tui_exit
 from tui.status import runtime_status
 from utils.logger import logger
@@ -111,7 +112,7 @@ def _recognition_texts(argv: CustomAction.RunArg) -> list[str]:
 
 def _take_next_task() -> ManagedTask | None:
     """到期任务优先，其次按 MaaPiCli 原顺序取普通任务。"""
-    ready = deferred_task_store.claim_ready()
+    ready = [] if single_run() else deferred_task_store.claim_ready()
     if ready:
         first, rest = ready[0], ready[1:]
         if rest:
@@ -296,11 +297,13 @@ def dispatch_next(tasker: Any) -> bool:
         if _post_managed_task(tasker, task):
             return True
         managed_task_queue.prepend_pending(task)
+        invocation_result.record("failed", "task_submission_failed")
         return False
 
     delay = deferred_task_store.seconds_until_next()
-    if delay is None and not managed_task_queue.has_pending():
+    if single_run() or (delay is None and not managed_task_queue.has_pending()):
         managed_task_queue.finish()
+        deferred_task_store.clear()
         managed_task_yield_signal_store.clear()
         logger.info("Agent 管理的任务队列已全部完成")
         request_tui_exit("queue_finished")
@@ -418,6 +421,9 @@ class ScheduleDeferredTask(CustomAction):
                 matched_text = f"fallback_seconds={fallback_seconds:g}"
 
         delay_seconds = duration_seconds + float(grace_seconds)
+        if single_run():
+            invocation_result.record("deferred", f"{entry} 暂无可执行内容，需要后续周期重试")
+            return CustomAction.RunResult(success=True)
         deferred_task_store.arm(
             key=key,
             entry=entry,
@@ -524,7 +530,8 @@ class SetManagedTaskPersistentState(CustomAction):
             f"valid_until={valid_until.isoformat() if valid_until else None!r}"
         )
         if (
-            not enabled
+            not single_run()
+            and not enabled
             and valid_until is not None
             and current is not None
             and current.entry == entry
@@ -614,6 +621,10 @@ class ManagedTaskSchedulerBootstrap(CustomAction):
         for task in tasks:
             if not persistent_task_state_store.is_enabled(task.entry):
                 disabled_entries.add(task.entry)
+        if single_run():
+            tasks = [task for task in tasks if task.entry not in disabled_entries]
+            if not tasks and disabled_entries:
+                invocation_result.record("skipped", "指定任务已由持久化完成状态确认无需执行")
         managed_task_queue.activate(
             tasks,
             argv.task_detail.task_id,
@@ -672,6 +683,12 @@ class ManagedTaskSchedulerYieldCurrent(CustomAction):
     ) -> CustomAction.RunResult:
         del context
         task_id = argv.task_detail.task_id
+        if single_run():
+            task = managed_task_queue.current()
+            if task is None or not managed_task_queue.active_for(task_id):
+                return CustomAction.RunResult(success=False)
+            invocation_result.record("yielded", f"{task.entry} 已到安全让出边界，任务尚未完成")
+            return CustomAction.RunResult(success=True)
         task = managed_task_queue.requeue_current(task_id)
         if task is None:
             logger.error(

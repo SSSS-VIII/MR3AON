@@ -6,6 +6,13 @@ from pathlib import Path
 import re
 
 
+def parse_task_options(text: str) -> dict:
+    value = json.loads(text)
+    if not isinstance(value, dict):
+        raise ValueError("任务选项 JSON 必须为对象")
+    return value
+
+
 def load_task_interface(path: Path) -> dict:
     interface = json.loads(path.read_text())
     for imported in interface.get("import", []):

@@ -384,6 +384,7 @@ def agent(is_dev_mode=False):
         from maa.toolkit import Toolkit
 
         import custom
+        from runtime.run_result import invocation_result
         from tui import run_agent_tui, tui_should_run
         from utils.agent_lifecycle import guard_agent_process, close_agent_server
 
@@ -445,20 +446,24 @@ def agent(is_dev_mode=False):
                 # killing PiCli here bypasses its controller/child destructors.
                 join_thread.join(timeout=5)
                 if join_thread.is_alive():
+                    invocation_result.record("failed", "client_disconnect_timeout")
                     logger.warning("等待当前实例断开超时，结束绑定的 MaaPiCli")
                     terminate_parent_maa_picli()
                 if not close_agent_server(AgentServer):
+                    invocation_result.record("failed", "agent_shutdown_timeout")
                     logger.warning("AgentServer 关闭超时，强制结束 Agent")
                     logger.remove()
                     os._exit(0)
         else:
             AgentServer.join()
             if not close_agent_server(AgentServer):
+                invocation_result.record("failed", "agent_shutdown_timeout")
                 logger.warning("AgentServer 关闭超时，强制结束 Agent")
                 logger.remove()
                 os._exit(0)
 
         logger.info("AgentServer关闭")
+        invocation_result.finalize()
     except ImportError as e:
         logger.error(f"导入模块失败: {e}")
         logger.error("考虑重新配置环境")

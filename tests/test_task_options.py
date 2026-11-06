@@ -44,3 +44,19 @@ def test_nested_checkbox_and_inputs_keep_only_active_branches():
     assert task['option'] == [{'name': 'parent', 'value': 'B'}, {'name': 'items', 'values': ['b']}, {'name': 'fields', 'inputs': {'one': '2', 'two': 'saved'}}]
     with pytest.raises(ValueError, match='未启用'):
         build_task_config(interface, config, ['T'], {'T': {'parent': 'B', 'child': True}})
+
+
+@pytest.mark.parametrize('arguments', [
+    ['--task-options', 'null'], ['--task-options', '[]'], ['--task-options', '{}'],
+    ['--once'], ['--once', '--task', '备战副本', '--prepare'],
+])
+def test_launcher_rejects_invalid_invocation_before_opening_an_instance(monkeypatch, arguments):
+    from runtime import launcher
+    from unittest.mock import Mock
+    registry = Mock(side_effect=AssertionError('invalid arguments must not prepare devices'))
+    monkeypatch.setattr(launcher, 'InstanceRegistry', registry)
+    monkeypatch.setattr('sys.argv', ['run', *arguments])
+    with pytest.raises(SystemExit) as exc:
+        launcher.main()
+    assert exc.value.code == 2
+    registry.assert_not_called()

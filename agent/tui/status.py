@@ -104,6 +104,9 @@ class RuntimeStatus:
 
     def request_exit(self, reason: str = "") -> None:
         """请 TUI 自行 exit，恢复终端后再杀 PiCli。"""
+        from runtime.run_result import invocation_result
+
+        invocation_result.on_exit(reason)
         with self._lock:
             self.exit_requested = True
             self.exit_reason = reason or self.exit_reason

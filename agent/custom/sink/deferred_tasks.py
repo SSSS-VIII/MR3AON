@@ -17,6 +17,7 @@ from maa.tasker import Tasker, TaskerEventSink
 
 from custom.action.deferred_tasks import dispatch_next
 from custom.deferred_tasks import managed_task_queue
+from runtime.run_result import invocation_result
 from tui.run import request_tui_exit
 from utils.logger import logger
 
@@ -49,6 +50,7 @@ def _advance_after_hard_end(
         # StopTask 路径已 release+dispatch，或队列已切到下一项
         return
 
+    invocation_result.record("failed", f"managed_task_hard_end:{outcome}:{abandoned.entry}")
     logger.error(
         f"Agent 管理的任务硬结束({outcome}): task_id={task_id}, "
         f"entry={entry!r}, name={abandoned.name!r}；尝试推进队列"
@@ -105,6 +107,7 @@ class ManagedTaskStopSink(ContextEventSink):
                 f"not_before={retained.not_before.isoformat()!r}"
             )
         if not dispatch_next(context.tasker):
+            invocation_result.record("failed", "stop_dispatch_failed")
             logger.error(
                 f"Agent 在 StopTask 前提交下一项失败: "
                 f"task_id={detail.task_id}, stop_node={detail.name!r}"

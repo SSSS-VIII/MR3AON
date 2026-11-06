@@ -79,3 +79,32 @@ PYTHONPATH=agent ./.venv/bin/python -m unittest -v tests/test_error_recovery.py 
 PYTHONPATH=agent ./.venv/bin/python tools/ci/check_resource.py assets/resource
 git diff --check
 ```
+
+## 外部项目的本次选项与单次执行
+
+```bash
+./run xiaoli --once --task 每周逆袭悬赏 \
+  --task-options '{"每周逆袭悬赏":{"选择要打的逆袭boss":"仅逆袭S"}}'
+./run xiaoli --once --task 备战副本 \
+  --task-options '{"备战副本":{"免费接力":true}}'
+```
+
+`--task` 可以重复，按参数顺序执行。`--task-options` 的 JSON 第一层是本次任务名，第二层是接口选项名。select 使用 case 名，switch 使用布尔值或 `"Yes"`/`"No"`，checkbox 使用 case 名数组，input 使用字段到值的对象。选项名与 case 名以当前任务接口为准，例如 `仅逆袭S` 中没有空格。只覆盖提供的值，其余沿用该账号保存选项，没有保存值时采用接口默认值。输入对象支持局部覆盖，选中 case 的子选项也可在同一任务对象内指定。
+
+`--task-options` 和 `--once` 都要求显式 `--task`，与配置/检查/准备/关闭模式互斥。参数只在本次内存配置中生效，保存的账号任务计划与选项保留。内部使用继承的匿名配置文件将选项交给同一 MaaPiCli，保存的输入凭据不进入命令行参数。真实任务完成记录仍按原规则落盘。
+
+`--once` 执行本次指定计划后退出，释放同名控制租约，Android 与游戏环境保留。已有持久化完成状态继续生效，已完成任务直接跳过；完成登记不再保留下一周期候选，不等待每日/每周重置。进入未来周期等待时结束本次调用，返回3。一小时安全让出时返回4，当前任务不再重新入队。3和4都表示业务尚未全部完成，调用方可稍后用同样参数重试。游戏异常恢复仍沿用现有机制，耗尽后失败退出。
+
+| 退出码 | 含义 |
+| --- | --- |
+| 0 | 正常结束或确认无需执行。入口由持久化状态跳过时为 skipped，其余正常结束为 completed |
+| 1 | 执行/环境初始化失败、异常断连、收尾失败或缺少可靠的完成结果 |
+| 2 | 参数无效 |
+| 3 | 进入未来周期等待，状态 deferred |
+| 4 | 到达一小时安全让出边界，状态 yielded |
+| 130 | SIGINT 或 TUI 按 q 中断，状态 interrupted |
+| 143 | SIGTERM 中断，状态 interrupted |
+
+进入单次执行后的收尾会输出独立一行 `MR3A_RESULT {"status":"completed","exit_code":0,"reason":"queue_finished"}`，适合按此前缀解析 JSON。它位于普通日志之后、控制权释放之后。初始化或参数校验阶段失败时，以退出码及 stderr 判断。多个任务以本次整体结果返回，任何失败都会阻止返回成功；外部信号中断按信号码返回。
+
+无点击真实进程验证使用 `MR3A_ONCE_LIVE=small PYTHONPATH=agent .venv/bin/python -m pytest tests/test_single_run_live.py -q`。它通过 launcher 参数解析及同一份 MaaPiCli/Agent，复用真实 small 就绪与控制租约，只把业务资源和配置换成临时夹具，账号原配置保持原样。覆盖完成、已完成、失败、延后、让出、信号中断、TUI 自动结束和 q；验证终端、进程回收、配置哈希、锁释放及 Android 保留。它没有实跑每周逆袭或备战副本业务。

@@ -1,8 +1,10 @@
 # 当前工作交接
 
+2026-11-06：外部任务调用现支持 `--task-options` 本次覆盖与 `--once` 单次执行。完成/已完成跳过返回0，失败1，参数错误2，周期延后3，一小时让出4，SIGINT/q中断130，SIGTERM143；退出释放控制权并保留 Android。small 无点击真实进程9项通过，普通回归205 passed、14 skipped、5项既有失败、85 subtests passed；未实跑逆袭/备战业务。small 保留运行，main 未接管，xiaoli 保持停止。详见 [单次退出](archived/2026-11-06-single-run-exit.md) 和 `test-environment.md`。
+
 2026-11-06：单次执行验证发现后台命名容器可在会话存活时冻结，start 现按名字调用 Unfreeze 后再检查设备，small 实测恢复，27项相关回归通过，见 [冻结实例唤醒](archived/2026-11-06-resume-frozen-named-instance.md)。
 
-2026-11-06：run 已增加本次任务选项 JSON 覆盖，原生 MaaPiCli 接收内存任务配置并复用现有选项转换，保存计划保留。33项相关回归通过，见 [本次任务选项](archived/2026-11-06-invocation-task-options.md)。单次执行模式正在继续接入。
+2026-11-06：run 已增加本次任务选项 JSON 覆盖，原生 MaaPiCli 接收内存任务配置并复用现有选项转换，保存计划保留。33项相关回归通过，见 [本次任务选项](archived/2026-11-06-invocation-task-options.md)。单次执行模式已接入，后续收口见本页最新记录。
 
 2026-11-06：鬼族活动草稿已按用户要求撤回。深渊挑战已接入家族战同款挂起调度，开启等待时周五20:00前交回队列，到点恢复并沿用选卡配置，保留既有21:00截止；跳过/结束登记到下一次每日重置。代码未发现自动领取宝箱或个人积分奖励分支。10项相关回归与原生资源加载通过，未实机验证，见 [深渊周五调度](archived/2026-11-06-abyss-friday-deferred.md)。
 

@@ -58,6 +58,8 @@ class InstanceSpec:
         env = os.environ.copy()
         env.pop("MR3A_TEST_WORK", None)
         env.pop("MR3A_PICLI_PID", None)
+        env.pop("MR3A_RUN_ONCE", None)
+        env.pop("MR3A_RUN_RESULT", None)
         env.pop("MR3A_ADB_SERIAL", None)
         env.pop("ANDROID_SERIAL", None)
         env.pop("ANDROID_ADB_SERVER_PORT", None)
