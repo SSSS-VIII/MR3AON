@@ -1,5 +1,4 @@
 {
-    "不停止深渊挑战任务": {},
     "主页点击深渊冒险": {
         "recognition": {
             "type": "OCR",
@@ -73,9 +72,12 @@
     "停止深渊挑战任务": {
         "enabled": false,
         "action": {
-            "type": "StopTask"
+            "type": "DoNothing"
         },
-        "focus": "任务完成：深渊挑战✅"
+        "focus": "深渊挑战未到20:00，按配置跳过本次任务",
+        "next": [
+            "登记深渊挑战每日完成"
+        ]
     },
     "关闭节点深渊挑战寻找队伍右滑": {
         "pre_delay": 0,
@@ -480,10 +482,10 @@
         ]
     },
     "深渊挑战当前不为周五": {
-        "action": {
-            "type": "StopTask"
-        },
-        "focus": "深渊挑战：非周五，跳过此任务"
+        "focus": "深渊挑战：非周五，跳过此任务",
+        "next": [
+            "登记深渊挑战每日完成"
+        ]
     },
     "深渊挑战当前为周五": {
         "recognition": {
@@ -497,7 +499,7 @@
         },
         "next": [
             "深渊挑战当前时间大于21点00",
-            "[JumpBack]深渊挑战当前时间小于20点",
+            "深渊挑战当前时间小于20点",
             "深渊挑战在目标时间范围开始深渊挑战"
         ]
     },
@@ -511,10 +513,10 @@
                 }
             }
         },
-        "action": {
-            "type": "StopTask"
-        },
-        "focus": "深渊挑战：当前时间大于21:00，跳过此任务"
+        "focus": "深渊挑战：当前时间大于21:00，跳过此任务",
+        "next": [
+            "登记深渊挑战每日完成"
+        ]
     },
     "深渊挑战当前时间小于20点": {
         "recognition": {
@@ -522,14 +524,15 @@
             "param": {
                 "custom_recognition": "TimeBefore",
                 "custom_recognition_param": {
-                    "time": "19:56"
+                    "time": "20:00"
                 }
             }
         },
         "next": [
-            "[JumpBack]深渊挑战等待提示",
-            "深渊挑战等待5秒"
-        ]
+            "停止深渊挑战任务",
+            "深渊挑战挂起到八点"
+        ],
+        "focus": "深渊挑战未到20:00，检查等待选项"
     },
     "深渊挑战时间大于21点结束": {
         "recognition": {
@@ -637,25 +640,6 @@
             "尝试进入深渊挑战主页"
         ]
     },
-    "深渊挑战等待5秒": {
-        "post_delay": 5000
-    },
-    "深渊挑战等待提示": {
-        "recognition": {
-            "type": "Custom",
-            "param": {
-                "custom_recognition": "Count",
-                "custom_recognition_param": {
-                    "target": 1
-                }
-            }
-        },
-        "focus": "挂机等待至19:56深渊挑战开启",
-        "next": [
-            "停止深渊挑战任务",
-            "不停止深渊挑战任务"
-        ]
-    },
     "深渊挑战等待队伍开启": {
         "recognition": {
             "type": "OCR",
@@ -674,7 +658,10 @@
         "post_delay": 1000
     },
     "深渊挑战结束": {
-        "enabled": false
+        "enabled": false,
+        "next": [
+            "登记深渊挑战每日完成"
+        ]
     },
     "深渊挑战结算确定": {
         "recognition": {
@@ -1080,6 +1067,52 @@
                     "time": "20:20"
                 }
             }
+        }
+    },
+    "深渊挑战挂起到八点": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ScheduleDeferredTask",
+                "custom_action_param": {
+                    "key": "深渊挑战等待八点",
+                    "entry": "深渊挑战entry",
+                    "daily_times": [
+                        "20:00"
+                    ],
+                    "reuse_current_override": true
+                }
+            }
+        },
+        "next": [
+            "深渊挑战挂起后结束"
+        ],
+        "focus": "深渊挑战挂起到周五20:00，继续其它任务"
+    },
+    "深渊挑战挂起后结束": {
+        "action": {
+            "type": "StopTask"
+        }
+    },
+    "登记深渊挑战每日完成": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "深渊挑战entry",
+                    "enabled": false,
+                    "valid_until": "next_daily_reset"
+                }
+            }
+        },
+        "next": [
+            "深渊挑战完成停止任务"
+        ]
+    },
+    "深渊挑战完成停止任务": {
+        "action": {
+            "type": "StopTask"
         }
     }
 }
