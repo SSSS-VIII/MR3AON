@@ -110,3 +110,9 @@ __all__ = [
     "my_3v3_fight",
     "sync_race_parkour",
 ]
+
+from .bounty_companion import (
+    PrepareBountyCompanion, CaptureBountyLeader, InviteBountyCompanion,
+    FallbackBountyCompanion, InitializeBountyCompanion, PollBountyCompanion,
+    FailBountyCompanion,
+)

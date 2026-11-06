@@ -9,6 +9,8 @@ import sys
 import tempfile
 import time
 
+_COMPANION_CLEANUP_TIMEOUT = 45
+
 _EXEC_CLI = """import os, sys
 os.environ['MR3A_PICLI_PID'] = str(os.getpid())
 os.execv(sys.argv[1], sys.argv[1:])
@@ -28,6 +30,38 @@ def _signal_group(pid, signum):
         os.killpg(pid, signum)
     except ProcessLookupError:
         pass
+
+
+def _await_companion_cleanup(directory):
+    """Wait only for registered workers; their receipts outlive the Agent.
+
+    The native CLI grants its Agent only eight seconds after disconnect. Device
+    cleanup belongs to the independent worker, so this wait must happen outside
+    that Agent and outside the ten-second CLI signal grace period.
+    """
+    tickets = list(directory.glob("*.json"))
+    if not tickets:
+        return True, {}
+    deadline = time.monotonic() + _COMPANION_CLEANUP_TIMEOUT
+    while True:
+        results = []
+        for path in tickets:
+            try:
+                value = json.loads(path.read_text())
+                results.append(value if isinstance(value, dict) else {})
+            except (OSError, ValueError):
+                results.append({})
+        pending = any(type(value.get("cleanup_complete")) is not bool for value in results)
+        if not pending or time.monotonic() >= deadline:
+            ok = all(value.get("cleanup_complete") is True for value in results)
+            details = {"companion_cleanup_complete": ok, "companion_count": len(tickets)}
+            if not ok:
+                details["companion_cleanup_errors"] = [
+                    value.get("reason", "cleanup_timeout") for value in results
+                    if value.get("cleanup_complete") is not True
+                ]
+            return ok, details
+        time.sleep(0.05)
 
 
 def run_once(command, *, cwd, env, pass_fds):
@@ -50,7 +84,10 @@ def run_once(command, *, cwd, env, pass_fds):
     try:
         with tempfile.TemporaryDirectory(prefix='mr3a-run-result-') as directory:
             result_path = Path(directory) / 'result.json'
-            child_env = dict(env, MR3A_RUN_ONCE='1', MR3A_RUN_RESULT=str(result_path))
+            cleanup_dir = Path(directory) / 'companions'
+            cleanup_dir.mkdir(mode=0o700)
+            child_env = dict(env, MR3A_RUN_ONCE='1', MR3A_RUN_RESULT=str(result_path),
+                             MR3A_RUN_CLEANUP_DIR=str(cleanup_dir))
             process = subprocess.Popen(
                 [sys.executable, '-c', _EXEC_CLI, *command], cwd=cwd, env=child_env,
                 pass_fds=pass_fds, start_new_session=True,
@@ -75,10 +112,16 @@ def run_once(command, *, cwd, env, pass_fds):
                         _signal_group(process.pid, signal.SIGKILL)
                 if process.poll() is None:
                     process.wait(timeout=5)
+            companion_ok, companion_detail = _await_companion_cleanup(cleanup_dir)
             if interrupted is not None:
-                return {'status': 'interrupted', 'exit_code': 128 + interrupted, 'reason': signal.Signals(interrupted).name}
+                return {'status': 'interrupted', 'exit_code': 128 + interrupted,
+                        'reason': signal.Signals(interrupted).name, **companion_detail}
+            if not companion_ok:
+                return {'status': 'failed', 'exit_code': 1, 'reason': 'companion_cleanup_failed',
+                        'cleanup_complete': False, **companion_detail}
             if returncode != 0 or leaked:
-                return {'status': 'failed', 'exit_code': 1, 'reason': 'cli_failed' if returncode else 'child_cleanup_failed', 'cli_exit_code': returncode}
+                return {'status': 'failed', 'exit_code': 1, 'reason': 'cli_failed' if returncode else 'child_cleanup_failed',
+                        'cli_exit_code': returncode, **companion_detail}
             try:
                 result = json.loads(result_path.read_text())
                 if result['status'] not in {'completed', 'skipped', 'failed', 'deferred', 'yielded', 'interrupted'}:
@@ -88,9 +131,9 @@ def run_once(command, *, cwd, env, pass_fds):
                     raise ValueError('agent cleanup incomplete')
                 if result['exit_code'] != STATUS_CODES[result['status']]:
                     raise ValueError('invalid exit code')
-                return result
+                return {**result, **companion_detail}
             except (OSError, ValueError, KeyError, TypeError):
-                return {'status': 'failed', 'exit_code': 1, 'reason': 'missing_or_invalid_agent_result'}
+                return {'status': 'failed', 'exit_code': 1, 'reason': 'missing_or_invalid_agent_result', **companion_detail}
     finally:
         for sig, handler in previous.items():
             signal.signal(sig, handler)

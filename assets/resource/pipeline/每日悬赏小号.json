@@ -1,0 +1,66 @@
+{
+    "每日悬赏小号entry": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "InitializeBountyCompanion"
+            }
+        },
+        "next": [
+            "每日悬赏小号等待邀请"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "每日悬赏小号等待邀请": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "PollBountyCompanion"
+            }
+        },
+        "post_delay": 500,
+        "next": [
+            "每日悬赏小号等待邀请"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "每日悬赏小号失败": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "FailBountyCompanion"
+            }
+        },
+        "next": [
+            "每日悬赏小号停止"
+        ],
+        "on_error": [
+            "每日悬赏小号停止"
+        ]
+    },
+    "每日悬赏小号停止": {
+        "action": "StopTask",
+        "on_error": []
+    },
+    "小号协同OCR": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    1280,
+                    720
+                ],
+                "expected": [
+                    "."
+                ]
+            }
+        },
+        "on_error": []
+    }
+}

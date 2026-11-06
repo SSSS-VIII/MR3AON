@@ -1,6 +1,6 @@
 # 当前工作交接
 
-2026-11-07：每日悬赏拉小号协同正在开发。冷启动阻塞的OPPO可币券弹窗已单独修复，3项原生回放及xiaoli自动过弹窗验证通过，见 [渠道启动弹窗](archived/2026-11-07-oppo-startup-coupon-popup.md)。协同准备、定向邀请和回收的联合验收继续进行。
+2026-11-07：每日悬赏已增加默认关闭的拉小号模式，配置游戏ID与命名实例；自动启动、定向邀请、准备、战斗结算及任务结束回收已接通，异常回退原组队流程。main带xiaoli连续两轮实机通过，双方奖励按环境保存，主配置与正式完成账本保留；现main运行、xiaoli停止，双方控制锁空闲。协同期间按大号剩余奖励次数结束，不额外补打龙血组队轮次。全量346 passed、14 skipped、5项既有失败、85 subtests passed。详见 [每日悬赏协同](archived/2026-11-07-daily-bounty-companion.md)、[配置与边界](../docs/develop/每日悬赏协同.md)。冷启动OPPO可币券弹窗已单独修复，见 [渠道启动弹窗](archived/2026-11-07-oppo-startup-coupon-popup.md)。
 
 2026-11-07：深渊结束后误用每日重置已修正，完成/非周五/超时出口现持久禁用至下一周五05:00，到期再由独立门挂起到20:00。31项相关回归与原生资源加载通过，未实跑活动。main 当前仍运行旧规则，需退出后更新既有05:00完成记录再重启，本次未在线改状态，见 [深渊每周完成](archived/2026-11-07-abyss-weekly-completion.md)。
 
@@ -30,7 +30,7 @@
 
 小鲤游戏入口现默认经 `run xiaoli --no-window` 后台启动，设备就绪和 Agent 恢复不再额外打开桌面窗口；普通启动仍显示。相关 54 项测试及现有 Android 热启动无新增窗口、1280×720 截图检查通过；未为验证关闭在用窗口或冷重启设备。见 [小鲤后台启动](archived/2026-11-01-xiaoli-background-start.md)。
 
-命名设备层已在 `c52f41c` 独立提交；现已接入 `./run [名字]`，省略为复用现有账号的 main。新名空白凭据，同名完整复用；检查、恢复、ADB、配置/缓存/奖励、日志及退出按名字隔离，不再复制程序。当前 main 与新建 xiaoli 已就绪，small 经关闭/恢复验证后保持关闭；small 保持空任务；xiaoli 已配置唯一启动游戏任务（OPPO、上次登录），魅族应用及框架已按用户要求卸载。新增 `./run [名字] --stop` 关闭窗口及对应 Waydroid 后台，先退出同名脚本，保留数据；冷启动等待 DHCP。见 [关闭入口与 xiaoli](archived/2026-11-01-named-instance-shutdown.md)、[命名入口落地](archived/2026-11-01-named-run-isolation.md)、[设备会话层](archived/2026-11-01-named-device-session.md)；用法在 `test-environment.md`，后续 dsh 边界在 `docs/develop/命名实例.md`。小鲤独立游戏插件经 `~/xiaoli/run` 调用原启动任务，完成后交还设备，不再常驻占用租约；现已恢复 OPPO 配置并保留原账号数据，见 [恢复 OPPO](archived/2026-11-01-xiaoli-return-oppo.md)；此前魅族试用见 [魅族安装与渠道切换](archived/2026-11-01-xiaoli-meizu-ninja.md)，OPPO 启动验证见 [启动任务交接](archived/2026-11-01-xiaoli-startup-task-handoff.md)。公共设备 ADB 接口见 [接入记录](archived/2026-11-01-xiaoli-device-adb-api.md)；大小号协同业务尚未实现，鬼族继续暂缓。
+命名设备层已在 `c52f41c` 独立提交；现已接入 `./run [名字]`，省略为复用现有账号的 main。新名空白凭据，同名完整复用；检查、恢复、ADB、配置/缓存/奖励、日志及退出按名字隔离，不再复制程序。当前 main 与新建 xiaoli 已就绪，small 经关闭/恢复验证后保持关闭；small 保持空任务；xiaoli 已配置唯一启动游戏任务（OPPO、上次登录），魅族应用及框架已按用户要求卸载。新增 `./run [名字] --stop` 关闭窗口及对应 Waydroid 后台，先退出同名脚本，保留数据；冷启动等待 DHCP。见 [关闭入口与 xiaoli](archived/2026-11-01-named-instance-shutdown.md)、[命名入口落地](archived/2026-11-01-named-run-isolation.md)、[设备会话层](archived/2026-11-01-named-device-session.md)；用法在 `test-environment.md`，后续 dsh 边界在 `docs/develop/命名实例.md`。小鲤独立游戏插件经 `~/xiaoli/run` 调用原启动任务，完成后交还设备，不再常驻占用租约；现已恢复 OPPO 配置并保留原账号数据，见 [恢复 OPPO](archived/2026-11-01-xiaoli-return-oppo.md)；此前魅族试用见 [魅族安装与渠道切换](archived/2026-11-01-xiaoli-meizu-ninja.md)，OPPO 启动验证见 [启动任务交接](archived/2026-11-01-xiaoli-startup-task-handoff.md)。公共设备 ADB 接口见 [接入记录](archived/2026-11-01-xiaoli-device-adb-api.md)；每日悬赏大小号协同已落地，其它任务协同待开发，鬼族继续暂缓。
 
 脚本接入提交为 `ef15765`。截图/录制工具也已按名接入同一设备对象与控制租约，见 [调试工具归档](archived/2026-11-01-instance-debug-tools.md)。MaaPiCli 独立提交为 `7fa3bf2c`（目录参数/临时任务）和 `f42934de`（控制器初始化失败返回错误）。
 

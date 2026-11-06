@@ -90,12 +90,21 @@
             "name": "每日悬赏",
             "entry": "每日悬赏entry",
             "option": [
+                "拉小号模式",
                 "完成每日龙血任务",
                 "每日悬赏开大前延迟(毫秒)"
             ],
             "group": [
                 "daily"
             ]
+        },
+        {
+            "name": "每日悬赏小号",
+            "entry": "每日悬赏小号entry",
+            "group": [
+                "daily"
+            ],
+            "description": "供每日悬赏的拉小号模式自动调用，使用小号实例自己的启动游戏配置。完成启动后核对账号、允许组队邀请，在主页等待大号邀请并处理准备和结算。需由大号创建的协同会话管理，不加入小号日常计划；单独执行也须先启动游戏并处于该协同会话中。"
         },
         {
             "name": "决胜狭路",
@@ -1452,6 +1461,65 @@
                     }
                 }
             ]
+        },
+        "拉小号模式": {
+            "type": "switch",
+            "default_case": "No",
+            "description": "开启后启动配置的小号实例，在好友列表核对游戏 ID 并邀请。两号须已互为好友，小号实例须已安装游戏并保存自己的启动游戏配置。协同时固定小号并按大号剩余奖励次数结束，不再独立补打族员/好友龙血轮次。小号无法就绪或邀请失败时恢复原组队方式及龙血选项；大号任务结束后关闭本次借用的小号环境，保留账号和配置。",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "开启",
+                    "option": [
+                        "小号配置"
+                    ],
+                    "pipeline_override": {
+                        "每日悬赏小号配置": {
+                            "attach": {
+                                "enabled": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "label": "关闭",
+                    "pipeline_override": {
+                        "每日悬赏小号配置": {
+                            "attach": {
+                                "enabled": false
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "小号配置": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "游戏ID",
+                    "description": "小号个人信息中的数字 ID。留空时本次回到原组队方式。",
+                    "default": "",
+                    "pipeline_type": "string",
+                    "verify": "^(?:[0-9]{1,20})?$",
+                    "pattern_msg": "请输入数字游戏 ID，或留空"
+                },
+                {
+                    "name": "实例名称",
+                    "description": "小号独立环境的名字，例如 xiaoli；不能与当前大号实例相同。留空时本次回到原组队方式。",
+                    "default": "",
+                    "pipeline_type": "string"
+                }
+            ],
+            "pipeline_override": {
+                "每日悬赏小号配置": {
+                    "attach": {
+                        "game_id": "{游戏ID}",
+                        "instance": "{实例名称}"
+                    }
+                }
+            }
         },
         "完成每日龙血任务": {
             "type": "switch",

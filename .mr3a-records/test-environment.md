@@ -55,7 +55,7 @@ python3 dev/test_runtime_cli.py
 
 新号起号使用独立名字与起号预设，不与日常计划混跑；必填账号代号，状态保存在该实例的 `config/staged_workflows.json`，不是每日重置状态。本轮仅离线验证，尚未使用新号实跑。入口和中断重试边界见 `docs/develop/新号起号.md`，不要用main/xiaoli已有账号验证教程。
 
-外部封装只选择名字，并使用 `runtime.InstanceSession` 的就绪、状态、截图和控制租约；不自行维护 Waydroid、ADB 或端口。接口边界见 `docs/develop/命名实例.md`。小鲤已通过独立插件的 `game_control` 接入：启动调用 `~/xiaoli/run` → 本项目 `run xiaoli --task 启动游戏`，只在单条设备操作期间持有租约；配置为 OPPO、上次登录。账号尚未提供，仅验证到渠道账号页；大小号协同业务仍未实现。
+外部封装只选择名字，并使用 `runtime.InstanceSession` 的就绪、状态、截图和控制租约；不自行维护 Waydroid、ADB 或端口。接口边界见 `docs/develop/命名实例.md`。小鲤已通过独立插件的 `game_control` 接入：启动调用 `~/xiaoli/run` → 本项目 `run xiaoli --task 启动游戏`，只在单条设备操作期间持有租约；配置为 OPPO、上次登录。xiaoli 已登录游戏并与 main 互为好友，2026-11-07已完成每日悬赏协同实机验证；其它协同业务待开发。
 
 ## 小鲤当前游戏渠道
 
@@ -108,3 +108,11 @@ git diff --check
 进入单次执行后的收尾会输出独立一行 `MR3A_RESULT {"status":"completed","exit_code":0,"reason":"queue_finished"}`，适合按此前缀解析 JSON。它位于普通日志之后、控制权释放之后。初始化或参数校验阶段失败时，以退出码及 stderr 判断。多个任务以本次整体结果返回，任何失败都会阻止返回成功；外部信号中断按信号码返回。
 
 无点击真实进程验证使用 `MR3A_ONCE_LIVE=small PYTHONPATH=agent .venv/bin/python -m pytest tests/test_single_run_live.py -q`。它通过 launcher 参数解析及同一份 MaaPiCli/Agent，复用真实 small 就绪与控制租约，只把业务资源和配置换成临时夹具，账号原配置保持原样。覆盖完成、已完成、失败、延后、让出、信号中断、TUI 自动结束和 q；验证终端、进程回收、配置哈希、锁释放及 Android 保留。它没有实跑每周逆袭或备战副本业务。
+
+## 每日悬赏大小号协同
+
+大号「每日悬赏」开启「拉小号模式」，填写「小号配置」的游戏ID、实例名称。默认关闭，长期保存用 `./run main --configure`；也可通过本次 `--task-options` 覆盖，例子与边界见 `docs/develop/每日悬赏协同.md`。小号必须已有自己的启动游戏配置，两号已互为好友。协同任务自动管理，不要另行启动第二个脚本占住小号。
+
+小号日志及奖励留在自己的实例目录。完成、回退、重排或中断都会关闭本次小号Android并释放控制权，主环境保留。小号游戏内的组队邀请屏蔽会取消，结束不重新勾选。单次执行只在启动过协同worker时，额外等待最多45秒核验回收；结果增加 `companion_cleanup_complete` 与 `companion_count`，清理无法确认返回1。
+
+2026-11-07用户指定 main 带 xiaoli（游戏ID 344345890），连续两轮A级每日悬赏自动邀请、准备、战斗、结算回主页验证通过；小号两轮奖励截图分别保存。main当日奖励次数已满，验收仅在 `deps/bin/debug/companion-acceptance` 使用独立完成账本及有限轮次资源覆盖，不改主配置、正式完成状态和日常规则；验收夹具中的配置副本已清除。最终 main Android运行、xiaoli Android停止，控制权均释放。新选项没有写入两号保存计划。详细过程见 `archived/2026-11-07-daily-bounty-companion.md`。

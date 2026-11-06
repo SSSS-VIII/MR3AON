@@ -60,6 +60,8 @@ class InstanceSpec:
         env.pop("MR3A_PICLI_PID", None)
         env.pop("MR3A_RUN_ONCE", None)
         env.pop("MR3A_RUN_RESULT", None)
+        env.pop("MR3A_RUN_CLEANUP_DIR", None)
+        env.pop("MR3A_COMPANION_DIR", None)
         env.pop("MR3A_ADB_SERIAL", None)
         env.pop("ANDROID_SERIAL", None)
         env.pop("ANDROID_ADB_SERVER_PORT", None)
@@ -279,11 +281,17 @@ class InstanceSession:
         self.stop()
         return self.ensure_ready()
 
-    def shutdown(self) -> None:
-        """Explicit full shutdown; recovery's stop() deliberately keeps its manager."""
-        with self.control():
+    def shutdown(self, *, timeout: float | None = None) -> None:
+        """Full shutdown, retaining an already-owned lease through backend cleanup."""
+        if not self._owns_control:
+            with self.control():
+                self.shutdown(timeout=timeout)
+            return
+        if timeout is None:
             self._backend("stop")
-            self._serial = None
+        else:
+            self._backend("stop", timeout=timeout)
+        self._serial = None
 
     def _shell(self, *args: str) -> str:
         return self._adb("shell", *args).decode(errors="replace")

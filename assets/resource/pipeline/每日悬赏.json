@@ -249,6 +249,12 @@
         ]
     },
     "每日悬赏entry": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "PrepareBountyCompanion"
+            }
+        },
         "next": [
             "[JumpBack]每日悬赏入口",
             "每日悬赏任务出错"
@@ -983,6 +989,12 @@
                     "主页面.png"
                 ],
                 "green_mask": true
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "CaptureBountyLeader"
             }
         },
         "next": [
@@ -2400,6 +2412,49 @@
         },
         "next": [
             "每日悬赏完成回到了主页面"
+        ]
+    },
+    "每日悬赏小号配置": {
+        "attach": {
+            "enabled": false,
+            "game_id": "",
+            "instance": ""
+        }
+    },
+    "每日悬赏邀请小号": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "InviteBountyCompanion"
+            }
+        },
+        "next": [
+            "每日悬赏小号队伍待出发"
+        ],
+        "on_error": [
+            "每日悬赏小号回退"
+        ]
+    },
+    "每日悬赏小号队伍待出发": {
+        "next": [
+            "[JumpBack]每日悬赏点击出发",
+            "每日悬赏识别到进入了战斗"
+        ],
+        "timeout": 25000,
+        "rate_limit": 300,
+        "on_error": [
+            "每日悬赏小号回退"
+        ]
+    },
+    "每日悬赏小号回退": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "FallbackBountyCompanion"
+            }
+        },
+        "next": [
+            "退出悬赏组队"
         ]
     }
 }

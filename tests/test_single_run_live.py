@@ -34,9 +34,9 @@ real = InstanceSession(name)
 spec = replace(real.spec, work_root=Path(work))
 env = real.spec.environment(real._address())
 env['MR3A_WORK_ROOT'] = work
-session = SimpleNamespace(spec=spec, control=real.control, ensure_ready=real.ensure_ready,
-                          bind_config=lambda: None, environment=lambda: env)
 registry = SimpleNamespace(prepare=lambda spec: None)
+session = SimpleNamespace(spec=spec, registry=registry, control=real.control, ensure_ready=real.ensure_ready,
+                          bind_config=lambda: None, environment=lambda: env)
 sys.argv = ['run', name, '--no-window', '--once', '--task', 'Smoke',
             '--task-options', '{"Smoke":{"enabled":true}}']
 with patch.object(launcher, 'InstanceRegistry', return_value=registry), patch.object(launcher, 'InstanceSession', return_value=session):

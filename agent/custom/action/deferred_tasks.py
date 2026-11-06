@@ -54,6 +54,17 @@ _TIME_SLICE_SECONDS = {
 }
 
 
+def stop_task_companion(task_id: int) -> None:
+    """只回收这个顶层任务借用的小号，回调不等待设备退出。"""
+    try:
+        from runtime.companion import companion_manager
+
+        companion_manager.stop(task_id=task_id, wait=False)
+    except Exception as exc:
+        # 协同收尾失败不能阻断原任务队列，Agent finally 还会统一回收。
+        logger.exception(f"任务小号回收请求失败: task_id={task_id}: {exc}")
+
+
 def parse_chinese_duration_seconds(text: str) -> int | None:
     matches = _DURATION_PART.findall(text)
     if not matches:
@@ -652,8 +663,13 @@ class ManagedTaskSchedulerFinalize(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> CustomAction.RunResult:
+        task_id = argv.task_detail.task_id
+        stop_task_companion(task_id)
         from custom.action.staged_workflow import pause_workflow
-        if pause_workflow(argv.task_detail.task_id, "阶段未经过成功登记就结束"):
+        if pause_workflow(task_id, "阶段未经过成功登记就结束"):
+            return CustomAction.RunResult(success=True)
+        if not managed_task_queue.active_for(task_id):
+            # StopTask 已推进队列时，迟到的旧 wrapper 不得再提交下一项。
             return CustomAction.RunResult(success=True)
         current = managed_task_queue.current()
         if current is not None:
@@ -688,6 +704,7 @@ class ManagedTaskSchedulerYieldCurrent(CustomAction):
             if task is None or not managed_task_queue.active_for(task_id):
                 return CustomAction.RunResult(success=False)
             invocation_result.record("yielded", f"{task.entry} 已到安全让出边界，任务尚未完成")
+            stop_task_companion(task_id)
             return CustomAction.RunResult(success=True)
         task = managed_task_queue.requeue_current(task_id)
         if task is None:
@@ -696,6 +713,7 @@ class ManagedTaskSchedulerYieldCurrent(CustomAction):
             )
             return CustomAction.RunResult(success=False)
 
+        stop_task_companion(task_id)
         logger.info(
             f"Agent 调度已挂起当前任务: task_id={task_id}, "
             f"name={task.name!r}, entry={task.entry!r}, 等待重新编排"

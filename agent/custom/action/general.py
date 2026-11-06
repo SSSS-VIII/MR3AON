@@ -276,6 +276,9 @@ class RestartGame(CustomAction):
             )
             return CustomAction.RunResult(success=False)
 
+        from custom.action.deferred_tasks import stop_task_companion
+
+        stop_task_companion(task_id)
         startup = ManagedTask(
             name="异常恢复：启动游戏",
             entry="启动游戏entry",
@@ -343,6 +346,9 @@ class RetryCurrentTaskAtHome(CustomAction):
             )
             return CustomAction.RunResult(success=False)
 
+        from custom.action.deferred_tasks import stop_task_companion
+
+        stop_task_companion(task_id)
         logger.info(
             f"RetryCurrentTaskAtHome: task_id={task_id} 已交还 Agent，"
             f"将从入口 {task.entry!r} 重新调度"
@@ -359,6 +365,9 @@ class AbortTasker(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> CustomAction.RunResult:
+        from custom.action.deferred_tasks import stop_task_companion
+
+        stop_task_companion(argv.task_detail.task_id)
         try:
             # 不能在当前 CustomAction 回调里 wait；停止完成依赖当前回调先返回。
             context.tasker.post_stop()

@@ -15,7 +15,7 @@ from maa.context import Context, ContextEventSink
 from maa.event_sink import NotificationType
 from maa.tasker import Tasker, TaskerEventSink
 
-from custom.action.deferred_tasks import dispatch_next
+from custom.action.deferred_tasks import dispatch_next, stop_task_companion
 from custom.deferred_tasks import managed_task_queue
 from runtime.run_result import invocation_result
 from tui.run import request_tui_exit
@@ -41,6 +41,7 @@ def _advance_after_hard_end(
     """等 Tasker 回调栈退干净后再调度，避免 send_and_recv 重入。"""
     # 给 Failed/Succeeded 通知完全返回留一点时间
     time.sleep(0.05)
+    stop_task_companion(task_id)
     if managed_task_queue.active_for(task_id):
         from custom.action.staged_workflow import pause_workflow
         if pause_workflow(task_id, f"阶段异常结束：{outcome}"):
@@ -90,6 +91,7 @@ class ManagedTaskStopSink(ContextEventSink):
         if not node_data or _action_type(node_data.get("action")) != "StopTask":
             return
 
+        stop_task_companion(detail.task_id)
         from custom.action.staged_workflow import pause_workflow
         if pause_workflow(detail.task_id, "阶段未经过成功登记就停止"):
             return
@@ -128,6 +130,7 @@ class ManagedTaskHardEndSink(TaskerEventSink):
             return
         if detail.entry == "MaaTaskerPostStop":
             return
+        stop_task_companion(detail.task_id)
         if not managed_task_queue.active_for(detail.task_id):
             return
 

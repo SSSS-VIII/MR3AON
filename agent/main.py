@@ -378,11 +378,16 @@ def check_and_install_dependencies():
 # -----# region 核心业务# -----
 
 def agent(is_dev_mode=False):
+    companion_manager = None
+    invocation_result = None
+    server_closed = False
+    force_exit = False
     try:
         from maa.agent.agent_server import AgentServer
         from maa.tasker import Tasker
         from maa.toolkit import Toolkit
 
+        from runtime.companion import companion_manager
         import custom
         from runtime.run_result import invocation_result
         from tui import run_agent_tui, tui_should_run
@@ -452,18 +457,17 @@ def agent(is_dev_mode=False):
                 if not close_agent_server(AgentServer):
                     invocation_result.record("failed", "agent_shutdown_timeout")
                     logger.warning("AgentServer 关闭超时，强制结束 Agent")
-                    logger.remove()
-                    os._exit(0)
+                    force_exit = True
         else:
             AgentServer.join()
             if not close_agent_server(AgentServer):
                 invocation_result.record("failed", "agent_shutdown_timeout")
                 logger.warning("AgentServer 关闭超时，强制结束 Agent")
-                logger.remove()
-                os._exit(0)
+                force_exit = True
 
-        logger.info("AgentServer关闭")
-        invocation_result.finalize()
+        if not force_exit:
+            logger.info("AgentServer关闭")
+            server_closed = True
     except ImportError as e:
         logger.error(f"导入模块失败: {e}")
         logger.error("考虑重新配置环境")
@@ -471,6 +475,29 @@ def agent(is_dev_mode=False):
     except Exception as e:
         logger.exception("agent运行过程中发生异常")
         raise
+    finally:
+        # q、异常断连和正常收尾都要回收本 Agent 借用的小号。
+        # 原生关闭超时的强退也放在这里之后，避免 os._exit 绕过清理。
+        if companion_manager is not None:
+            try:
+                if os.environ.get("MR3A_RUN_ONCE") == "1" and os.environ.get("MR3A_RUN_CLEANUP_DIR"):
+                    # The one-shot launcher waits for worker receipts. Waiting
+                    # here can exceed the native CLI's eight-second Agent grace.
+                    companion_manager.stop()
+                elif companion_manager.shutdown(timeout=5) is False:
+                    if invocation_result is not None:
+                        invocation_result.record("failed", "companion_cleanup_incomplete")
+                    logger.error("小号环境退出时未完成回收")
+            except Exception as exc:
+                if invocation_result is not None:
+                    invocation_result.record("failed", "companion_shutdown_failed")
+                logger.exception(f"退出时回收小号环境失败: {exc}")
+        if force_exit:
+            logger.remove()
+            os._exit(0)
+        if server_closed and invocation_result is not None:
+            # Agent 自身收尾凭据；单次 launcher 另外核对小号回收凭据。
+            invocation_result.finalize()
 
 # -----# region 程序入口# -----
 

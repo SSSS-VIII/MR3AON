@@ -1,7 +1,8 @@
 """The single run entry; all environment selection is by persistent name."""
 
 import argparse
-from contextlib import ExitStack
+from contextlib import ExitStack, contextmanager
+from dataclasses import dataclass
 import json
 import os
 import signal
@@ -11,6 +12,59 @@ import tempfile
 
 from runtime.instances import InstanceRegistry, InstanceSession
 from runtime.task_options import build_task_config, load_task_interface, parse_task_options
+
+
+@dataclass
+class PreparedCommand:
+    command: list[str]
+    env: dict[str, str]
+    pass_fds: tuple[int, ...]
+
+
+@contextmanager
+def prepare_command(session, *, tasks=(), task_options=None, once=False,
+                    configure=False, ready_timeout=180):
+    """Prepare the same binary/configuration for a caller holding control()."""
+    with ExitStack() as temporary_files:
+        session.registry.prepare(session.spec)
+        temporary_tasks = None
+        if task_options is not None or once:
+            temporary_tasks = build_task_config(
+                load_task_interface(session.spec.work_root / "interface.json"),
+                json.loads(session.spec.config_path.read_text()), list(tasks),
+                task_options if task_options is not None else {},
+            )
+        session.ensure_ready(timeout=ready_timeout)
+        session.bind_config()
+        binary = session.spec.project_root / "deps/bin/MaaPiCli"
+        support = subprocess.run([str(binary), "--help"], cwd=session.spec.work_root,
+                                 capture_output=True, text=True, check=True, timeout=10)
+        if "--user-dir" not in support.stdout:
+            raise RuntimeError("共享 MaaPiCli 尚未支持实例目录，请先重编本地定制版本")
+        command = [str(binary), "--user-dir", str(session.spec.work_root),
+                   "--resource-dir", str(session.spec.work_root)]
+        config = json.loads(session.spec.config_path.read_text())
+        if not configure and (config.get("task") or tasks):
+            command.append("-d")
+        elif not sys.stdin.isatty():
+            raise RuntimeError(f"实例 {session.spec.name} 尚无任务，请在终端执行 ./run {session.spec.name} --configure")
+        pass_fds = ()
+        if temporary_tasks is not None:
+            if "--task-config" not in support.stdout:
+                raise RuntimeError("共享 MaaPiCli 尚未支持临时选项，请重编本地定制版本")
+            task_file = temporary_files.enter_context(tempfile.TemporaryFile(mode="w+", encoding="utf-8"))
+            task_file.write(json.dumps(temporary_tasks, ensure_ascii=False))
+            task_file.flush()
+            task_file.seek(0)
+            os.set_inheritable(task_file.fileno(), True)
+            command.extend(["--task-config", f"/proc/self/fd/{task_file.fileno()}"])
+            pass_fds = (task_file.fileno(),)
+        else:
+            for task in tasks:
+                command.extend(["--task", task])
+        env = session.environment()
+        env["MR3A_PICLI_PID"] = str(os.getpid())
+        yield PreparedCommand(command, env, pass_fds)
 
 
 def main():
@@ -53,53 +107,22 @@ def main():
         session.ensure_ready()
         print(f"实例 {session.spec.name} 已就绪：{session.spec.work_root}")
         return 0
-    with session.control() as control_fd, ExitStack() as temporary_files:
-        registry.prepare(session.spec)
-        temporary_tasks = None
-        if args.task_options is not None or args.once:
-            try:
-                temporary_tasks = build_task_config(
-                    load_task_interface(session.spec.work_root / "interface.json"),
-                    json.loads(session.spec.config_path.read_text()), args.task, args.task_options if args.task_options is not None else {},
-                )
-            except ValueError as exc:
-                parser.error(str(exc))
-        session.ensure_ready()
-        session.bind_config()
-        binary = session.spec.project_root / "deps/bin/MaaPiCli"
-        support = subprocess.run([str(binary), "--help"], cwd=session.spec.work_root, capture_output=True, text=True, check=True)
-        if "--user-dir" not in support.stdout:
-            raise RuntimeError("共享 MaaPiCli 尚未支持实例目录，请先重编本地定制版本")
-        command = [str(binary), "--user-dir", str(session.spec.work_root), "--resource-dir", str(session.spec.work_root)]
-        config = json.loads(session.spec.config_path.read_text())
-        if not args.configure and (config.get("task") or args.task):
-            command.append("-d")
-        elif not sys.stdin.isatty():
-            raise RuntimeError(f"实例 {session.spec.name} 尚无任务，请在终端执行 ./run {session.spec.name} --configure")
-        if temporary_tasks is not None:
-            if "--task-config" not in support.stdout:
-                raise RuntimeError("共享 MaaPiCli 尚未支持临时选项，请重编本地定制版本")
-            task_file = temporary_files.enter_context(tempfile.TemporaryFile(mode="w+", encoding="utf-8"))
-            task_file.write(json.dumps(temporary_tasks, ensure_ascii=False))
-            task_file.flush()
-            task_file.seek(0)
-            os.set_inheritable(task_file.fileno(), True)
-            command.extend(["--task-config", f"/proc/self/fd/{task_file.fileno()}"])
-        else:
-            for task in args.task:
-                command.extend(["--task", task])
-        env = session.environment()
-        env["MR3A_PICLI_PID"] = str(os.getpid())
-        print(f"运行实例 {session.spec.name}：{session.spec.work_root}", flush=True)
-        if args.once:
-            from runtime.one_shot import run_once
-            result = run_once(
-                command, cwd=session.spec.work_root, env=env,
-                pass_fds=(control_fd, task_file.fileno()),
-            )
-        else:
-            os.chdir(session.spec.work_root)
-            os.execve(binary, command, env)
+    with session.control() as control_fd:
+        try:
+            with prepare_command(session, tasks=args.task, task_options=args.task_options,
+                                 once=args.once, configure=args.configure) as prepared:
+                print(f"运行实例 {session.spec.name}：{session.spec.work_root}", flush=True)
+                if args.once:
+                    from runtime.one_shot import run_once
+                    result = run_once(
+                        prepared.command, cwd=session.spec.work_root, env=prepared.env,
+                        pass_fds=(control_fd, *prepared.pass_fds),
+                    )
+                else:
+                    os.chdir(session.spec.work_root)
+                    os.execve(prepared.command[0], prepared.command, prepared.env)
+        except ValueError as exc:
+            parser.error(str(exc))
     print("MR3A_RESULT " + json.dumps(result, ensure_ascii=False), flush=True)
     return result["exit_code"]
 
