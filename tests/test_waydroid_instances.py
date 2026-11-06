@@ -128,6 +128,8 @@ def test_background_start_still_starts_session_but_only_opens_window_when_reques
     assert "--setenv=WAYLAND_DISPLAY=wayland-1" in session_command
     assert "--setenv=XDG_RUNTIME_DIR=/run/user/1000" in session_command
     assert any(command[-1] == "show-full-ui" for command in commands) == show_window
+    assert ["busctl", "--system", "call", Instance(1).container_bus,
+            "/ContainerManager", "id.waydro.ContainerManager", "Unfreeze"] in commands
     assert any(command[-1] == "status" for command in commands)
 
 

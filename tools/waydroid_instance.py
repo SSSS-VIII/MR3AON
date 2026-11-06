@@ -352,6 +352,12 @@ def manage(instance, action, *, show_window=True):
         time.sleep(1)
     else:
         raise RuntimeError("等待次实例 Android 会话超时；请查看对应用户服务日志")
+    # A session can outlive a suspended Android container. ADB cannot wake
+    # a frozen container, including when no desktop window is requested.
+    subprocess.run([
+        "busctl", "--system", "call", instance.container_bus,
+        "/ContainerManager", "id.waydro.ContainerManager", "Unfreeze",
+    ], check=True, timeout=20)
     if show_window:
         subprocess.run([*command, "show-full-ui"], check=True, timeout=30)
     subprocess.run([*command, "status"], check=True)
