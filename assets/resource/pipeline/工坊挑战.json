@@ -1,0 +1,118 @@
+{
+    "工坊挑战entry": {
+        "next": [
+            "工坊挑战周六",
+            "工坊挑战周日",
+            "登记工坊挑战本周结束"
+        ]
+    },
+    "工坊挑战周六": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "IsTargetWeekday",
+                "custom_recognition_param": {
+                    "weekday": "6"
+                }
+            }
+        },
+        "next": [
+            "工坊挑战等待九点",
+            "工坊挑战执行"
+        ]
+    },
+    "工坊挑战周日": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "IsTargetWeekday",
+                "custom_recognition_param": {
+                    "weekday": "7"
+                }
+            }
+        },
+        "next": [
+            "工坊挑战执行"
+        ]
+    },
+    "工坊挑战执行": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "RunWorkshopChallenge",
+                "custom_action_param": {}
+            }
+        },
+        "next": [
+            "登记工坊挑战本周结束"
+        ],
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "登记工坊挑战本周结束": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "工坊挑战entry",
+                    "enabled": false,
+                    "valid_until": "next_weekly_reset",
+                    "weekday": 5
+                }
+            }
+        },
+        "next": [
+            "工坊挑战停止"
+        ]
+    },
+    "工坊挑战停止": {
+        "action": "StopTask"
+    },
+    "工坊挑战OCR": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    1280,
+                    720
+                ],
+                "expected": [
+                    "."
+                ]
+            }
+        }
+    },
+    "工坊挑战等待九点": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "TimeBefore",
+                "custom_recognition_param": {
+                    "time": "09:00"
+                }
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ScheduleDeferredTask",
+                "custom_action_param": {
+                    "key": "工坊挑战等待九点",
+                    "entry": "工坊挑战entry",
+                    "daily_times": [
+                        "09:00"
+                    ],
+                    "reuse_current_override": true
+                }
+            }
+        },
+        "next": [
+            "工坊挑战停止"
+        ],
+        "focus": "工坊挑战周六09:00开放，挂起等待"
+    }
+}
