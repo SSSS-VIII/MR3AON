@@ -3,7 +3,219 @@
         "action": {
             "type": "Custom",
             "param": {
-                "custom_action": "InitializeBountyCompanion"
+                "custom_action": "InitializeBountyCompanion",
+                "custom_action_param": {}
+            }
+        },
+        "next": [
+            "悬赏小号读取昵称"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号主页昵称": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    140,
+                    24,
+                    210,
+                    46
+                ],
+                "expected": [
+                    "."
+                ]
+            }
+        },
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号读取昵称": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "每日悬赏确认在主页面",
+                    "悬赏小号主页昵称"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "RecordBountyCompanionNickname",
+                "custom_action_param": {}
+            }
+        },
+        "next": [
+            "悬赏小号重置设置滑动"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号重置设置滑动": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "悬赏小号设置上滑"
+                }
+            }
+        },
+        "next": [
+            "悬赏小号打开设置"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号打开设置": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "关闭游戏打开设置"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "悬赏小号查找邀请设置"
+        ],
+        "post_delay": 700,
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号查找邀请设置": {
+        "next": [
+            "悬赏小号取消屏蔽",
+            "悬赏小号邀请设置可见",
+            "悬赏小号设置上滑",
+            "每日悬赏小号失败"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号取消屏蔽": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "关闭游戏屏蔽所有组队邀请",
+                    "点击取消勾选屏蔽"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "悬赏小号查找邀请设置"
+        ],
+        "post_delay": 350,
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号邀请设置可见": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "关闭游戏屏蔽所有组队邀请"
+                ],
+                "box_index": 0
+            }
+        },
+        "next": [
+            "悬赏小号关闭设置"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号设置上滑": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 10
+                }
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    1100,
+                    420
+                ],
+                "end": [
+                    1100,
+                    350
+                ],
+                "duration": 600
+            }
+        },
+        "next": [
+            "悬赏小号查找邀请设置"
+        ],
+        "post_delay": 400,
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号关闭设置": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "启动阶段关闭设置"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "悬赏小号主页就绪"
+        ],
+        "post_delay": 500,
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号主页就绪": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "每日悬赏确认在主页面"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ReportBountyCompanionState",
+                "custom_action_param": {
+                    "state": "ready"
+                }
             }
         },
         "next": [
@@ -14,16 +226,874 @@
         ]
     },
     "每日悬赏小号等待邀请": {
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "PollBountyCompanion"
-            }
-        },
-        "post_delay": 500,
+        "next": [
+            "悬赏小号合法邀请",
+            "悬赏小号拒绝邀请",
+            "悬赏小号继续等邀请"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号继续等邀请": {
         "next": [
             "每日悬赏小号等待邀请"
         ],
+        "post_delay": 500,
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号邀请许可": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "BountyInvitationPermit"
+            }
+        },
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号邀请类型": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    555,
+                    185,
+                    220,
+                    55
+                ],
+                "expected": [
+                    "每日悬赏"
+                ]
+            }
+        },
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号授权邀请人": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    100,
+                    242,
+                    350,
+                    44
+                ],
+                "expected": [
+                    "^$"
+                ]
+            }
+        },
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号授权队长": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    339,
+                    148,
+                    169,
+                    48
+                ],
+                "expected": [
+                    "^$"
+                ]
+            }
+        },
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号同意按钮": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    700,
+                    490,
+                    220,
+                    80
+                ],
+                "expected": [
+                    "^同意$"
+                ]
+            }
+        },
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号合法邀请": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "悬赏小号邀请许可",
+                    "悬赏小号邀请类型",
+                    "悬赏小号授权邀请人",
+                    "悬赏小号同意按钮"
+                ],
+                "box_index": 3
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BeginBountyCompanionJoin",
+                "custom_action_param": {}
+            }
+        },
+        "next": [
+            "悬赏小号同意邀请"
+        ],
+        "on_error": [
+            "悬赏小号拒绝邀请"
+        ]
+    },
+    "悬赏小号同意邀请": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "悬赏小号邀请许可",
+                    "悬赏小号邀请类型",
+                    "悬赏小号授权邀请人",
+                    "悬赏小号同意按钮"
+                ],
+                "box_index": 3
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "悬赏小号设置组队时限"
+        ],
+        "post_delay": 500,
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号好友邀请标题": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    100,
+                    205,
+                    270,
+                    42
+                ],
+                "expected": [
+                    "来自好友"
+                ]
+            }
+        },
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号任意邀请": {
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "悬赏小号邀请类型",
+                    "悬赏小号好友邀请标题"
+                ]
+            }
+        },
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号拒绝按钮": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    365,
+                    490,
+                    220,
+                    80
+                ],
+                "expected": [
+                    "^拒绝$"
+                ]
+            }
+        },
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号拒绝邀请": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "悬赏小号任意邀请",
+                    "悬赏小号拒绝按钮"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "每日悬赏小号等待邀请"
+        ],
+        "post_delay": 500,
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号设置组队时限": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "悬赏小号组队",
+                    "duration_ms": 120000
+                }
+            }
+        },
+        "next": [
+            "悬赏小号等待队伍"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号组队超时": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "LoopDeadlineExpired",
+                "custom_recognition_param": {
+                    "scope": "悬赏小号组队"
+                }
+            }
+        },
+        "next": [
+            "每日悬赏小号失败"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号准备按钮": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    965,
+                    628,
+                    300,
+                    80
+                ],
+                "expected": [
+                    "^准备$"
+                ]
+            }
+        },
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号取消准备按钮": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    965,
+                    628,
+                    300,
+                    80
+                ],
+                "expected": [
+                    "^取消准备$"
+                ]
+            }
+        },
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号点击准备": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "悬赏小号授权队长",
+                    "悬赏小号准备按钮"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "悬赏小号等待队伍"
+        ],
+        "post_delay": 500,
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号确认准备": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "悬赏小号授权队长",
+                    "悬赏小号取消准备按钮"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ReportBountyCompanionState",
+                "custom_action_param": {
+                    "state": "teamed"
+                }
+            }
+        },
+        "next": [
+            "悬赏小号等待出发"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号成为队长": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    965,
+                    628,
+                    300,
+                    80
+                ],
+                "expected": [
+                    "至少需要二人|出发"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ReportBountyCompanionState",
+                "custom_action_param": {
+                    "state": "returning"
+                }
+            }
+        },
+        "next": [
+            "悬赏小号设置返回时限"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号等待队伍": {
+        "next": [
+            "悬赏小号组队超时",
+            "悬赏小号战斗开始",
+            "悬赏小号点击准备",
+            "悬赏小号确认准备",
+            "悬赏小号成为队长",
+            "悬赏小号主页就绪",
+            "悬赏小号继续等队伍"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号继续等队伍": {
+        "next": [
+            "悬赏小号等待队伍"
+        ],
+        "post_delay": 500,
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号等待出发": {
+        "next": [
+            "悬赏小号组队超时",
+            "悬赏小号战斗开始",
+            "悬赏小号战后弹层入口",
+            "悬赏小号战后确认入口",
+            "悬赏小号点击准备",
+            "悬赏小号成为队长",
+            "悬赏小号主页就绪",
+            "悬赏小号继续等出发"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号继续等出发": {
+        "next": [
+            "悬赏小号等待出发"
+        ],
+        "post_delay": 500,
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号战斗开始": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "每日悬赏识别到进入了战斗"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ReportBountyCompanionState",
+                "custom_action_param": {
+                    "state": "fighting"
+                }
+            }
+        },
+        "next": [
+            "悬赏小号设置战斗时限"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号设置战斗时限": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "悬赏小号战斗",
+                    "duration_ms": 480000
+                }
+            }
+        },
+        "next": [
+            "悬赏小号战内循环"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号战斗超时": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "LoopDeadlineExpired",
+                "custom_recognition_param": {
+                    "scope": "悬赏小号战斗"
+                }
+            }
+        },
+        "next": [
+            "每日悬赏小号失败"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号结算标题": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    430,
+                    20,
+                    450,
+                    170
+                ],
+                "expected": [
+                    "每日悬赏|讨伐失败|恭喜获得"
+                ]
+            }
+        },
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号奖励关闭字": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    505,
+                    599,
+                    247,
+                    71
+                ],
+                "expected": [
+                    "点击空白处关闭"
+                ]
+            }
+        },
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号结算确认字": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    521,
+                    408,
+                    246,
+                    309
+                ],
+                "expected": [
+                    "确定|下一页"
+                ]
+            }
+        },
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号战后弹层入口": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "悬赏小号本轮参与",
+                    "悬赏小号结算标题",
+                    "悬赏小号奖励关闭字"
+                ],
+                "box_index": 2
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "悬赏小号返回",
+                    "duration_ms": 120000
+                }
+            }
+        },
+        "next": [
+            "悬赏小号关闭奖励"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号战后确认入口": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "悬赏小号本轮参与",
+                    "悬赏小号结算标题",
+                    "悬赏小号结算确认字"
+                ],
+                "box_index": 2
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "悬赏小号返回",
+                    "duration_ms": 120000
+                }
+            }
+        },
+        "next": [
+            "悬赏小号结算确认"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号关闭奖励": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "悬赏小号本轮参与",
+                    "悬赏小号结算标题",
+                    "悬赏小号奖励关闭字"
+                ],
+                "box_index": 2
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    384,
+                    23,
+                    -126,
+                    17
+                ]
+            }
+        },
+        "next": [
+            "悬赏小号报告结算"
+        ],
+        "post_delay": 1500,
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号结算确认": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "悬赏小号本轮参与",
+                    "悬赏小号结算标题",
+                    "悬赏小号结算确认字"
+                ],
+                "box_index": 2
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "悬赏小号报告结算"
+        ],
+        "post_delay": 1500,
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号报告结算": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ReportBountyCompanionState",
+                "custom_action_param": {
+                    "state": "settling"
+                }
+            }
+        },
+        "next": [
+            "悬赏小号返回循环"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号点击技能": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "每日悬赏识别到进入了战斗"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    80,
+                    360,
+                    1,
+                    1
+                ]
+            }
+        },
+        "next": [
+            "悬赏小号战内循环"
+        ],
+        "post_delay": 500,
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号战内循环": {
+        "next": [
+            "悬赏小号战斗超时",
+            "悬赏小号战后弹层入口",
+            "悬赏小号战后确认入口",
+            "悬赏小号主页就绪",
+            "悬赏小号点击技能",
+            "悬赏小号继续等战斗"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号继续等战斗": {
+        "next": [
+            "悬赏小号战内循环"
+        ],
+        "post_delay": 500,
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号设置返回时限": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "悬赏小号返回",
+                    "duration_ms": 120000
+                }
+            }
+        },
+        "next": [
+            "悬赏小号返回循环"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号返回超时": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "LoopDeadlineExpired",
+                "custom_recognition_param": {
+                    "scope": "悬赏小号返回"
+                }
+            }
+        },
+        "next": [
+            "每日悬赏小号失败"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号离队提示": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    525,
+                    340,
+                    240,
+                    65
+                ],
+                "expected": [
+                    "确定离开队伍"
+                ]
+            }
+        },
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号离队确定字": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    690,
+                    490,
+                    230,
+                    80
+                ],
+                "expected": [
+                    "^确定$"
+                ]
+            }
+        },
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号确认离队": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "悬赏小号离队提示",
+                    "悬赏小号离队确定字"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "悬赏小号返回循环"
+        ],
+        "post_delay": 700,
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号返回上级": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    125,
+                    100
+                ],
+                "template": [
+                    "返回按钮.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "悬赏小号返回循环"
+        ],
+        "post_delay": 700,
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号返回循环": {
+        "next": [
+            "悬赏小号返回超时",
+            "悬赏小号关闭奖励",
+            "悬赏小号结算确认",
+            "悬赏小号主页就绪",
+            "悬赏小号确认离队",
+            "悬赏小号返回上级",
+            "悬赏小号继续等返回"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号继续等返回": {
+        "next": [
+            "悬赏小号返回循环"
+        ],
+        "post_delay": 500,
         "on_error": [
             "每日悬赏小号失败"
         ]
@@ -32,7 +1102,8 @@
         "action": {
             "type": "Custom",
             "param": {
-                "custom_action": "FailBountyCompanion"
+                "custom_action": "FailBountyCompanion",
+                "custom_action_param": {}
             }
         },
         "next": [
@@ -43,24 +1114,30 @@
         ]
     },
     "每日悬赏小号停止": {
-        "action": "StopTask",
-        "on_error": []
-    },
-    "小号协同OCR": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "roi": [
-                    0,
-                    0,
-                    1280,
-                    720
-                ],
-                "expected": [
-                    "."
-                ]
-            }
+        "action": {
+            "type": "StopTask"
         },
         "on_error": []
+    },
+    "悬赏小号本轮参与": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "BountyCompanionState",
+                "custom_recognition_param": {
+                    "side": "small",
+                    "states": [
+                        "joining",
+                        "teamed",
+                        "fighting",
+                        "settling",
+                        "returning"
+                    ]
+                }
+            }
+        },
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
     }
 }

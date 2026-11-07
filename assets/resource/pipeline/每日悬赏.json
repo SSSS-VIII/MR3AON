@@ -991,12 +991,7 @@
                 "green_mask": true
             }
         },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "CaptureBountyLeader"
-            }
-        },
+        "action": "DoNothing",
         "next": [
             "每日悬赏进入集会所"
         ]
@@ -2424,14 +2419,22 @@
         "action": {
             "type": "Custom",
             "param": {
-                "custom_action": "InviteBountyCompanion"
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "每日悬赏复核小号昵称": {
+                        "recognition": {
+                            "param": {
+                                "expected": [
+                                    "^$"
+                                ]
+                            }
+                        }
+                    }
+                }
             }
         },
         "next": [
-            "每日悬赏小号队伍待出发"
-        ],
-        "on_error": [
-            "每日悬赏小号回退"
+            "每日悬赏设置小号等待时限"
         ]
     },
     "每日悬赏小号队伍待出发": {
@@ -2452,6 +2455,585 @@
                 "custom_action": "FallbackBountyCompanion"
             }
         },
+        "next": [
+            "每日悬赏回退导航"
+        ]
+    },
+    "每日悬赏记录大号昵称": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    140,
+                    24,
+                    210,
+                    46
+                ],
+                "expected": [
+                    "."
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "CaptureBountyLeader",
+                "custom_action_param": {}
+            }
+        },
+        "next": [
+            "每日悬赏进入集会所"
+        ],
+        "on_error": [
+            "每日悬赏昵称失败回退"
+        ]
+    },
+    "每日悬赏昵称失败回退": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "FallbackBountyCompanion",
+                "custom_action_param": {}
+            }
+        },
+        "next": [
+            "每日悬赏进入集会所"
+        ]
+    },
+    "每日悬赏设置小号等待时限": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "悬赏小号就绪",
+                    "duration_ms": 150000
+                }
+            }
+        },
+        "next": [
+            "每日悬赏轮询小号就绪"
+        ]
+    },
+    "每日悬赏轮询小号就绪": {
+        "next": [
+            "每日悬赏小号就绪",
+            "每日悬赏小号已结束",
+            "每日悬赏小号就绪超时",
+            "每日悬赏继续等小号"
+        ]
+    },
+    "每日悬赏小号就绪": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "BountyCompanionState",
+                "custom_recognition_param": {
+                    "states": [
+                        "ready"
+                    ],
+                    "side": "main",
+                    "match_token": false
+                }
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "InviteBountyCompanion",
+                "custom_action_param": {}
+            }
+        },
+        "next": [
+            "每日悬赏刷新邀请面板"
+        ],
+        "on_error": [
+            "每日悬赏小号回退"
+        ]
+    },
+    "每日悬赏小号已结束": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "BountyCompanionState",
+                "custom_recognition_param": {
+                    "states": [
+                        "failed",
+                        "stopped",
+                        "stopping"
+                    ],
+                    "side": "main",
+                    "match_token": false
+                }
+            }
+        },
+        "next": [
+            "每日悬赏小号回退"
+        ]
+    },
+    "每日悬赏小号就绪超时": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "LoopDeadlineExpired",
+                "custom_recognition_param": {
+                    "scope": "悬赏小号就绪"
+                }
+            }
+        },
+        "next": [
+            "每日悬赏小号回退"
+        ]
+    },
+    "每日悬赏继续等小号": {
+        "next": [
+            "每日悬赏轮询小号就绪"
+        ],
+        "post_delay": 500
+    },
+    "每日悬赏刷新邀请面板": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "每日悬赏展开了邀请页面"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    703,
+                    44,
+                    1,
+                    1
+                ]
+            }
+        },
+        "next": [
+            "每日悬赏重新打开邀请"
+        ],
+        "post_delay": 500,
+        "on_error": [
+            "每日悬赏小号回退"
+        ]
+    },
+    "每日悬赏重新打开邀请": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    517,
+                    233,
+                    244,
+                    251
+                ],
+                "expected": [
+                    "点击邀请好友"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "每日悬赏选择好友页签"
+        ],
+        "post_delay": 700,
+        "on_error": [
+            "每日悬赏小号回退"
+        ]
+    },
+    "每日悬赏选择好友页签": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    810,
+                    20,
+                    160,
+                    65
+                ],
+                "expected": [
+                    "^好友$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "每日悬赏好友列表回顶一"
+        ],
+        "post_delay": 350,
+        "on_error": [
+            "每日悬赏小号回退"
+        ]
+    },
+    "每日悬赏好友列表回顶一": {
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    1100,
+                    150
+                ],
+                "end": [
+                    1100,
+                    620
+                ],
+                "duration": 350
+            }
+        },
+        "next": [
+            "每日悬赏好友列表回顶二"
+        ],
+        "post_delay": 350
+    },
+    "每日悬赏好友列表回顶二": {
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    1100,
+                    150
+                ],
+                "end": [
+                    1100,
+                    620
+                ],
+                "duration": 350
+            }
+        },
+        "next": [
+            "每日悬赏设置好友搜索时限"
+        ],
+        "post_delay": 350
+    },
+    "每日悬赏设置好友搜索时限": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "悬赏好友搜索",
+                    "duration_ms": 30000
+                }
+            }
+        },
+        "next": [
+            "每日悬赏重置好友翻页"
+        ]
+    },
+    "每日悬赏重置好友翻页": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "每日悬赏好友下一页"
+                }
+            }
+        },
+        "next": [
+            "每日悬赏搜索小号昵称"
+        ]
+    },
+    "每日悬赏搜索小号昵称": {
+        "next": [
+            "每日悬赏好友搜索超时",
+            "每日悬赏好友目标昵称",
+            "每日悬赏好友下一页",
+            "每日悬赏小号回退"
+        ]
+    },
+    "每日悬赏好友搜索超时": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "LoopDeadlineExpired",
+                "custom_recognition_param": {
+                    "scope": "悬赏好友搜索"
+                }
+            }
+        },
+        "next": [
+            "每日悬赏小号回退"
+        ]
+    },
+    "每日悬赏好友目标昵称": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    915,
+                    90,
+                    165,
+                    580
+                ],
+                "expected": [
+                    "^$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BindBountyFriendRow",
+                "custom_action_param": {}
+            }
+        },
+        "next": [
+            "每日悬赏授权小号邀请"
+        ],
+        "on_error": [
+            "每日悬赏小号回退"
+        ]
+    },
+    "每日悬赏好友下一页": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 5
+                }
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    1100,
+                    575
+                ],
+                "end": [
+                    1100,
+                    175
+                ],
+                "duration": 350
+            }
+        },
+        "next": [
+            "每日悬赏搜索小号昵称"
+        ],
+        "post_delay": 350
+    },
+    "每日悬赏复核小号昵称": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    915,
+                    90,
+                    165,
+                    48
+                ],
+                "expected": [
+                    "^$"
+                ]
+            }
+        }
+    },
+    "每日悬赏小号行邀请按钮": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1150,
+                    90,
+                    125,
+                    56
+                ],
+                "expected": [
+                    "^邀请$"
+                ]
+            }
+        }
+    },
+    "每日悬赏授权小号邀请": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "每日悬赏复核小号昵称",
+                    "每日悬赏小号行邀请按钮"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ArmBountyInvitation",
+                "custom_action_param": {}
+            }
+        },
+        "next": [
+            "每日悬赏点击小号邀请"
+        ],
+        "on_error": [
+            "每日悬赏小号回退"
+        ]
+    },
+    "每日悬赏点击小号邀请": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "每日悬赏复核小号昵称",
+                    "每日悬赏小号行邀请按钮"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "每日悬赏收起定向邀请"
+        ],
+        "post_delay": 350,
+        "on_error": [
+            "每日悬赏小号回退"
+        ]
+    },
+    "每日悬赏收起定向邀请": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "每日悬赏展开了邀请页面"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    703,
+                    44,
+                    1,
+                    1
+                ]
+            }
+        },
+        "next": [
+            "每日悬赏设置小号入队时限"
+        ],
+        "post_delay": 350,
+        "on_error": [
+            "每日悬赏小号回退"
+        ]
+    },
+    "每日悬赏设置小号入队时限": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "悬赏小号入队",
+                    "duration_ms": 25000
+                }
+            }
+        },
+        "next": [
+            "每日悬赏轮询小号准备"
+        ]
+    },
+    "每日悬赏轮询小号准备": {
+        "next": [
+            "每日悬赏小号已准备",
+            "每日悬赏小号已结束",
+            "每日悬赏小号入队超时",
+            "每日悬赏继续等准备"
+        ]
+    },
+    "每日悬赏小号已准备": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "BountyCompanionState",
+                "custom_recognition_param": {
+                    "states": [
+                        "teamed",
+                        "fighting"
+                    ],
+                    "side": "main",
+                    "match_token": true
+                }
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "FinishBountyInvitation",
+                "custom_action_param": {}
+            }
+        },
+        "next": [
+            "每日悬赏小号队伍待出发"
+        ],
+        "on_error": [
+            "每日悬赏小号回退"
+        ]
+    },
+    "每日悬赏小号入队超时": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "LoopDeadlineExpired",
+                "custom_recognition_param": {
+                    "scope": "悬赏小号入队"
+                }
+            }
+        },
+        "next": [
+            "每日悬赏小号回退"
+        ]
+    },
+    "每日悬赏继续等准备": {
+        "next": [
+            "每日悬赏轮询小号准备"
+        ],
+        "post_delay": 500
+    },
+    "每日悬赏回退导航": {
+        "next": [
+            "每日悬赏回退收起邀请",
+            "每日悬赏回退离队"
+        ]
+    },
+    "每日悬赏回退收起邀请": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "每日悬赏展开了邀请页面"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    703,
+                    44,
+                    1,
+                    1
+                ]
+            }
+        },
+        "next": [
+            "退出悬赏组队"
+        ],
+        "post_delay": 350
+    },
+    "每日悬赏回退离队": {
         "next": [
             "退出悬赏组队"
         ]

@@ -2,7 +2,7 @@
 
 2026-11-07：工坊挑战改为原生JSON流水线，删除Python界面控制器、不再截图，结束前领取全部可领奖励，周禁用保留。xiaoli完整10次、领奖回主页、周禁用及复跑跳过通过，见 `archived/2026-11-07-workshop-json-pipeline.md`。
 
-2026-11-07：每日悬赏大小号协同落地：按命名实例小号的现场昵称匹配邀请，自动准备、结算回主页，异常回退、结束回收。main/xiaoli连续两轮实机及单次退出回归通过；UID配置已移除，仅填实例名；其它任务协同待开发，见 `archived/2026-11-07-bounty-companion-nickname-only.md`。
+2026-11-07：每日悬赏大小号协同已改为原生JSON界面流水线，生命周期/授权留在Python桥接；76项相关回归通过。xiaoli接收任务ready、完整回收及租约释放实测通过，main未接管，新版双号战斗待验，见 `archived/2026-11-07-bounty-companion-json-pipeline.md`。
 
 2026-11-07：深渊完成改为周五周重置并持久化禁用，到周五05:00恢复后挂起到20:00；31项相关回归通过，当前旧会话需退出后更新状态并加载，见 `archived/2026-11-07-abyss-weekly-completion.md`。
 

@@ -113,9 +113,11 @@ git diff --check
 
 大号「每日悬赏」开启「拉小号模式」，只填写「小号配置」的实例名称；小号启动后从主页读取昵称，大号在好友列表匹配邀请，不读取好友UID。默认关闭，长期保存用 `./run main --configure`；也可通过本次 `--task-options` 覆盖，例子与边界见 `docs/develop/每日悬赏协同.md`。小号必须已有自己的启动游戏配置，两号已互为好友。协同任务自动管理，不要另行启动第二个脚本占住小号。
 
-小号日志及奖励留在自己的实例目录。完成、回退、重排或中断都会关闭本次小号Android并释放控制权，主环境保留。小号游戏内的组队邀请屏蔽会取消，结束不重新勾选。单次执行只在启动过协同worker时，额外等待最多45秒核验回收；结果增加 `companion_cleanup_complete` 与 `companion_count`，清理无法确认返回1。
+小号日志留在自己的实例目录；当前协同流水线不再新增奖励/结算截图，大号原有每日悬赏截图保留。完成、回退、重排或中断都会关闭本次小号Android并释放控制权，主环境保留。小号游戏内的组队邀请屏蔽会取消，结束不重新勾选。单次执行只在启动过协同worker时，额外等待最多45秒核验回收；结果增加 `companion_cleanup_complete` 与 `companion_count`，清理无法确认返回1。
 
-2026-11-07用户指定 main 带 xiaoli（游戏ID 344345890），连续两轮A级每日悬赏自动邀请、准备、战斗、结算回主页验证通过；小号两轮奖励截图分别保存。main当日奖励次数已满，验收仅在 `deps/bin/debug/companion-acceptance` 使用独立完成账本及有限轮次资源覆盖，不改主配置、正式完成状态和日常规则；验收夹具中的配置副本已清除。最终 main Android运行、xiaoli Android停止，控制权均释放。新选项没有写入两号保存计划。详细过程见 `archived/2026-11-07-daily-bounty-companion.md`。
+首版历史验证（Python界面控制器，已被JSON流水线替代）：2026-11-07用户指定 main 带 xiaoli（游戏ID 344345890），连续两轮A级每日悬赏自动邀请、准备、战斗、结算回主页验证通过；小号两轮奖励截图分别保存。main当日奖励次数已满，验收仅在 `deps/bin/debug/companion-acceptance` 使用独立完成账本及有限轮次资源覆盖，不改主配置、正式完成状态和日常规则；验收夹具中的配置副本已清除。最终 main Android运行、xiaoli Android停止，控制权均释放。新选项没有写入两号保存计划。详细过程见 `archived/2026-11-07-daily-bounty-companion.md`。
+
+当前原生JSON流水线重构后，76项协同相关回归与资源加载通过。xiaoli已用真实worker完成启动游戏、现场读取昵称、取消邀请屏蔽、回主页ready及父任务结束后的完整回收；最终Android STOPPED，同名控制租约可重新获取，main旧会话保持运行。新流水线双号邀请/准备/战斗尚未重跑，旧版两轮结果仅为历史。见 `archived/2026-11-07-bounty-companion-json-pipeline.md`。
 
 ## 工坊挑战
 

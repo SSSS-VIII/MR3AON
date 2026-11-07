@@ -113,6 +113,7 @@ __all__ = [
 
 from .bounty_companion import (
     PrepareBountyCompanion, CaptureBountyLeader, InviteBountyCompanion,
-    FallbackBountyCompanion, InitializeBountyCompanion, PollBountyCompanion,
-    FailBountyCompanion,
+    FallbackBountyCompanion, InitializeBountyCompanion, RecordBountyCompanionNickname,
+    FailBountyCompanion, ArmBountyInvitation, FinishBountyInvitation,
+    BindBountyFriendRow, BeginBountyCompanionJoin, ReportBountyCompanionState,
 )
