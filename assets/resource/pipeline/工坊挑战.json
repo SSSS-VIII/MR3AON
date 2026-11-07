@@ -18,7 +18,7 @@
         },
         "next": [
             "工坊挑战等待九点",
-            "工坊挑战执行"
+            "工坊初始化"
         ]
     },
     "工坊挑战周日": {
@@ -32,22 +32,7 @@
             }
         },
         "next": [
-            "工坊挑战执行"
-        ]
-    },
-    "工坊挑战执行": {
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "RunWorkshopChallenge",
-                "custom_action_param": {}
-            }
-        },
-        "next": [
-            "登记工坊挑战本周结束"
-        ],
-        "on_error": [
-            "Default_on_error"
+            "工坊初始化"
         ]
     },
     "登记工坊挑战本周结束": {
@@ -69,22 +54,6 @@
     },
     "工坊挑战停止": {
         "action": "StopTask"
-    },
-    "工坊挑战OCR": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "roi": [
-                    0,
-                    0,
-                    1280,
-                    720
-                ],
-                "expected": [
-                    "."
-                ]
-            }
-        }
     },
     "工坊挑战等待九点": {
         "recognition": {
@@ -114,5 +83,1643 @@
             "工坊挑战停止"
         ],
         "focus": "工坊挑战周六09:00开放，挂起等待"
+    },
+    "工坊初始化": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "工坊选择地图": {
+                        "next": [
+                            "工坊地图一"
+                        ]
+                    },
+                    "工坊三张游玩已领取标记": {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    0,
+                                    0,
+                                    50,
+                                    25
+                                ],
+                                "expected": [
+                                    "^工坊标记尚未就绪$"
+                                ]
+                            }
+                        }
+                    },
+                    "工坊记录三张游玩": {
+                        "enabled": true,
+                        "enable": true
+                    },
+                    "工坊累计十次已领取标记": {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    0,
+                                    0,
+                                    50,
+                                    25
+                                ],
+                                "expected": [
+                                    "^工坊标记尚未就绪$"
+                                ]
+                            }
+                        }
+                    },
+                    "工坊记录累计十次": {
+                        "enabled": true,
+                        "enable": true
+                    },
+                    "工坊查看轮换已领取标记": {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    0,
+                                    0,
+                                    50,
+                                    25
+                                ],
+                                "expected": [
+                                    "^工坊标记尚未就绪$"
+                                ]
+                            }
+                        }
+                    },
+                    "工坊记录查看轮换": {
+                        "enabled": true,
+                        "enable": true
+                    },
+                    "工坊分享地图已领取标记": {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    0,
+                                    0,
+                                    50,
+                                    25
+                                ],
+                                "expected": [
+                                    "^工坊标记尚未就绪$"
+                                ]
+                            }
+                        }
+                    },
+                    "工坊记录分享地图": {
+                        "enabled": true,
+                        "enable": true
+                    }
+                }
+            }
+        },
+        "next": [
+            "工坊设置总时限"
+        ]
+    },
+    "工坊设置总时限": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "工坊挑战",
+                    "duration_ms": 3600000
+                }
+            }
+        },
+        "next": [
+            "工坊重置局数"
+        ]
+    },
+    "工坊重置局数": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "工坊允许下一局"
+                }
+            }
+        },
+        "next": [
+            "工坊导航"
+        ]
+    },
+    "工坊总超时": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "LoopDeadlineExpired",
+                "custom_recognition_param": {
+                    "scope": "工坊挑战"
+                }
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "AbortTasker",
+                "custom_action_param": {}
+            }
+        },
+        "next": [
+            "工坊挑战停止"
+        ],
+        "focus": "工坊挑战超过一小时，未登记完成"
+    },
+    "工坊导航": {
+        "next": [
+            "工坊总超时",
+            "工坊首次说明",
+            "工坊导航关闭任务窗",
+            "工坊奖励弹层",
+            "工坊识别结算",
+            "工坊收起地图详情",
+            "工坊在工坊内",
+            "工坊集会所返回入口",
+            "工坊主页进入"
+        ]
+    },
+    "工坊导航关闭任务窗": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    500,
+                    70,
+                    330,
+                    60
+                ],
+                "expected": [
+                    "^每周任务$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1148,
+                    77,
+                    1,
+                    1
+                ]
+            }
+        },
+        "next": [
+            "工坊导航"
+        ],
+        "post_delay": 700
+    },
+    "工坊主页进入": {
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    0,
+                                    100,
+                                    330,
+                                    450
+                                ],
+                                "expected": [
+                                    "工坊挑战"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "roi": [
+                                    80,
+                                    320,
+                                    130,
+                                    100
+                                ],
+                                "template": [
+                                    "工坊挑战入口.png"
+                                ],
+                                "threshold": 0.8
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "工坊导航"
+        ],
+        "post_delay": 1000
+    },
+    "工坊集会所返回入口": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    90,
+                    10,
+                    300,
+                    90
+                ],
+                "expected": [
+                    "集会所"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    60,
+                    45,
+                    1,
+                    1
+                ]
+            }
+        },
+        "next": [
+            "工坊导航"
+        ],
+        "post_delay": 700
+    },
+    "工坊收起地图详情": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    860,
+                    630,
+                    205,
+                    80
+                ],
+                "expected": [
+                    "^单人挑战$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    240,
+                    400,
+                    1,
+                    1
+                ]
+            }
+        },
+        "next": [
+            "工坊导航"
+        ],
+        "post_delay": 700
+    },
+    "工坊在工坊内": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    90,
+                    10,
+                    230,
+                    80
+                ],
+                "expected": [
+                    "创意工坊"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    110,
+                    450,
+                    1,
+                    1
+                ]
+            }
+        },
+        "next": [
+            "工坊页面就绪"
+        ],
+        "post_delay": 700
+    },
+    "工坊挑战列表": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    260,
+                    95,
+                    990,
+                    200
+                ],
+                "expected": [
+                    "本周挑战|每周轮换"
+                ]
+            }
+        },
+        "next": [
+            "工坊打开任务"
+        ]
+    },
+    "工坊打开任务": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1000,
+                    50,
+                    130,
+                    50
+                ],
+                "expected": [
+                    "^任务$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "工坊任务标题"
+        ],
+        "post_delay": 700
+    },
+    "工坊任务标题": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    500,
+                    70,
+                    330,
+                    60
+                ],
+                "expected": [
+                    "^每周任务$"
+                ]
+            }
+        },
+        "next": [
+            "工坊任务回顶"
+        ]
+    },
+    "工坊任务回顶": {
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    1000,
+                    230
+                ],
+                "end": [
+                    1000,
+                    550
+                ],
+                "duration": 600
+            }
+        },
+        "next": [
+            "工坊重置翻页"
+        ],
+        "post_delay": 700
+    },
+    "工坊重置翻页": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "工坊任务翻页"
+                }
+            }
+        },
+        "next": [
+            "工坊扫描任务"
+        ]
+    },
+    "工坊一键领取奖励": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "工坊任务标题",
+                    "工坊一键领取按钮"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 700,
+        "next": [
+            "工坊奖励弹层"
+        ]
+    },
+    "工坊奖励弹层": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    450,
+                    65,
+                    390,
+                    95
+                ],
+                "expected": [
+                    "恭喜获得"
+                ]
+            }
+        },
+        "next": [
+            "工坊奖励确认"
+        ]
+    },
+    "工坊奖励确认": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    500,
+                    595,
+                    290,
+                    100
+                ],
+                "expected": [
+                    "^确定$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "工坊任务回顶"
+        ],
+        "post_delay": 1500
+    },
+    "工坊三张游玩文案": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    345,
+                    140,
+                    510,
+                    440
+                ],
+                "expected": [
+                    "单人游玩3张本周挑战地图"
+                ]
+            }
+        }
+    },
+    "工坊三张游玩同行已领取": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "工坊三张游玩文案",
+                "expected": [
+                    "^已领取$|^已完成$"
+                ],
+                "roi_offset": [
+                    500,
+                    -25,
+                    0,
+                    50
+                ]
+            }
+        }
+    },
+    "工坊三张游玩已领取标记": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    50,
+                    25
+                ],
+                "expected": [
+                    "^工坊标记尚未就绪$"
+                ]
+            }
+        }
+    },
+    "工坊记录三张游玩": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "工坊三张游玩文案",
+                    "工坊三张游玩同行已领取"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "工坊三张游玩已领取标记": {
+                        "recognition": {
+                            "type": "DirectHit"
+                        }
+                    },
+                    "工坊记录三张游玩": {
+                        "enabled": false,
+                        "enable": false
+                    }
+                }
+            }
+        },
+        "next": [
+            "工坊扫描任务"
+        ]
+    },
+    "工坊累计十次文案": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    345,
+                    140,
+                    510,
+                    440
+                ],
+                "expected": [
+                    "累计单人游玩10次本周挑战地图"
+                ]
+            }
+        }
+    },
+    "工坊累计十次同行已领取": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "工坊累计十次文案",
+                "expected": [
+                    "^已领取$|^已完成$"
+                ],
+                "roi_offset": [
+                    500,
+                    -25,
+                    0,
+                    50
+                ]
+            }
+        }
+    },
+    "工坊累计十次已领取标记": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    50,
+                    25
+                ],
+                "expected": [
+                    "^工坊标记尚未就绪$"
+                ]
+            }
+        }
+    },
+    "工坊记录累计十次": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "工坊累计十次文案",
+                    "工坊累计十次同行已领取"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "工坊累计十次已领取标记": {
+                        "recognition": {
+                            "type": "DirectHit"
+                        }
+                    },
+                    "工坊记录累计十次": {
+                        "enabled": false,
+                        "enable": false
+                    }
+                }
+            }
+        },
+        "next": [
+            "工坊扫描任务"
+        ]
+    },
+    "工坊查看轮换文案": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    345,
+                    140,
+                    510,
+                    440
+                ],
+                "expected": [
+                    "查看本周轮换的地图"
+                ]
+            }
+        }
+    },
+    "工坊查看轮换同行已领取": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "工坊查看轮换文案",
+                "expected": [
+                    "^已领取$|^已完成$"
+                ],
+                "roi_offset": [
+                    500,
+                    -25,
+                    0,
+                    50
+                ]
+            }
+        }
+    },
+    "工坊查看轮换已领取标记": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    50,
+                    25
+                ],
+                "expected": [
+                    "^工坊标记尚未就绪$"
+                ]
+            }
+        }
+    },
+    "工坊记录查看轮换": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "工坊查看轮换文案",
+                    "工坊查看轮换同行已领取"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "工坊查看轮换已领取标记": {
+                        "recognition": {
+                            "type": "DirectHit"
+                        }
+                    },
+                    "工坊记录查看轮换": {
+                        "enabled": false,
+                        "enable": false
+                    }
+                }
+            }
+        },
+        "next": [
+            "工坊扫描任务"
+        ]
+    },
+    "工坊分享地图文案": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    345,
+                    140,
+                    510,
+                    440
+                ],
+                "expected": [
+                    "分享一次本周挑战地图"
+                ]
+            }
+        }
+    },
+    "工坊分享地图同行已领取": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "工坊分享地图文案",
+                "expected": [
+                    "^已领取$|^已完成$"
+                ],
+                "roi_offset": [
+                    500,
+                    -25,
+                    0,
+                    50
+                ]
+            }
+        }
+    },
+    "工坊分享地图已领取标记": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    50,
+                    25
+                ],
+                "expected": [
+                    "^工坊标记尚未就绪$"
+                ]
+            }
+        },
+        "next": [
+            "工坊点击单人挑战"
+        ]
+    },
+    "工坊记录分享地图": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "工坊分享地图文案",
+                    "工坊分享地图同行已领取"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "工坊分享地图已领取标记": {
+                        "recognition": {
+                            "type": "DirectHit"
+                        }
+                    },
+                    "工坊记录分享地图": {
+                        "enabled": false,
+                        "enable": false
+                    }
+                }
+            }
+        },
+        "next": [
+            "工坊扫描任务"
+        ]
+    },
+    "工坊扫描任务": {
+        "next": [
+            "工坊总超时",
+            "工坊一键领取奖励",
+            "工坊逐项领取奖励",
+            "工坊记录三张游玩",
+            "工坊记录累计十次",
+            "工坊记录查看轮换",
+            "工坊记录分享地图",
+            "工坊任务翻页",
+            "工坊四目标齐",
+            "工坊关闭任务继续"
+        ]
+    },
+    "工坊任务翻页": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    1000,
+                    540
+                ],
+                "end": [
+                    1000,
+                    230
+                ],
+                "duration": 600
+            }
+        },
+        "next": [
+            "工坊扫描任务"
+        ],
+        "post_delay": 700
+    },
+    "工坊四目标齐": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "工坊三张游玩已领取标记",
+                    "工坊累计十次已领取标记",
+                    "工坊查看轮换已领取标记",
+                    "工坊分享地图已领取标记"
+                ],
+                "box_index": 0
+            }
+        },
+        "next": [
+            "工坊关闭任务完成"
+        ],
+        "focus": "工坊四类目标均已领取"
+    },
+    "工坊关闭任务完成": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    500,
+                    70,
+                    330,
+                    60
+                ],
+                "expected": [
+                    "^每周任务$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1148,
+                    77,
+                    1,
+                    1
+                ]
+            }
+        },
+        "next": [
+            "工坊返回主页"
+        ],
+        "post_delay": 700
+    },
+    "工坊返回主页": {
+        "next": [
+            "工坊总超时",
+            "工坊确认主页完成",
+            "工坊完成退出工坊",
+            "工坊完成退出集会所"
+        ]
+    },
+    "工坊完成退出工坊": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    90,
+                    10,
+                    230,
+                    80
+                ],
+                "expected": [
+                    "创意工坊"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    60,
+                    45,
+                    1,
+                    1
+                ]
+            }
+        },
+        "next": [
+            "工坊返回主页"
+        ],
+        "post_delay": 700
+    },
+    "工坊完成退出集会所": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    90,
+                    10,
+                    300,
+                    90
+                ],
+                "expected": [
+                    "集会所"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    60,
+                    45,
+                    1,
+                    1
+                ]
+            }
+        },
+        "next": [
+            "工坊返回主页"
+        ],
+        "post_delay": 700
+    },
+    "工坊确认主页完成": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "每日悬赏确认在主页面"
+                ],
+                "box_index": 0
+            }
+        },
+        "next": [
+            "登记工坊挑战本周结束"
+        ]
+    },
+    "工坊关闭任务继续": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    500,
+                    70,
+                    330,
+                    60
+                ],
+                "expected": [
+                    "^每周任务$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1148,
+                    77,
+                    1,
+                    1
+                ]
+            }
+        },
+        "next": [
+            "工坊检查下一局"
+        ],
+        "post_delay": 700
+    },
+    "工坊检查下一局": {
+        "next": [
+            "工坊总超时",
+            "工坊允许下一局",
+            "工坊次数耗尽"
+        ]
+    },
+    "工坊允许下一局": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 18
+                }
+            }
+        },
+        "next": [
+            "工坊选择地图"
+        ]
+    },
+    "工坊次数耗尽": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "AbortTasker",
+                "custom_action_param": {}
+            }
+        },
+        "next": [
+            "工坊挑战停止"
+        ],
+        "focus": "工坊18轮后仍有目标未领取，未登记完成"
+    },
+    "工坊选择地图": {
+        "next": [
+            "工坊地图一"
+        ]
+    },
+    "工坊地图一": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    330,
+                    630,
+                    170,
+                    70
+                ],
+                "expected": [
+                    "^挑战$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "工坊下次地图二"
+        ],
+        "post_delay": 700
+    },
+    "工坊下次地图二": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "工坊选择地图": {
+                        "next": [
+                            "工坊地图二"
+                        ]
+                    }
+                }
+            }
+        },
+        "next": [
+            "工坊地图详情"
+        ]
+    },
+    "工坊地图二": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    668,
+                    630,
+                    170,
+                    70
+                ],
+                "expected": [
+                    "^挑战$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "工坊下次地图三"
+        ],
+        "post_delay": 700
+    },
+    "工坊下次地图三": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "工坊选择地图": {
+                        "next": [
+                            "工坊地图三"
+                        ]
+                    }
+                }
+            }
+        },
+        "next": [
+            "工坊地图详情"
+        ]
+    },
+    "工坊地图三": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1006,
+                    630,
+                    170,
+                    70
+                ],
+                "expected": [
+                    "^挑战$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "工坊下次地图一"
+        ],
+        "post_delay": 700
+    },
+    "工坊下次地图一": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "工坊选择地图": {
+                        "next": [
+                            "工坊地图一"
+                        ]
+                    }
+                }
+            }
+        },
+        "next": [
+            "工坊地图详情"
+        ]
+    },
+    "工坊地图详情": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    860,
+                    630,
+                    205,
+                    80
+                ],
+                "expected": [
+                    "^单人挑战$"
+                ]
+            }
+        },
+        "next": [
+            "工坊分享地图已领取标记",
+            "工坊点击分享"
+        ]
+    },
+    "工坊点击分享": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    300,
+                    640,
+                    80,
+                    80
+                ],
+                "expected": [
+                    "^分享$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "工坊选择分享途径"
+        ],
+        "post_delay": 700
+    },
+    "工坊选择分享途径": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    386,
+                    608,
+                    1,
+                    1
+                ]
+            }
+        },
+        "next": [
+            "工坊分享成功"
+        ],
+        "post_delay": 300
+    },
+    "工坊分享成功": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    400,
+                    190,
+                    540,
+                    110
+                ],
+                "expected": [
+                    "分享成功"
+                ]
+            }
+        },
+        "next": [
+            "工坊点击单人挑战"
+        ],
+        "timeout": 5000
+    },
+    "工坊点击单人挑战": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    860,
+                    630,
+                    205,
+                    80
+                ],
+                "expected": [
+                    "^单人挑战$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "工坊准备设置时限"
+        ],
+        "post_delay": 700
+    },
+    "工坊准备设置时限": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    970,
+                    620,
+                    295,
+                    90
+                ],
+                "expected": [
+                    "^完成$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "工坊单局",
+                    "duration_ms": 480000
+                }
+            }
+        },
+        "next": [
+            "工坊准备完成"
+        ]
+    },
+    "工坊准备完成": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    970,
+                    620,
+                    295,
+                    90
+                ],
+                "expected": [
+                    "^完成$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "工坊战内等待"
+        ],
+        "post_delay": 1000
+    },
+    "工坊单局超时": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "LoopDeadlineExpired",
+                "custom_recognition_param": {
+                    "scope": "工坊单局"
+                }
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "AbortTasker",
+                "custom_action_param": {}
+            }
+        },
+        "next": [
+            "工坊挑战停止"
+        ],
+        "focus": "工坊单局超过8分钟，未登记完成"
+    },
+    "工坊战内等待": {
+        "next": [
+            "工坊总超时",
+            "工坊单局超时",
+            "工坊识别结算",
+            "工坊接力结束",
+            "工坊继续挂机"
+        ]
+    },
+    "工坊继续挂机": {
+        "next": [
+            "工坊战内等待"
+        ],
+        "post_delay": 1000
+    },
+    "工坊接力提示": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    300,
+                    100,
+                    700,
+                    360
+                ],
+                "expected": [
+                    "接力"
+                ]
+            }
+        }
+    },
+    "工坊接力结束按钮": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    200,
+                    400,
+                    900,
+                    310
+                ],
+                "expected": [
+                    "^放弃$|^结束挑战$|^结算$"
+                ]
+            }
+        }
+    },
+    "工坊接力结束": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "工坊接力提示",
+                    "工坊接力结束按钮"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "工坊战内等待"
+        ],
+        "post_delay": 700
+    },
+    "工坊结算文字": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    650,
+                    220,
+                    610,
+                    180
+                ],
+                "expected": [
+                    "本次收集|最高排名|挑战榜排名"
+                ]
+            }
+        }
+    },
+    "工坊结算返回按钮": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    660,
+                    525,
+                    230,
+                    105
+                ],
+                "expected": [
+                    "^返回$"
+                ]
+            }
+        }
+    },
+    "工坊识别结算": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "工坊结算文字",
+                    "工坊结算返回按钮"
+                ],
+                "box_index": 1
+            }
+        },
+        "next": [
+            "工坊结算返回"
+        ]
+    },
+    "工坊结算返回": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    660,
+                    525,
+                    230,
+                    105
+                ],
+                "expected": [
+                    "^返回$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "工坊结算详情就绪"
+        ],
+        "post_delay": 700
+    },
+    "工坊结算详情就绪": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    860,
+                    630,
+                    205,
+                    80
+                ],
+                "expected": [
+                    "^单人挑战$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    240,
+                    400,
+                    1,
+                    1
+                ]
+            }
+        },
+        "next": [
+            "工坊导航"
+        ],
+        "post_delay": 700
+    },
+    "工坊一键领取按钮": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    980,
+                    630,
+                    260,
+                    90
+                ],
+                "expected": [
+                    "^一?键领取$"
+                ]
+            }
+        }
+    },
+    "工坊任意领取按钮": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    870,
+                    140,
+                    245,
+                    455
+                ],
+                "expected": [
+                    "^领取$"
+                ]
+            }
+        }
+    },
+    "工坊逐项领取奖励": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "工坊任务标题",
+                    "工坊任意领取按钮"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 700,
+        "next": [
+            "工坊奖励弹层"
+        ]
+    },
+    "工坊首次说明": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    540,
+                                    120,
+                                    350,
+                                    85
+                                ],
+                                "expected": [
+                                    "创意工坊"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    940,
+                                    530,
+                                    310,
+                                    110
+                                ],
+                                "expected": [
+                                    "^下一页$|^我知道了$|^知道了$"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "工坊页面就绪"
+        ],
+        "post_delay": 700
+    },
+    "工坊页面就绪": {
+        "next": [
+            "工坊总超时",
+            "工坊首次说明",
+            "工坊挑战列表"
+        ]
     }
 }

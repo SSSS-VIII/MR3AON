@@ -116,5 +116,3 @@ from .bounty_companion import (
     FallbackBountyCompanion, InitializeBountyCompanion, PollBountyCompanion,
     FailBountyCompanion,
 )
-
-from .workshop_challenge import RunWorkshopChallenge
