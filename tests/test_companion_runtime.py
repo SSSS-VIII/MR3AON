@@ -133,6 +133,8 @@ class Session:
         with (root/'control.lock').open('w') as f:
             fcntl.flock(f,fcntl.LOCK_EX|fcntl.LOCK_NB)
             self.owned=True
+            marker=root/'leases'
+            marker.write_text(str(int(marker.read_text())+1 if marker.exists() else 1))
             try: yield f.fileno()
             finally: self.owned=False
     def shutdown(self,timeout=None):
@@ -141,12 +143,17 @@ class Session:
             try: fcntl.flock(other,fcntl.LOCK_EX|fcntl.LOCK_NB)
             except BlockingIOError: pass
             else: raise AssertionError('shutdown after lease released')
+        if mode=='parent_retry_cleanup':
+            (root/'cleanup-enter').touch()
+            time.sleep(0.5)
         (root/'shutdown').write_text('done')
-        if mode=='shutdown_failure': raise RuntimeError('backend failure')
+        if mode in ('shutdown_failure','retry_shutdown_failure'): raise RuntimeError('backend failure')
 @contextmanager
 def prepare(session,**kwargs):
     assert kwargs['tasks']==['启动游戏','每日悬赏小号']
     assert kwargs['task_options']['启动游戏']['启动时屏蔽组队邀请']=='否'
+    marker=root/'prepares'
+    marker.write_text(str(int(marker.read_text())+1 if marker.exists() else 1))
     if mode=='startup_failure': raise RuntimeError('boot failed')
     if mode=='cancel_startup':
         (root/'preparing').touch()
@@ -159,13 +166,14 @@ CLI_FIXTURE = '''
 import json,os,signal,sys,time
 from pathlib import Path
 mode=sys.argv[1]; directory=Path(os.environ['MR3A_COMPANION_DIR'])
-if mode not in ('never_ready',):
+attempt=int((directory.parent/'prepares').read_text())
+if mode not in ('never_ready','retry_shutdown_failure','parent_retry_cleanup') and not (mode=='retry_ready' and attempt==1):
     (directory/'state.json').write_text(json.dumps({'state':'ready'}))
 def finish(signum=None,frame=None):
     Path(os.environ['MR3A_RUN_RESULT']).write_text(json.dumps({'status':'completed','exit_code':0,'cleanup_complete':True}))
     sys.exit(0)
 signal.signal(signal.SIGUSR1,finish)
-if mode in ('waiting','never_ready','lifetime'):
+if mode in ('waiting','never_ready','lifetime','retry_shutdown_failure','parent_retry_cleanup') or (mode=='retry_ready' and attempt==1):
     while True: time.sleep(0.05)
 if mode=='failed': sys.exit(8)
 finish()
@@ -365,3 +373,66 @@ receipt.write_text(json.dumps(result))
         allowed.touch()
         for process in processes:
             process.wait(timeout=3)
+
+
+def test_startup_timeout_retries_once_under_same_lease_and_can_finish(worker, tmp_path):
+    process, _ = worker("retry_ready", startup=0.5, lifetime=10)
+    output, errors = process.communicate(timeout=8)
+    assert process.returncode == 0, (output, errors)
+    assert (tmp_path / "prepares").read_text() == "2"
+    assert output.count(b"retrying once") == 1
+    assert (tmp_path / "leases").read_text() == "1"
+    status = companion._read(tmp_path / "receipt.json")
+    assert status == {"state": "stopped", "reason": "task_finished", "cleanup_complete": True}
+
+
+def test_repeated_startup_timeout_exhausts_after_two_attempts(worker, tmp_path):
+    process, _ = worker("never_ready", startup=0.5, lifetime=10)
+    output, errors = process.communicate(timeout=8)
+    assert process.returncode == 1, (output, errors)
+    assert (tmp_path / "prepares").read_text() == "2"
+    assert output.count(b"retrying once") == 1
+    assert companion._read(tmp_path / "receipt.json")["reason"] == "startup_timeout"
+
+
+def test_parent_cancel_during_retry_still_cleans_and_has_no_early_receipt(worker, tmp_path):
+    process, fd = worker("never_ready", startup=0.6, lifetime=10)
+    wait_for(lambda: (tmp_path / "prepares").exists() and (tmp_path / "prepares").read_text() == "2")
+    assert not (tmp_path / "receipt.json").exists()
+    os.close(fd)
+    output, errors = process.communicate(timeout=8)
+    assert process.returncode == 0, (output, errors)
+    assert companion._read(tmp_path / "receipt.json") == {"state": "stopped", "reason": "parent_finished", "cleanup_complete": True}
+
+
+def test_failed_cleanup_prevents_startup_retry(worker, tmp_path):
+    process, _ = worker("retry_shutdown_failure", startup=0.5, lifetime=10)
+    output, errors = process.communicate(timeout=8)
+    assert process.returncode == 1, (output, errors)
+    assert (tmp_path / "prepares").read_text() == "1"
+    assert companion._read(tmp_path / "receipt.json")["cleanup_complete"] is False
+
+
+def test_startup_retry_keeps_original_overall_lifetime(worker, tmp_path):
+    process, _ = worker("never_ready", startup=0.4, lifetime=0.8)
+    output, errors = process.communicate(timeout=8)
+    assert process.returncode == 1, (output, errors)
+    assert (tmp_path / "prepares").read_text() == "2"
+    assert companion._read(tmp_path / "receipt.json")["reason"] == "lifetime_timeout"
+
+
+def test_main_ready_budget_includes_both_launches_and_cleanup():
+    pipeline = json.loads((ROOT / "assets/resource/pipeline/每日悬赏.json").read_text())
+    budget = pipeline["每日悬赏设置小号等待时限"]["action"]["param"]["custom_action_param"]["duration_ms"]
+    assert budget >= 2 * (companion.CompanionManager().startup_timeout + 30) * 1000
+
+
+def test_parent_cancel_during_first_cleanup_prevents_retry(worker, tmp_path):
+    process, fd = worker("parent_retry_cleanup", startup=0.5, lifetime=10)
+    wait_for(lambda: (tmp_path / "cleanup-enter").exists())
+    assert not (tmp_path / "receipt.json").exists()
+    os.close(fd)
+    output, errors = process.communicate(timeout=8)
+    assert process.returncode == 0, (output, errors)
+    assert (tmp_path / "prepares").read_text() == "1"
+    assert companion._read(tmp_path / "receipt.json")["reason"] == "parent_finished"

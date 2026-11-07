@@ -52,7 +52,8 @@ _small = _SmallSession()
 
 def _fallback(context, reason):
     if _main.enabled:
-        logger.warning(f'每日悬赏拉小号回退原组队流程，原因={reason}')
+        status = companion_manager.status()
+        logger.warning(f'每日悬赏拉小号回退原组队流程，原因={reason}，小号状态={status.get("state")}，小号原因={status.get("reason", "未报告")}')
     _main.enabled = False
     try:
         companion_manager.stop(task_id=_main.task_id)

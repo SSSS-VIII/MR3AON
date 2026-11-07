@@ -1,5 +1,7 @@
 # Roadmap
 
+2026-11-08：每日悬赏小号首次启动超时新增一次有界回收重试，首次等待360秒；main按用户要求未动，新资源待正常重启加载。xiaoli冷启动ready和83项相关回归通过，受控首轮失败后的实际冷启动重试、ready及回收通过，见 `archived/2026-11-08-companion-startup-retry.md`。
+
 2026-11-07：工坊挑战改为原生JSON流水线，删除Python界面控制器、不再截图，结束前领取全部可领奖励，周禁用保留。xiaoli完整10次、领奖回主页、周禁用及复跑跳过通过，见 `archived/2026-11-07-workshop-json-pipeline.md`。
 
 2026-11-07：每日悬赏大小号协同已改为原生JSON界面流水线，生命周期/授权留在Python桥接；76项相关回归通过。xiaoli接收任务ready、完整回收及租约释放实测通过，main未接管，新版双号战斗待验，见 `archived/2026-11-07-bounty-companion-json-pipeline.md`。
