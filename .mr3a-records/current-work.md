@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-08：LuaManager真实Key/IV来源与AES-CBC→PKCS7→GZip链已核实，4813份Lua源码47929363字节全部恢复、0失败。新增离线解码器，26项提取/恢复/Lua保护测试通过；密钥/源码只在忽略目录。NCONFIG通过原生diskdata模块读取，配置数据库仍未解析，不把源码恢复等同完整行为移植。见 [Lua源码恢复](archived/2026-11-08-arena-lua-source-recovery.md)。
+
 2026-11-08：基础小黑平地完整ProcessMovementOnGround已在ARM64执行器跑通到落地，C#平地跳跃子集在三个步长下一/二段跳303帧float32逐位一致，总1390项通过。确认3.5重力倍率、先纵速后位移、顶点状态变化、旧位置落地判断；globalgamemanagers的Fixed Timestep为0.02（配置，不冒充运行值）。平台/复杂碰撞/原版渲染仍继续开发，见 [平地飞行对照](archived/2026-11-08-arena-flat-flight-port.md)。
 
 2026-11-08：基础小黑EnterJump/EnterJump2入口已追加C#移植和原生执行对照，含纵速覆盖、标志清理、音效/空中烟尘/特殊移动结束事件；总1087例通过。继续追完整地形运动，已发现原生空中重力更新存在额外3.5倍及部分分支-40限速，尚未核实全部分支条件，不能直接把配置重力当实际加速度。见 [跳跃入口记录](archived/2026-11-08-arena-jump-entry-port.md)。
