@@ -56,10 +56,10 @@ class LocalClient:
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     sub = p.add_subparsers(dest="command", required=True)
-    for name in ("load", "state", "pause", "resume", "enter", "result", "layout", "load_audio"):
+    for name in ("load", "state", "pause", "resume", "enter", "result", "layout", "load_audio", "parameters"):
         sub.add_parser(name)
     advance = sub.add_parser("advance")
-    advance.add_argument("frames", type=int)
+    advance.add_argument("ticks", type=int, help="Original 0.02-second physics ticks (1..600)")
     advance.add_argument("--action", choices=("none", "jump", "down"), default="none")
     prepare = sub.add_parser("prepare")
     prepare.add_argument("--chapter", type=int, default=1)
@@ -93,7 +93,7 @@ def main():
             p.error("chapter and level must be positive")
         result = client.execute(f"return MR3A.prepare({a.chapter},{a.level})")
     elif a.command == "advance":
-        result = client.execute(f"return MR3A.advance({a.frames},{json.dumps(a.action)})")
+        result = client.execute(f"return MR3A.advance({a.ticks},{json.dumps(a.action)})")
     elif a.command == "reset":
         result = client.execute(f"return MR3A.reset({a.seed},{a.chapter},{a.level})")
     else:

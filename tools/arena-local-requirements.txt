@@ -1,0 +1,2 @@
+# Short-lived native Java bootstrap; not needed for ordinary Lua RPC.
+frida==16.7.19

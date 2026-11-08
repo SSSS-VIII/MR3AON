@@ -1,6 +1,50 @@
-# 竞技场原版行为移植（开发中）
+# 竞技场本地环境
 
-这里保存从客户端原生方法核对后移植的C#行为。当前是行为部件，尚无完整可操作模拟器。原版纹理、骨骼、预制体和程序副本均保存在忽略目录，不随源码提交。
+当前可操作入口使用**原官服客户端自己的Unity运行时**：原模型、骨骼、材质、特效、地图生成、移动和碰撞均由原实现执行。在独立、空白且禁止游戏联网的 `arena` 实例运行，不需要Unity编辑器许可。恢复资源、完整客户端源码与密钥保存在本机忽略目录，不随Git分发。
+
+## 启动和操作
+
+在这台已准备资源的机器上：
+
+```bash
+./tools/run-arena --seed 42 --level 4 --paused
+./tools/run-arena --stop
+```
+
+省略 `--paused` 会直接开始跑；再次运行入口重置回合。`--restart` 重新启动arena游戏，`--cold` 重启arena的Android；`--no-focus` 用于训练时保留桌面焦点。第4段示例便于观察原随机块；默认章节1、第1段、种子1。入口只处理名为arena的实例，复用 `runtime.InstanceSession`，不接管main或复制账号。
+
+| 按键 | 操作 |
+| --- | --- |
+| 空格 / W / ↑ | 跳跃，再按触发原二段跳 |
+| S / ↓ | 下翻 |
+| P | 暂停 / 继续 |
+| R | 相同种子重开 |
+| N | 换下一个种子重开 |
+| . | 暂停时推进一个原生物理步 |
+
+原屏幕按钮也可直接操作。重开后保持暂停，按P开始。当前基准为一级基础小黑，三/四段跳关闭；未增加自制碰撞箱或视觉覆盖层。
+
+## 数据与时序
+
+`Local/environment.lua` 提供原输入、暂停、按种子复位、实际最终地图和运行参数接口；`tools/arena_local.py` 为命令行控制入口：
+
+```bash
+.venv/bin/python tools/arena_local.py state
+.venv/bin/python tools/arena_local.py parameters > debug/arena-client/gameonly/parameters.json
+.venv/bin/python tools/arena_local.py layout > debug/arena-client/gameonly/layout.json
+```
+
+物理步为原客户端0.02秒（50Hz），渲染为60Hz；`advance` 按**物理步**计数，输入保持到首个原物理步消费。返回实际物理/渲染帧数，不把截图帧当物理步。小黑参数及碰撞体的local/world区别见 [参数说明](parameters.md)。种子传入原随机函数，最终地图来自原 `GameLevelInfo._stageList`；不自行拼板子。
+
+本地完整提取数据位于 `debug/arena-client/dataset/`，2029张配置表位于 `nconfig-all/`，4813份Lua位于 `lua-recovered/`，157种有配置实体的503包原资源闭包位于 `arena-entities-complete/`（上述路径均相对 `debug/arena-client/`）。恢复方法见 [客户端数据](../docs/develop/竞技场客户端数据.md) 和 [资源恢复](../docs/develop/竞技场原版资源恢复.md)。
+
+## 实测范围
+
+已验证冷启动、原画面/跳跃/下翻、HP100、死亡后复位、固定步与实际地图导出；seed42重复生成90块逐项相同，seed43生成91块且路线改变。初始模型插值可能有微小位置差异，尚不保证逐像素确定。普通竞技场以外的模式、其它角色及每一种随机情况未逐一验收；当前依托Waydroid原运行时，独立Unity工程移植仍未完成。
+
+## 原生行为研究部件
+
+以下C#部件保留用于理解和对照动作，不用于替代上面的原版运行环境。
 
 `Runtime/ClientMotion.cs`已实现空中板子固定步移动、按动画状态切换胶囊参数、小黑重力状态选择与基础一/二段跳入口（含效果事件）。不依赖UnityEditor授权，可用已安装编辑器附带Mono编译运行。
 
@@ -16,7 +60,7 @@ debug/arena-client/toolenv/bin/python tools/verify_arena_motion.py \
 
 当前2246例对照通过：220碰撞状态/保护组合、319板子触发/移动/到期案例、468重力状态/四跳标志/参数案例，80跳跃入口的增益门/分身/水面/同步与随机起跳参数组合，303帧基础一/二段跳平地轨迹，400例平台候选查询、152例三组平台合并，304例平台与基础地面高度合并。随机参数使用固定种子1248，另覆盖触发等号、零/负剩余时间、双向移动和未知状态。C#参数均由调用者提供，不把小黑当前prefab值固化成所有角色的规则。
 
-范围与缺失：
+这些独立C#部件的范围与缺失（不描述上面的原客户端运行能力）：
 
 - `ClientCollider`复现的是传给Unity setter的参数及调用次序；PhysX接触形状、变换缩放、触发器及角色搭载还未验证。
 - `ClientAirGround`复现的是原生移动更新中的归约部分；原生基类更新、热更、初始边界/生成、回收、碰撞平台和角色承载尚未接入。

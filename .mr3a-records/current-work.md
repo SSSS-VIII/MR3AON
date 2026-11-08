@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-09：原版离线竞技场已提供 `./tools/run-arena`、键盘、50Hz原生物理步、实际参数/地图导出；小黑第397步死亡后原生复位HP100通过。冷启动采用本地资源初始化、临时Java通道后退出；独立显示父链识别已修正，stop后全新冷启动及R/N/P键实测通过。见 [本地环境](../arena/README.md)、[运行入口记录](archived/2026-11-09-arena-native-offline-environment.md)。
+
 2026-11-08：原客户端arena已断网完整进入战斗；本地Manifest/MD5/原生资源解密初始化打通，临时Java消息退出后原引擎运行。原模型/VFX/跳跃/下翻已实测，重置后一级小黑HP100；seed42最终90块逐项重现，seed43变为91块。启动入口/键盘、死亡复位及画面对照继续收口，未宣称完整验收，见 [GameOnly调查](archived/2026-11-08-arena-gameonly-bootstrap-investigation.md)。
 
 2026-11-08：44449包索引完成，157种有配置实体全部唯一定位；503包闭包导出0错误，原模型/特效/碰撞组件保全。5种配置缺失敌人仍须追兼容生成；不丢弃其路由候选Stage。独立空白arena实例正在验证原客户端GameOnly入口，main未操作。见 [完整实体索引](archived/2026-11-08-arena-complete-asset-index.md)。

@@ -25,6 +25,9 @@ function E.state()
         only=gm._isOnlyGame,offline=gm.GameInfo.OfflineGame,
         mode=gm.GameInfo._combatType,chapter=gm.GameInfo._chapterID,level=gm.GameInfo._levelID,seed=E.seed,
         episodeFrame=gm.GameInfo._totalFrameCount,episodeTime=gm.GameInfo._totalTime}
+    out.score=gm.GameInfo._scoreInfo._totalScore
+    out.distance=gm.GameInfo._scoreInfo._runDistance
+    out.coins=gm.GameInfo._scoreInfo.TotalCoin
     local c = CS.NinjaController.Instance
     if c and c.NinjaScript then
         local n = c.NinjaScript
@@ -66,6 +69,14 @@ function E.layout()
     return out
 end
 
+function E.parameters()
+    local n=CS.NinjaController.Instance.NinjaScript
+    local data=n:GetType():GetField('_ninjaData',flags):GetValue(n)
+    return {role=1,skin=1,level=1,fixedDeltaTime=U.Time.fixedDeltaTime,
+        canJump3=n.CanJump3,canJump4=n.CanJump4,
+        configured=json.parse(U.JsonUtility.ToJson(data)),runtime=E.state()}
+end
+
 function E.load_audio()
     E.audio={done=false}
     local previousScale=U.Time.timeScale
@@ -100,7 +111,7 @@ function E.advance(frames, action)
     assert(U.Time.timeScale==0,'Pause before advancing')
     assert(tostring(CS.GameManager.Instance:GetCurFSMStateID())=='Game: 8','Battle is not ready')
     E.busy=true
-    E.job={done=false,action=action,samples={},before=E.state()}
+    E.job={done=false,action=action,unit='native_physics_tick',samples={},before=E.state()}
     local runner=U.GameObject.Find('MR3A_LocalControl'):GetComponent(typeof(U.EventSystems.EventTrigger))
     runner:StartCoroutine(require('common/util').cs_generator(function()
         local ok,err=pcall(function()
@@ -109,19 +120,32 @@ function E.advance(frames, action)
             U.Time.timeScale=1
             if action=='jump' then ui:OnRightDown() end
             if action=='down' then ui:OnLeftDown() end
-            for i=1,frames do
+            local game=CS.GameManager.Instance.GameInfo
+            local firstTick=game._totalFrameCount
+            local lastTick=firstTick
+            local released=false
+            local deadline=U.Time.realtimeSinceStartup+frames*0.2+10
+            while game._totalFrameCount-firstTick<frames do
+                assert(U.Time.realtimeSinceStartup<deadline,'Physics ticks stopped advancing')
                 coroutine.step()
                 local n=CS.NinjaController.Instance.NinjaScript
-                E.job.samples[#E.job.samples+1]={frame=U.Time.frameCount,time=U.Time.time,
-                    episodeFrame=CS.GameManager.Instance.GameInfo._totalFrameCount,
-                    episodeTime=CS.GameManager.Instance.GameInfo._totalTime,
-                    position=vector(n.transform.position),
-                    physics=tostring(n:GetType():GetField('__ninjaPhysicsState',flags):GetValue(n))}
+                if game._totalFrameCount>lastTick then
+                    lastTick=game._totalFrameCount
+                    E.job.samples[#E.job.samples+1]={frame=U.Time.frameCount,time=U.Time.time,
+                        episodeFrame=game._totalFrameCount,episodeTime=game._totalTime,
+                        position=vector(n.transform.position),
+                        physics=tostring(n:GetType():GetField('__ninjaPhysicsState',flags):GetValue(n))}
+                end
                 if n.CurrentHp<=0 then E.job.terminated=true;break end
-                if i==1 then
+                if not released and game._totalFrameCount>firstTick then
                     if action=='jump' then ui:OnRightReleased(U.Vector3.zero,U.Vector3.zero) end
                     if action=='down' then ui:OnLeftReleased(U.Vector3.zero,U.Vector3.zero) end
+                    released=true
                 end
+            end
+            if not released then
+                if action=='jump' then ui:OnRightReleased(U.Vector3.zero,U.Vector3.zero) end
+                if action=='down' then ui:OnLeftReleased(U.Vector3.zero,U.Vector3.zero) end
             end
         end)
         U.Time.timeScale=0
@@ -130,10 +154,57 @@ function E.advance(frames, action)
         if not ok then E.job.error=tostring(err) end
         E.job.after=E.state()
     end))
-    return {started=true,frames=frames,action=action}
+    return {started=true,ticks=frames,action=action}
 end
 
 function E.result() return E.job end
+
+function E.poll_keys()
+    local gm=CS.GameManager.Instance
+    if E.busy or tostring(gm:GetCurFSMStateID())~='Game: 8' then return end
+    local input=U.Input
+    local keys=U.KeyCode
+    local ui=CS.UIContorller.Instance.GameOperate
+    if input.GetKeyDown(keys.P) then
+        E.lastKey='P'
+        if U.Time.timeScale==0 then E.resume() else E.pause() end
+    elseif input.GetKeyDown(keys.R) or input.GetKeyDown(keys.N) then
+        local change=input.GetKeyDown(keys.N)
+        E.lastKey=change and 'N' or 'R'
+        E.reset(change and ((E.seed+1)%2147483648) or E.seed,gm.GameInfo._chapterID,gm.GameInfo._levelID)
+    elseif input.GetKeyDown(keys.Period) and U.Time.timeScale==0 then
+        E.lastKey='.'
+        E.advance(1,'none')
+    elseif input.GetKeyDown(keys.Space) or input.GetKeyDown(keys.W) or input.GetKeyDown(keys.UpArrow) then
+        E.lastKey='jump'
+        if U.Time.timeScale==0 then E.advance(1,'jump') else ui:OnRightDown() end
+    elseif input.GetKeyDown(keys.S) or input.GetKeyDown(keys.DownArrow) then
+        E.lastKey='down'
+        if U.Time.timeScale==0 then E.advance(1,'down') else ui:OnLeftDown() end
+    end
+    if input.GetKeyUp(keys.Space) or input.GetKeyUp(keys.W) or input.GetKeyUp(keys.UpArrow) then
+        ui:OnRightReleased(U.Vector3.zero,U.Vector3.zero)
+    end
+    if input.GetKeyUp(keys.S) or input.GetKeyUp(keys.DownArrow) then
+        ui:OnLeftReleased(U.Vector3.zero,U.Vector3.zero)
+    end
+end
+
+function E.enable_keyboard()
+    if E.keyboardReady then return true end
+    local host=U.GameObject('MR3A_InputControl')
+    U.Object.DontDestroyOnLoad(host)
+    local runner=host:AddComponent(typeof(U.EventSystems.EventTrigger))
+    E.keyboardReady=true
+    runner:StartCoroutine(require('common/util').cs_generator(function()
+        while true do
+            local ok,err=pcall(E.poll_keys)
+            if not ok then E.keyboardError=tostring(err) end
+            coroutine.step()
+        end
+    end))
+    return true
+end
 
 function E.new_info(chapter,level)
     assert(NCONFIG.CfgEndlessData[chapter or 1] and NCONFIG.CfgEndlessData[chapter or 1][level or 1],
@@ -192,7 +263,27 @@ function E.enter()
     local g=gm.GameInfo
     gm:PreloadLevelData(g._combatType,g._chapterID,g._levelID)
     gm:EnterGameScene()
+    E.wait_ready()
     return E.state()
+end
+
+function E.wait_ready()
+    local gm=CS.GameManager.Instance
+    E.resetJob={done=false,seed=E.seed}
+    local runner=U.GameObject.Find('MR3A_LocalControl'):GetComponent(typeof(U.EventSystems.EventTrigger))
+    runner:StartCoroutine(require('common/util').cs_generator(function()
+        local ok,err=pcall(function()
+            local deadline=U.Time.realtimeSinceStartup+60
+            while tostring(gm:GetCurFSMStateID())~='Game: 8' or tostring(gm.CurrContentState)~='Running: 1' do
+                assert(U.Time.realtimeSinceStartup<deadline,'Reset did not enter the battle')
+                coroutine.step()
+            end
+        end)
+        U.Time.timeScale=0
+        E.resetJob.done=true
+        if not ok then E.resetJob.error=tostring(err) end
+        E.resetJob.state=E.state()
+    end))
 end
 
 function E.reset(seed, chapter, level)
@@ -212,18 +303,7 @@ function E.reset(seed, chapter, level)
     E.role_defaults()
     gm:PreloadLevelData(3,chapter or 1,level or 1)
     gm:EnterGameScene()
-    E.resetJob={done=false,seed=seed}
-    local runner=U.GameObject.Find('MR3A_LocalControl'):GetComponent(typeof(U.EventSystems.EventTrigger))
-    runner:StartCoroutine(require('common/util').cs_generator(function()
-        local deadline=U.Time.realtimeSinceStartup+60
-        while tostring(gm:GetCurFSMStateID())~='Game: 8' or tostring(gm.CurrContentState)~='Running: 1' do
-            assert(U.Time.realtimeSinceStartup<deadline,'Reset did not enter the battle')
-            coroutine.step()
-        end
-        U.Time.timeScale=0
-        E.resetJob.done=true
-        E.resetJob.state=E.state()
-    end))
+    E.wait_ready()
     return {resetting=true,seed=seed,chapter=chapter or 1,level=level or 1}
 end
 

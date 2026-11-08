@@ -102,3 +102,54 @@ io.write(output)
         assert not result["ok"] and "serializable" in result["error"]
     else:
         assert result["ok"] and result["result"] == expected
+
+
+@pytest.mark.parametrize("death_tick,expected_ticks", [(0, 7), (2, 2)])
+def test_advance_counts_physics_ticks_and_holds_tap_until_consumed(tmp_path, death_tick, expected_ticks):
+    lua = shutil.which("luajit")
+    if not lua:
+        pytest.skip("LuaJIT is unavailable")
+    harness = r'''
+MR3A={seedHook=true}
+local game={_totalFrameCount=0,_totalTime=0}
+local ninja={CurrentHp=100,transform={position={x=0,y=0,z=0}},GetType=function()
+ return {GetField=function() return {GetValue=function() return 'runOnGround: 5' end} end}
+end}
+local releaseTick=-1
+local ui={OnRightDown=function() end,OnRightReleased=function() releaseTick=game._totalFrameCount end}
+local co
+local runner={StartCoroutine=function(self,f) co=coroutine.create(f);assert(coroutine.resume(co)) end}
+CS={System={Reflection={BindingFlags={__CastFrom=function(v) return v end}}},
+UnityEngine={Time={timeScale=0,frameCount=0,time=0,realtimeSinceStartup=0},
+GameObject={Find=function() return {GetComponent=function() return runner end} end},
+EventSystems={EventTrigger={}},Vector3={zero={}}},
+GameManager={Instance={GameInfo=game,GetCurFSMStateID=function() return 'Game: 8' end}},
+NinjaController={Instance={NinjaScript=ninja}},UIContorller={Instance={GameOperate=ui}}}
+typeof=function(v) return v end
+package.preload['common/util']=function() return {cs_generator=function(f) return f end} end
+coroutine.step=function() coroutine.yield() end
+dofile(ENVIRONMENT)
+MR3A.state=function() return {episodeFrame=game._totalFrameCount} end
+MR3A.advance(7,'jump')
+local renders=0
+while MR3A.busy do
+ renders=renders+1
+ assert(renders<20,'Advance never completed')
+ local t=CS.UnityEngine.Time
+ t.frameCount=renders;t.realtimeSinceStartup=renders/60;t.time=renders/60
+ -- 60 rendered frames carry only 50 original fixed updates.
+ if renders%6~=0 then game._totalFrameCount=game._totalFrameCount+1;game._totalTime=game._totalFrameCount/50 end
+ if DEATH_TICK>0 and game._totalFrameCount>=DEATH_TICK then ninja.CurrentHp=0 end
+ assert(coroutine.resume(co))
+end
+assert(not MR3A.job.error,MR3A.job.error)
+io.write(string.format('%d|%d|%d|%d|%s',game._totalFrameCount,renders,releaseTick,#MR3A.job.samples,tostring(MR3A.job.terminated)))
+'''
+    script = tmp_path / "ticks.lua"
+    script.write_text("local ENVIRONMENT=" + json.dumps(str(ROOT / "arena/Local/environment.lua")) + f"\nlocal DEATH_TICK={death_tick}\n" + harness)
+    output = subprocess.check_output([lua, str(script)], text=True).split("|")
+    ticks, renders, release_tick, samples = map(int, output[:4])
+    assert ticks == samples == expected_ticks
+    assert release_tick == 1
+    assert renders == (8 if death_tick == 0 else 2)
+    assert output[4] == ("true" if death_tick else "nil")

@@ -1,6 +1,6 @@
 # Roadmap
 
-2026-11-08：竞技场原始数据已提取；原Pygame程序降为参数调试器，撤回模拟器完成结论、禁止视觉训练使用。按原版模型/动画/特效、运行时碰撞和随机板子全面还原继续开发，见 `archived/2026-11-08-arena-fidelity-requirements.md`。
+2026-11-09：原客户端离线竞技场已有操作入口、原画面/碰撞/随机生成、50Hz步进与死亡复位；独立Unity移植未完成，视觉策略后续训练。旧Pygame只保留参数调试用途，见 `arena/README.md` 及 `archived/2026-11-09-arena-native-offline-environment.md`。
 
 2026-11-08：3v3网络错误弹窗新增原生识别/点击重连分支，优先于背景继续；真实截图回放及资源加载通过，main未重启，见 `archived/2026-11-08-3v3-network-popup-reconnect.md`。
 
