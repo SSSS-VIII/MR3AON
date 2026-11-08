@@ -268,6 +268,10 @@ def main():
             display.unlink(missing_ok=True)
         print('已关闭 arena，本地资源和配置保留。')
         return
+    from arena_gale_catalog import build_catalog
+    catalog = build_catalog(base / 'nconfig-all/CfgEndlessGaleData.json',
+                            base / 'dataset/assets/assets/gameresources/binarydatas/leveldata/endless_gale')
+    (base / 'gameonly/gale-catalog-native.json').write_text(json.dumps(catalog, ensure_ascii=False, separators=(',', ':')))
     display_data, new_display = ensure_display(display)
     for key, value in display_data.items():
         if key in ("WAYLAND_DISPLAY", "DISPLAY", "XDG_RUNTIME_DIR") and value:
@@ -324,7 +328,7 @@ def main():
         client.execute("return MR3A.enter()")
     else:
         client.load_environment()
-        client.execute(f"return MR3A.reset({a.seed},{a.chapter},{a.level})")
+        client.execute(f"MR3A.nativeSelection=nil;return MR3A.reset({a.seed},{a.chapter},{a.level})")
     wait_job(client, "MR3A.resetJob")
     state = client.execute("return MR3A.state()")
     if state.get("maxHealth") != 5000:

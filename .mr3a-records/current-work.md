@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-09：原传送符/通灵兽选关接口完成，保留完整地图，只固定原地图和版型候选。Boss/奖励循环不能按静态长度求起点，现读原生成StageStartX并核验实际脚下板索引；map52短平台第8块、map24跳关路线、无限段8010均真实落地/5000血/GodMode=false。API支持map_id/start_board/boards，见 [原机制选关](archived/2026-11-09-arena-full-map-native-selection.md)、[用法](../arena/selection.md)；菜单独立接入。
+
 2026-11-09：离线疾风Boss在原正式开战后用原bonus/阶段/健康接口设为1/1，原战斗/死亡保留；原DragonBoss实机及原setter次序回归通过，见 [Boss血量](archived/2026-11-09-arena-native-boss-health.md)。
 
 2026-11-09：独立复现原客户端本地重开遗失池对象：7只旧乌鸦仍激活/有碰撞，但已失去地块和管理关系。重开清场景前补原Item/Enemy回收调用，完整重启后相同600步/换图复跑残留为0，9项针对性回归通过。不是给单个陷阱改AI；见 [重开对象回收](archived/2026-11-09-arena-reset-object-recycling.md)。

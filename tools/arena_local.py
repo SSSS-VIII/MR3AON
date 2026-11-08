@@ -49,10 +49,19 @@ class LocalClient:
         raise TimeoutError("Arena bridge did not answer; check SDK dialog and bridge readiness")
 
     def load_environment(self):
+        catalog = ROOT / "debug/arena-client/gameonly/gale-catalog-native.json"
+        native = ROOT / "arena/Local/native_selection.lua"
+        if native.exists():
+            if not catalog.exists():
+                raise RuntimeError("Build the Gale catalog with tools/arena_gale_catalog.py first")
+            with self.session.control():
+                self.session.adb("push", str(catalog), f"{FOLDER}/catalog-native.tmp").check_returncode()
+                self.session.adb("shell", "mv", f"{FOLDER}/catalog-native.tmp", f"{FOLDER}/catalog-native.json").check_returncode()
         chunks = []
-        for name in ("environment", "native_boss"):
+        for name in ("environment", "native_selection", "native_boss"):
             path = ROOT / f"arena/Local/{name}.lua"
-            chunks.append("assert(load(" + json.dumps(path.read_text(), ensure_ascii=False) + ", '@mr3a-" + name + "'))()")
+            if path.exists():
+                chunks.append("assert(load(" + json.dumps(path.read_text(), ensure_ascii=False) + ", '@mr3a-" + name + "'))()")
         return self.execute(";".join(chunks) + ";return MR3A.state()")
 
 
