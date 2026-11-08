@@ -553,6 +553,7 @@
         },
         "timeout": 420000,
         "next": [
+            "[JumpBack]3v3网络异常点击重试",
             "[JumpBack]3v3进入准备页面",
             "[JumpBack]3v3观战返回等待消失",
             "[JumpBack]3v3结算确定",
@@ -1872,6 +1873,7 @@
     "3v3_boss战斗循环_0": {
         "recognition": "DirectHit",
         "next": [
+            "[JumpBack]3v3网络异常点击重试",
             "3v3_boss战斗循环超时",
             "打完boss还活着进入kn_ying_p2",
             "[JumpBack]3v3_boss战斗点击单元"
@@ -1880,6 +1882,7 @@
     "3v3_boss战斗循环_1": {
         "recognition": "DirectHit",
         "next": [
+            "[JumpBack]3v3网络异常点击重试",
             "3v3_boss战斗循环超时",
             "打完boss还活着进入kn_an_p2",
             "[JumpBack]3v3_boss战斗点击单元"
@@ -1888,6 +1891,7 @@
     "3v3_boss战斗循环_2": {
         "recognition": "DirectHit",
         "next": [
+            "[JumpBack]3v3网络异常点击重试",
             "3v3_boss战斗循环超时",
             "打完boss还活着进入kn_ya_p2",
             "[JumpBack]3v3_boss战斗点击单元"
@@ -1896,6 +1900,7 @@
     "3v3_boss战斗循环_3": {
         "recognition": "DirectHit",
         "next": [
+            "[JumpBack]3v3网络异常点击重试",
             "3v3_boss战斗循环超时",
             "打完boss还活着进入kn_wu_p2",
             "[JumpBack]3v3_boss战斗点击单元"
@@ -2295,6 +2300,7 @@
         },
         "post_wait_freezes": 500,
         "next": [
+            "[JumpBack]3v3网络异常点击重试",
             "[JumpBack]3v3继续1_关闭残留",
             "[JumpBack]3v3继续0_关闭残留",
             "[JumpBack]3v3结算确定_关闭残留",
@@ -2661,6 +2667,7 @@
     "3v3_boss战斗循环_4": {
         "recognition": "DirectHit",
         "next": [
+            "[JumpBack]3v3网络异常点击重试",
             "3v3_boss战斗循环超时",
             "打完boss还活着进入kn_yan_p2",
             "[JumpBack]3v3_boss战斗点击单元"
@@ -2999,6 +3006,7 @@
         "rate_limit": 0,
         "timeout": 60000,
         "next": [
+            "[JumpBack]3v3网络异常点击重试",
             "3v3观战返回等待消失",
             "3v3观战返回消失后点中间"
         ],
@@ -3032,5 +3040,69 @@
             "没有匹配模式说明时间不符合"
         ],
         "focus": "3v3满了也刷：每日已领完，继续匹配"
+    },
+    "3v3网络异常点击重试": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    470,
+                                    245,
+                                    340,
+                                    75
+                                ],
+                                "expected": [
+                                    "^网络错误$|^网络异常$"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    350,
+                                    320,
+                                    580,
+                                    135
+                                ],
+                                "expected": [
+                                    "与服务器通[信讯]超时|点击重新连接|请.*重试"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    480,
+                                    480,
+                                    320,
+                                    95
+                                ],
+                                "expected": [
+                                    "^确定$|^重试$|^重新连接$"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 2
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 2000,
+        "next": [],
+        "focus": "网络异常：点击弹窗确认重新连接，再返回原流程"
     }
 }
