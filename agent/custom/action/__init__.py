@@ -17,6 +17,7 @@ from .deferred_tasks import (
     ManagedTaskSchedulerWait,
     ScheduleDeferredTask,
     SetManagedTaskPersistentState,
+    RetainManagedTaskUntilStateChange,
 )
 from .general import *
 from .landlady_qa import LandladyQaLearnAnswer
@@ -65,6 +66,7 @@ __all__ = [
     "DownloadGameMeta",
     "ScheduleDeferredTask",
     "SetManagedTaskPersistentState",
+    "RetainManagedTaskUntilStateChange",
     "ManagedTaskSchedulerBootstrap",
     "ManagedTaskSchedulerFinalize",
     "ManagedTaskSchedulerYieldCurrent",

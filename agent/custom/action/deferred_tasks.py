@@ -559,6 +559,39 @@ class SetManagedTaskPersistentState(CustomAction):
         return CustomAction.RunResult(success=True)
 
 
+@AgentServer.custom_action("RetainManagedTaskUntilStateChange")
+class RetainManagedTaskUntilStateChange(CustomAction):
+    """已完成出口复用已有子节点期限，保留本实例的下一周期候选。"""
+
+    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
+        del context
+        current = managed_task_queue.current()
+        task_id = argv.task_detail.task_id
+        if current is None or not managed_task_queue.active_for(task_id):
+            return CustomAction.RunResult(success=False)
+        if single_run():
+            return CustomAction.RunResult(success=True)
+        param = parse_pipeline_json_param(argv.custom_action_param)
+        nodes = param.get("nodes", [])
+        if not isinstance(nodes, list) or any(not isinstance(node, str) or not node for node in nodes):
+            logger.error("RetainManagedTaskUntilStateChange: nodes 必须是节点名数组")
+            return CustomAction.RunResult(success=False)
+        base = current.base_pipeline_override
+        if base is None:
+            base = current.pipeline_override
+        selected = [
+            node for node in nodes
+            if base.get(node, {}).get("enabled", base.get(node, {}).get("enable", True))
+        ]
+        due = persistent_task_state_store.next_disabled_expiry(current.entry, nodes=selected)
+        if due is None:
+            return CustomAction.RunResult(success=True)
+        retained = managed_task_queue.retain_current_until(task_id, due)
+        if retained:
+            logger.info(f"Agent 已按现有状态保留下一周期: entry={current.entry!r}, due={due.isoformat()!r}")
+        return CustomAction.RunResult(success=retained)
+
+
 @AgentServer.custom_action("ManagedTaskSchedulerBootstrap")
 class ManagedTaskSchedulerBootstrap(CustomAction):
     """接收任务计划，并在 bootstrap 结束前提交第一项。"""

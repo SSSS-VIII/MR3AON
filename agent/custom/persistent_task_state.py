@@ -268,6 +268,18 @@ class PersistentTaskStateStore:
                 self._write_locked(now)
             return {node: state.enabled for node, state in states.items()}
 
+    def next_disabled_expiry(self, entry: str, *, nodes: list[str]) -> datetime | None:
+        """查询已有禁用期限；含执行期间刚到期的状态，供安全结束后立即恢复。"""
+        with self._lock:
+            states = [self._states.get(entry)]
+            states.extend(self._node_states.get(entry, {}).get(node) for node in nodes)
+            deadlines = [
+                state.valid_until for state in states
+                if state is not None and not state.enabled
+                and state.valid_until is not None
+            ]
+        return min(deadlines) if deadlines else None
+
     def seconds_until_state_change(self) -> float:
         """返回下次 05:00 重载或现有状态过期前的秒数。"""
         now = self._now()

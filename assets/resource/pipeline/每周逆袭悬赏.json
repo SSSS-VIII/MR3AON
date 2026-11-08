@@ -350,9 +350,22 @@
             }
         },
         "action": {
-            "type": "StopTask"
+            "type": "Custom",
+            "param": {
+                "custom_action": "RetainManagedTaskUntilStateChange",
+                "custom_action_param": {
+                    "nodes": [
+                        "每周逆袭悬赏阶段1进行中",
+                        "每周逆袭悬赏阶段2进行中",
+                        "每周逆袭悬赏阶段3进行中"
+                    ]
+                }
+            }
         },
-        "focus": "任务完成：每周逆袭悬赏✅"
+        "focus": "任务完成：每周逆袭悬赏✅",
+        "next": [
+            "每周逆袭悬赏完成停止任务"
+        ]
     },
     "每周逆袭悬赏已准备": {
         "recognition": {
@@ -1780,5 +1793,10 @@
             "type": "Click"
         },
         "post_delay": 1000
+    },
+    "每周逆袭悬赏完成停止任务": {
+        "action": {
+            "type": "StopTask"
+        }
     }
 }
