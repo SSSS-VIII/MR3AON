@@ -119,4 +119,35 @@ namespace MR3A.Arena
         }
     }
 
+    public struct FlatFlightState
+    {
+        public int PhysicsState;
+        public V3 Position,Velocity,JumpFromPoint;
+    }
+    public static class ClientFlatFlight
+    {
+        // Restricted to the explicit flat-ground basic-jump fixture used by the
+        // native oracle. No platforms, slopes, modifiers, input, clone or glide.
+        public static FlatFlightState Step(FlatFlightState s,float[] data,float dt,float groundY)
+        {
+            if(s.PhysicsState!=14 && s.PhysicsState!=15 && s.PhysicsState!=16 && s.PhysicsState!=17)
+                throw new System.ArgumentException("Only basic jump/fall states supported");
+            float foot=data[1];
+            bool falling=s.PhysicsState==15 || s.PhysicsState==17;
+            float trigger=System.Math.Max(foot,System.Math.Abs(s.Velocity.Y)*dt+.001f);
+            if(falling && s.Position.Y<groundY+trigger) {
+                s.PhysicsState=5;s.Position.Y=groundY+foot;s.Velocity.Y=0;
+                s.Velocity.X=data[2];
+            } else {
+                float acceleration=ClientGravity.Select(s.PhysicsState,false,data)*dt;
+                acceleration*=3.5f;
+                s.Velocity.Y=System.Math.Max(-40,s.Velocity.Y+acceleration);
+                if(s.Velocity.Y<0 && s.PhysicsState==14){s.PhysicsState=15;s.JumpFromPoint=s.Position;}
+                else if(s.Velocity.Y<0 && s.PhysicsState==16)s.PhysicsState=17;
+            }
+            s.Position.X+=s.Velocity.X*dt;s.Position.Y+=s.Velocity.Y*dt;s.Position.Z+=s.Velocity.Z*dt;
+            return s;
+        }
+    }
+
 }
