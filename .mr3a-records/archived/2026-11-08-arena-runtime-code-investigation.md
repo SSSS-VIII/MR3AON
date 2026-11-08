@@ -26,11 +26,11 @@ NinjaCollider两个ChangeColliderState签名分别是Boolean和NinjaAnimState，
 | 分支 | center | radius | height |
 | --- | --- | --- | --- |
 | 普通 | (0.1,0,0) | 0.2 | 1.8 |
-| jump | (0.1,0.3,0) | 保持前态（普通配置0.2） | 1.2 |
+| jump | (0.1,0.3,0) | 0.2 | 1.2 |
 | roll2 | (0.05,0,0) | 0.1 | 0.1 |
 | attack_charge | (0.05,-0.3,0) | 0.2 | 0.2 |
 
-此处只核实setter代码与prefab配置，未验证Unity/PhysX对height<2radius的形状处理、根运行缩放、触发器关系或真实接触边缘。jump分支只设置center/height，并未强制恢复radius，不能假设从任意上一状态进入都得到0.2。
+此处只核实setter代码与prefab配置，未验证Unity/PhysX对height<2radius的形状处理、根运行缩放、触发器关系或真实接触边缘。后续实际ARM64执行纠正本次静态阅读遗漏：jump设置center/height后会进入共用尾段恢复normal radius，详情见 [行为移植对照](2026-11-08-arena-native-motion-port.md)。
 
 Ninja.UpdateGravity、Jump、EnterJump/EnterJump2、翻绳入口已提取带调用目标名称的反汇编；完整物理更新顺序、输入门和动态速度仍未移植或标定。没有将这些线索写成几何原型的假精确实现。
 

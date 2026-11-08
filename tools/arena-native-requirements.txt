@@ -1,0 +1,2 @@
+# Offline ARM64 instruction comparison; separate from the Agent environment.
+unicorn==2.1.4
