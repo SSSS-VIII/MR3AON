@@ -45,3 +45,21 @@ arena在IPv4/IPv6 UID禁止联网规则下实际到达Game:8、Running:1，原�
 重要边界：第一次可运行的新版独立控制桥构建误因普通用户无权访问main动态目录而回退到APK Lua包，虽然LuaMain原文本相同，其余热更文件有差异；已经从只读动态原件重新构建v3，原bundle SHA39b1f33a...，4813未改TextAsset回读一致。动态版本替换后的再次冷启动仍被原生账号SDK网络错误界面阻挡；仅覆盖Lua_UILogin.Show来抑制账号界面不足以解决。当前继续解决冷启动、随机种子与重置，不能把上述可操作战斗实证写成完整训练环境验收完成。
 
 advance目前按Unity渲染帧推进并记录实际Time.time，未声称严格固定物理步长；GameOnly自带自动复活、默认属性/计分等尚未完整校正。视觉训练还需验证随机板子分布与种子重放、一致的reset/step/截图，并补齐这些差异。
+
+## 断网完整启动链与重置的实际进展
+
+后续核对UI层级及metadata字符串，冷启动的“网络异常”实际为Unity里的启动资源检查界面，不应归因为账号SDK。还确认UnitySendMessage能够调用LuaManager.DoString并实际写文件；此前仅凭print未出现和返回类型推断消息无效不成立。
+
+通过原Lua/C#接口读本地PatchManifest、构造SaveData并ReadLocalAssetBundleMD5，反射写回Patch的m_saveData/patchManifest，再InitManifest，可在断网时正确解析动态资源；仅调用InitAfterPatch而不给这两项数据，会落到APK资源并丢失热更。正常更新还设置了AssetBundle原生解密参数，离线启动按已恢复本地资源key调用同一SetAssetBundleDecryptKey；不改APK和游戏运动/渲染指令。
+
+已通过客户端自己的DoString在Unity主线程完成上述初始化，提前设置_isOnlyGame，独立协程延后3秒启动完整Lua模块，让临时Java控制通道先退出。随后本地资源桥响应、自然Setter把Patch设Success，GameOnly/竞技场进入成功，不再写进程内存/构造委托。早期内存枚举改写仅为失败诊断，不是当前启动方案。arena的IPv4/IPv6 UID禁止联网规则全程在位，动态Lua包版本正确，当前原生控制器/地形/道具/VFX已显示。
+
+一次启动失败还捕获到bionic明确报错“32 bit ... only accepts pid <= 65535”：断网Reyun重试会快速产生线程/消耗命名空间PID。通过InstanceSession只重启arena重置其PID命名空间并恢复UID路由规则；Java读取该进程ReYunWorkHandler.sHandlers，清空其统计任务并退出专属Looper，未改游戏线程。Frida仅用native realm临时排队Unity消息，加载前已detach并停止自己server，游戏运行和后续RPC无Frida常驻。没有调整全局pid_max、main刷新率或其它实例。
+
+补齐原GameOnly默认GameInfo后进一步发现HP/计分默认为0，初次跑速9也缺基础加成，不能作为最终属性。现通过原InitBaseBonusGameOnly和Lua_GameManager.GetRoleAddBonus读取一级小黑配置，再写原BonusManager，实际重置后CurrentHp=MaxHp=100；基础速度加成补齐后普通初始段查询9.5，具体段仍由原关卡速度配置决定。原FMODUnity.RuntimeManager.LoadAllBanksAfterFullPatch协程加载后，Jump事件描述有效，修复了跳跃/脚步事件缺失。
+
+重置不能使用ReEnterGameScene：其Finish分支进入LoadingUI，会因离线无大厅对象失败。现使用PauseGameContent、原ClearAllObjectsInScene先完整销毁旧GameController（执行原OnDestroy热更清理），再构造新的GameInfo、InitGameData/InitTestBonus、角色默认值、PreloadLevelData及EnterGameScene。原跨场景控制对象不销毁。新回合开始Running后自动暂停，重置无重复消息委托异常，实测HP100及同一客户端运行稳定。
+
+种子通过原Random_Seed/Random_Boss_Seed的输入适配传入原实现，不替换分布或地图生成算法。相同seed42/章节1/第4段两次生成的8个stage、90个最终block（含实际敌人与道具数据）逐项一致；stage为4101/41024/4103/4104/41051/41062/41074/41081。seed43生成41011/41022/4103/4104/41051/4106/4107/41081，91个block，证明随机段按原生成链变化。导出证据为gameonly/layout-seed42-level4-{a,b}.json及layout-seed43-level4.json。JSON由原最终LevelBlockInfo经JsonUtility序列化，没有自行拼关卡。
+
+推进接口记录Unity帧及GameInfo原物理帧/回合时间；实测原Unity fixedDeltaTime和Lua fixedDeltaTime为0.02（50Hz），观察渲染可为60Hz，不能把30个渲染帧宣称30个物理步。相同seed重置时初始插值画面位置仍有约0.03单位差异，当前只确认地图和块数据重现，未宣称全画面逐像素确定。训练入口/冷启动脚本、交互按键及死亡复位仍继续收口。

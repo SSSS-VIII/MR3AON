@@ -1,6 +1,6 @@
 # 当前工作交接
 
-2026-11-08：arena隔离原客户端已在断网战斗中显示原小黑/地形/敌人/特效，实测原按钮跳跃与下翻及胶囊变化；资源Lua文件桥跨场景可用，5项控制回归通过。动态版本冷启动仍卡原生SDK网络错误，随机种子/重置/固定步长待继续，尚未完成训练环境。详见 [GameOnly调查](archived/2026-11-08-arena-gameonly-bootstrap-investigation.md)。
+2026-11-08：原客户端arena已断网完整进入战斗；本地Manifest/MD5/原生资源解密初始化打通，临时Java消息退出后原引擎运行。原模型/VFX/跳跃/下翻已实测，重置后一级小黑HP100；seed42最终90块逐项重现，seed43变为91块。启动入口/键盘、死亡复位及画面对照继续收口，未宣称完整验收，见 [GameOnly调查](archived/2026-11-08-arena-gameonly-bootstrap-investigation.md)。
 
 2026-11-08：44449包索引完成，157种有配置实体全部唯一定位；503包闭包导出0错误，原模型/特效/碰撞组件保全。5种配置缺失敌人仍须追兼容生成；不丢弃其路由候选Stage。独立空白arena实例正在验证原客户端GameOnly入口，main未操作。见 [完整实体索引](archived/2026-11-08-arena-complete-asset-index.md)。
 

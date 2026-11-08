@@ -4,6 +4,17 @@ MR3A = MR3A or {}
 local E = MR3A
 local U = CS.UnityEngine
 local flags = CS.System.Reflection.BindingFlags.__CastFrom(52)
+E.seed=E.seed or 1
+if not E.seedHook then
+    local util=require('common/util')
+    util.hotfix_ex(CS.RandomManager,'Random_Seed',function(seed)
+        CS.RandomManager.Random_Seed(E.seed or seed)
+    end)
+    util.hotfix_ex(CS.RandomManager,'Random_Boss_Seed',function(seed)
+        CS.RandomManager.Random_Boss_Seed(E.seed or seed)
+    end)
+    E.seedHook=true
+end
 
 local function vector(v) return {x=v.x,y=v.y,z=v.z} end
 
@@ -12,12 +23,15 @@ function E.state()
     local out = {state=tostring(gm:GetCurFSMStateID()),content=tostring(gm.CurrContentState),
         frame=U.Time.frameCount,time=U.Time.time,timeScale=U.Time.timeScale,
         only=gm._isOnlyGame,offline=gm.GameInfo.OfflineGame,
-        mode=gm.GameInfo._combatType,chapter=gm.GameInfo._chapterID,level=gm.GameInfo._levelID}
+        mode=gm.GameInfo._combatType,chapter=gm.GameInfo._chapterID,level=gm.GameInfo._levelID,seed=E.seed,
+        episodeFrame=gm.GameInfo._totalFrameCount,episodeTime=gm.GameInfo._totalTime}
     local c = CS.NinjaController.Instance
     if c and c.NinjaScript then
         local n = c.NinjaScript
         out.position=vector(n.transform.position)
         out.speed=c:GetNinjaSpeed()
+        out.health=n.CurrentHp
+        out.maxHealth=n.MaxHp
         out.physics=tostring(n:GetType():GetField('__ninjaPhysicsState',flags):GetValue(n))
         out.colliders={}
         local cols=n.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
@@ -35,12 +49,46 @@ function E.state()
     return out
 end
 
+function E.layout()
+    local level=CS.LevelManager.Instance.GameLevelInfo
+    local list=level:GetType():GetField('_stageList',flags):GetValue(level)
+    local out={seed=E.seed,stages={}}
+    for i=0,list.Count-1 do
+        local stage=list[i]
+        local info=stage:GetType():GetField('_stageBaseInfo',flags):GetValue(stage)
+        local blocks=stage:GetType():GetField('_finalBlockList',flags):GetValue(stage)
+        local row={stage=info._stageID,blocks={}}
+        for j=0,blocks.Count-1 do
+            row.blocks[#row.blocks+1]=json.parse(U.JsonUtility.ToJson(blocks[j]))
+        end
+        out.stages[#out.stages+1]=row
+    end
+    return out
+end
+
+function E.load_audio()
+    E.audio={done=false}
+    local previousScale=U.Time.timeScale
+    U.Time.timeScale=1
+    local runner=U.GameObject.Find('MR3A_LocalControl'):GetComponent(typeof(U.EventSystems.EventTrigger))
+    runner:StartCoroutine(require('common/util').cs_generator(function()
+        local ok,err=pcall(function()
+            coroutine.yield(CS.FMODUnity.RuntimeManager.LoadAllBanksAfterFullPatch())
+        end)
+        U.Time.timeScale=previousScale
+        E.audio.done=true
+        if not ok then E.audio.error=tostring(err) end
+    end))
+    return {loading=true}
+end
+
 function E.pause()
     U.Time.timeScale=0
     return E.state()
 end
 
 function E.resume()
+    U.Time.captureFramerate=0
     U.Time.timeScale=1
     return E.state()
 end
@@ -57,6 +105,7 @@ function E.advance(frames, action)
     runner:StartCoroutine(require('common/util').cs_generator(function()
         local ok,err=pcall(function()
             local ui=CS.UIContorller.Instance.GameOperate
+            U.Time.captureFramerate=60
             U.Time.timeScale=1
             if action=='jump' then ui:OnRightDown() end
             if action=='down' then ui:OnLeftDown() end
@@ -64,8 +113,11 @@ function E.advance(frames, action)
                 coroutine.step()
                 local n=CS.NinjaController.Instance.NinjaScript
                 E.job.samples[#E.job.samples+1]={frame=U.Time.frameCount,time=U.Time.time,
+                    episodeFrame=CS.GameManager.Instance.GameInfo._totalFrameCount,
+                    episodeTime=CS.GameManager.Instance.GameInfo._totalTime,
                     position=vector(n.transform.position),
                     physics=tostring(n:GetType():GetField('__ninjaPhysicsState',flags):GetValue(n))}
+                if n.CurrentHp<=0 then E.job.terminated=true;break end
                 if i==1 then
                     if action=='jump' then ui:OnRightReleased(U.Vector3.zero,U.Vector3.zero) end
                     if action=='down' then ui:OnLeftReleased(U.Vector3.zero,U.Vector3.zero) end
@@ -83,34 +135,96 @@ end
 
 function E.result() return E.job end
 
-function E.prepare(chapter, level)
-    local gm=CS.GameManager.Instance
-    assert(not gm.InRealGame,'A battle is already active')
-    CurAvatar=CurAvatar or require('UI/Data/Avatar')()
-    CurAvatar.serverindex=1
+function E.new_info(chapter,level)
+    assert(NCONFIG.CfgEndlessData[chapter or 1] and NCONFIG.CfgEndlessData[chapter or 1][level or 1],
+        'Unknown arena chapter or level')
     local g=CS.Ninja3GameInfo.GameInfo()
     g.OfflineGame=true
     g._combatType=3
     g._chapterID=chapter or 1
     g._levelID=level or 1
-    gm.GameInfo=g
-    gm._isOnlyGame=true
     local r=g._roleInfo
     r._ninjatsuID=1
     r._magicInfo=Lua_GameManager.CreateNinjaMagicInfo({curNinjutsuid=1,roleid=1,curSkinid=1})
     g._ninjaMagicInfo=r._magicInfo
+    return g
+end
+
+function E.prepare(chapter, level)
+    local gm=CS.GameManager.Instance
+    local state=tostring(gm:GetCurFSMStateID())
+    assert(state~='Game: 8' and state~='LoadingGame: 9','A battle is already active')
+    CurAvatar=CurAvatar or require('UI/Data/Avatar')()
+    CurAvatar.serverindex=1
+    gm.GameInfo=E.new_info(chapter,level)
+    gm._isOnlyGame=true
     gm:ChangeFSMState(11)
     return E.state()
+end
+
+function E.role_defaults()
+    local gm=CS.GameManager.Instance
+    local g=gm.GameInfo
+    if E.roleGameInfo==g then return end
+    gm:InitBaseBonusGameOnly()
+    local bonuses={}
+    Lua_GameManager.GetRoleAddBonus(bonuses,{roleid=1,level=1})
+    for _,v in pairs(bonuses) do
+        local x=v.bonusvalue
+        g._bonusManager:AddRoleProperty(g._playerID,g._roleInfo._roleID,
+            CS.CfgBonusType.__CastFrom(v.bonustype),x[1],x[2],x[3])
+    end
+    local cfg=NCONFIG.CfgGameScoreCoinExp
+    for _,k in ipairs({'CritMulti_Base_Score','CritMulti_Base_Damage','ScoreFactor_DistanceToScore','ScoreMax','CoinMax'}) do g[k]=cfg[k] end
+    g.CoinBaseReward=cfg.CoinBaseReward_Normal
+    for _,k in ipairs({'Distance','Monster','Coin'}) do g['CoinFactor_ScoreTransCoin_'..k]=cfg['CoinFactor_ScoreTransCoin_'..k..'_Normal'] end
+    gm._gameOnlyAutoResurgence=false
+    E.roleGameInfo=g
 end
 
 function E.enter()
     local gm=CS.GameManager.Instance
     assert(gm._isOnlyGame and gm.GameInfo.OfflineGame,'Requires offline GameOnly')
     assert(gm.gameRecordManager,'GameOnly initialization has not completed')
+    E.role_defaults()
+    if CS.GameException.Instance then CS.GameException.Instance.gameObject:SetActive(false) end
+    CS.GameLoading.CloseLoading()
     local g=gm.GameInfo
     gm:PreloadLevelData(g._combatType,g._chapterID,g._levelID)
     gm:EnterGameScene()
     return E.state()
+end
+
+function E.reset(seed, chapter, level)
+    local gm=CS.GameManager.Instance
+    assert(gm._isOnlyGame and gm.GameInfo.OfflineGame,'Requires offline GameOnly')
+    assert(type(seed)=='number' and seed%1==0 and seed>=0 and seed<=2147483647,'Invalid seed')
+    assert(not E.busy,'An advance is active')
+    E.seed=seed
+    U.Time.captureFramerate=60
+    U.Time.timeScale=1
+    gm:PauseGameContent()
+    gm:ClearAllObjectsInScene()
+    U.Random.InitState(seed)
+    gm.GameInfo=E.new_info(chapter,level)
+    gm:InitGameData()
+    gm:InitTestBonus()
+    E.role_defaults()
+    gm:PreloadLevelData(3,chapter or 1,level or 1)
+    gm:EnterGameScene()
+    E.resetJob={done=false,seed=seed}
+    local runner=U.GameObject.Find('MR3A_LocalControl'):GetComponent(typeof(U.EventSystems.EventTrigger))
+    runner:StartCoroutine(require('common/util').cs_generator(function()
+        local deadline=U.Time.realtimeSinceStartup+60
+        while tostring(gm:GetCurFSMStateID())~='Game: 8' or tostring(gm.CurrContentState)~='Running: 1' do
+            assert(U.Time.realtimeSinceStartup<deadline,'Reset did not enter the battle')
+            coroutine.step()
+        end
+        U.Time.timeScale=0
+        E.resetJob.done=true
+        E.resetJob.state=E.state()
+    end))
+    return {resetting=true,seed=seed,chapter=chapter or 1,level=level or 1}
 end
 
 return E

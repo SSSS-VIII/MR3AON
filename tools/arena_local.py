@@ -56,7 +56,7 @@ class LocalClient:
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     sub = p.add_subparsers(dest="command", required=True)
-    for name in ("load", "state", "pause", "resume", "enter", "result"):
+    for name in ("load", "state", "pause", "resume", "enter", "result", "layout", "load_audio"):
         sub.add_parser(name)
     advance = sub.add_parser("advance")
     advance.add_argument("frames", type=int)
@@ -64,6 +64,10 @@ def main():
     prepare = sub.add_parser("prepare")
     prepare.add_argument("--chapter", type=int, default=1)
     prepare.add_argument("--level", type=int, default=1)
+    reset = sub.add_parser("reset")
+    reset.add_argument("--seed", type=int, default=1)
+    reset.add_argument("--chapter", type=int, default=1)
+    reset.add_argument("--level", type=int, default=1)
     run = sub.add_parser("exec")
     run.add_argument("code")
     runfile = sub.add_parser("exec-file")
@@ -90,6 +94,8 @@ def main():
         result = client.execute(f"return MR3A.prepare({a.chapter},{a.level})")
     elif a.command == "advance":
         result = client.execute(f"return MR3A.advance({a.frames},{json.dumps(a.action)})")
+    elif a.command == "reset":
+        result = client.execute(f"return MR3A.reset({a.seed},{a.chapter},{a.level})")
     else:
         result = client.execute(f"return MR3A.{a.command}()")
     print(json.dumps(result, ensure_ascii=False, indent=2))
