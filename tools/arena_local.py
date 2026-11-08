@@ -49,8 +49,11 @@ class LocalClient:
         raise TimeoutError("Arena bridge did not answer; check SDK dialog and bridge readiness")
 
     def load_environment(self):
-        source = (ROOT / "arena/Local/environment.lua").read_text()
-        return self.execute("return assert(load(" + json.dumps(source, ensure_ascii=False) + ", '@mr3a-environment'))() and MR3A.state()")
+        chunks = []
+        for name in ("environment", "native_boss"):
+            path = ROOT / f"arena/Local/{name}.lua"
+            chunks.append("assert(load(" + json.dumps(path.read_text(), ensure_ascii=False) + ", '@mr3a-" + name + "'))()")
+        return self.execute(";".join(chunks) + ";return MR3A.state()")
 
 
 def main():
