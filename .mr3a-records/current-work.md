@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-09：暂停训练菜单已重新接入原机制选关，按实际1～8关→30地图→有序板子/无限段→版型池排列，标随机分布/固定布置/动作随机。5000血、K/S/P/R/N及原屏幕三按钮实机通过；冷启动、原路线map24、真实板内索引、版型重放、保护回收及重开无残留通过，相关63项测试通过。main未操作。见 [暂停菜单](archived/2026-11-09-arena-native-pause-selection-menu.md)、[用法](../arena/README.md)。未穷尽509种版型的每个随机结果；旧裁剪方案始终撤回。
+
 2026-11-09：原传送符/通灵兽选关接口完成，保留完整地图，只固定原地图和版型候选。Boss/奖励循环不能按静态长度求起点，现读原生成StageStartX并核验实际脚下板索引；map52短平台第8块、map24跳关路线、无限段8010均真实落地/5000血/GodMode=false。API支持map_id/start_board/boards，见 [原机制选关](archived/2026-11-09-arena-full-map-native-selection.md)、[用法](../arena/selection.md)；菜单独立接入。
 
 2026-11-09：离线疾风Boss在原正式开战后用原bonus/阶段/健康接口设为1/1，原战斗/死亡保留；原DragonBoss实机及原setter次序回归通过，见 [Boss血量](archived/2026-11-09-arena-native-boss-health.md)。

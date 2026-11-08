@@ -135,6 +135,8 @@ main保存计划已加入工坊挑战，单次入口为 `./run [名字] --once -
 
 ## 原客户端竞技场本地环境
 
+当前为疾风/基础小黑5000血。P或原屏幕暂停键打开选关页，定位沿原传送符/通灵兽完整跑图；Boss/奖励循环可能耗时数分钟，到达并结束落地保护后暂停。`--no-focus`及训练ArenaEnv隐藏菜单；训练结束后重新运行正常入口恢复交互菜单。重开先走原Item/Enemy回收，不能省略后只销毁Scene。详见 [原机制选关](../arena/selection.md)。
+
 `./tools/run-arena --seed 42 --level 4 --paused` 运行已准备的空白arena，`--stop` 关闭arena及自己的嵌套显示；`--restart` 只重启游戏，`--cold` 重启该名字Android。内部统一复用InstanceSession与同名控制租约，不运行MaaPiCli、不重新分配Waydroid/ADB。main及其它实例保留。arena只复制资源白名单、不复制登录凭据，游戏UID的IPv4/IPv6路由禁止联网；重启后重新核验规则。
 
 本地资源/工具依赖来自此前提取，入口会核对原APK、Lua桥报告与源码摘要；不是从Git克隆后无需资源即可运行的独立发行版。60Hz/1280×720 gamescope窗口只按本工具命令参数/PID识别，不聚焦其它Waydroid窗口。键盘、参数和验证边界见 [arena说明](../arena/README.md)。按键与脚本步进不要并用；每条控制命令通过arena租约互斥，截图可只读。冷启动临时native Java消息完成初始化后退出，原战斗通过本地资源桥在Unity主线程控制。

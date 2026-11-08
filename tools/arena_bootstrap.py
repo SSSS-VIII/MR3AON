@@ -334,6 +334,7 @@ def main():
     if state.get("maxHealth") != 5000:
         raise RuntimeError("Level-one Xiaohei did not initialize with the expected health")
     client.execute("return MR3A.enable_keyboard()")
+    client.execute("MR3A.menu_suppressed=" + ("true" if a.no_focus else "false") + ";return MR3A.enable_menu()")
     if not a.paused:
         client.execute("return MR3A.resume()")
     if not a.no_focus:
