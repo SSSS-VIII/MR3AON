@@ -38,6 +38,28 @@
 
 本地完整提取数据位于 `debug/arena-client/dataset/`，2029张配置表位于 `nconfig-all/`，4813份Lua位于 `lua-recovered/`，157种有配置实体的503包原资源闭包位于 `arena-entities-complete/`（上述路径均相对 `debug/arena-client/`）。恢复方法见 [客户端数据](../docs/develop/竞技场客户端数据.md) 和 [资源恢复](../docs/develop/竞技场原版资源恢复.md)。
 
+## 视觉训练接口
+
+`tools/arena_env.py` 的同步接口接收0/none、1/jump、2/down，返回原PNG、原状态、原分数增量、死亡标记和实际步数。PNG是观测；state/layout是可选的训练标注，不应作为纯视觉策略的输入。每次step结束都会暂停，死亡后必须reset；close只暂停并保留环境。
+
+```python
+# PYTHONPATH=tools debug/arena-client/toolenv/bin/python your_script.py
+from pathlib import Path
+from arena_env import ArenaEnv
+
+env = ArenaEnv()  # 未启动时自动调用本机run-arena，已有环境则复用
+observation, info = env.reset(seed=42, chapter=1, level=4)
+observation.save(Path('debug/arena-rollout'), 'start')
+observation, reward, terminated, truncated, info = env.step('jump', ticks=30)
+# observation.image_png: 1280×720原客户端PNG bytes
+# info['ticks']: 实际推进物理步；死亡时可能少于请求值
+# reward: 原客户端_scoreInfo._totalScore的差值，未增加手工奖励
+layout = env.layout()
+env.close()
+```
+
+这是本地环境接口，尚未训练视觉模型或实现自动竞技场策略。动作1/2表示一次原按钮按下与释放；二段跳需要后续再次发送jump。重置前检查种子/章节/关卡范围，并由原NCONFIG校验实际存在的关卡。
+
 ## 实测范围
 
 已验证冷启动、原画面/跳跃/下翻、HP100、死亡后复位、固定步与实际地图导出；seed42重复生成90块逐项相同，seed43生成91块且路线改变。初始模型插值可能有微小位置差异，尚不保证逐像素确定。普通竞技场以外的模式、其它角色及每一种随机情况未逐一验收；当前依托Waydroid原运行时，独立Unity工程移植仍未完成。

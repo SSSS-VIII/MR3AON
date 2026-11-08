@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-09：原版视觉训练适配器 `tools/arena_env.py` 已提供reset/step、原PNG、原分差与死亡标记；冷启动后的30步跳/8步翻、同种子90块复现和换种子91块实测通过，相关48项测试通过。当前arena原版窗口已暂停可操作，训练策略尚未开发；见 [训练接口记录](archived/2026-11-09-arena-visual-training-adapter.md)。
+
 2026-11-09：原版离线竞技场已提供 `./tools/run-arena`、键盘、50Hz原生物理步、实际参数/地图导出；小黑第397步死亡后原生复位HP100通过。冷启动采用本地资源初始化、临时Java通道后退出；独立显示父链识别已修正，stop后全新冷启动及R/N/P键实测通过。见 [本地环境](../arena/README.md)、[运行入口记录](archived/2026-11-09-arena-native-offline-environment.md)。
 
 2026-11-08：原客户端arena已断网完整进入战斗；本地Manifest/MD5/原生资源解密初始化打通，临时Java消息退出后原引擎运行。原模型/VFX/跳跃/下翻已实测，重置后一级小黑HP100；seed42最终90块逐项重现，seed43变为91块。启动入口/键盘、死亡复位及画面对照继续收口，未宣称完整验收，见 [GameOnly调查](archived/2026-11-08-arena-gameonly-bootstrap-investigation.md)。
