@@ -11,11 +11,12 @@ def files(tmp_path, mode=6):
     config = tmp_path / 'config.json'
     config.write_text(json.dumps([{'key_path': [1], 'values': [[
         {'levelID': 2, 'nextLevelID': 2, 'levelDataList': [11]},
-        {'levelID': 1, 'nextLevelID': 2, 'levelDataList': [11]}]]}]))
+        {'levelID': 1, 'nextLevelID': 2, 'levelDataList': [1]}]]}]))
     source = dict(_levelDataType={'value__': mode}, _groundType={'value__': 3}, _difficultyLevel=28,
                   _stageRandomGroup=[{'_stageRandomList': [{'_stageID': 90, '_weight': 1}]},
                                      {'_stageRandomList': [{'_stageID': 11, '_weight': 3}, {'_stageID': 12, '_weight': 1}]}])
     (tmp_path / 'level_endless_gale_11.bytes.json').write_text(json.dumps([source]))
+    (tmp_path / 'level_endless_gale_1.bytes.json').write_text(json.dumps([source]))
     for identity in [90, 11, 12]:
         stage = dict(_levelDataType=6, _stageUseFor=1 if identity == 90 else 0,
                      _levelBlockInfos=[[{}]])
@@ -74,3 +75,14 @@ def test_infinite_section_keeps_its_own_original_board_pool(tmp_path):
     catalog = build_catalog(config, tmp_path)
     assert [v['id'] for v in catalog['maps']['11']['slots'][0]['pool']] == [11, 12]
     assert [(v['id'], v['weight']) for v in catalog['maps']['11']['loop']] == [(12, 5)]
+
+
+def test_scroll_route_start_is_grouped_under_actual_level(tmp_path):
+    config = files(tmp_path)
+    rows = json.loads(config.read_text())
+    rows[0]['key_path'] = [3]
+    rows[0]['values'][0] = [{'levelID': 1, 'nextLevelID': 1, 'levelDataList': [11]}]
+    config.write_text(json.dumps(rows))
+    result = build_catalog(config, tmp_path)
+    assert result['levels'] == [dict(id=3, maps=[dict(id=11, chapter=3, level=1)])]
+    assert result['maps']['11']['absoluteLevel'] == 3

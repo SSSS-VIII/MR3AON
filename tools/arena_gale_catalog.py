@@ -101,7 +101,21 @@ def build_catalog(config: Path, dataset: Path):
                              classification=classify_board(stage), entry=entry_info(blocks), opening=False))
         maps[str(identity)] = dict(id=identity, ground=source['_groundType']['value__'],
                                    difficulty=source['_difficultyLevel'], opening=opening, slots=slots, loop=loop)
-    return dict(version=1, mode=6, routes=sorted(routes, key=lambda v: v['id']), maps=maps)
+    # The original scroll routes 3..6 begin at absolute levels 3..6.
+    # Keep raw route indices for the client; present absolute levels to humans.
+    absolute = {}
+    for route in sorted(routes, key=lambda v: v['id']):
+        offset = route['id'] - 1 if route['id'] >= 3 else 0
+        for level in route['levels']:
+            ordinal = level['id'] + offset
+            target = absolute.setdefault(ordinal, {})
+            for identity in level['maps']:
+                target.setdefault(identity, dict(id=identity, chapter=route['id'], level=level['id']))
+                old = maps[str(identity)].setdefault('absoluteLevel', ordinal)
+                if old != ordinal:
+                    raise ValueError(f'Conflicting absolute level for map {identity}')
+    levels = [dict(id=k, maps=[v for _, v in sorted(pool.items())]) for k, pool in sorted(absolute.items())]
+    return dict(version=1, mode=6, routes=sorted(routes, key=lambda v: v['id']), maps=maps, levels=levels)
 
 
 def main():
