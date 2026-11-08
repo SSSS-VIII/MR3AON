@@ -90,8 +90,17 @@ def build_catalog(config: Path, dataset: Path):
                 opening.append(dict(group=group_index, pool=pool))
             else:
                 slots.append(dict(position=len(slots) + 1, group=group_index, pool=pool))
+        loop = []
+        for candidate in source.get('_loopRandomStage', {}).get('_stageRandomList', []):
+            stage_id = candidate['_stageID']
+            stage = json.loads((dataset / f'stage_endless_gale_{stage_id}.json').read_text())
+            if stage.get('_levelDataType', 0) != 6:
+                raise ValueError(f'Non-Gale loop board {stage_id}')
+            blocks = [block for group_ in stage['_levelBlockInfos'] for block in group_]
+            loop.append(dict(id=stage_id, weight=candidate['_weight'], blocks=len(blocks),
+                             classification=classify_board(stage), entry=entry_info(blocks), opening=False))
         maps[str(identity)] = dict(id=identity, ground=source['_groundType']['value__'],
-                                   difficulty=source['_difficultyLevel'], opening=opening, slots=slots)
+                                   difficulty=source['_difficultyLevel'], opening=opening, slots=slots, loop=loop)
     return dict(version=1, mode=6, routes=sorted(routes, key=lambda v: v['id']), maps=maps)
 
 

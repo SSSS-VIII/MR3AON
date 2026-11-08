@@ -63,3 +63,14 @@ def test_random_layout_is_distinct_from_random_action_and_pool_choice():
     fixed['_levelBlockInfos'][0][0]['enemyInfos'][0]['_enemyInfoCustom']['_randomRangeY'] = 5
     result = classify_board(fixed)
     assert result['layout'] == 'random' and result['layout_evidence'] == ['1._randomRangeY']
+
+
+def test_infinite_section_keeps_its_own_original_board_pool(tmp_path):
+    config = files(tmp_path)
+    source_path = tmp_path / 'level_endless_gale_11.bytes.json'
+    source = json.loads(source_path.read_text())
+    source[0]['_loopRandomStage'] = {'_stageRandomList': [{'_stageID': 12, '_weight': 5}]}
+    source_path.write_text(json.dumps(source))
+    catalog = build_catalog(config, tmp_path)
+    assert [v['id'] for v in catalog['maps']['11']['slots'][0]['pool']] == [11, 12]
+    assert [(v['id'], v['weight']) for v in catalog['maps']['11']['loop']] == [(12, 5)]
