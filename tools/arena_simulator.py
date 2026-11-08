@@ -36,7 +36,7 @@ class App:
         self.pg = pygame
         pygame.init()
         self.screen = pygame.display.set_mode((1320, 820), pygame.RESIZABLE)
-        pygame.display.set_caption('忍三 · 竞技场本地模拟器 / 小黑练习台')
+        pygame.display.set_caption('忍三 · 动作参数调试器（不可用于视觉训练）')
         font = '/usr/share/fonts/google-noto-sans-cjk-vf-fonts/NotoSansCJK-VF.ttc'
         if not Path(font).exists():
             font = pygame.font.match_font('notosanscjksc,notosanscjk,wqyzenhei,dejavusans')
@@ -355,10 +355,10 @@ class App:
         self.buttons = []
         self.screen.fill(BG)
         self.text('NINJA / LOCAL LAB', 26, 18, 12, TEAL)
-        self.text('竞技场练习台', 24, 39, 30)
+        self.text('动作参数调试器', 24, 39, 30)
         self.text('小黑基础动作  ·  本地运行', 250, 53, 15, MUTED)
         self.box((w-260, 31, 232, 33), (45, 40, 32), 8)
-        self.text('原始资源 / 近似物理模型', w-144, 47, 14, ORANGE, True)
+        self.text('非还原环境 · 不可视觉训练', w-144, 47, 14, ORANGE, True)
         labels = [('动作实验场', 'training'), ('经典竞技场', 'endless'), ('疾风资源池', 'endless_gale'), ('扩展资源池', 'singleendlessreserved1')]
         for index, (label, mode) in enumerate(labels):
             self.button(label, (24 + index*132, 92, 122, 36), ('mode', mode), self.mode == mode)
