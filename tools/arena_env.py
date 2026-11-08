@@ -66,7 +66,7 @@ class ArenaEnv:
             self.client.execute(f"return MR3A.reset({seed},{chapter},{level})")
             wait_job(self.client, "MR3A.resetJob")
         state = self.client.execute("return MR3A.state()")
-        if state.get("state") != "Game: 8" or state.get("timeScale") != 0 or state.get("health") != 100:
+        if state.get("state") != "Game: 8" or state.get("timeScale") != 0 or state.get("health") != 2000 or state.get("maxHealth") != 2000:
             raise RuntimeError("Reset did not produce a paused, healthy Xiaohei battle")
         self._last_state = state
         self._terminated = False

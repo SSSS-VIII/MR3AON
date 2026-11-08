@@ -11,7 +11,7 @@ import arena_env
 
 
 def state(**updates):
-    value = dict(state='Game: 8', timeScale=0, health=100, score=25,
+    value = dict(state='Game: 8', timeScale=0, health=2000, maxHealth=2000, score=25,
                  episodeFrame=10, frame=30)
     value.update(updates)
     return value
@@ -53,7 +53,7 @@ def test_step_uses_client_score_and_stops_episode_on_death(monkeypatch):
     assert observation.state is after
     assert reward == 46.5 and terminated and not truncated
     assert info['ticks'] == 3 and info['render_frames'] == 4
-    assert info['health_delta'] == -100
+    assert info['health_delta'] == -2000
     with pytest.raises(RuntimeError, match='Reset'):
         env.step('none')
     # Reset must reopen the episode, even after death.

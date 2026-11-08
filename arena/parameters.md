@@ -1,6 +1,6 @@
 # 基础小黑参数与观测约定
 
-当前固定小黑role1、skin1、level1。下表来自原客户端的NinjaData/prefab及实际运行对象；单位是原世界坐标与秒，不能当成像素。查询当前回合：
+当前固定疾风竞技场、小黑role1、skin1、level1，按用户要求HP由100提高20倍至2000；运动参数保持原值。下表来自原客户端的NinjaData/prefab及实际运行对象；单位是原世界坐标与秒，不能当成像素。查询当前回合：
 
 ```bash
 .venv/bin/python tools/arena_local.py parameters
@@ -33,6 +33,6 @@ NinjaData还包含三/四段跳及滑翔参数，但基础小黑运行时 `CanJu
 
 ## 地图与时间
 
-`layout` 返回原GameLevelInfo里最终stage/block数据，包含原随机选择后的敌人、道具和板子字段。运行时 `LevelManager._currLevelDataID` 可能指向下一段预载，不能用它代替当前画面所在块。普通竞技场mode=3，与资源LevelDataType.Endless=0属于不同枚举。
+`layout` 返回原GameLevelInfo里最终stage/block数据，包含原随机选择后的敌人、道具和板子字段。运行时 `LevelManager._currLevelDataID` 可能指向下一段预载，不能用它代替当前画面所在块。当前疾风竞技场真实mode=6，资源LevelDataType.EndlessGale=6。原GameInfo._combatType getter会把疾风归到公共竞技场3，查询真实模式须用GetRealCombatType；state.mode已使用该接口。
 
 `state.episodeFrame/episodeTime` 是原GameInfo物理计数/回合时间；`frame/time` 是Unity全局渲染计数/时间。reset会经过原开场过程，初始episodeFrame不保证为0，测量步进使用前后差值。60个渲染帧对应约50个物理步；只确认固定步计数与地图同种子复现，尚不保证开场插值、粒子等每像素确定。

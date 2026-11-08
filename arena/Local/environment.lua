@@ -5,6 +5,8 @@ local E = MR3A
 local U = CS.UnityEngine
 local flags = CS.System.Reflection.BindingFlags.__CastFrom(52)
 E.seed=E.seed or 1
+E.mode=6
+E.healthMultiplier=20
 if not E.seedHook then
     local util=require('common/util')
     util.hotfix_ex(CS.RandomManager,'Random_Seed',function(seed)
@@ -23,8 +25,8 @@ function E.state()
     local out = {state=tostring(gm:GetCurFSMStateID()),content=tostring(gm.CurrContentState),
         frame=U.Time.frameCount,time=U.Time.time,timeScale=U.Time.timeScale,
         only=gm._isOnlyGame,offline=gm.GameInfo.OfflineGame,
-        mode=gm.GameInfo._combatType,chapter=gm.GameInfo._chapterID,level=gm.GameInfo._levelID,seed=E.seed,
-        episodeFrame=gm.GameInfo._totalFrameCount,episodeTime=gm.GameInfo._totalTime}
+        mode=gm.GameInfo:GetRealCombatType(),combatFamily=gm.GameInfo._combatType,chapter=gm.GameInfo._chapterID,level=gm.GameInfo._levelID,seed=E.seed,
+        episodeFrame=gm.GameInfo._totalFrameCount,episodeTime=gm.GameInfo._totalTime,healthMultiplier=E.healthMultiplier}
     out.score=gm.GameInfo._scoreInfo._totalScore
     out.distance=gm.GameInfo._scoreInfo._runDistance
     out.coins=gm.GameInfo._scoreInfo.TotalCoin
@@ -207,11 +209,11 @@ function E.enable_keyboard()
 end
 
 function E.new_info(chapter,level)
-    assert(NCONFIG.CfgEndlessData[chapter or 1] and NCONFIG.CfgEndlessData[chapter or 1][level or 1],
+    assert(NCONFIG.CfgEndlessGaleData[chapter or 1] and NCONFIG.CfgEndlessGaleData[chapter or 1][level or 1],
         'Unknown arena chapter or level')
     local g=CS.Ninja3GameInfo.GameInfo()
     g.OfflineGame=true
-    g._combatType=3
+    g._combatType=E.mode
     g._chapterID=chapter or 1
     g._levelID=level or 1
     local r=g._roleInfo
@@ -242,13 +244,14 @@ function E.role_defaults()
     Lua_GameManager.GetRoleAddBonus(bonuses,{roleid=1,level=1})
     for _,v in pairs(bonuses) do
         local x=v.bonusvalue
+        local multiplier=v.bonustype==NCONFIG.CfgBonusType.HP and E.healthMultiplier or 1
         g._bonusManager:AddRoleProperty(g._playerID,g._roleInfo._roleID,
-            CS.CfgBonusType.__CastFrom(v.bonustype),x[1],x[2],x[3])
+            CS.CfgBonusType.__CastFrom(v.bonustype),x[1]*multiplier,x[2]*multiplier,x[3])
     end
     local cfg=NCONFIG.CfgGameScoreCoinExp
     for _,k in ipairs({'CritMulti_Base_Score','CritMulti_Base_Damage','ScoreFactor_DistanceToScore','ScoreMax','CoinMax'}) do g[k]=cfg[k] end
-    g.CoinBaseReward=cfg.CoinBaseReward_Normal
-    for _,k in ipairs({'Distance','Monster','Coin'}) do g['CoinFactor_ScoreTransCoin_'..k]=cfg['CoinFactor_ScoreTransCoin_'..k..'_Normal'] end
+    g.CoinBaseReward=cfg.CoinBaseReward_Gale
+    for _,k in ipairs({'Distance','Monster','Coin'}) do g['CoinFactor_ScoreTransCoin_'..k]=cfg['CoinFactor_ScoreTransCoin_'..k..'_Gale'] end
     gm._gameOnlyAutoResurgence=false
     E.roleGameInfo=g
 end
@@ -261,7 +264,7 @@ function E.enter()
     if CS.GameException.Instance then CS.GameException.Instance.gameObject:SetActive(false) end
     CS.GameLoading.CloseLoading()
     local g=gm.GameInfo
-    gm:PreloadLevelData(g._combatType,g._chapterID,g._levelID)
+    gm:PreloadLevelData(E.mode,g._chapterID,g._levelID)
     gm:EnterGameScene()
     E.wait_ready()
     return E.state()
@@ -301,7 +304,7 @@ function E.reset(seed, chapter, level)
     gm:InitGameData()
     gm:InitTestBonus()
     E.role_defaults()
-    gm:PreloadLevelData(3,chapter or 1,level or 1)
+    gm:PreloadLevelData(E.mode,chapter or 1,level or 1)
     gm:EnterGameScene()
     E.wait_ready()
     return {resetting=true,seed=seed,chapter=chapter or 1,level=level or 1}
