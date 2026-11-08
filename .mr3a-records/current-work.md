@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-08：44449包索引完成，157种有配置实体全部唯一定位；503包闭包导出0错误，原模型/特效/碰撞组件保全。5种配置缺失敌人仍须追兼容生成；不丢弃其路由候选Stage。独立空白arena实例正在验证原客户端GameOnly入口，main未操作。见 [完整实体索引](archived/2026-11-08-arena-complete-asset-index.md)。
+
 2026-11-08：真实 m_PlayerSubPrograms 中的232 Shader/2595程序/5190阶段已恢复，ESSL310派生副本5190项语法通过；小黑原模型使用恢复的Spine程序在Mesa编译渲染成功，仍非Unity完整画面等价。427实体依赖包导出0错误，1个运行时字体零尺寸纹理明确缺预览；32项相关测试通过。继续原客户端GameOnly离线入口与平台承载，见 [GPU程序恢复](archived/2026-11-08-arena-shader-program-recovery.md)。
 
 2026-11-08：LevelBlockCollider基础地面与三组平台的高度合并已接原生完整调用链对照：304例新增通过，总2246项。平台顶面必须严格高于地面，等高保留基础地面，已写入C#；仍不代表承载完成。见 [地面平台合并](archived/2026-11-08-arena-ground-platform-height.md)。
