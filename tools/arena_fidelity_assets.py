@@ -78,7 +78,7 @@ def export_recovery(source, manifest, roots, output):
     env = UnityPy.Environment()
     report = {'schema': 1, 'status': 'asset_recovery_only_not_training_environment',
               'roots': roots, 'dependency_closure': order, 'load_order_note': 'References can be cyclic; load the complete closure before instantiating assets', 'bundles': [], 'errors': [],
-              'type_counts': {}, 'spine_versions': [], 'script_classes': []}
+              'type_counts': {}, 'spine_versions': [], 'script_classes': [], 'texture_preview_omissions': []}
     before = source.version()
     classes, versions, types = set(), set(), collections.Counter()
     output.mkdir(parents=True, exist_ok=True)
@@ -143,6 +143,10 @@ def export_recovery(source, manifest, roots, output):
                 continue
             try:
                 texture = obj.read()
+                if texture.m_Width == 0 and texture.m_Height == 0 and texture.m_CompleteImageSize == 0:
+                    report['texture_preview_omissions'].append({'path_id': obj.path_id, 'name': texture.m_Name,
+                        'reason': 'Zero-sized serialized texture; runtime pixel generation not restored'})
+                    continue
                 target = output/'texture-previews'/f"{obj.path_id}-{re.sub(r'[^a-zA-Z0-9_.-]+', '_', texture.m_Name)}.png"
                 target.parent.mkdir(parents=True, exist_ok=True)
                 texture.image.save(target)

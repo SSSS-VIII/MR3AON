@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-08：真实 m_PlayerSubPrograms 中的232 Shader/2595程序/5190阶段已恢复，ESSL310派生副本5190项语法通过；小黑原模型使用恢复的Spine程序在Mesa编译渲染成功，仍非Unity完整画面等价。427实体依赖包导出0错误，1个运行时字体零尺寸纹理明确缺预览；32项相关测试通过。继续原客户端GameOnly离线入口与平台承载，见 [GPU程序恢复](archived/2026-11-08-arena-shader-program-recovery.md)。
+
 2026-11-08：LevelBlockCollider基础地面与三组平台的高度合并已接原生完整调用链对照：304例新增通过，总2246项。平台顶面必须严格高于地面，等高保留基础地面，已写入C#；仍不代表承载完成。见 [地面平台合并](archived/2026-11-08-arena-ground-platform-height.md)。
 
 2026-11-08：平台候选选择与三组候选合并已移植并对照实际原生GetGroundY/GetAtAirGroundY/GetMaxTopY，共新增552例通过，总1942项一致；明确端点方向顺序、下穿排除及等高选取。尚未接角色承载和复杂地形。107种已定位实体的427依赖包正在导出，剩余资源并行补索引中，见 [平台查询](archived/2026-11-08-arena-platform-query-port.md)。
