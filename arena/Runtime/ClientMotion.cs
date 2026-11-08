@@ -157,6 +157,21 @@ namespace MR3A.Arena
     public static class ClientPlatformQuery
     {
         // The client's endpoint order is direction dependent. Do not normalise.
+        public static float GroundHeight(AirPlatformBounds[][] groups,float x,float y,int direction,int excluded,float baseY,out int platform)
+        {
+            platform=SelectThree(groups,x,y,direction,excluded);
+            if(platform>=0) {
+                int index=platform;
+                foreach(var group in groups) {
+                    if(index<group.Length) {
+                        if(group[index].TopY>baseY)return group[index].TopY;
+                        break;
+                    }
+                    index-=group.Length;
+                }
+            }
+            platform=-1;return baseY;
+        }
         public static int SelectThree(AirPlatformBounds[][] groups,float x,float y,int direction,int excluded)
         {
             if(groups==null || groups.Length!=3)throw new System.ArgumentException("Expected three groups");

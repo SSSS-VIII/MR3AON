@@ -117,6 +117,13 @@ def main():
         commands.append('T '+' '.join(map(str,[x,y,direction,excluded,*map(len,groups),*flat])))
         expected.append([oracle.query_three_platform_groups(groups,x=x,y=y,direction=direction,excluded=excluded)])
         details.append({'kind':'three_platform_groups','groups':groups,'x':x,'y':y,'direction':direction,'excluded':excluded})
+    group_query_cases=len(expected)-220-platform_cases-gravity_cases-jump_entry_cases-flight_frames-platform_query_cases
+    for groups,x,y,direction,excluded in group_tests:
+        for base_y in [0,4]:
+            flat=[v for g in groups for b in g for v in b]
+            commands.append('H '+' '.join(map(str,[x,y,direction,excluded,base_y,*map(len,groups),*flat])))
+            expected.append(list(oracle.ground_with_platforms(groups,x=x,y=y,base_y=base_y,direction=direction,excluded=excluded)))
+            details.append({'kind':'ground_with_platforms','base_y':base_y,'groups':groups,'x':x,'y':y,'direction':direction,'excluded':excluded})
     with tempfile.TemporaryDirectory(prefix='arena-motion-') as folder:
         exe=Path(folder)/'MotionProbe.exe'
         subprocess.run([str(mono),str(compiler),'-out:'+str(exe),str(root/'arena/Runtime/ClientMotion.cs'),str(root/'arena/Validation/MotionProbe.cs')],check=True)
@@ -130,7 +137,7 @@ def main():
             matches=matches and (a==b if isinstance(b,str) else struct.pack('<f',float(a))==struct.pack('<f',b))
         if not matches:failures.append({'input':commands[i],'actual':got,'expected':want,'context':details[i]})
     report={'status':'reducer_native_equivalence_only_not_game_equivalence','cases':len(expected),
-            'collider_cases':220,'platform_cases':platform_cases,'gravity_cases':gravity_cases,'jump_entry_cases':jump_entry_cases,'flight_frames':flight_frames,'platform_query_cases':platform_query_cases,'group_query_cases':len(expected)-220-platform_cases-gravity_cases-jump_entry_cases-flight_frames-platform_query_cases,'failures':failures,
+            'collider_cases':220,'platform_cases':platform_cases,'gravity_cases':gravity_cases,'jump_entry_cases':jump_entry_cases,'flight_frames':flight_frames,'platform_query_cases':platform_query_cases,'group_query_cases':group_query_cases,'ground_height_cases':len(expected)-220-platform_cases-gravity_cases-jump_entry_cases-flight_frames-platform_query_cases-group_query_cases,'failures':failures,
             'scope':'Unity calls/context are fixtures; no PhysX, hotfix, reset, prefab layout or rendering validation'}
     args.report.parent.mkdir(parents=True,exist_ok=True)
     args.report.write_text(json.dumps(report,indent=2)+'\n')

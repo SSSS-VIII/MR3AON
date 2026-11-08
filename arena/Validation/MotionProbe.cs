@@ -39,6 +39,14 @@ class MotionProbe
                 for(int i=0;i<n;i++){groups[g][i]=new AirPlatformBounds{StartX=F(v[cursor]),EndX=F(v[cursor+1]),TopY=F(v[cursor+2]),BottomY=F(v[cursor+3])};cursor+=4;}
             }
             Console.WriteLine("T "+ClientPlatformQuery.SelectThree(groups,F(v[1]),F(v[2]),int.Parse(v[3]),int.Parse(v[4])));
+        }else if(v[0]=="H"){
+            var groups=new AirPlatformBounds[3][];int cursor=9;
+            for(int g=0;g<3;g++){
+                int n=int.Parse(v[6+g]);groups[g]=new AirPlatformBounds[n];
+                for(int i=0;i<n;i++){groups[g][i]=new AirPlatformBounds{StartX=F(v[cursor]),EndX=F(v[cursor+1]),TopY=F(v[cursor+2]),BottomY=F(v[cursor+3])};cursor+=4;}
+            }
+            int platform;float h=ClientPlatformQuery.GroundHeight(groups,F(v[1]),F(v[2]),int.Parse(v[3]),int.Parse(v[4]),F(v[5]),out platform);
+            Console.WriteLine("H "+platform+" "+R(h));
         }else throw new Exception("Unknown probe input");
     }}
 }
