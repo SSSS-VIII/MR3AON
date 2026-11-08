@@ -298,6 +298,10 @@ function E.reset(seed, chapter, level)
     U.Time.captureFramerate=60
     U.Time.timeScale=1
     gm:PauseGameContent()
+    -- Recycle while the old managers still own their objects. Scene teardown
+    -- alone leaves active enemies/items under the persistent native pool root.
+    CS.ItemManager.Instance:ClearAllActiveItem()
+    CS.EnemyManager.Instance:ClearAllActiveEnemy()
     gm:ClearAllObjectsInScene()
     U.Random.InitState(seed)
     gm.GameInfo=E.new_info(chapter,level)

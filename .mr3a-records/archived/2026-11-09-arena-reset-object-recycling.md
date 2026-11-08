@@ -1,0 +1,17 @@
+# 原客户端重开前回收持久池对象
+
+## 现象与独立复现
+
+用户要求独立检查陷阱，不能依赖其提供症状或给单个陷阱打补丁。检查实际EnemyBase/Collider时发现：旧蜘蛛/蛛网和曲线飞行敌人仍在DontDestroyOnLoad的N3GameObjPoolRoot下，渲染器和Layer9碰撞体开启，AtLevelBlock已变成Unity null，且不在EnemyManager.activeEnemyList中。
+
+随后完整重启arena排除旧选关试验污染，不注入额外陷阱逻辑：原疾风map1固定11013，正常推进600物理步，7只直线乌鸦全部在原activeEnemyList；按已有reset进入map2后，7只实例仍在原坐标/仍激活，但原地块销毁、管理列表为0。这证明问题并非某一种蜘蛛的AI，而是本地重开生命周期遗失原池对象，可能导致画面/碰撞残留或不再更新。前后实例ID及注册关系见忽略目录native-mechanisms/reset-orphans-before-fix.json。
+
+## 原因与改动
+
+ClearAllObjectsInScene清理当前Scene根对象，不会自动回收DontDestroyOnLoad池中的所有激活实体；原列表在后续重新初始化中被清空，已无法再管理旧对象。原生PUGCManager.RecycleLevel也会显式调用ItemManager.ClearAllActiveItem和EnemyManager.ClearAllActiveEnemy，随后再回收其它池资源。
+
+本地environment.reset在原PauseGameContent之后、清场景和替换GameInfo之前，增加上述两个原生回收调用。仅补原机制的生命周期顺序；不枚举并手动销毁陷阱、不改AI/速度/碰撞箱、不清资源缓存。完整重启arena清掉修复前已经失去管理关系的历史实体。
+
+## 验证
+
+LuaJIT执行实际reset，要求两个原管理器在旧GameInfo、旧Scene仍有效时回收，销毁Scene/建立新GameInfo必须发生在其后。针对性测试9项通过。完整重启arena后，用同一原地图/版型、600物理步和map2重开复现脚本复跑：重开前7只乌鸦均注册，重开后FindObjectsOfType(EnemyBase)为0，原管理列表也为0，没有旧激活碰撞对象残留。前后实例及原始状态见reset-orphans-after-fix.json。未更改原敌人脚本或Prefab；后续选关与输入一起回归。

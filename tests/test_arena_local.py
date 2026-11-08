@@ -178,3 +178,34 @@ MR3A.poll_keys();assert(pressed==1 and released==1)
 io.write('ok')
 ''')
     assert subprocess.check_output([lua, str(script)], text=True) == 'ok'
+
+
+def test_reset_recycles_native_objects_before_scene_and_game_info_teardown(tmp_path):
+    lua = shutil.which('luajit')
+    if not lua:
+        pytest.skip('LuaJIT unavailable')
+    script = tmp_path / 'recycle.lua'
+    script.write_text('local SOURCE=' + json.dumps(str(ROOT / 'arena/Local/environment.lua')) + r'''
+MR3A={seedHook=true}
+local old={OfflineGame=true}
+local items,enemies,scene=false,false,false
+local gm={_isOnlyGame=true,GameInfo=old}
+function gm:PauseGameContent()assert(self.GameInfo==old)end
+function gm:ClearAllObjectsInScene()assert(items and enemies);scene=true end
+function gm:InitGameData()assert(items and enemies and scene and self.GameInfo~=old)end
+function gm:InitTestBonus()end
+function gm:PreloadLevelData()end
+function gm:EnterGameScene()end
+CS={System={Reflection={BindingFlags={__CastFrom=function(v)return v end}}},
+ UnityEngine={Time={},Random={InitState=function()end}},GameManager={Instance=gm},
+ ItemManager={Instance={ClearAllActiveItem=function()assert(gm.GameInfo==old and not scene);items=true end}},
+ EnemyManager={Instance={ClearAllActiveEnemy=function()assert(gm.GameInfo==old and not scene);enemies=true end}}}
+dofile(SOURCE)
+MR3A.new_info=function()assert(items and enemies and scene);return {OfflineGame=true}end
+MR3A.role_defaults=function()end
+MR3A.wait_ready=function()end
+local r=MR3A.reset(42,1,1)
+assert(r.resetting and items and enemies and scene)
+io.write('ok')
+''')
+    assert subprocess.check_output([lua, str(script)], text=True) == 'ok'
