@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-08：arena隔离原客户端已在断网战斗中显示原小黑/地形/敌人/特效，实测原按钮跳跃与下翻及胶囊变化；资源Lua文件桥跨场景可用，5项控制回归通过。动态版本冷启动仍卡原生SDK网络错误，随机种子/重置/固定步长待继续，尚未完成训练环境。详见 [GameOnly调查](archived/2026-11-08-arena-gameonly-bootstrap-investigation.md)。
+
 2026-11-08：44449包索引完成，157种有配置实体全部唯一定位；503包闭包导出0错误，原模型/特效/碰撞组件保全。5种配置缺失敌人仍须追兼容生成；不丢弃其路由候选Stage。独立空白arena实例正在验证原客户端GameOnly入口，main未操作。见 [完整实体索引](archived/2026-11-08-arena-complete-asset-index.md)。
 
 2026-11-08：真实 m_PlayerSubPrograms 中的232 Shader/2595程序/5190阶段已恢复，ESSL310派生副本5190项语法通过；小黑原模型使用恢复的Spine程序在Mesa编译渲染成功，仍非Unity完整画面等价。427实体依赖包导出0错误，1个运行时字体零尺寸纹理明确缺预览；32项相关测试通过。继续原客户端GameOnly离线入口与平台承载，见 [GPU程序恢复](archived/2026-11-08-arena-shader-program-recovery.md)。

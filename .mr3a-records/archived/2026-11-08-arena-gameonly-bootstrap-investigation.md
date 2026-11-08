@@ -1,0 +1,47 @@
+# 原客户端 GameOnly 离线运行入口调查（进行中）
+
+## 需求与依据
+
+用户要求继续完成原模型/特效/碰撞的可操作竞技场环境，不能停在编辑器缺许可或资源提取。原客户端保留GameManagerState_GameOnly、离线Avatar、无需联网同步的敌人与战斗分支。GameManager.Start按_isOnlyGame选择状态11（开发离线）或1（正常启动）；GameInfo默认章节1、战斗模式3（CfgCombatType.Endless），该枚举不能与LevelDataType.Endless=0混用。
+
+## 当前操作与结果
+
+- 通过原run/InstanceSession创建独立空白arena（命名层分配mr3a3），安装客户端并只复制白名单AssetBundles/FMODBanks/NCONFIG/资源清单等，不复制登录数据/SharedPreferences/main用户目录；main未停止、未输入、未注入。
+- SDK重签名副本、保留证书但改场景压缩数据的副本都发生启动保护库异常；已将arena安装APK恢复到原件逐字节SHA256一致。原客户端清空arena自己的启动数据后能正常进入Unity及隐私提示。此前异常还受缓存影响，不能把所有失败简单归因于开关或签名。
+- 客户端DoString入口已定位；Frida仅对arena实验进程试验过Java消息桥，能附加/排队，但过程退出，尚未形成可靠的Lua控制通路。实验server已按其明确PID/命令验证后停止；未对main加载任何调试库。
+- Android标准Instrumentation桥独立APK编译成功，但系统因签名与目标不符拒绝启动（包括该容器root调用）。未更改框架签名检查。临时Java调试尝试无可用JDWP进程列表，已清除arena的debug-app设置；没有保留MR3A设备层API改动。
+- 现验证启动时在arena进程设置原有开发标志，使客户端自身Start进入GameOnly。目标由InstanceSession的PID命名空间及包名核验，核对GameManager类/对象指针，仅写其_isOnlyGame一字节；不改原生指令、不暂停或注入main。第一轮观察器误选Houdini宿主镜像映射，已停止自己的观察器并限定真实ARM客体映射重试。
+
+## 隔离与验证边界
+
+曾尝试Android iptables owner规则，但容器无legacy filter表，未生效；已改用arena自己的IPv4/IPv6 uidrange prohibit路由规则，规则输出核验通过。为区分正常SDK首次启动问题，曾仅对该空白客户端UID临时撤规则让SDK启动，随后恢复。无游戏账号登录；其余实例网络未改。
+
+所有探针/客户端副本/密钥/本地签名、控制桥APK与截图留在忽略目录debug/arena-client/gameonly。以上均为启动调查，尚未完成GameOnly竞技场加载、操作、碰撞与随机板子验收，继续开发，不作为已完成模拟器提交。
+
+## 后续验证（仍进行中）
+
+启动标志观察器已成功仅对arena设置_isOnlyGame=1，但过早设置会在正常资源清单初始化前触发Lua加载，报GetAssetBundleLoader空引用。已追到正常权限页协程先执行ResourceManager.InitManifestPrepatch，再设置一个System.Action回调。隔离进程内核对Action类、原回调目标、GameManager类与Start MethodInfo后，将该本地一次性回调绑定到原Start，正常清单初始化后才设置开发标志；点击后确实推进到完整Lua模块初始化。尚未到关卡，随后Android/ART的Java反射或UnityChoreographer线程崩溃，不能宣称启动通过。
+
+已核实Lua_DeviceTierManager在无DeviceLevel设置时调用Android SOC查询。只在arena自己的Unity PlayerPrefs中设置DeviceLevel=3（High），未复制main设置/账号。后一次崩溃落在UnityChoreographer线程，正在验证该实例的显示兼容：persist.waydroid.no_presentation从未设置改为true，并通过InstanceSession.restart只重启arena。该属性有官方文档依据（https://docs.waydro.id/usage/waydroid-prop-options），禁用wp_presentation；重启后物理显示仍报告120Hz，不能声称已改成60Hz。该轮重启会清掉临时路由规则，启动游戏前已按arena当前UID重新核验/补齐IPv4/IPv6禁止联网规则。
+
+重启后旧.MainActivity.init入口报Activity不存在，已通过pm path、UID及resolve-activity核实：安装与userdata仍在，SDK将启动别名切到了.MainActivity.alias2。不能将该报错写成实例数据丢失；后续启动应现场解析当前入口，或使用实际MainActivity。
+
+High档已使SOC查询分支跳过并输出Device_Info，但仍在UnityChoreographer线程重复崩溃；禁用wp_presentation单独未解决。已使用本机既有gamescope为arena建立独立1280×720/60Hz Wayland输出，生命周期仍经InstanceSession.shutdown/ensure_ready，未调整niri桌面/main刷新率。Android dumpsys display实际确认物理模式60.000004Hz、1280×720，当前会话display=gamescope-0。正在该环境复跑离线加载。
+
+独立60Hz输出下仍出现Scudo invalid chunk state中止，不能把崩溃归因确定为刷新率。后续尝试保留正常同意回调、在SDK完成后经原hotfix槽跳GameOnly，出现触摸ANR和客户端内核态高占用；已通过InstanceSession.shutdown关闭arena释放资源，不继续在失稳进程上调试。对main仅通过原InstanceSession读取getprop核对JIT/native bridge参数，没有输入或写配置；main与arena的关键ART/native bridge配置一致。接下来先验证完全不改运行时数据的正常SDK初始化至登录页（空白账号不登录），以区分原始环境和离线入口改动。
+
+正常启动基线已到达空白手机号登录界面，SDK日志初始化成功；未登录账号，截图normal-sdk-before-agree.png及随后sandbox-screen.png可复查。该轮不写开发开关/委托，说明基础客户端和Android环境可正常完成初始化；当前PatchVersion仍为1248，没有随意归因刷新率/环境。已关闭SDK登录弹窗，正在使用该完整初始化后的LuaManager.DoString接口验证控制。
+
+## 已打通原客户端战斗及本地控制（后续进展）
+
+放弃运行时指针改写后，已使用资源层 LuaMain 附加本地控制协程，AES/GZip按原加载链回写，只替换arena资源副本，APK仍与官服原件逐字节一致。客户端实际写出ready.json，文件RPC在Unity主线程执行；通过独立DontDestroyOnLoad对象上的EventTrigger承载协程，避开原客户端切战斗时LuaManager.StopAllCoroutines导致控制桥失效。
+
+原GameOnly初始化后还需要PreloadLevelData/EnterGameScene。GameInfo默认_levelID=0会请求不存在的Level_Endless_0，改为当前CfgEndlessData中的章节1/关卡1。默认旧忍术_magicID=1在当前配置无效；通过原Lua_GameManager.CreateNinjaMagicInfo按小黑忍术1生成SkillId=101，同时写回_roleInfo/_ninjaMagicInfo，加载协程得以完成。曾重复进入造成消息委托重复登记，已改用新进程复验；正常登录前资源工厂与GameOnly初始化衔接仍需可靠化，尚有一次失败后清理同名资源池重试的人工步骤。
+
+arena在IPv4/IPv6 UID禁止联网规则下实际到达Game:8、Running:1，原场景、小黑模型/飘带、地形/障碍/敌人和原特效已显示。证据在忽略目录gameonly/offline-game.png、jump-30.png、down-8.png。跳跃调用原UIGameOperate.OnRightDown/Released：30个渲染帧中位置从(278.868866,0.75)到(283.368683,2.766201)，轨迹包含jump到fall。随后原OnLeftDown/Released推进8帧，进入rollToLineDown，y=-0.553350；Role胶囊height从约1.8变为0.1、radius从0.18变为0.1。跑速查询9.0。这里读的是运行中原对象，胶囊local属性与world bounds受Transform缩放影响，不应混为同一尺寸。
+
+新增arena/Local/client_bridge.lua、environment.lua、tools/arena_local_bridge.py及tools/arena_local.py。资源工具显式读取本地bundle，避免权限不足时动态资源被静默回退APK；回写后核对全部TextAsset，仅LuaMain改变，其余4813项字节不变。原件、密钥、构建产物不入Git。RPC限定arena，通过InstanceSession控制租约、原子发布命令、字符串UUID确认响应。C#枚举/对象按文本编码，数组保持有序，环引用返回明确错误；旧命令在进程启动时不重放。LuaJIT运行真实控制桥的序列化/错误回归与Python传输/实例范围回归合计5项通过。
+
+重要边界：第一次可运行的新版独立控制桥构建误因普通用户无权访问main动态目录而回退到APK Lua包，虽然LuaMain原文本相同，其余热更文件有差异；已经从只读动态原件重新构建v3，原bundle SHA39b1f33a...，4813未改TextAsset回读一致。动态版本替换后的再次冷启动仍被原生账号SDK网络错误界面阻挡；仅覆盖Lua_UILogin.Show来抑制账号界面不足以解决。当前继续解决冷启动、随机种子与重置，不能把上述可操作战斗实证写成完整训练环境验收完成。
+
+advance目前按Unity渲染帧推进并记录实际Time.time，未声称严格固定物理步长；GameOnly自带自动复活、默认属性/计分等尚未完整校正。视觉训练还需验证随机板子分布与种子重放、一致的reset/step/截图，并补齐这些差异。
