@@ -29,7 +29,7 @@ AssetRipper 2.0.0从`fidelity-recovery/serialized`成功生成`restored-unity-pr
 
 ## 编辑器与环境影响
 
-官方Unity Hub已下载到忽略目录recovery-tools，SHA256为832e3923e036fcc279f2031db88b7193300ca9125a3cf8ba0b04812b1d6ae528；公开下载链接重定向中国版。Linux headless可列版本，但历史版本需changeset；官方中国归档确认2022.3.62f2c1的changeset=92e6e6be66dc、Linux安装包4152241040字节。编辑器安装/授权的最终状态由本记录后续补充；Hub登录/条款激活未代用户执行。Hub还报PlasticSCMUtil path未定义异常，日志保留。
+官方Unity Hub已下载到忽略目录recovery-tools，SHA256为832e3923e036fcc279f2031db88b7193300ca9125a3cf8ba0b04812b1d6ae528；公开下载链接重定向中国版。Linux headless可列版本，但历史版本需changeset；官方中国归档确认2022.3.62f2c1的changeset=92e6e6be66dc、Linux安装包4152241040字节。后续已安装匹配编辑器并验证版本，但授权未通过，见 [运行时调查与安装](2026-11-08-arena-runtime-code-investigation.md)；Hub登录/条款激活未代用户执行。Hub还报PlasticSCMUtil path未定义异常，日志保留。
 
 为骨骼查看器补装java-25-openjdk图形库，同时依赖mkfontscale、ttmkfdir、xorg-x11-fonts-Type1（4包、约2MiB），触发DNF将11月3日准备的1476项离线更新标记失效。没有执行升级或重启。原transaction.json及offline-transaction-state.toml已备份到recovery-tools/offline-update-backup；原缓存仍保留。尝试`--assumeno`离线重放时CLI明确不支持replay的--offline，未变更事务；未篡改rpmdb_cookie绕过一致性检查。已向用户说明实际副作用，截止当前未恢复排队有效性，后续需通过系统更新工具重新解析准备事务；不能声称环境完全无改动。
 
