@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+arena_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+arena_python="$arena_root/debug/arena-client/toolenv/bin/python"
+if [[ ! -x "$arena_python" ]]; then
+    echo '请先安装本地模拟器环境：python3 -m venv debug/arena-client/toolenv' >&2
+    echo '再运行：debug/arena-client/toolenv/bin/pip install -r tools/arena-simulator-requirements.txt' >&2
+    exit 1
+fi
+exec "$arena_python" "$arena_root/tools/arena_simulator.py" "$@"

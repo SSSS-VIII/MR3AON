@@ -1,0 +1,2 @@
+# Native local simulator; no Android / Agent dependencies.
+pygame-ce==2.5.8
