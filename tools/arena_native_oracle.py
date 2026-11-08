@@ -126,3 +126,36 @@ class NativeOracle:
         for i,v in enumerate(data):f(ninja_data+0x10+i*4,v)
         u.reg_write(UC_ARM64_REG_X0,obj);u.emu_start(start,0x1001f000,count=5000)
         return struct.unpack('<f',u.mem_read(obj+0x144,4))[0]
+
+    def jump_entry(self, second, *, bonus, force1, force2, state=5, velocity_y=-1,
+                   cloned=False, water=False, sync=False, glided=True,
+                   reset_jump_times=True, input_jump2=True):
+        from unicorn.arm64_const import UC_ARM64_REG_X0,UC_ARM64_REG_W0,UC_ARM64_REG_W1,UC_ARM64_REG_S0
+        events=[];result_state=[state]
+        def ret(u,x):u.reg_write(UC_ARM64_REG_W0,int(x))
+        def set_state(u):result_state[0]=u.reg_read(UC_ARM64_REG_W1)
+        def audio(u):events.append('audio:'+str(u.reg_read(UC_ARM64_REG_W1)))
+        def single(u):u.reg_write(UC_ARM64_REG_X0,0x10009000)
+        def bonus_hook(u):u.reg_write(UC_ARM64_REG_S0,struct.unpack('<I',struct.pack('<f',bonus))[0])
+        hooks={0x10008000:bonus_hook,0x10008100:lambda u:ret(u,sync),
+               0x49c32e8:set_state,0x5517a18:single,0x5517f08:single,
+               0x4a0bbac:lambda u:ret(u,water),0x43ad9a8:audio,
+               0x6b397bc:lambda u:ret(u,False), # No ItemShell in this fixture.
+               0x49c63b8:lambda u:None,0x49c4590:lambda u:ret(u,False), # Base Xiaohei has no glide.
+               0x4a0dafc:lambda u:events.append('jump_sky_smoke'),
+               0x4b042b0:lambda u:events.append('end_special_move:'+str(u.reg_read(UC_ARM64_REG_W1)))}
+        start,end=(0x49cf2cc,0x49cf49c) if second else (0x49d4b28,0x49d4d00)
+        # Decode the original prologue's metadata-init byte address. No body patch.
+        flag_loads=[word for (word,) in struct.iter_unpack('<I',self.library[start-0x4000:start-0x4000+64])
+                    if word&0xffc00000==0x39400000 and (word>>5)&31 in (20,21)]
+        if len(flag_loads)!=1:raise ValueError('Unexpected jump-entry prologue')
+        flag=0x7692000+((flag_loads[0]>>10)&0xfff)
+        u,q,f=self._machine(start,end,[0x718dd28,0x718da10,0x718e3d8,0x718b250,0x71e1450],flag,hooks)
+        obj=0x10000000;klass=0x10007000;data=0x10003000
+        q(obj,klass);q(klass+0x428,0x10008000);q(klass+0xb18,0x10008100)
+        q(obj+0x190,data);f(data+0x20,force1);f(data+0x2c,force2);f(obj+0x13c,velocity_y)
+        for off,val in [(0x250,cloned),(0x380,glided),(0x2b4,reset_jump_times),(0x101,input_jump2)]:u.mem_write(obj+off,bytes([bool(val)]))
+        u.reg_write(UC_ARM64_REG_X0,obj);u.emu_start(start,0x1001f000,count=5000)
+        return {'state':result_state[0],'velocity_y':struct.unpack('<f',u.mem_read(obj+0x13c,4))[0],
+                'glided':bool(u.mem_read(obj+0x380,1)[0]),'reset_jump_times':bool(u.mem_read(obj+0x2b4,1)[0]),
+                'input_jump2':bool(u.mem_read(obj+0x101,1)[0]),'events':events}

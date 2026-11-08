@@ -90,4 +90,33 @@ namespace MR3A.Arena
         }
     }
 
+    public struct JumpEntryState
+    {
+        public int PhysicsState;
+        public float VelocityY;
+        public bool Glided,ResetJumpTimes,InputJump2;
+        public string Events;
+    }
+    public static class ClientJumpEntry
+    {
+        // Base Xiaohei fixture: no glide and no ItemShell. Caller decides whether
+        // input is accepted; this mirrors EnterJump/EnterJump2, not Jump's gate.
+        public static JumpEntryState Enter(bool second,JumpEntryState s,float bonus,
+            float force1,float force2,bool cloned,bool water,bool sync)
+        {
+            s.Events="";
+            if(bonus>=1)return s;
+            s.PhysicsState=second?16:14;s.VelocityY=second?force2:force1;
+            if(second) {
+                if(!cloned)s.Events="jump_sky_smoke,audio:102";
+                s.ResetJumpTimes=false;s.InputJump2=false;
+            } else {
+                s.Glided=false;
+                if(!cloned)s.Events=water?"audio:115":"audio:101";
+                if(!sync)s.Events+=(s.Events.Length==0?"":",")+"end_special_move:25";
+            }
+            return s;
+        }
+    }
+
 }

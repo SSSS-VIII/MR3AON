@@ -19,6 +19,10 @@ class MotionProbe
         }else if(v[0]=="G"){
             var data=new float[24];for(int i=0;i<24;i++)data[i]=F(v[i+3]);
             Console.WriteLine("G "+R(ClientGravity.Select(int.Parse(v[1]),v[2]=="1",data)));
+        }else if(v[0]=="J"){
+            var s=new JumpEntryState{PhysicsState=int.Parse(v[5]),VelocityY=F(v[6]),Glided=v[10]=="1",ResetJumpTimes=v[11]=="1",InputJump2=v[12]=="1"};
+            s=ClientJumpEntry.Enter(v[1]=="1",s,F(v[2]),F(v[3]),F(v[4]),v[7]=="1",v[8]=="1",v[9]=="1");
+            Console.WriteLine(string.Join(" ",new[]{"J",s.PhysicsState.ToString(),R(s.VelocityY),s.Glided?"1":"0",s.ResetJumpTimes?"1":"0",s.InputJump2?"1":"0",s.Events.Length==0?"-":s.Events}));
         }else throw new Exception("Unknown probe input");
     }}
 }

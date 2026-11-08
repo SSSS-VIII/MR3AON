@@ -56,6 +56,20 @@ def main():
                 commands.append('G '+' '.join(map(str,[state,int(fourth),*data])))
                 expected.append([oracle.gravity(state,fourth_jump=fourth,data=data)])
                 details.append({'kind':'gravity','physics_state':state,'inJump4':fourth})
+    gravity_cases=len(expected)-220-platform_cases
+    for second in [False,True]:
+        for bonus in [-.1,0,.999,1,1.1]:
+            for cloned in [False,True]:
+                for water in [False,True]:
+                    for sync in [False,True]:
+                        k=dict(bonus=bonus,force1=rng.uniform(15,35),force2=rng.uniform(8,16),state=5,velocity_y=rng.uniform(-10,10),
+                               cloned=cloned,water=water,sync=sync,glided=rng.choice([True,False]),reset_jump_times=rng.choice([True,False]),input_jump2=rng.choice([True,False]))
+                        e=oracle.jump_entry(second,**k)
+                        vals=[int(second),bonus,k['force1'],k['force2'],k['state'],k['velocity_y'],
+                              int(cloned),int(water),int(sync),int(k['glided']),int(k['reset_jump_times']),int(k['input_jump2'])]
+                        commands.append('J '+' '.join(map(str,vals)))
+                        expected.append([e['state'],e['velocity_y'],int(e['glided']),int(e['reset_jump_times']),int(e['input_jump2']),','.join(e['events']) or '-'])
+                        details.append({'kind':'jump_entry','second':second,**k})
     with tempfile.TemporaryDirectory(prefix='arena-motion-') as folder:
         exe=Path(folder)/'MotionProbe.exe'
         subprocess.run([str(mono),str(compiler),'-out:'+str(exe),str(root/'arena/Runtime/ClientMotion.cs'),str(root/'arena/Validation/MotionProbe.cs')],check=True)
@@ -69,7 +83,7 @@ def main():
             matches=matches and (a==b if isinstance(b,str) else struct.pack('<f',float(a))==struct.pack('<f',b))
         if not matches:failures.append({'input':commands[i],'actual':got,'expected':want,'context':details[i]})
     report={'status':'reducer_native_equivalence_only_not_game_equivalence','cases':len(expected),
-            'collider_cases':220,'platform_cases':platform_cases,'gravity_cases':len(expected)-220-platform_cases,'failures':failures,
+            'collider_cases':220,'platform_cases':platform_cases,'gravity_cases':gravity_cases,'jump_entry_cases':len(expected)-220-platform_cases-gravity_cases,'failures':failures,
             'scope':'Unity calls/context are fixtures; no PhysX, hotfix, reset, prefab layout or rendering validation'}
     args.report.parent.mkdir(parents=True,exist_ok=True)
     args.report.write_text(json.dumps(report,indent=2)+'\n')
