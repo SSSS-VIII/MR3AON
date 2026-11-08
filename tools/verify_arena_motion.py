@@ -84,6 +84,39 @@ def main():
                 expected.append([frame['state'],*frame['position'],*frame['velocity']])
                 details.append({'kind':'flat_flight','frame':frame['frame'],'dt':dt,'second':second})
                 state=frame['state'];pos=frame['position'];vel=frame['velocity']
+    flight_frames=len(expected)-220-platform_cases-gravity_cases-jump_entry_cases
+    def query(bounds,x,y,direction,excluded):
+        commands.append('Q '+' '.join(map(str,[x,y,direction,excluded,len(bounds),*[v for b in bounds for v in b]])))
+        expected.append([oracle.query_platform(bounds,x=x,y=y,direction=direction,excluded=excluded)])
+        details.append({'kind':'platform_query','bounds':bounds,'x':x,'y':y,'direction':direction,'excluded':excluded})
+    fixed_bounds=[(0,10,2,1),(0,10,4,3),(0,10,4,2)]
+    for x in [-.001,0,5,10,10.001]:
+        for y in [1.999,2,3.999,4,4.001]:
+            for excluded in [-1,0,1,2]:query(fixed_bounds,x,y,1,excluded)
+    for i in range(300):
+        direction=rng.choice([-2,-1,0,1,2]);bounds=[]
+        for j in range(rng.randrange(9)):
+            a=rng.uniform(-10,10);b=a+rng.uniform(.01,10)
+            if direction<0:a,b=b,a
+            top=rng.uniform(-5,8);bounds.append((a,b,top,top-1))
+        query(bounds,rng.uniform(-12,12),rng.uniform(-6,10),direction,rng.randrange(-1,len(bounds)+1))
+    platform_query_cases=len(expected)-220-platform_cases-gravity_cases-jump_entry_cases-flight_frames
+    group_tests=[([[(0,10,4,2)],[(0,10,4,2)],[(0,10,4,2)]],5,5,1,-1),([[],[],[]],0,0,1,-1)]
+    for i in range(150):
+        groups=[];direction=rng.choice([-1,0,1])
+        for g in range(3):
+            group=[]
+            for j in range(rng.randrange(6)):
+                a=rng.uniform(-10,10);b=a+rng.uniform(.1,12)
+                if direction<0:a,b=b,a
+                group.append((a,b,rng.choice([0,2,4,6]),-1))
+            groups.append(group)
+        group_tests.append((groups,rng.uniform(-10,10),rng.choice([0,2,4,6]),direction,rng.randrange(-1,sum(map(len,groups))+1)))
+    for groups,x,y,direction,excluded in group_tests:
+        flat=[v for g in groups for b in g for v in b]
+        commands.append('T '+' '.join(map(str,[x,y,direction,excluded,*map(len,groups),*flat])))
+        expected.append([oracle.query_three_platform_groups(groups,x=x,y=y,direction=direction,excluded=excluded)])
+        details.append({'kind':'three_platform_groups','groups':groups,'x':x,'y':y,'direction':direction,'excluded':excluded})
     with tempfile.TemporaryDirectory(prefix='arena-motion-') as folder:
         exe=Path(folder)/'MotionProbe.exe'
         subprocess.run([str(mono),str(compiler),'-out:'+str(exe),str(root/'arena/Runtime/ClientMotion.cs'),str(root/'arena/Validation/MotionProbe.cs')],check=True)
@@ -97,7 +130,7 @@ def main():
             matches=matches and (a==b if isinstance(b,str) else struct.pack('<f',float(a))==struct.pack('<f',b))
         if not matches:failures.append({'input':commands[i],'actual':got,'expected':want,'context':details[i]})
     report={'status':'reducer_native_equivalence_only_not_game_equivalence','cases':len(expected),
-            'collider_cases':220,'platform_cases':platform_cases,'gravity_cases':gravity_cases,'jump_entry_cases':jump_entry_cases,'flight_frames':len(expected)-220-platform_cases-gravity_cases-jump_entry_cases,'failures':failures,
+            'collider_cases':220,'platform_cases':platform_cases,'gravity_cases':gravity_cases,'jump_entry_cases':jump_entry_cases,'flight_frames':flight_frames,'platform_query_cases':platform_query_cases,'group_query_cases':len(expected)-220-platform_cases-gravity_cases-jump_entry_cases-flight_frames-platform_query_cases,'failures':failures,
             'scope':'Unity calls/context are fixtures; no PhysX, hotfix, reset, prefab layout or rendering validation'}
     args.report.parent.mkdir(parents=True,exist_ok=True)
     args.report.write_text(json.dumps(report,indent=2)+'\n')

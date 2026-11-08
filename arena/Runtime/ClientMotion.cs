@@ -150,4 +150,38 @@ namespace MR3A.Arena
         }
     }
 
+    public struct AirPlatformBounds
+    {
+        public float StartX,EndX,TopY,BottomY;
+    }
+    public static class ClientPlatformQuery
+    {
+        // The client's endpoint order is direction dependent. Do not normalise.
+        public static int SelectThree(AirPlatformBounds[][] groups,float x,float y,int direction,int excluded)
+        {
+            if(groups==null || groups.Length!=3)throw new System.ArgumentException("Expected three groups");
+            int best=-1,offset=0;float top=0;
+            foreach(var group in groups) {
+                int local=Select(group,x,y,direction,excluded-offset);
+                if(local>=0 && (best<0 || group[local].TopY>=top)) {
+                    best=offset+local;top=group[local].TopY;
+                }
+                offset+=group.Length;
+            }
+            return best;
+        }
+        public static int Select(AirPlatformBounds[] bounds,float x,float y,int direction,int excluded)
+        {
+            if(bounds==null)throw new System.ArgumentNullException("bounds");
+            int best=-1;
+            for(int i=0;i<bounds.Length;i++) {
+                if(i==excluded)continue;
+                var b=bounds[i];
+                if(b.StartX*direction>x*direction || b.EndX*direction<x*direction || b.TopY>y)continue;
+                if(best<0 || b.TopY>bounds[best].TopY)best=i;
+            }
+            return best;
+        }
+    }
+
 }

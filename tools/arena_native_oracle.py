@@ -159,3 +159,74 @@ class NativeOracle:
         return {'state':result_state[0],'velocity_y':struct.unpack('<f',u.mem_read(obj+0x13c,4))[0],
                 'glided':bool(u.mem_read(obj+0x380,1)[0]),'reset_jump_times':bool(u.mem_read(obj+0x2b4,1)[0]),
                 'input_jump2':bool(u.mem_read(obj+0x101,1)[0]),'events':events}
+
+    def query_platform(self, bounds, *, x, y, direction=1, excluded=-1):
+        """Execute LevelManager.GetGroundY with only enumeration as a fixture.
+
+        bounds tuples are internal (startX,endX,topY,bottomY), unnormalised.
+        Excluded is the index of the platform deliberately being fallen through.
+        """
+        from unicorn.arm64_const import UC_ARM64_REG_X0,UC_ARM64_REG_X1,UC_ARM64_REG_X2,UC_ARM64_REG_X8
+        from unicorn.arm64_const import UC_ARM64_REG_W0,UC_ARM64_REG_S0,UC_ARM64_REG_S1
+        if len(bounds)>64:raise ValueError('Fixture platform limit')
+        ptrs=[0x10005000+i*64 for i in range(len(bounds))];iterator=[0]
+        def enumerate_(u):
+            iterator[0]=0
+            u.mem_write(u.reg_read(UC_ARM64_REG_X8),struct.pack('<QQQ',0x10004000,0,0))
+        def next_(u):
+            i=iterator[0];iterator[0]+=1
+            if i<len(ptrs):u.mem_write(u.reg_read(UC_ARM64_REG_X0)+0x10,struct.pack('<Q',ptrs[i]))
+            u.reg_write(UC_ARM64_REG_W0,int(i<len(ptrs)))
+        hooks={0x5fa848c:enumerate_,0x5be97a4:next_,0x5be97a0:lambda u:None,
+               0x483ba68:lambda u:u.reg_write(UC_ARM64_REG_X0,0x10008000),
+               0x4842cb8:lambda u:u.reg_write(UC_ARM64_REG_W0,direction&0xffffffff)}
+        start=0x4920018
+        u,q,f=self._machine(start,0x4920284,[0x7193100,0x721e800,0x721e7f0,0x721e7e8,0x718b1f8],0x7691ddd,hooks)
+        for ptr,record in zip(ptrs,bounds):
+            for i,v in enumerate(record):f(ptr+0x10+i*4,v)
+        u.reg_write(UC_ARM64_REG_X0,0x10000000)
+        u.reg_write(UC_ARM64_REG_X1,ptrs[excluded] if 0<=excluded<len(ptrs) else 0)
+        u.reg_write(UC_ARM64_REG_X2,0x10004000)
+        for r,v in [(UC_ARM64_REG_S0,x),(UC_ARM64_REG_S1,y)]:u.reg_write(r,struct.unpack('<I',struct.pack('<f',v))[0])
+        u.emu_start(start,0x1001f000,count=10000)
+        result=u.reg_read(UC_ARM64_REG_X0)
+        return ptrs.index(result) if result else -1
+
+    def query_three_platform_groups(self, groups, *, x, y, direction=1, excluded=-1):
+        """Execute LevelManager.GetGroundY with only enumeration as a fixture.
+
+        bounds tuples are internal (startX,endX,topY,bottomY), unnormalised.
+        Excluded is the index of the platform deliberately being fallen through.
+        """
+        from unicorn.arm64_const import UC_ARM64_REG_X0,UC_ARM64_REG_X1,UC_ARM64_REG_X2,UC_ARM64_REG_X8
+        from unicorn.arm64_const import UC_ARM64_REG_W0,UC_ARM64_REG_S0,UC_ARM64_REG_S1
+        if len(groups)!=3:raise ValueError('Expected three client platform groups')
+        bounds=[b for g in groups for b in g]
+        if len(bounds)>64:raise ValueError('Fixture platform limit')
+        ptrs=[0x10005000+i*64 for i in range(len(bounds))];iterator=[0];active=[]
+        lists={};offset=0
+        for i,g in enumerate(groups):
+            lists[0x10004000+i*256]=ptrs[offset:offset+len(g)];offset+=len(g)
+        def enumerate_(u):
+            iterator[0]=0;active[:]=lists[u.reg_read(UC_ARM64_REG_X0)]
+            u.mem_write(u.reg_read(UC_ARM64_REG_X8),struct.pack('<QQQ',0x10004000,0,0))
+        def next_(u):
+            i=iterator[0];iterator[0]+=1
+            if i<len(active):u.mem_write(u.reg_read(UC_ARM64_REG_X0)+0x10,struct.pack('<Q',active[i]))
+            u.reg_write(UC_ARM64_REG_W0,int(i<len(active)))
+        hooks={0x5fa848c:enumerate_,0x5be97a4:next_,0x5be97a0:lambda u:None,
+               0x483ba68:lambda u:u.reg_write(UC_ARM64_REG_X0,0x10008000),
+               0x4842cb8:lambda u:u.reg_write(UC_ARM64_REG_W0,direction&0xffffffff)}
+        start=0x491fefc
+        u,q,f=self._machine(0x491fe40,0x4920284,[0x7193100,0x721e800,0x721e7f0,0x721e7e8,0x718b1f8],0x7691ddc,hooks)
+        u.mem_write(0x7691ddb,b'\1\1\1')
+        for i in range(3):q(0x10000000+0x190+i*8,0x10004000+i*256)
+        for ptr,record in zip(ptrs,bounds):
+            for i,v in enumerate(record):f(ptr+0x10+i*4,v)
+        u.reg_write(UC_ARM64_REG_X0,0x10000000)
+        u.reg_write(UC_ARM64_REG_X1,ptrs[excluded] if 0<=excluded<len(ptrs) else 0)
+        u.reg_write(UC_ARM64_REG_X2,0x10004000)
+        for r,v in [(UC_ARM64_REG_S0,x),(UC_ARM64_REG_S1,y)]:u.reg_write(r,struct.unpack('<I',struct.pack('<f',v))[0])
+        u.emu_start(start,0x1001f000,count=10000)
+        result=u.reg_read(UC_ARM64_REG_X0)
+        return ptrs.index(result) if result else -1

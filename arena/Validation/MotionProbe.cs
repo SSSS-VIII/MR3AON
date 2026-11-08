@@ -28,6 +28,17 @@ class MotionProbe
             var data=new float[24];for(int i=0;i<24;i++)data[i]=F(v[i+10]);
             s=ClientFlatFlight.Step(s,data,F(v[8]),F(v[9]));
             Console.WriteLine(string.Join(" ",new[]{"F",s.PhysicsState.ToString(),R(s.Position.X),R(s.Position.Y),R(s.Position.Z),R(s.Velocity.X),R(s.Velocity.Y),R(s.Velocity.Z)}));
+        }else if(v[0]=="Q"){
+            int n=int.Parse(v[5]);var bounds=new AirPlatformBounds[n];
+            for(int i=0;i<n;i++)bounds[i]=new AirPlatformBounds{StartX=F(v[6+i*4]),EndX=F(v[7+i*4]),TopY=F(v[8+i*4]),BottomY=F(v[9+i*4])};
+            Console.WriteLine("Q "+ClientPlatformQuery.Select(bounds,F(v[1]),F(v[2]),int.Parse(v[3]),int.Parse(v[4])));
+        }else if(v[0]=="T"){
+            var groups=new AirPlatformBounds[3][];int cursor=8;
+            for(int g=0;g<3;g++){
+                int n=int.Parse(v[5+g]);groups[g]=new AirPlatformBounds[n];
+                for(int i=0;i<n;i++){groups[g][i]=new AirPlatformBounds{StartX=F(v[cursor]),EndX=F(v[cursor+1]),TopY=F(v[cursor+2]),BottomY=F(v[cursor+3])};cursor+=4;}
+            }
+            Console.WriteLine("T "+ClientPlatformQuery.SelectThree(groups,F(v[1]),F(v[2]),int.Parse(v[3]),int.Parse(v[4])));
         }else throw new Exception("Unknown probe input");
     }}
 }
