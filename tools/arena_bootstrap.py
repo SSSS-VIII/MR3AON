@@ -327,7 +327,7 @@ def main():
         client.execute(f"return MR3A.reset({a.seed},{a.chapter},{a.level})")
     wait_job(client, "MR3A.resetJob")
     state = client.execute("return MR3A.state()")
-    if state.get("maxHealth") != 2000:
+    if state.get("maxHealth") != 5000:
         raise RuntimeError("Level-one Xiaohei did not initialize with the expected health")
     client.execute("return MR3A.enable_keyboard()")
     if not a.paused:
@@ -335,7 +335,7 @@ def main():
     if not a.no_focus:
         focus_display(display_data)
     print(f"已就绪：疾风／小黑／章节 {a.chapter}／第 {a.level} 段／种子 {a.seed}" + ("（已暂停）" if a.paused else ""), flush=True)
-    print("空格/W/↑ 跳跃，S/↓ 下翻，P 暂停/继续，R 重开，N 换种子，. 单步", flush=True)
+    print("K/空格/W/↑ 跳跃，S/↓ 下翻，P 暂停/继续，R 重开，N 换种子，. 单步", flush=True)
 
 
 if __name__ == "__main__":

@@ -153,3 +153,28 @@ io.write(string.format('%d|%d|%d|%d|%s',game._totalFrameCount,renders,releaseTic
     assert release_tick == 1
     assert renders == (8 if death_tick == 0 else 2)
     assert output[4] == ("true" if death_tick else "nil")
+
+
+def test_k_key_uses_original_jump_press_and_release(tmp_path):
+    lua = shutil.which('luajit')
+    if not lua:
+        pytest.skip('LuaJIT unavailable')
+    script = tmp_path / 'keyboard.lua'
+    script.write_text('local SOURCE=' + json.dumps(str(ROOT / 'arena/Local/environment.lua')) + r'''
+MR3A={seedHook=true}
+local pressed,released=0,0
+local down,up=true,false
+CS={System={Reflection={BindingFlags={__CastFrom=function(v)return v end}}},
+ UnityEngine={Time={timeScale=1},Vector3={zero={}},
+ KeyCode={P='P',R='R',N='N',Period='.',Space='space',K='K',W='W',UpArrow='up',S='S',DownArrow='down'},
+ Input={GetKeyDown=function(k)return down and k=='K' end,GetKeyUp=function(k)return up and k=='K' end}},
+ GameManager={Instance={GetCurFSMStateID=function()return 'Game: 8' end}},
+ UIContorller={Instance={GameOperate={OnRightDown=function()pressed=pressed+1 end,
+ OnRightReleased=function()released=released+1 end}}}}
+dofile(SOURCE)
+MR3A.poll_keys();assert(pressed==1 and released==0 and MR3A.lastKey=='jump')
+down=false;up=true
+MR3A.poll_keys();assert(pressed==1 and released==1)
+io.write('ok')
+''')
+    assert subprocess.check_output([lua, str(script)], text=True) == 'ok'

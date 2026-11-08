@@ -1,6 +1,6 @@
 # 基础小黑参数与观测约定
 
-当前固定疾风竞技场、小黑role1、skin1、level1，按用户要求HP由100提高20倍至2000；运动参数保持原值。下表来自原客户端的NinjaData/prefab及实际运行对象；单位是原世界坐标与秒，不能当成像素。查询当前回合：
+当前固定疾风竞技场、小黑role1、skin1、level1，按用户最新要求HP为5000（原100的50倍）；运动参数保持原值。下表来自原客户端的NinjaData/prefab及实际运行对象；单位是原世界坐标与秒，不能当成像素。查询当前回合：
 
 ```bash
 .venv/bin/python tools/arena_local.py parameters

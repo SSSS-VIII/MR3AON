@@ -6,7 +6,7 @@ local U = CS.UnityEngine
 local flags = CS.System.Reflection.BindingFlags.__CastFrom(52)
 E.seed=E.seed or 1
 E.mode=6
-E.healthMultiplier=20
+E.healthMultiplier=50
 if not E.seedHook then
     local util=require('common/util')
     util.hotfix_ex(CS.RandomManager,'Random_Seed',function(seed)
@@ -177,14 +177,14 @@ function E.poll_keys()
     elseif input.GetKeyDown(keys.Period) and U.Time.timeScale==0 then
         E.lastKey='.'
         E.advance(1,'none')
-    elseif input.GetKeyDown(keys.Space) or input.GetKeyDown(keys.W) or input.GetKeyDown(keys.UpArrow) then
+    elseif input.GetKeyDown(keys.Space) or input.GetKeyDown(keys.K) or input.GetKeyDown(keys.W) or input.GetKeyDown(keys.UpArrow) then
         E.lastKey='jump'
         if U.Time.timeScale==0 then E.advance(1,'jump') else ui:OnRightDown() end
     elseif input.GetKeyDown(keys.S) or input.GetKeyDown(keys.DownArrow) then
         E.lastKey='down'
         if U.Time.timeScale==0 then E.advance(1,'down') else ui:OnLeftDown() end
     end
-    if input.GetKeyUp(keys.Space) or input.GetKeyUp(keys.W) or input.GetKeyUp(keys.UpArrow) then
+    if input.GetKeyUp(keys.Space) or input.GetKeyUp(keys.K) or input.GetKeyUp(keys.W) or input.GetKeyUp(keys.UpArrow) then
         ui:OnRightReleased(U.Vector3.zero,U.Vector3.zero)
     end
     if input.GetKeyUp(keys.S) or input.GetKeyUp(keys.DownArrow) then
