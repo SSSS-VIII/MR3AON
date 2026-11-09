@@ -92,8 +92,13 @@ def summarize_stage(stage):
 class ClientSource:
     def __init__(self, apk, dynamic):
         self.apk = Path(apk)
-        self.zip = zipfile.ZipFile(apk)
         self.dynamic = Path(dynamic) if dynamic else None
+        if self.dynamic is not None:
+            # is_file()/exists() can hide EACCES as False and quietly select the
+            # old APK instead. An explicit dynamic source must be readable.
+            self.dynamic.stat()
+            next((self.dynamic / 'AssetBundles').iterdir(),None)
+        self.zip = zipfile.ZipFile(apk)
 
     def bundles(self):
         names = {PurePosixPath(n).name for n in self.zip.namelist()
@@ -106,8 +111,11 @@ class ClientSource:
         if PurePosixPath(name).name != name:
             raise ValueError('Bundle name must not contain a directory')
         path = self.dynamic / 'AssetBundles' / name if self.dynamic else None
-        if path and path.is_file():
-            before = path.stat()
+        try:
+            before=path.stat() if path else None
+        except FileNotFoundError:
+            before=None
+        if before is not None:
             blob = path.read_bytes()
             after = path.stat()
             if (before.st_ino, before.st_size, before.st_mtime_ns) != (after.st_ino, after.st_size, after.st_mtime_ns):
@@ -124,7 +132,12 @@ class ClientSource:
 
     def version(self):
         path = self.dynamic / 'PatchVersion' if self.dynamic else None
-        return path.read_bytes().hex() if path and path.exists() else None
+        if path is None:
+            return None
+        try:
+            return path.read_bytes().hex()
+        except FileNotFoundError:
+            return None
 
     def close(self):
         self.zip.close()

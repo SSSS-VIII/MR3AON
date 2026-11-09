@@ -114,6 +114,33 @@ def test_source_prefers_dynamic_and_falls_back_to_apk(tmp_path):
         source.close()
 
 
+def test_explicit_missing_dynamic_directory_never_selects_old_apk(tmp_path):
+    apk=tmp_path/'client.apk'
+    with zipfile.ZipFile(apk,'w')as archive:
+        archive.writestr('assets/AssetBundles/current.ab',b'old')
+    with pytest.raises(FileNotFoundError):
+        ClientSource(apk,tmp_path/'missing')
+
+
+def test_dynamic_permission_failure_is_not_hidden_as_apk_fallback(tmp_path,monkeypatch):
+    apk=tmp_path/'client.apk';dynamic=tmp_path/'dynamic'
+    (dynamic/'AssetBundles').mkdir(parents=True)
+    with zipfile.ZipFile(apk,'w')as archive:
+        archive.writestr('assets/AssetBundles/current.ab',b'old')
+    source=ClientSource(apk,dynamic)
+    original=Path.stat
+    def denied(path,*args,**kwargs):
+        if path==dynamic/'AssetBundles/current.ab':
+            raise PermissionError('Synthetic unreadable dynamic resource')
+        return original(path,*args,**kwargs)
+    monkeypatch.setattr(Path,'stat',denied)
+    try:
+        with pytest.raises(PermissionError):
+            source.read_bundle('current.ab')
+    finally:
+        source.close()
+
+
 def test_physics_selection_excludes_clone_enemy_and_external_scripts():
     objects = [
         {'type': 'MonoScript', 'path_id': 10, 'data': {'m_ClassName': 'Ninja'}},
