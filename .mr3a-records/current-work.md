@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-10：108原生回合全部调度完成，99采样/9准备死亡，21333原帧（7059/6972/7302），59危险物正标签资源；完整元数据引用0错、28248回调owner全同，不能把采样称跑图通过。完整训练及16新train窗口继续，香蕉已从训练layout定位到实际block3，见[全批结果](archived/2026-11-10-arena-full-coverage-capture.md)。
+
 2026-11-10：完整7059训练/6972验证原帧、59正标签原资源的标准YOLO26n-OBB正在官方freeze0/24epoch训练；默认小样本freeze10保留。16窗口新种子仅train补采也在串行运行（coverage-v7，session54358），禁止同时控制arena。见[完整微调](archived/2026-11-10-arena-full-backbone-finetune.md)。
 
 2026-11-10：新OBB按像素实测冲刺速度校正较快关级，标准YOLO缓存验证0.2秒340对横误差中位52.2→6.51px，0.4秒310对107.8→14.1px；是匹配对象预测，未实机，旧默认未变。LK仅2.5%可用已撤回，见[实测冲刺](archived/2026-11-10-arena-observed-rush-speed.md)。
