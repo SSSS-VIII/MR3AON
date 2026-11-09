@@ -1,5 +1,11 @@
 -- Paused ground truth for annotation/verification. Never an actor input.
 local E,U=MR3A,CS.UnityEngine
+local inspectFlags=CS.System.Reflection.BindingFlags.__CastFrom(52)
+local deadField=typeof(CS.EnemyBase):GetField('_dead',inspectFlags)
+local crowFields={}
+for _,name in ipairs({'_currState','_currStateTime','_stayTime','_rushDistance','_currAnim'})do
+ crowFields[name]=typeof(CS.EnemyStraightBat):GetField(name,inspectFlags)
+end
 function E.vision_labels(include_scene)
  local cam=U.Camera.main
  local function point(p)
@@ -27,6 +33,14 @@ function E.vision_labels(include_scene)
  for i=0,objects.Length-1 do local o=objects[i]
   if o.gameObject.activeInHierarchy and o.isActive then
    local row={id=o:GetInstanceID(),type=o:GetType().Name,name=o.name,point=point(o.transform.position),colliders={}}
+   row.dead=deadField:GetValue(o)
+   if row.type=='EnemyStraightBat' then
+    row.controller={}
+    for name,f in pairs(crowFields)do
+     local value=f:GetValue(o)
+     row.controller[name]=f.FieldType.IsEnum and tostring(value)or value
+    end
+   end
    row.renderers={}
    local renderers=o.gameObject:GetComponentsInChildren(typeof(U.Renderer),true)
    local selected={};local hasModel=false
