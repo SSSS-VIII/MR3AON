@@ -48,9 +48,9 @@
 
 ## 视觉训练接口
 
-实时视觉试跑现有`./tools/run-arena-vision --pin 1:1101 --boards 3`，包含基础识别、速度/轨迹和原动作控制，结束显示暂停菜单。当前有伤跑过三块，策略尚不稳定、未训练网络；计时、日志和限制见 [首版说明](visual-baseline.md)。下方同步ArenaEnv接口仍供步进和标注使用。
+实时视觉入口为`./tools/run-arena-vision --pin 1:1101 --boards 3`，使用微调现成YOLO、运动跟踪和原动作控制，结束显示暂停菜单。标准OBB候选已实机有伤通过随机四板，仍未稳定跑完竞技场；当前权重、复现命令、计时和限制见[视觉基线](visual-baseline.md)。下方同步ArenaEnv接口仍供步进和标注使用。
 
-现成YOLOE另已接通原资产视觉提示并做离线识别验收；目前准确性失败，尚未替换上述控制器。未训练/微调，见[YOLO实测](yolo-evaluation.md)。
+此前YOLOE原资产视觉提示的零样本验收失败；目前改用官方YOLO26n/OBB微调。数据口径、检测结果与历史试验见[YOLO实测](yolo-evaluation.md)。
 
 `tools/arena_env.py` 的同步接口接收0/none、1/jump、2/down，返回原PNG、原状态、原分数增量、死亡标记和实际步数。PNG是观测；state/layout是可选的训练标注，不应作为纯视觉策略的输入。每次step结束都会暂停，死亡后必须reset；close只暂停并保留环境。
 
