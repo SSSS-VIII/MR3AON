@@ -310,3 +310,38 @@ def test_rectangular_traps_use_rolling_action_search_on_rope():
              tracks=[threat],terrain=None,time=1.,motion=None,scale_px=39.5)
     assert MpcAvoider().uses_search(obs)
     assert not MpcAvoider().uses_search(dict(obs,terrain={'y':260.}))
+
+
+def test_native_air_down_priors_reach_rope_from_different_measured_heights():
+    import arena_motion as m
+    # Independent original-UI probes: initial root, first-frame displacement,
+    # root displacement at 0.1333 seconds, first settled native state.
+    for height,lead,delta,settled in [(3.3899,.2243,-2.9683,.1667),
+                                    (4.5368,-.0099,-3.2280,.2),
+                                    (4.1690,.0858,-3.1814,.1833),
+                                    (5.3326,.0398,-3.1721,.2333)]:
+        params=dict(height=height,lead=lead,offset_x=.052,offset_y=0.,width=.4,height_box=.936)
+        assert m.point('air_down',.1333,params)[1]==pytest.approx(delta,abs=.09)
+        assert m.duration('air_down',params)==pytest.approx(settled,abs=.017)
+        assert m.point('air_down',.5,params)[1]==pytest.approx(-height)
+        assert m.phase('air_down',.5,params)=='rope_below'
+
+
+def test_air_down_keeps_projected_state_and_retimed_geometry_consistent():
+    from arena_mpc import start_action,MpcAvoider
+    from arena_vision import advance_player,Perception
+    obs=dict(player=Box(172,82,16,36),rope=260.,phase='jump2_falling',jumps=2,
+             tracks=[],terrain=None,time=1.,motion=None,scale_px=40.,vy=300.,
+             stand_w=14.4,stand_h=37.44)
+    assert 'air_down'in MpcAvoider()._options(obs,1.)
+    rolling=start_action(obs,'air_down')
+    assert rolling['player'].center==pytest.approx(obs['player'].center)
+    assert (rolling['player'].w,rolling['player'].h)==pytest.approx((16,36))
+    assert rolling['jumps']==0
+    direct=advance_player(rolling,.3)
+    retimed=advance_player(advance_player(rolling,.09),.21)
+    assert retimed['player'].center==pytest.approx(direct['player'].center)
+    assert direct['player'].center[1]==pytest.approx(290.)
+    assert direct['phase']=='rope_below'and direct['motion']is None
+    p=Perception();p.jump_count=2;p.action('down',1.,obs)
+    assert p.active_motion['name']=='air_down'and p.jump_count==0

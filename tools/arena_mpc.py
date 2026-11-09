@@ -1,7 +1,7 @@
 """Receding-horizon search over original actions and visual hazard trajectories."""
 from dataclasses import dataclass
 import numpy as np
-from arena_vision import advance_player,native_motion_box
+from arena_vision import advance_player,native_motion_box,create_motion,can_air_down
 from arena_policy import VisualAvoider
 import arena_motion as motion
 
@@ -20,8 +20,9 @@ def advance(state,seconds):
 
 
 def start_action(state,name):
+    active=create_motion(state,name)
     return dict(state,player=native_motion_box(state,name,0),
-                motion=dict(name=name,started=state['time']),phase=motion.phase(name,0),
+                motion=active,phase=motion.phase(name,0,active),
                 jumps=1 if name=='jump1'else 2 if name=='jump2'else 0)
 
 
@@ -96,6 +97,7 @@ class MpcAvoider(VisualAvoider):
         elif state['jumps']==1 and phase.startswith('jump1'):
             active=state.get('motion')
             if active and stamp-active['started']>=.17:names+=['jump2']
+        if can_air_down(state):names+=['air_down']
         return names
 
     def choose(self,obs):
@@ -153,5 +155,5 @@ class MpcAvoider(VisualAvoider):
         best=min(beam,key=lambda n:(n.cost,n.actions))
         if not best.first:return None,'mpc_wait'
         self.last_action=now
-        action='down'if best.first=='rope_down'else'jump'
+        action='down'if best.first in ('rope_down','air_down')else'jump'
         return action,'mpc_'+best.first

@@ -316,10 +316,12 @@ class Perception:
             self.last_flip = stamp
             if phase=='rope_above':
                 name='rope_down';self.jump_count=0
+            elif current and can_air_down(current):
+                name='air_down';self.jump_count=0
         elif action=='slide':
             self.sliding_until=stamp+.55
         if name and current and current['player']:
-            self.active_motion={'name':name,'started':stamp}
+            self.active_motion=create_motion(current,name,stamp)
             ox,oy=current_offsets(current)
             p=current['player'];scale=current.get('scale_px',41.)
             support=current.get('rope')
@@ -577,7 +579,7 @@ class Perception:
             support=self.rope if on_rope else (terrain['y']+7 if terrain and terrain['y']is not None else None)
             if self.active_motion and not self.visual_role:
                 name=self.active_motion['name'];elapsed=max(0,stamp-self.active_motion['started'])
-                offset_x,root_y,offset_y,width,height=motion.point(name,elapsed)
+                offset_x,root_y,offset_y,width,height=motion.point(name,elapsed,self.active_motion)
                 origin=self.motion_origin;scale=origin['scale']
                 cx=origin['x']+offset_x*scale
                 cy=(support or 0)+origin['y']-(root_y+offset_y)*scale
@@ -605,8 +607,8 @@ class Perception:
                     phase='slide'
             if self.active_motion:
                 name=self.active_motion['name'];elapsed=max(0,stamp-self.active_motion['started'])
-                phase=motion.phase(name,elapsed)
-                if name.startswith('rope')and elapsed>=motion.duration(name):
+                phase=motion.phase(name,elapsed,self.active_motion)
+                if motion.is_rope_transition(name)and elapsed>=motion.duration(name,self.active_motion):
                     self.active_motion=None;self.jump_count=0
                 elif name.startswith('jump')and 'falling' in phase and support is not None:
                     available=on_rope or bool(terrain and terrain['at_player'])
@@ -643,15 +645,37 @@ class Perception:
 def current_offsets(observation):
     active=observation.get('motion')
     if active:
-        p=motion.point(active['name'],max(0,observation['time']-active['started']))
+        p=motion.point(active['name'],max(0,observation['time']-active['started']),active)
         return p[0],p[2]
     return motion.DATA['stand_offset_x'],0.
+
+
+def can_air_down(observation):
+    return (observation.get('player')is not None and observation.get('rope')is not None
+            and observation['phase'].startswith('jump')
+            and observation['player'].center[1]<observation['rope']+.75*observation.get('scale_px',41.))
+
+
+def create_motion(observation,name,stamp=None):
+    active=dict(name=name,started=observation['time']if stamp is None else stamp)
+    if name=='air_down':
+        scale=observation.get('scale_px',41.);p=observation['player'];ox,oy=current_offsets(observation)
+        delay=motion.DATA['air_down']['input_delay'];previous=observation.get('motion')
+        if previous and previous['name'].startswith('jump'):
+            elapsed=max(0,observation['time']-previous['started'])
+            lead=motion.point(previous['name'],elapsed+delay)[1]-motion.point(previous['name'],elapsed)[1]
+        else:
+            lead=-observation.get('vy',0.)*delay/scale
+        active.update(height=max(0,(observation['rope']-p.center[1])/scale+.75-oy),lead=lead,
+                      offset_x=ox,offset_y=oy,width=p.w/scale,height_box=p.h/scale)
+    return active
 
 
 def native_motion_box(observation,name,seconds):
     p=observation['player'];scale=observation.get('scale_px',41.)
     ox,oy=current_offsets(observation)
-    x,y,offset_y,w,h=motion.point(name,seconds)
+    parameters=create_motion(observation,name)if name=='air_down'else None
+    x,y,offset_y,w,h=motion.point(name,seconds,parameters)
     cx=p.center[0]+(x-ox)*scale
     cy=p.center[1]-(y+offset_y-oy)*scale
     w=observation.get('stand_w',p.w)*w/motion.DATA['stand_width']
@@ -689,7 +713,7 @@ def player_future(observation,seconds):
     active=observation.get('motion')
     if active:
         elapsed=max(0,observation['time']-active['started'])
-        a=motion.point(active['name'],elapsed);b=motion.point(active['name'],elapsed+seconds)
+        a=motion.point(active['name'],elapsed,active);b=motion.point(active['name'],elapsed+seconds,active)
         scale=observation.get('scale_px',41.)
         cx=p.center[0]+(b[0]-a[0])*scale
         cy=p.center[1]-((b[1]+b[2])-(a[1]+a[2]))*scale
@@ -739,8 +763,8 @@ def advance_player(observation,seconds):
     active=observation.get('motion')
     if active:
         elapsed=current['time']-active['started'];name=active['name']
-        current['phase']=motion.phase(name,elapsed)
-        if name.startswith('rope')and elapsed>=motion.duration(name):
+        current['phase']=motion.phase(name,elapsed,active)
+        if motion.is_rope_transition(name)and elapsed>=motion.duration(name,active):
             current.update(motion=None,jumps=0)
         elif name.startswith('jump')and 'falling'in current['phase']:
             support=observation.get('rope');terrain=observation.get('terrain')

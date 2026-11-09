@@ -1,5 +1,5 @@
 """Short-horizon avoidance over visual objects, support and native action priors."""
-from arena_vision import Box,player_future,native_motion_box
+from arena_vision import Box,player_future,native_motion_box,can_air_down
 import arena_motion as motion
 
 
@@ -29,6 +29,8 @@ class Avoider:
             return player_future(obs,t)
         if action=='jump':
             return self._jump(obs,p,t)
+        if action=='air_down':
+            return native_motion_box(obs,'air_down',t)
         if action in ('flip','escape'):
             below=obs['phase']=='rope_below'
             name='rope_up'if below else'rope_down'
@@ -127,6 +129,7 @@ class Avoider:
             # after movement begins so its apex coincides with the crossing.
             if first.active or not first.arming:
                 candidates.append(('jump',.05))
+        if can_air_down(obs):candidates.append(('air_down',.03))
         if obs['phase']=='ground' and ground:
             candidates.append(('slide',.02))
         scored=[(self._risk(obs,a)[0]+effort,a)for a,effort in candidates]
@@ -143,6 +146,7 @@ class Avoider:
         if action=='escape':
             self.followup_until=stamp+.9
             return 'jump',f'under_rope_escape:{first.id}'
+        if action=='air_down':return 'down',f'air_down:{first.id}'
         return action,f'{action}:{first.id}'
 
 

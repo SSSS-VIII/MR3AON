@@ -7,13 +7,29 @@ DATA=json.loads((Path(__file__).resolve().parents[1]/'arena/vision-motion-priors
 TIMES={name:tuple(p[0]for p in profile['points'])for name,profile in DATA['profiles'].items()}
 
 
-def duration(name):
+def is_rope_transition(name):
+    return name.startswith('rope') or name=='air_down'
+
+
+def duration(name,parameters=None):
+    if name=='air_down':
+        prior=DATA['air_down']
+        return prior['input_delay']+max(0,parameters['height']+parameters['lead'])/prior['speed']+prior['settle_seconds']
     profile=DATA['profiles'][name]
     return profile.get('duration',profile['points'][-1][0])
 
 
-def point(name,t):
+def point(name,t,parameters=None):
     """Return collider offsetX, root displacementY, offsetY, width, height."""
+    if name=='air_down':
+        prior=DATA['air_down'];delay=prior['input_delay']
+        if t<=0:
+            return [parameters['offset_x'],0.,parameters['offset_y'],parameters['width'],parameters['height_box']]
+        delta=parameters['lead']*min(1,t/delay)-prior['speed']*max(0,t-delay)
+        arrived=delta<=-parameters['height']
+        return [DATA['stand_offset_x']if arrived else 0.,max(-parameters['height'],delta),0.,
+                prior['stand_width']if arrived else prior['width'],
+                DATA['stand_height']if arrived else prior['height']]
     profile=DATA['profiles'][name]
     points=profile['points']
     if t<=0:
@@ -30,9 +46,10 @@ def point(name,t):
     return [x+(y-x)*f for x,y in zip(a[1:],b[1:])]
 
 
-def phase(name,t):
-    if name.startswith('rope'):
-        if t<duration(name):
-            return 'flip_down' if name=='rope_down' else 'flip_up'
-        return 'rope_below' if name=='rope_down' else 'rope_above'
+def phase(name,t,parameters=None):
+    if is_rope_transition(name):
+        below=name in ('rope_down','air_down')
+        if t<duration(name,parameters):
+            return 'flip_down' if below else 'flip_up'
+        return 'rope_below' if below else 'rope_above'
     return name+('_rising' if t<DATA['profiles'][name]['apex'] else '_falling')

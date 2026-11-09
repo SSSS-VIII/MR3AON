@@ -1145,5 +1145,16 @@
       "tail_acceleration": -34.3012321,
       "apex": 0.3999939
     }
+  },
+  "air_down": {
+    "speed": 28.0,
+    "input_delay": 0.016666666666666666,
+    "settle_seconds": 0.016666666666666666,
+    "width": 0.2,
+    "height": 0.2,
+    "stand_width": 0.4,
+    "source": "Original UI down at four airborne starting poses; additionally confirmed during fall2",
+    "source_sha256": "c630061899c7b4dc0c8e4804e1b9ca81a01ab985fde890f672c2e0a1e03d580b",
+    "validation_sha256": "ea1caa15d8396b9b8cdeb1c85f2b5e33417e160d37a180b10d3fb3a2265d07b5"
   }
 }
