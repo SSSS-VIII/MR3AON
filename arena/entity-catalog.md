@@ -29,6 +29,8 @@
 
 原生配对标签额外保留按对象引用去重的EnemyInfo与EnemyBaseProperty初始快照，以及当前速度、血量和伤害属性；每回合`parameter_updates`先定义1起始ID，再由对象引用。初始快照不代表后续所有可变字段，当前值另列`runtime_parameters`，可选诊断读取失败显式记录，不丢几何或改原行为。
 
+69个ID是疾风板池直接放置类型，运行时生成物另行核对。已捕获蒸汽骑士生成153（EnemyEliteWarrior_Bullet / EnemyBullutFireRobot），并从当前客户端提取其原Prefab、BoxCollider和17包依赖。`arena_runtime_catalog.py`按实际训练回合与原Cfg/Prefab精确绑定扩充数据目录，保留直接放置与运行时生成的区别，不伪造板池记录。当前扩展目录含70种，完整运行时派生闭包尚未证明。
+
 配对标注schema3进一步保存实际启用的Collider局部参数、完整变换、Box四角、相机矩阵，以及真实支撑端点/隐藏和切换状态。Collider/Renderer只归最近的EnemyBase，电球父对象只持有自身电线Box，子球各持自身Sphere，避免重复合并。纯粒子须有存活粒子才记为可见；这些原生标签仅用于数据和验收，不输入自动跑图策略。
 
 ## 复现
