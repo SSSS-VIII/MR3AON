@@ -1,0 +1,19 @@
+# 重开释放原对象池以保留浮空平台完整资源
+
+## 现象与根因
+
+全对象补采时在原RecycleAllMainAirGround抛空引用，112同一回合存活HP2195仍复现，非死亡专属。原回收顺序已按PUGCManager.RecycleLevel反汇编核对，无顺序偏差。
+
+112重开前原_airMainGroundList已有一个null SpriteRenderer。114只记录原GetMainAirGround/RecycleMainAirGround参数（结束移除诊断hook），证实null在重开之前已被传入。继续对照原ItemAirGround.Awake、序列化Prefab和运行时对象：原资产GroundGroup/Main带SpriteRenderer且_mainGround有效；Awake把Main移入当前LevelPoolManager地面池。旧本地reset仅DespawnAll，InGameResourceFactory缓存了已经Awake的ItemAirGround克隆，随后ClearAllObjectsInScene销毁其Main所属旧场景。下一轮复用的缓存/克隆已经没有Main子节点且_mainGround失效，ShowBehaviourGround/GetMainAirGround继续传null，原池才遭污染。114原资产/克隆逐层对照及调用反汇编保存在忽略目录。
+
+## 改动
+
+在原Item/Enemy/Block/MainAirGround回收完成后、ClearAllObjectsInScene之前调用原InGameResourceFactory.DestroyAllPools，释放依赖旧场景的对象缓存，再走原初始化/预加载。没有改陷阱AI、碰撞、浮空平台算法，也不跳过null或吞原异常。
+
+collector同时重载并归档实际environment与selection源码及摘要，确保后续采集确实使用已核对的重开实现。已被污染的旧进程仅重启arena清理一次；main不动。
+
+## 验证
+
+11项本地环境LuaJIT回归通过，生命周期测试要求旧GameInfo仍有效、原回收先完成、对象池销毁先于Scene销毁。115重启后连续原生批采：level7/map61/7007小块37（seed20000，0.6秒因垂直连接段跌落，原失败保留）→level3/map22/30024（seed20003，302帧10秒、HP3922）。跨图重开成功，没有RecycleAllMainAirGround异常；第二段结束原_airMainGroundList四个Main渲染器均有效，区别于112/114的null槽。
+
+这两段验证的是重开缓存生命周期，不表示所有板子均已无伤通过。零宽垂直连接处安全采样另行处理；短回合仍如实进入失败/覆盖统计。证据coverage-v5/collection.json、native-pool-after-bulk2.json、item-airground-all114.json、native-airtrace114.json。

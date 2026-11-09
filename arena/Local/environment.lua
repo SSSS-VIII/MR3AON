@@ -314,6 +314,10 @@ function E.reset(seed, chapter, level)
     CS.EnemyManager.Instance:ClearAllActiveEnemy()
     CS.InGameResourceFactory.Instance.SpawnPool:DespawnAll()
     CS.LevelPoolManager.Instance:RecycleAllMainAirGround()
+    -- ItemAirGround.Awake moves its Main renderer into the scene's ground
+    -- pool. Cached prefab clones therefore reference that old scene object.
+    -- Release the native object pools before destroying their ownership graph.
+    CS.InGameResourceFactory.Instance:DestroyAllPools()
     gm:ClearAllObjectsInScene()
     U.Random.InitState(seed)
     gm.GameInfo=E.new_info(chapter,level)

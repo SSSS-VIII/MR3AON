@@ -38,13 +38,14 @@ def collect(output, *, seed=42, board=11012, seconds=18, ticks=4,explore=False,p
     count=0
     try:
         selected={str(start):board}|(pins or {})
+        environment=(ROOT/'arena/Local/environment.lua').read_text()
         native=(ROOT/'arena/Local/native_selection.lua').read_text()
         sources=output/'sources';sources.mkdir()
         for name,data in {'collector.py.txt':COLLECTION_SOURCE,'preparation.py.txt':PREPARATION_SOURCE,
-                          'native_selection.lua.txt':native.encode(),'vision_labels.lua.txt':source.encode(),
+                          'environment.lua.txt':environment.encode(),'native_selection.lua.txt':native.encode(),'vision_labels.lua.txt':source.encode(),
                           'paired_collection.lua.txt':paired.encode()}.items():
             (sources/name).write_bytes(data)
-        client.execute('assert(load('+json.dumps(native)+'))();return true')
+        client.execute('assert(load('+json.dumps(environment)+'))();assert(load('+json.dumps(native)+'))();return true')
         initial=prepare(client,seed,level,map_id,selected,start=start,sample_block=sample_block,timeout=620)
         client.execute('assert(load('+json.dumps(source)+'))();assert(load('+json.dumps(paired)+'))();return true')
         layout=normalize_arrays(client.execute('return MR3A.vision_resolved_layout()'))
@@ -53,6 +54,7 @@ def collect(output, *, seed=42, board=11012, seconds=18, ticks=4,explore=False,p
         (output/'setup.json').write_text(json.dumps(dict(seed=seed,board=board,ticks=ticks,
             seconds=seconds,initial=initial,native_travel=travel,explore=explore,pins=selected,start=start,level=level,map=map_id,sample_block=sample_block,
             collection_sha256=COLLECTION_SHA256,preparation_sha256=PREPARATION_SHA256,
+            environment_sha256=hashlib.sha256(environment.encode()).hexdigest(),
             native_selection_sha256=hashlib.sha256(native.encode()).hexdigest(),
             label_sha256=hashlib.sha256(source.encode()).hexdigest(),
             paired_sha256=hashlib.sha256(paired.encode()).hexdigest()),indent=2)+'\n')
