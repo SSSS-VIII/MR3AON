@@ -86,8 +86,13 @@ class Avoider:
                 self.last_action=stamp
                 return 'jump','extend_gap_jump'
         if (stamp<self.followup_until and stamp-self.last_action>.26 and obs['phase']=='rope_above'):
-            self.followup_until=-10;self.last_action=stamp
-            return 'jump','complete_under_rope_escape'
+            self.followup_until=-10
+            # Recheck the second input from the new image. A sequence which was
+            # safe before the flip can meet a newly arrived spider afterwards.
+            stay=self._risk(obs,'none')[0];jump=self._risk(obs,'jump')[0]
+            if jump==0 and stay>0:
+                self.last_action=stamp
+                return 'jump','complete_under_rope_escape'
         if stamp-self.last_action<.32:
             return None,'action_transition'
         if obs['phase']=='rope_below' and obs.get('rope')is not None:

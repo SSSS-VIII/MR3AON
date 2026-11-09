@@ -222,3 +222,15 @@ def test_two_small_spider_eyes_join_without_losing_dark_background_detection():
     cv2.rectangle(image,(526,69),(529,74),(245,150,15),-1)
     enemies=Perception().observe(image,1)['detections']
     assert any(d.confidence>.7 and 510<d.box.center[0]<540 and d.box.center[1]<100 for d in enemies)
+
+
+@pytest.mark.parametrize('stay,jump,expected',[(0,100,None),(100,0,'jump'),(400,200,None)])
+def test_escape_followup_rechecks_new_hazards_before_second_input(stay,jump,expected):
+    class ChangedScene(Avoider):
+        def _risk(self,obs,action):
+            return (jump if action=='jump'else stay),10,{}
+    policy=ChangedScene();policy.followup_until=2.;policy.last_action=1.
+    action,reason=policy.choose(observation('rope_above',[],stamp=1.35))
+    assert action==expected
+    assert reason==('complete_under_rope_escape'if expected else'clear')
+    assert policy.followup_until<1.3
