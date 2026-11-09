@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-09：标准YOLO v4隐藏爪补充完成12epoch；独立claw63召回68/524→510/524（97.3%）、精确率92.2%，states53旧类别保持。旧策略新路线两轮约708伤害（隐藏爪588），正在复测矩形机关滚动搜索；当前默认未切换，见[隐藏爪适配](archived/2026-11-09-arena-yolo-hidden-claw-adaptation.md)。
+
 2026-11-09：依据原隐藏爪BoxCollider修正trap预测误用内接椭圆，55项相关/全arena174项通过、2依赖跳过；实机待v4权重。四段claw采集结束，63随机探索在20.88秒跌落，保留349帧独立验收，不重选好样本；官方Trainer进行12epoch适配。见[矩形预测范围](archived/2026-11-09-arena-rectangular-hazard-prediction.md)。
 
 2026-11-09：配对采集已复用原生start指定位置，首段claw60确认11031/序号2、368帧723个隐藏爪目标；claw62/61/63继续采集，后续用官方Trainer补八类模型，尚未验收。见[定点原生采集](archived/2026-11-09-arena-native-targeted-collection.md)。

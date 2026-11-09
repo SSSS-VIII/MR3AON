@@ -1,6 +1,8 @@
 # 现成YOLO与原客户端参考图实测
 
-用户明确允许微调现成YOLO、禁止自写网络。标准YOLO26n六类适配已接入默认实时入口；另完成八类状态版本，利用原生控制器自动标注飞行怪普通/预备/冲刺，再用官方Trainer微调18epoch。独立seed53的危险物空间召回98.2%，预备状态召回92.1%、冲刺97.4%；这段验证没有弹球、机关和投射物目标，不能据此宣称全部陷阱识别完成。见[状态微调及独立口径](../.mr3a-records/archived/2026-11-09-arena-yolo-crow-state-adaptation.md)、[初版六类适配](../.mr3a-records/archived/2026-11-09-arena-standard-yolo-finetune.md)和[实际闭环](visual-baseline.md)。
+用户明确允许微调现成YOLO、禁止自写网络。标准YOLO26n六类适配已接入默认实时入口；另完成八类状态版本及隐藏爪实景补充，利用原生控制器自动标注飞行怪普通/预备/冲刺，再用官方Trainer微调18epoch。独立seed53的危险物空间召回98.2%，预备状态召回92.1%、冲刺97.4%；这段验证没有弹球、机关和投射物目标，不能据此宣称全部陷阱识别完成。见[状态微调及独立口径](../.mr3a-records/archived/2026-11-09-arena-yolo-crow-state-adaptation.md)、[初版六类适配](../.mr3a-records/archived/2026-11-09-arena-standard-yolo-finetune.md)和[实际闭环](visual-baseline.md)。
+
+最新隐藏爪独立claw63严格召回从13.0%提高到97.3%，精确率92.2%；原飞行/蜘蛛独立验收保持，实际避障仍有受伤，见[隐藏爪适配](../.mr3a-records/archived/2026-11-09-arena-yolo-hidden-claw-adaptation.md)。实景正样本目前只有6种原资源，不能称为全部机关通过。
 
 以下保留此前不更新权重的零样本试验，准确性失败；其中“未训练/未接管”描述的是当时状态，不是当前状态。
 
