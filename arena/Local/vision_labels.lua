@@ -4,6 +4,7 @@ local inspectFlags=CS.System.Reflection.BindingFlags.__CastFrom(52)
 local deadField=typeof(CS.EnemyBase):GetField('_dead',inspectFlags)
 local enemyInfoField=typeof(CS.EnemyBase):GetField('_enemyInfo',inspectFlags)
 local enemyPropertyField=typeof(CS.EnemyBase):GetField('_enemyBaseProperty',inspectFlags)
+local callbackOwnerField=typeof(CS.EnemyBaseCollider):GetField('_enemy',inspectFlags)
 local supportType=typeof(CS.LevelBlockCollider)
 local airGroundType=typeof(CS.ItemAirGround)
 local supportDataField=supportType:GetField('_levelBlockInfo',inspectFlags)
@@ -63,6 +64,11 @@ function E.vision_labels(include_scene)
    bounds_center=vector(c.bounds.center),bounds_extents=vector(c.bounds.extents),
    trigger=c.isTrigger,layer=c.gameObject.layer,tag=c.tag,local_to_world=matrix(c.transform.localToWorldMatrix),
    lossy_scale=vector(c.transform.lossyScale),world_rotation={x=rotation.x,y=rotation.y,z=rotation.z,w=rotation.w}}
+  local callback=c.gameObject:GetComponent(typeof(CS.EnemyBaseCollider))
+  if callback and callbackOwnerField then
+   local target=callbackOwnerField:GetValue(callback)
+   if target then row.callback_owner_id=target:GetInstanceID()end
+  end
   if kind=='BoxCollider' then
    row.center=vector(c.center);row.world_center=vector(c.transform:TransformPoint(c.center));row.size=vector(c.size);row.plane_quad={}
    for _,sign in ipairs({{-1,-1},{1,-1},{1,1},{-1,1}})do
@@ -108,7 +114,7 @@ function E.vision_labels(include_scene)
     local ok,value=pcall(function()
      return {current_speed=o.CurrentSpeed,
       max_health=o.MaxHp,current_health=o.CurrentHp,damage_ratio=o.DamageRatio,
-      damage_type=tostring(o.EnemyDamageType),damage_role=o.DamageRole}
+      damage_type=tostring(o.EnemyDamageType),has_damaged_role=o.DamageRole}
     end)
     if ok then row.runtime_parameters=value else row.runtime_parameters_error=tostring(value)end
    end

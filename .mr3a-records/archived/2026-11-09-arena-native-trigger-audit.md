@@ -1,0 +1,17 @@
+# 原触发回调归属与伤害标记检查
+
+## 现象与原因
+
+标注此前记录原getter DamageRole，名称容易误读成能否伤害角色。竹子存在AimLine碰撞体，也需核对最近EnemyBase几何归属和原EnemyBaseCollider回调目标是否一致，不能靠名字删碰撞体。
+
+## 检查与改动
+
+检查本机原ARM64 EnemyBase.get_DamageRole读取0x231；原ProcessOnTriggerEnter在一次伤害控制处检查该位，伤害后置1，元数据有_oneOffDamageEnemy、_damagedRole、hurtNinjaRecycle相邻布尔字段。据此该值是已经伤害角色的标记，不能用false把未伤害的机关过滤掉。原Bamboo触发最终转到原EnemyBase，不能根据AimLine字样就断言无害；本次未改标签的危险性分类或游戏逻辑。
+
+只读字段改名has_damaged_role，旧帧damage_role保留原档、下游训练均未用它过滤。额外记录Collider所在EnemyBaseCollider._enemy的callback_owner_id，用于核对原回调，不替换现有几何owner。
+
+## 验证与边界
+
+串行批采w27 train/val分别168/163帧，共804个有原回调对象的碰撞体帧；callback_owner_id与几何owner全部相同，参数读取错误0。取图生产路径不读这些诊断字段，原AI/碰撞/输入不变。
+
+另发现蒸汽骑士原生生成type153 EnemyEliteWarrior_Bullet / EnemyBullutFireRobot，不在69个直接放置ID内。这证明直接板池类型并不等于全部运行时生成类型；后续数据构造必须补运行时派生对象，不能把它们静默当背景。原disassembly证据在忽略目录native-bamboo-damage-audit.txt；这不是对所有触发脚本的完整语义验收。

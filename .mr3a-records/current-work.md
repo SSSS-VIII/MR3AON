@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-09：原DamageRole核为已经伤害标记，改诊断名has_damaged_role，不能用false滤危险物；原回调owner新增只读记录，w27两回合804碰撞帧全匹配/0错误。发现蒸汽骑士派生153不在直接69ID内，后续必须扩展数据，见[触发检查](archived/2026-11-09-arena-native-trigger-audit.md)。
+
 2026-11-09：神经支撑有前方同高平台但脚下是缺口时不再报ground，7项接口回归通过；离线状态验收须回放采集器previous_action，不能用未回放按键的air数量判状态正确，见[缺口状态](archived/2026-11-09-arena-neural-gap-state.md)。
 
 2026-11-09：4524训练/4599验证原帧、47个有正标签原资源的标准共享物理YOLO在训练（fit-physics-coverage23，12epoch），独立测试未混入；全批108回合仍执行。评分器已补按原真值资源的漏检账本，不冒称共享模型输出原资源ID，见[原资源召回](archived/2026-11-09-arena-original-resource-recall.md)。
