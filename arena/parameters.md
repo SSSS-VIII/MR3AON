@@ -27,6 +27,12 @@ NinjaData还包含三/四段跳及滑翔参数，但基础小黑运行时 `CanJu
 
 ## 碰撞箱
 
+视觉控制首版另以原UI动作采样了完整时序，工具为`tools/arena_motion_probe.py`，已核对的数值先验为`vision-motion-priors.json`。这是决策侧的预测资料，游戏仍执行原动作与碰撞。
+
+当前基础小黑的Role世界bounds高度：站姿/下落约0.936，一段跳上升约0.624（中心较角色根节点上移0.156），二段跳上升及绳索换边过渡约0.2。二段跳不能沿用站姿或一段跳的碰撞范围。两次原生采样中下翻稳定约0.27–0.28秒，上翻约0.23–0.25秒；一段跳约0.30秒到顶、同高度落地约0.70秒。由下落段拟合的加速度约为−31.5和−34.3，对应原参数9×3.5、9.8×3.5。
+
+采样时钟使用`UnityEngine.Time.time`，逐渲染帧记录根节点、真实Role bounds中心和宽高；结束/按住预算使用原物理计数。原动作起始阶段及碰撞箱切换有过渡，不能只用一个初速度和统一抛物线替代。
+
 碰撞体随原动画/物理状态切换。Role的普通胶囊local height约1.8、radius0.18、center.x0.1；下翻状态可变为height0.1、radius0.1、center.x0.05。原子物体还带缩放：local height不是world height，下翻胶囊受Unity形状约束后world extents可为0.1。取物用ColliderForItem、骑乘用ColliderAtMount是另外的对象，不能合并成Role受击箱。
 
 `state.colliders` 同时导出类型、enabled/trigger、local center/height/radius/direction以及world bounds center/extents。禁用碰撞体的bounds可能为零。足点、贴地查询与平台承载仍由原角色代码执行，不从画面矩形推断碰撞。
