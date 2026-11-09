@@ -1,0 +1,7 @@
+{
+  "model": "Ultralytics YOLO26n",
+  "weights": "debug/arena-client/yolo/finetune/fit-v2/weights/best.pt",
+  "sha256": "61a8c70a322094e9d0ceeab3153b27671c8aa4cd20096dcac33370599586389a",
+  "classes": ["player", "spider", "flying", "pinball", "trap", "projectile"],
+  "evaluation": "Experimental: independent native detection evaluation and partial arena board tests; not full Gale acceptance"
+}

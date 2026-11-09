@@ -137,3 +137,19 @@ class Avoider:
             self.followup_until=stamp+.9
             return 'jump',f'under_rope_escape:{first.id}'
         return action,f'{action}:{first.id}'
+
+
+class VisualAvoider(Avoider):
+    """Class motion priors for collider-trained visual detections.
+
+    Basic spiders enter with a fast drop/rebound and then stay at their anchor;
+    extrapolating that entry velocity for a whole crossing invents a new path.
+    Native paired episodes favor the stopped vertical model over constant
+    velocity at 300 ms. Keep the measured velocity in telemetry unchanged.
+    Flying enemies retain the measured trajectory and wind-up/dash prior.
+    """
+    def _hazard(self,track,t):
+        box=super()._hazard(track,t)
+        if track.kind=='spider' and track.sine_count<2:
+            box.y=track.box.y
+        return box

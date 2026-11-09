@@ -61,6 +61,12 @@ class Track:
     sine_a: float = 0
     sine_b: float = 0
     sine_count: int = 0
+    adaptive_velocity: bool = False
+    ballistic: bool = False
+    gravity_up: float = 0
+    gravity_down: float = 0
+    floor_y: float = 0
+    rebound_speed: float = 0
 
     def update(self, detection, stamp, player):
         self.box, self.kind, self.confidence, self.seen = (
@@ -78,10 +84,16 @@ class Track:
         t = samples[:, 0] - stamp
         # A short regression suppresses single-frame wing/animation jitter.
         design = np.column_stack((np.ones(len(t)), t))
-        weights = np.exp(t / .09)[:, None]
+        weights = np.exp(t / (.18 if self.adaptive_velocity else .09))[:, None]
         fit, _, _, _ = np.linalg.lstsq(design * weights, samples[:, 1:] * weights, rcond=None)
         self.vx, self.vy = map(float, fit[1])
-        if np.ptp(samples[:, 2]) < 12:
+        if self.adaptive_velocity:
+            residual_y=samples[:,2]-(design@fit)[:,1]
+            centered=t-np.average(t,weights=weights[:,0]**2)
+            denominator=float(np.sum((centered*weights[:,0])**2))
+            sigma=float(np.sqrt(np.mean(residual_y**2)/max(denominator,1e-6)))
+            if abs(self.vy)<max(10,2*sigma):self.vy=0.
+        elif np.ptp(samples[:, 2]) < 12:
             self.vy = 0.
         self.residual = float(np.sqrt(np.mean((design @ fit - samples[:, 1:]) ** 2)))
         old_a=(self.ax,self.ay)
@@ -132,6 +144,11 @@ class Track:
                 self.ay=-self.sine_b*self.sine_frequency**2
         else:
             self.sine_count=0
+        if self.adaptive_velocity and self.kind=='pinball':
+            from arena_object_motion import fit_ballistic
+            from arena_projection import SCALE
+            self.ballistic=False
+            fit_ballistic(self,SCALE)
 
     def future(self, seconds):
         horizon=min(seconds,.25)
@@ -140,13 +157,22 @@ class Track:
         if self.sine_count>=2:
             angle=self.sine_frequency*seconds
             dy=self.sine_a*math.sin(angle)+self.sine_b*(math.cos(angle)-1)
+        if self.ballistic:
+            from arena_object_motion import bounce_y
+            dy=bounce_y(self.box.center[1],self.vy,seconds,floor=self.floor_y,
+                        gravity_up=self.gravity_up,gravity_down=self.gravity_down,
+                        rebound=self.rebound_speed)-self.box.center[1]
         return Box(self.box.x + self.vx * seconds+.5*ax*horizon*horizon,
                    self.box.y+dy,
                    self.box.w, self.box.h)
 
     def at(self,seconds):
         result=replace(self,box=self.future(seconds))
-        if self.sine_count>=2:
+        if self.ballistic:
+            from arena_object_motion import bounce_state
+            _,result.vy=bounce_state(self.box.center[1],self.vy,seconds,floor=self.floor_y,
+                gravity_up=self.gravity_up,gravity_down=self.gravity_down,rebound=self.rebound_speed)
+        elif self.sine_count>=2:
             angle=self.sine_frequency*seconds
             result.sine_a=self.sine_a*math.cos(angle)-self.sine_b*math.sin(angle)
             result.sine_b=self.sine_a*math.sin(angle)+self.sine_b*math.cos(angle)
@@ -159,7 +185,8 @@ class Track:
 
 
 class Tracker:
-    def __init__(self):
+    def __init__(self,adaptive=False):
+        self.adaptive=adaptive
         self.tracks = []
         self.next_id = 1
 
@@ -185,6 +212,8 @@ class Tracker:
         for i, d in enumerate(detections):
             if i not in used:
                 t = Track(self.next_id, d.box, d.kind, d.confidence, stamp)
+                if self.adaptive:
+                    t.adaptive_velocity=True;t.history=deque(maxlen=64)
                 self.next_id += 1
                 t.update(d, stamp, player)
                 available[t.id] = t
@@ -205,6 +234,7 @@ class Tracker:
 class Perception:
     def __init__(self):
         self.tracker = Tracker()
+        self.visual_role = False
         self.previous_player = None
         self.last = None
         self.jump_count = 0
@@ -484,6 +514,9 @@ class Perception:
             if player and Box(float(x),float(y),float(w),float(h)).overlaps(player, 3):
                 continue
             detections.append(Detection(Box(float(x), float(y), float(w), float(h)), kind, confidence))
+        return self._finish(rgb,stamp,player,detections,body)
+
+    def _finish(self,rgb,stamp,player,detections,body=None):
         phase = 'unknown'
         tracks = []
         support=None
@@ -502,7 +535,7 @@ class Perception:
         if player:
             px, py = player.center
             support=self.rope if on_rope else (terrain['y']+7 if terrain and terrain['y']is not None else None)
-            if self.active_motion:
+            if self.active_motion and not self.visual_role:
                 name=self.active_motion['name'];elapsed=max(0,stamp-self.active_motion['started'])
                 offset_x,root_y,offset_y,width,height=motion.point(name,elapsed)
                 origin=self.motion_origin;scale=origin['scale']
@@ -538,12 +571,13 @@ class Perception:
                 elif name.startswith('jump')and 'falling' in phase and support is not None:
                     available=on_rope or bool(terrain and terrain['at_player'])
                     landing=support-.75*self.motion_origin['scale']
-                    if available and py>=landing:
-                        player=Box(player.x,landing-self.motion_origin['stand_h']/2,
-                                   self.motion_origin['stand_w'],self.motion_origin['stand_h'])
+                    if available and py>=landing-(3 if self.visual_role else 0) and (not self.visual_role or abs(py-landing)<15):
+                        if not self.visual_role:
+                            player=Box(player.x,landing-self.motion_origin['stand_h']/2,
+                                       self.motion_origin['stand_w'],self.motion_origin['stand_h'])
                         phase='rope_above'if on_rope else 'ground'
                         self.active_motion=None;self.jump_count=0
-            if not self.active_motion and phase in ('rope_above','rope_below')and support is not None:
+            if not self.visual_role and not self.active_motion and phase in ('rope_above','rope_below')and support is not None:
                 center=support+30 if phase=='rope_below'else support-29
                 player=Box(player.x,center-player.h/2,player.w,player.h)
             # Use the visible rope as vertical camera reference. A player's flip
@@ -651,11 +685,32 @@ def player_future(observation,seconds):
     return Box(p.x,p.y+dy,p.w,p.h)
 
 
+def advance_player(observation,seconds):
+    """Advance geometry and action state together, including landing/flip end."""
+    current=dict(observation,time=observation['time']+seconds)
+    if observation['player']is None:
+        return current
+    current['player']=player_future(observation,seconds)
+    active=observation.get('motion')
+    if active:
+        elapsed=current['time']-active['started'];name=active['name']
+        current['phase']=motion.phase(name,elapsed)
+        if name.startswith('rope')and elapsed>=motion.duration(name):
+            current.update(motion=None,jumps=0)
+        elif name.startswith('jump')and 'falling'in current['phase']:
+            support=observation.get('rope');terrain=observation.get('terrain')
+            if terrain and terrain['y']is not None:support=terrain['y']+7
+            if support is not None:
+                landing=support-.75*observation.get('scale_px',41.)
+                if abs(current['player'].center[1]-landing)<.15:
+                    current.update(motion=None,jumps=0,phase='ground'if terrain else'rope_above')
+    return current
+
+
 def extrapolate(observation,stamp):
     age=max(0,stamp-observation['time'])
-    current=dict(observation,time=stamp,observation_age_ms=age*1000)
-    if observation['player'] is not None:
-        current['player']=player_future(observation,age)
+    current=advance_player(observation,age)
+    current['observation_age_ms']=age*1000
     current['tracks']=[t.at(age) for t in observation['tracks']]
     return current
 

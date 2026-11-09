@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 DATA=json.loads((Path(__file__).resolve().parents[1]/'arena/vision-motion-priors.json').read_text())
+TIMES={name:tuple(p[0]for p in profile['points'])for name,profile in DATA['profiles'].items()}
 
 
 def duration(name):
@@ -23,7 +24,7 @@ def point(name,t):
         if 'tail_velocity' in profile:
             value[1]+=profile['tail_velocity']*dt+.5*profile['tail_acceleration']*dt*dt
         return value
-    index=bisect_right([p[0]for p in points],t)
+    index=bisect_right(TIMES[name],t)
     a,b=points[index-1],points[index]
     f=(t-a[0])/(b[0]-a[0])
     return [x+(y-x)*f for x,y in zip(a[1:],b[1:])]

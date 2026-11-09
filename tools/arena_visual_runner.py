@@ -15,6 +15,7 @@ import os
 import zlib
 import hashlib
 import subprocess
+from collections import deque
 
 # Tiny per-object regressions must not keep a BLAS worker pool spinning beside
 # Waydroid. Set before NumPy/OpenCV import, only in this experiment process.
@@ -26,6 +27,7 @@ from arena_local import LocalClient, FOLDER, ROOT
 from arena_capture import FastCapture, percentile
 from arena_vision import Perception, serializable, overlay,extrapolate
 from arena_policy import Avoider
+from arena_mpc import MpcAvoider
 from runtime import InstanceSession
 import cv2
 
@@ -138,14 +140,27 @@ def run(args):
     pins = dict(item.split(':', 1) for item in args.pin)
     pins = {k: int(v) for k, v in pins.items()}
     args.output.mkdir(parents=True, exist_ok=False)
+    detector_weights=getattr(args,'detector_weights',None)
+    if detector_weights:
+        from arena_yolo_detector import YoloDetector,YoloPerception
+        perception=YoloPerception(YoloDetector(detector_weights))
+        detector_info=dict(weights=str(detector_weights),sha256=hashlib.sha256(detector_weights.read_bytes()).hexdigest())
+    else:
+        perception=Perception();detector_info=None
+    policy=MpcAvoider() if detector_weights else Avoider()
+    policy_samples={False:deque(maxlen=32),True:deque(maxlen=32)}
+    policy_times,compute_priors=[],[]
     initial = prepare(client, args.seed, args.level, args.map, pins)
     sources=('tools/arena_vision.py','tools/arena_policy.py','tools/arena_terrain.py',
              'tools/arena_motion.py','arena/vision-motion-priors.json','arena/Local/vision_eval.lua',
-             'tools/arena_capture.py','arena/Capture/FrameServer.java')
+             'tools/arena_capture.py','arena/Capture/FrameServer.java','tools/arena_yolo_detector.py',
+             'tools/arena_yolo_data.py','tools/arena_visual_runner.py','tools/arena_projection.py',
+             'arena/vision-camera.json','tools/arena_mpc.py','tools/arena_object_motion.py',
+             'arena/vision-object-priors.json','arena/vision-detector.json')
     source_hashes={name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest()for name in sources}
     (args.output / 'setup.json').write_text(json.dumps(dict(seed=args.seed, level=args.level,
-        map=args.map, pins=pins, observe=args.observe_only, initial=initial,sources=source_hashes), indent=2))
-    perception, policy = Perception(), Avoider()
+        map=args.map, pins=pins, observe=args.observe_only, initial=initial,sources=source_hashes,
+        detector=detector_info), indent=2))
     capture_times, vision_times, action_times, intervals, fresh_intervals,ages = [], [], [], [], [], []
     fresh_vision_times=[]
     first_evaluation=None
@@ -190,8 +205,17 @@ def run(args):
                         status='stale_frame';break
                     # One native render-frame input prior, independently of actual
                     # measured pixel age. Neither number is a photon-time guarantee.
-                    obs=extrapolate(latest,now+1/60)
+                    # Budget the remaining policy computation too; its expensive
+                    # search samples must not be diluted by cheap reactive frames.
+                    expensive=isinstance(policy,MpcAvoider)and policy.uses_search(latest)
+                    samples=policy_samples[expensive]
+                    compute_prior=percentile(samples,90)/1000 if samples else (.01 if expensive else 0.)
+                    obs=extrapolate(latest,now+1/60+compute_prior)
+                    decision_start=time.perf_counter()
                     action, reason = policy.choose(obs)
+                    compute_ms=(time.perf_counter()-decision_start)*1000
+                    samples.append(compute_ms);policy_times.append(compute_ms)
+                    compute_priors.append(compute_prior*1000)
                     vision_times.append((time.perf_counter() - start) * 1000)
                     if is_fresh:
                         fresh_vision_times.append(vision_times[-1])
@@ -208,7 +232,8 @@ def run(args):
                     row = serializable(obs)
                     executed=action if not args.observe_only else None
                     row.update(frame=count, elapsed=time.monotonic()-begin, action=executed,proposed_action=action,
-                               reason=reason, capture_ms=frame.request_ms, vision_ms=vision_times[-1])
+                               reason=reason, capture_ms=frame.request_ms, vision_ms=vision_times[-1],
+                               policy_compute_ms=compute_ms,policy_compute_prior_ms=compute_prior*1000)
                     estimates.write(json.dumps(row) + '\n')
                     if loop >= next_image:
                         recorder.submit(count,cv2.cvtColor(frame.array(),cv2.COLOR_RGBA2BGR),
@@ -274,6 +299,8 @@ def run(args):
                   unity_keydown_ms=timing(consume_times),capture_to_unity_ms=timing(chain_times),
                   board_entries=board_entries,had_damage=had_damage)
     report['evaluation_error']=evaluator.error
+    report['policy_compute_ms']=timing(policy_times)
+    report['policy_compute_prior_ms']=timing(compute_priors)
     report['fresh_perception_policy_ms']=timing(fresh_vision_times)
     if first_evaluation and final['time']>first_evaluation['time']:
         report['native_render_fps']=(final['frame']-first_evaluation['frame'])/(final['time']-first_evaluation['time'])
@@ -283,6 +310,7 @@ def run(args):
 
 
 def main():
+    from arena_yolo_detector import DEFAULT_WEIGHTS
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--seed', type=int, default=42)
     p.add_argument('--level', type=int, default=1)
@@ -292,6 +320,8 @@ def main():
     p.add_argument('--boards', type=int, default=3, help='Stop once grounded on this zero-based stage index')
     p.add_argument('--fps', type=int, default=40)
     p.add_argument('--observe-only', action='store_true')
+    p.add_argument('--detector-weights',type=Path,default=DEFAULT_WEIGHTS,
+                   help='Fine-tuned standard YOLO checkpoint; defaults to reviewed profile')
     p.add_argument('--output', type=Path,default=ROOT/'debug/arena-client/visual-runs'/str(time.time_ns()))
     args = p.parse_args()
     if not 1 <= args.fps <= 60 or not 0 < args.seconds <= 180 or args.boards < 1:
