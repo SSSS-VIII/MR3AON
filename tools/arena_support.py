@@ -3,6 +3,29 @@ from collections import deque
 import numpy as np
 
 
+def leading_ground_faces(segments,stamp):
+    """Visible solid-ground entrances; floating surfaces and joined seams aren't walls.
+
+    These faces are derived geometry, never extra detector/native enemy labels.
+    A six-pixel top tolerance avoids penalising normal surface contact.
+    """
+    ground=[s for s in segments if s['kind']=='platform'and s.get('confidence',0)>=.7]
+    faces=[]
+    for s in ground:
+        x,y=s['a']
+        if not 3<x<637 or s['b'][0]-x<8:continue
+        joined=False
+        for other in ground:
+            if other is s or other['a'][0]>=x-4 or other['b'][0]<x-4:continue
+            sy=height(other,min(x,other['b'][0]))
+            if sy is not None and abs(sy-y)<=6:joined=True;break
+        if joined:continue
+        dt=max(0,stamp-s['stamp']);vx=s.get('vx',0);vy=s.get('vy',0)
+        faces.append(dict(id=s['id'],x=x+vx*dt,y=y+vy*dt+6,vx=vx,vy=vy,
+                          confidence=s['confidence']))
+    return faces
+
+
 def height(segment,x,seconds=0):
     a=np.asarray(segment['a'],float)+np.array([segment.get('vx',0),segment.get('vy',0)])*seconds
     b=np.asarray(segment['b'],float)+np.array([segment.get('vx',0),segment.get('vy',0)])*seconds

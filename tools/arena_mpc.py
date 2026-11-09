@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 import numpy as np
 from arena_vision import advance_player,native_motion_box,create_motion,can_air_down
-from arena_policy import VisualAvoider
+from arena_policy import VisualAvoider,collision_weight
 import arena_motion as motion
 from arena_object_motion import PRIORS
 from arena_oriented import is_box,swept_capsules
@@ -91,7 +91,7 @@ class MpcAvoider(VisualAvoider):
 
     def uses_search(self,obs):
         return bool(obs.get('player')and obs.get('rope')is not None and not obs.get('terrain')
-                    and any(t.kind in ('pinball','trap')or t.attack_phase is not None for t in self._objects(obs)))
+                    and any(t.kind in ('pinball','trap','terrain_wall')or t.attack_phase is not None for t in self._objects(obs)))
 
     def _options(self,state,stamp):
         names=[None]
@@ -166,7 +166,7 @@ class MpcAvoider(VisualAvoider):
                     for index in np.flatnonzero(distances[sample][i]<1):
                         identity=tracks[index].id
                         if identity not in hits:
-                            cost+=1000*(1-.2*(step+1)/self.STEPS);hits.add(identity)
+                            cost+=1000*collision_weight(tracks[index])*(1-.2*(step+1)/self.STEPS);hits.add(identity)
                     cost+=float(near[sample][i])
                 count=node.actions+bool(name)
                 if name:cost+=.05 if name.startswith('jump')else .03

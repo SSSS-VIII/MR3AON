@@ -1,7 +1,14 @@
 """Short-horizon avoidance over visual objects, support and native action priors."""
-from arena_vision import Box,player_future,native_motion_box,can_air_down
+from arena_vision import Box,Track,player_future,native_motion_box,can_air_down
 from arena_oriented import is_box,transform,touching_capsule
+from arena_support import leading_ground_faces
 import arena_motion as motion
+
+
+def collision_weight(track):
+    # Blocking the runner against a scrolling ground entrance is terminal;
+    # ordinary uncertain enemy contacts retain the existing health-loss cost.
+    return 10 if track.kind=='terrain_wall'else 1
 
 
 def touching(player,hazard,margin=4,*,shape="ellipse"):
@@ -48,9 +55,15 @@ class Avoider:
 
     def _objects(self,obs):
         p=obs['player']
-        return [t for t in obs['tracks'] if t.confidence>=.7
+        objects=[t for t in obs['tracks'] if t.confidence>=.7
                 and (t.observations>=3 or t.arming or t.active)
                 and t.box.x+t.box.w>p.x-100]
+        for face in leading_ground_faces(obs.get('visible_supports',[]),obs['time']):
+            if face['x']<p.x-100:continue
+            objects.append(Track(-1000000-face['id'],Box(face['x'],face['y'],1,1000),
+                'terrain_wall',face['confidence'],obs['time'],observations=3,
+                vx=face['vx'],vy=face['vy'],resource='derived_ground_entrance',collider_shape='BoxCollider'))
+        return objects
 
     def _hazard(self,track,t):
         box=track.future(t)
@@ -76,7 +89,7 @@ class Avoider:
                     collision=touching(p,hazard,shape='box'if is_box(track)else'ellipse')
                 if collision:
                     hits[track.id]=(t,track)
-        cost=sum(100*(1+(.8-t)*2) for t,_ in hits.values())
+        cost=sum(100*collision_weight(track)*(1+(.8-t)*2) for t,track in hits.values())
         return cost,min((t for t,_ in hits.values()),default=10),hits
 
     def choose(self,obs):
