@@ -4,6 +4,7 @@ import numpy as np
 from arena_vision import advance_player,native_motion_box,create_motion,can_air_down
 from arena_policy import VisualAvoider
 import arena_motion as motion
+from arena_object_motion import PRIORS
 
 
 @dataclass
@@ -30,7 +31,7 @@ def player_array(states):
     return np.array([[*s['player'].center,s['player'].w,s['player'].h]for s in states])
 
 
-def swept_distances(before,after,old,new,margin,box_hazards=None):
+def swept_distances(before,after,old,new,margin,box_hazards=None,box_vertical_margin=None):
     """All candidate capsules against all hazards in one broadcast operation.
 
     Player rows are centerX/centerY/width/height, hazard rows centerX/centerY/
@@ -60,6 +61,8 @@ def swept_distances(before,after,old,new,margin,box_hazards=None):
         velocity=(new[None,:,:2]-after[:,None,:2])-relative
         extent=np.maximum(old[:,2:],new[:,2:])[None,:,:]+radius[:,None,None]+margin
         extent=np.broadcast_to(extent,relative.shape).copy();extent[:,:,1]+=core[:,None]
+        if box_vertical_margin is not None:
+            extent[:,:,1]+=box_vertical_margin-margin
         parallel=abs(velocity)<1e-9;safe=np.where(parallel,1.,velocity)
         lo=(-extent-relative)/safe;hi=(extent-relative)/safe
         enter=np.minimum(lo,hi);leave=np.maximum(lo,hi)
@@ -132,7 +135,9 @@ class MpcAvoider(VisualAvoider):
                 index=step*2+sample
                 d=swept_distances(positions[sample],positions[sample+1],
                                   boxes[index],boxes[index+1],8+times[index+1]*8,
-                                  box_hazards=box_hazards)
+                                  box_hazards=box_hazards,
+                                  box_vertical_margin=PRIORS['trap_prediction']['vertical_margin_px']+
+                                    times[index+1]*PRIORS['trap_prediction']['vertical_growth_px_per_second'])
                 distances.append(d);near.append(np.maximum(0,1.4-d).sum(axis=1)*.002)
             pool={}
             for i,(node,state,half,end,name)in enumerate(branches):

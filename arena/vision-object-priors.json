@@ -13,7 +13,30 @@
     "accelerated_up": 8,
     "accelerated_down": 8,
     "rebound_speed": 7,
-    "sample_counts": [345, 432, 277],
-    "configured_ranges": [[2, 12], [2, 12], [1, 32]]
+    "sample_counts": [
+      345,
+      432,
+      277
+    ],
+    "configured_ranges": [
+      [
+        2,
+        12
+      ],
+      [
+        2,
+        12
+      ],
+      [
+        1,
+        32
+      ]
+    ]
+  },
+  "trap_prediction": {
+    "vertical_margin_px": 2,
+    "vertical_growth_px_per_second": 6,
+    "source": "claw61 validation, rope-facing bbox edge P95; horizontal timing uncertainty kept separately",
+    "source_sha256": "e5a6b9f71d6ca5c8c5563d5ab4875226b99a2acffe14efae17d5b016e344085f"
   }
 }

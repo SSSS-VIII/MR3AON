@@ -345,3 +345,14 @@ def test_air_down_keeps_projected_state_and_retimed_geometry_consistent():
     assert direct['phase']=='rope_below'and direct['motion']is None
     p=Perception();p.jump_count=2;p.action('down',1.,obs)
     assert p.active_motion['name']=='air_down'and p.jump_count==0
+
+
+def test_axis_uncertainty_preserves_measured_safe_under_rope_clearance():
+    from arena_mpc import swept_distances
+    # Actual upper claw envelope ends at y262; the standing lower capsule
+    # starts at y269.5. This is a safe native passage, not a missing corner.
+    players=np.array([[185,288,16,37],[185,278,16,37]],float)
+    claw=np.array([[185,211,10,51]],float)
+    assert (swept_distances(players,players,claw,claw,11.2,[True])<1).tolist()==[[True],[True]]
+    actual=swept_distances(players,players,claw,claw,11.2,[True],4.4)<1
+    assert actual.tolist()==[[False],[True]]
