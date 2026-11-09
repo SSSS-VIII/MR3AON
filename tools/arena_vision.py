@@ -74,6 +74,7 @@ class Track:
     rush_scale_remaining: float = 0
     rush_target_w: float = 0
     rush_target_h: float = 0
+    horizontal_stopped: bool = False
 
     def update(self, detection, stamp, player):
         self.box, self.kind, self.confidence, self.seen = (
@@ -154,6 +155,15 @@ class Track:
                 self.ay=-self.sine_b*self.sine_frequency**2
         else:
             self.sine_count=0
+        if self.attack_phase=='normal'and len(all_samples)>=3:
+            recent=all_samples[-3:]
+            stationary=recent[-1,0]-recent[0,0]>.025 and np.ptp(recent[:,1])<4
+            self.horizontal_stopped=bool(stationary and
+                                         (self.horizontal_stopped or np.ptp(all_samples[-10:,1])>20))
+            if self.horizontal_stopped:
+                self.vx=self.ax=0.
+        else:
+            self.horizontal_stopped=False
         if self.adaptive_velocity and self.kind=='pinball':
             from arena_object_motion import fit_ballistic
             from arena_projection import SCALE

@@ -229,3 +229,24 @@ def test_batched_sweeps_keep_each_candidate_and_each_hazard_independent():
     after=np.array([[215,228,12,12],[215,70,12,12]],float)
     collisions=swept_distances(players,players,before,after,0)<1
     assert collisions.tolist()==[[True,False],[False,True],[True,False]]
+
+
+def test_observed_stop_ends_old_entering_velocity_without_erasing_slow_motion():
+    from arena_vision import Track
+    fast=Track(1,Box(500,200,24,24),'eye_enemy',.9,0,adaptive_velocity=True)
+    slow=Track(2,Box(500,200,24,24),'eye_enemy',.9,0,adaptive_velocity=True)
+    for i,x in enumerate([500,477,454,431,431,431,431]):
+        t=i*.025
+        fast.update(Detection(Box(x,200,24,24),'eye_enemy',.9,False,False,'normal'),t,(180,260))
+        slow.update(Detection(Box(500-50*t,200,24,24),'eye_enemy',.9,False,False,'normal'),t,(180,260))
+    assert fast.horizontal_stopped and fast.future(.2).x==pytest.approx(431)
+    assert not slow.horizontal_stopped and slow.vx==pytest.approx(-50,abs=.01)
+
+
+def test_ready_onset_is_between_exposures_not_at_the_later_image():
+    from arena_vision import Track
+    t=Track(1,Box(400,200,22,22),'eye_enemy',.9,0)
+    t.update(Detection(t.box,'eye_enemy',.9,False,False,'normal'),1.,(180,260))
+    t.update(Detection(t.box,'eye_enemy',.9,False,True,'ready'),1.06,(180,260))
+    assert t.ready_started==pytest.approx(1.03)
+    assert t.ready_remaining==pytest.approx(.27)

@@ -14,7 +14,10 @@ def configure_crow(track,detection,stamp):
     track.attack_phase=phase
     if phase=='ready':
         if track.ready_started is None or stamp-track.ready_started>.65:
-            track.ready_started=stamp
+            # A newly observed transition occurred between this image and the
+            # preceding one. Use the interval midpoint, not the later exposure.
+            gap=stamp-track.history[-2][0]if len(track.history)>1 else 0.
+            track.ready_started=stamp-min(.05,max(0,gap/2))
             track.rush_target_w=track.box.w*CROW['collision_scale']
             track.rush_target_h=track.box.h*CROW['collision_scale']
         track.ready_remaining=max(0,CROW['ready_seconds']-(stamp-track.ready_started))
