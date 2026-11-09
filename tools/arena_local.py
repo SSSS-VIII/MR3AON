@@ -43,6 +43,11 @@ class LocalClient:
                 except (ValueError, UnicodeError):
                     response = {}
                 if response.get("id") == identity:
+                    # The original bridge reads/parses command.json every render
+                    # frame, even after acknowledging its ID. Do not leave a large
+                    # environment/annotation script in that hot path. The same
+                    # InstanceSession control lease still owns this request slot.
+                    self.session.adb("shell", "rm", "-f", f"{FOLDER}/command.json").check_returncode()
                     if not response.get("ok"):
                         raise RuntimeError(response.get("error", "Local command failed"))
                     return response.get("result")

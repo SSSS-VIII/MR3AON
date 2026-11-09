@@ -44,7 +44,23 @@ def test_rpc_identity_atomic_publish_and_literal_code():
     assert isinstance(s.request["id"], str)
     assert s.reads == 2
     assert s.calls[1][:2] == ("shell", "mv")
+    assert s.calls[-1] == ("shell","rm","-f",f"/sdcard/Android/data/com.pandadastudio.ninjamustdie3/files/arena-control/command.json")
+    assert s.calls.index(s.calls[-1])>s.calls.index(next(c for c in s.calls if c[:2]==('shell','cat')))
     assert not any(code in str(arg) for args in s.calls for arg in args)
+
+
+def test_acknowledged_error_also_removes_expensive_command():
+    s=Session()
+    original=s.adb
+    def adb(*args):
+        result=original(*args)
+        if args[:2]==('shell','cat') and s.reads>1:
+            return subprocess.CompletedProcess(args,0,json.dumps(dict(id=s.request['id'],ok=False,error='bad script')).encode())
+        return result
+    s.adb=adb
+    with pytest.raises(RuntimeError,match='bad script'):
+        LocalClient(s).execute('error("bad script")')
+    assert s.calls[-1][:3]==('shell','rm','-f')
 
 
 def test_rejects_main_and_oversized_commands():
