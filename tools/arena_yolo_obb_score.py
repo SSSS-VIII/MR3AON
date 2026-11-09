@@ -22,7 +22,8 @@ def match(truth,prediction,classes,mode='class'):
     def key(cls):
         c=classes[cls]
         if mode=='class':return cls
-        if mode=='resource':return(c['kind'],c.get('resource',c['name']))
+        if mode=='resource':
+            return(c['kind'],c['resource'])if c.get('resource')else(c['kind'],c.get('motion_kind'),c['shape'])
         if mode=='geometry':return c['kind']if c['kind']!='hazard'else'hazard'
         raise ValueError(mode)
     pairs=[]

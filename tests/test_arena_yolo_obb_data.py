@@ -4,7 +4,7 @@ import pytest
 pytest.importorskip('cv2')
 import numpy as np
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
-from arena_yolo_obb_data import schema,targets,clipped_quad,segment_quad,build
+from arena_yolo_obb_data import schema,targets,clipped_quad,segment_quad,build,physics_profile
 
 
 def profile():
@@ -80,3 +80,14 @@ def test_copied_folders_from_one_map_seed_cannot_leak_across_train_and_validatio
     for folder in(train,val):(folder/'setup.json').write_text(json.dumps(dict(seed=1,level=2,map=11)))
     with pytest.raises(ValueError,match='map seed'):
         build(tmp_path/'out',[train],[val],tmp_path/'entities',tmp_path/'prefabs',tmp_path/'plan')
+
+
+def test_shared_physics_classes_retain_original_ontology_and_separate_attack_phase():
+    native=profile();shared=physics_profile(native)
+    assert len(shared['classes'])==13 and shared['type_bindings']==native['type_bindings']
+    names=[c['name']for c in native['classes']]
+    assert shared['class_mapping'][names.index('Crow__SphereCollider__ready')]==6
+    assert shared['class_mapping'][names.index('Crow__SphereCollider__rush')]==7
+    assert shared['class_mapping'][names.index('type_238__BoxCollider__normal')]==4
+    assert shared['class_mapping'][names.index('type_238__SphereCollider__normal')]==5
+    assert shared['native_targets']['families']['Crow']['type_ids']==[101,102]

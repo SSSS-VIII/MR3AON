@@ -61,6 +61,41 @@ def axis_quad(box):
     return np.array([[x1,y1],[x2,y1],[x2,y2],[x1,y2]],np.float32)
 
 
+def physics_profile(native):
+    definitions=[('player','player','CapsuleCollider',None,None),
+                 ('spider','hazard','SphereCollider','spider',None),
+                 ('flying_normal','hazard','SphereCollider','eye_enemy','normal'),
+                 ('pinball','hazard','SphereCollider','pinball',None),
+                 ('box_hazard','hazard','BoxCollider','trap',None),
+                 ('sphere_hazard','hazard','SphereCollider','trap',None),
+                 ('flying_ready','hazard','SphereCollider','eye_enemy','ready'),
+                 ('flying_rush','hazard','SphereCollider','eye_enemy','rush'),
+                 ('capsule_hazard','hazard','CapsuleCollider','trap',None),
+                 ('cue','cue','cue',None,None),('rope','rope','segment',None,None),
+                 ('platform','platform','segment',None,None),('floating_platform','floating_platform','segment',None,None)]
+    classes=[dict(name=n,kind=k,shape=s,motion_kind=m,phase=p,members=[])
+             for n,k,s,m,p in definitions]
+    mapping=[]
+    for c in native['classes']:
+        if c['kind']=='player':index=0
+        elif c['kind']in('rope','platform','floating_platform'):
+            index={'rope':10,'platform':11,'floating_platform':12}[c['kind']]
+        elif c['shape']=='cue':index=9
+        elif c['shape']=='BoxCollider':index=4
+        elif c['shape']=='CapsuleCollider':index=8
+        else:
+            family=native['families'][c['resource']];scripts=family['script_types']
+            if family['straight_bat']:index={'normal':2,'ready':6,'rush':7}[c['phase']]
+            elif 'EnemyCurveBat'in scripts:index=2
+            elif 'EnemySpider'in scripts:index=1
+            elif 'EnemyPinball'in scripts:index=3
+            else:index=5
+        mapping.append(index);classes[index]['members'].append(c['name'])
+    return dict(version=2,task='obb',geometry='gameplay_plane',taxonomy='physics',classes=classes,
+                native_targets=native,class_mapping=mapping,families=native['families'],type_bindings=native['type_bindings'],
+                provenance='Shared native collider/motion classes; original resources/configs remain in the profile')
+
+
 def clipped_quad(quad):
     """Visible portion, converted by the same minAreaRect used by YOLO OBB."""
     points=np.asarray(quad,np.float32).reshape(-1,2)
@@ -101,6 +136,9 @@ def segment_quad(a,b,thickness=4):
 
 
 def targets(raw,profile):
+    if profile.get('taxonomy')=='physics':
+        native,counts=targets(raw,profile['native_targets'])
+        return [(profile['class_mapping'][cls],quad)for cls,quad in native],counts
     row=normalize_arrays(raw)
     if row.get('label_schema',0)<4:
         raise ValueError('Full support supervision requires native label schema 4')
@@ -148,7 +186,7 @@ def targets(raw,profile):
     return result,counts
 
 
-def build(output,train,validation,entities_path,prefabs_path,plan_path):
+def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=False):
     if {p.resolve()for p in train}&{p.resolve()for p in validation}:
         raise ValueError('Whole native episodes must be disjoint')
     def episode_keys(folders):
@@ -159,6 +197,7 @@ def build(output,train,validation,entities_path,prefabs_path,plan_path):
     plan=json.loads(plan_path.read_text())
     if plan.get('mode')!=6:raise ValueError('Only Gale resource pools may enter this dataset')
     profile=schema(json.loads(entities_path.read_text()),json.loads(prefabs_path.read_text()),plan['reachable_enemy_types'])
+    if physics:profile=physics_profile(profile)
     output.mkdir(parents=True,exist_ok=False)
     runtime_names=defaultdict(set);runtime_types=defaultdict(set)
     manifest=dict(task='standard Ultralytics YOLO26 OBB',profile='profile.json',splits={},sources={},
@@ -199,5 +238,6 @@ if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     for name in('output','entities','prefabs','plan'):p.add_argument('--'+name,type=Path,required=True)
     p.add_argument('--train',type=Path,nargs='+',required=True);p.add_argument('--validation',type=Path,nargs='+',required=True)
-    a=p.parse_args();result=build(a.output,a.train,a.validation,a.entities,a.prefabs,a.plan)
+    p.add_argument('--physics',action='store_true',help='Share classes by original collider and motion family, retaining the full resource profile')
+    a=p.parse_args();result=build(a.output,a.train,a.validation,a.entities,a.prefabs,a.plan,a.physics)
     print(json.dumps(result['splits']),flush=True)
