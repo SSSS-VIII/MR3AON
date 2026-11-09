@@ -43,7 +43,7 @@ def test_partial_frames_preserve_rgba_and_sequence():
     assert not thread.is_alive()
 
 
-@pytest.mark.parametrize('action,command', [('jump', 3), ('down', 4), ('pause', 5)])
+@pytest.mark.parametrize('action,command', [('jump', 3), ('down', 4), ('pause', 5), ('slide',6)])
 def test_key_pulses_have_ordered_payload_free_acknowledgments(action, command):
     capture = FastCapture(session(), width=16, height=16)
     client, server = socket.socketpair()

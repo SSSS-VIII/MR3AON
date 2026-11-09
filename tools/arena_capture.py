@@ -207,10 +207,10 @@ class FastCapture:
         return self._exchange(1)
 
     def tap(self, action):
-        """30ms Android key pulse; acknowledgment is enqueue time, not physics consumption."""
-        commands = {'jump': 3, 'down': 4, 'pause': 5}
+        """Android key pulse (slide holds S for 500ms); ack is enqueue, not consumption."""
+        commands = {'jump': 3, 'down': 4, 'pause': 5, 'slide': 6}
         if action not in commands:
-            raise ValueError('Action must be jump, down or pause')
+            raise ValueError('Action must be jump, down, slide or pause')
         return self._exchange(commands[action])
 
     def calibrate_clock(self, count=8):

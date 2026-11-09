@@ -19,3 +19,9 @@
 - 原辅助进程构建及实机取图/按键通过。视觉识别、轨迹和策略仍在开发，另行记录，不把本提交写成跑图验收。
 
 main及其它实例未操作，原APK和游戏物理未修改。
+
+## 地面滑铲按住（同日后续）
+
+地面地图的S是原生滑铲，按住语义与绳上下翻不同。协议命令6提供固定500ms的S按住后释放，Python对应`tap('slide')`；普通jump/down/pause仍30ms，没有添加游戏菜单项。断流清理同样释放该键。
+
+真实map2/1001平桥暂停校准：原按键后150ms读到`slideOnGround: 7`，Role原胶囊height/radius均为0.2、world extents约0.2，原站姿height为1.8。不是改模型或碰撞箱得到的滑铲。500ms期间无伤，原图保存在忽略目录`debug/arena-client/vision-v1/slide-calibration.png`。新增协议参数回归后，捕获/实例接口/ArenaEnv相关39项通过。视觉策略是否能正确选择滑铲仍属后续试验。

@@ -38,7 +38,7 @@ public final class FrameServer {
             manager = type.getMethod("getInstance").invoke(null);
             inject = type.getMethod("injectInputEvent", InputEvent.class, int.class);
         }
-        synchronized void tap(final int code) throws Exception {
+        synchronized void tap(final int code, int durationMs) throws Exception {
             if (held.containsKey(code)) return;
             long now = SystemClock.uptimeMillis();
             KeyEvent event = new KeyEvent(now, now, KeyEvent.ACTION_DOWN, code, 0, 0,
@@ -51,7 +51,7 @@ public final class FrameServer {
                 public void run() {
                     try { release(code); } catch (Exception error) { error.printStackTrace(System.err); }
                 }
-            }, 30, TimeUnit.MILLISECONDS);
+            }, durationMs, TimeUnit.MILLISECONDS);
         }
         synchronized void release(int code) throws Exception {
             KeyEvent event = held.remove(code);
@@ -122,7 +122,7 @@ public final class FrameServer {
                 try { command = in.readInt(); } catch (EOFException end) { break; }
                 long sequence = in.readLong();
                 if (command == 0) break;
-                if (command < 1 || command > 5) throw new IOException("Unknown capture command");
+                if (command < 1 || command > 6) throw new IOException("Unknown capture command");
                 long start = System.nanoTime(), captured = start, ready = start;
                 if (command == 1) {
                     Object shot = capture.invoke(null, captureArgs);
@@ -149,7 +149,8 @@ public final class FrameServer {
                 } else if (command >= 3) {
                     if (keys == null) keys = new Keys();
                     keys.tap(command == 3 ? KeyEvent.KEYCODE_K
-                            : command == 4 ? KeyEvent.KEYCODE_S : KeyEvent.KEYCODE_P);
+                            : command == 4 || command == 6 ? KeyEvent.KEYCODE_S : KeyEvent.KEYCODE_P,
+                            command == 6 ? 500 : 30);
                     captured = ready = System.nanoTime();
                 }
                 out.writeInt(0x4d523346); // MR3F
