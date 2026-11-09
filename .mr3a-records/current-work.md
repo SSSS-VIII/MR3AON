@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-10后续：原四类交互证据已进入可审阅配置，16类监督保留香蕉Box/番茄西瓜Capsule/炸弹Sphere；12534原训练/6972验证、果Box1016/果Capsule4169/炸弹183，标准Trainer8epoch正在训练（session14345），默认仍v10。5项新/31项接口通过；新val30001/test30002采集占arena（session37780），禁止并发设备。目标奖励规划仍待新模型实机，见[交互监督](archived/2026-11-10-arena-interaction-supervision.md)。
+
 2026-11-10后续：地面可见入口侧面已进入通用风险/MPC，排除内部接缝/裁切边/浮台，负ID派生几何不污染YOLO统计；4项新/23项接口通过。v10原权重开发25012三板30013→30024→3004完成，2115伤害、god全false、按键P95 52.2ms，36/80任务未满仍通行。新种子回归和水果/炸弹语义拆分继续，见[地面入口规划](archived/2026-11-10-arena-visible-ground-entrance-planning.md)。
 
 2026-11-10后续：原生验收已补只读任务计数/致死来源，242+578快照0读取错误；原地形与角色停滞指向绳下地面入口，StuckByBlock只是原flag，平常也为true。零按键水果79/80仍进入后板，地形策略修复36/80三板通过，80为额外目标非通关条件。见[交互诊断](archived/2026-11-10-arena-native-interaction-diagnostics.md)。

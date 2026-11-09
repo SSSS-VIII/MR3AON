@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "scope": "Exact original CFG and Prefab scripts; zero damage alone does not classify an object as a target.",
+  "evidence": "EnemyFruitMuppet and EnemyFruitPinball inherit EnemyFruitBase; its trigger branch slices and EnemyKilled calls AddCutFruitNum. EnemyMuppetBomb inherits EnemySpider and retains damage behavior.",
+  "resources": {
+    "EnemyFruitBanana": {"type_id": 280, "script": "EnemyFruitMuppet", "species": 160031, "damage": 0, "shape": "BoxCollider", "class": "fruit_box"},
+    "EnemyFruitTomato": {"type_id": 281, "script": "EnemyFruitPinball", "species": 160031, "damage": 0, "shape": "CapsuleCollider", "class": "fruit_capsule"},
+    "EnemyFruitWatermelon": {"type_id": 282, "script": "EnemyFruitPinball", "species": 160031, "damage": 0, "shape": "CapsuleCollider", "class": "fruit_capsule"},
+    "EnemyMuppetBomb": {"type_id": 200, "script": "EnemyMuppetBomb", "species": 160008, "damage": 5, "shape": "SphereCollider", "class": "muppet_bomb"}
+  }
+}

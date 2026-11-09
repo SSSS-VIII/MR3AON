@@ -12,6 +12,7 @@ from arena_yolo import offline_sdk
 from arena_yolo_obb_data import targets
 from arena_obb_detector import support_segment
 
+PHYSICAL_KINDS={'hazard','slice_target'}
 
 def match_support_lines(truth,prediction,classes,tolerance=6.):
     """Score physical centerlines separately from thin-band polygon IoU."""
@@ -49,6 +50,7 @@ def match(truth,prediction,classes,mode='class'):
         if mode=='resource':
             return(c['kind'],c['resource'])if c.get('resource')else(c['kind'],c.get('motion_kind'),c['shape'])
         if mode=='geometry':return c['kind']if c['kind']!='hazard'else'hazard'
+        if mode=='physical':return 'physical'if c['kind']in PHYSICAL_KINDS else c['kind']
         raise ValueError(mode)
     pairs=[]
     for i,(c,a)in enumerate(truth):
@@ -74,18 +76,31 @@ def resource_recalls(native_truth,truth,prediction,native_classes,classes):
     A shared detector does not predict original resource identity, so no
     per-resource precision or recognition accuracy may be inferred here.
     """
-    selected=[i for i,(c,q)in enumerate(truth)if classes[c]['kind']=='hazard']
-    t=[truth[i]for i in selected];p=[r for r in prediction if classes[r[0]]['kind']=='hazard']
+    selected=[i for i,(c,q)in enumerate(truth)if classes[c]['kind']in PHYSICAL_KINDS]
+    t=[truth[i]for i in selected];p=[r for r in prediction if classes[r[0]]['kind']in PHYSICAL_KINDS]
     counts={}
     for index in selected:
         meta=native_classes[native_truth[index][0]]
         counts.setdefault(meta['resource'],Counter())['targets']+=1
-    for i,j in match(t,p,classes,'geometry'):
+    for i,j in match(t,p,classes,'physical'):
         resource=native_classes[native_truth[selected[i]][0]]['resource'];counter=counts[resource]
         counter['matched']+=1
         if classes[t[i][0]]['shape']==classes[p[j][0]]['shape']:counter['shape_matched']+=1
         if t[i][0]==p[j][0]:counter['class_matched']+=1
     return counts
+
+
+def interaction_confusions(truth,prediction,classes,policy_confidence=.8):
+    truth=[r for r in truth if classes[r[0]]['kind']in PHYSICAL_KINDS]
+    prediction=[r for r in prediction if classes[r[0]]['kind']in PHYSICAL_KINDS]
+    result=Counter(hazard_targets=sum(classes[c]['kind']=='hazard'for c,q in truth),
+                   slice_targets=sum(classes[c]['kind']=='slice_target'for c,q in truth))
+    for i,j in match(truth,prediction,classes,'physical'):
+        a=classes[truth[i][0]]['kind'];b=classes[prediction[j][0]]['kind']
+        result[a+'->'+b]+=1
+        if a=='hazard'and b=='slice_target'and prediction[j][2]>=policy_confidence:
+            result['policy_hazard_as_target']+=1
+    return result
 
 
 def centerline_truth(row,profile,truth):
@@ -108,9 +123,11 @@ def score(weights,profile_path,episodes,output,stride=1):
     for _ in range(5):model.predict(np.zeros((360,640,3),np.uint8),**options)
     counts={i:Counter()for i in range(len(classes))};modes={m:Counter()for m in('resource','geometry')}
     groups={k:Counter()for k in('player','hazard','cue','rope','platform','floating_platform')}
+    for c in classes:groups.setdefault(c['kind'],Counter())
     support_counts={k:Counter()for k in('rope','platform','floating_platform')};line_errors=[]
     per_resource={};native_profile=profile.get('native_targets',profile)
     uncovered=Counter()
+    interactions=Counter();physical=Counter()
     times=[];frames=0
     with(output/'predictions.jsonl').open('w')as predictions:
         for episode in episodes:
@@ -130,6 +147,11 @@ def score(weights,profile_path,episodes,output,stride=1):
                     if y<55 or(y>275 and(x<135 or x>515)):continue
                     predicted.append((int(c),q.tolist(),float(s)))
                 strict=match(truth,predicted,classes)
+                interactions.update(interaction_confusions(truth,predicted,classes,profile.get('target_policy_confidence',.8)))
+                physical_t=[r for r in truth if classes[r[0]]['kind']in PHYSICAL_KINDS]
+                physical_p=[r for r in predicted if classes[r[0]]['kind']in PHYSICAL_KINDS]
+                physical.update(targets=len(physical_t),predictions=len(physical_p),
+                                matched=len(match(physical_t,physical_p,classes,'physical')))
                 for resource,counter in resource_recalls(native_truth,truth,predicted,native_profile['classes'],classes).items():
                     per_resource.setdefault(resource,Counter()).update(counter)
                 line_truth=centerline_truth(row,profile,truth)
@@ -157,6 +179,8 @@ def score(weights,profile_path,episodes,output,stride=1):
                 ontology_coverage_accepted=not bool(uncovered),uncovered_native_geometry=dict(uncovered),
                 sha256=hashlib.sha256(weights.read_bytes()).hexdigest(),profile_sha256=hashlib.sha256(profile_path.read_bytes()).hexdigest(),
                 confidence=.25,polygon_iou=.5,per_class={classes[i]['name']:summarize(c)for i,c in counts.items()if c},
+                interaction_confusions=dict(interactions),target_policy_confidence=profile.get('target_policy_confidence',.8),
+                spatial_physical_objects=summarize(physical),
                 strict_groups={k:summarize(c)for k,c in groups.items()},
                 support_centerlines={k:summarize(c)for k,c in support_counts.items()},
                 original_resource_recall={k:dict(c,spatial_recall=c['matched']/max(1,c['targets']))

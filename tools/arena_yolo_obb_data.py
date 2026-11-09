@@ -18,6 +18,7 @@ from arena_projection import sphere_plane,capsule_plane
 from arena_vision import Box
 
 SHAPES=('BoxCollider','SphereCollider','CapsuleCollider')
+INTERACTIONS=Path(__file__).resolve().parents[1]/'arena/vision-interactions.json'
 
 
 def schema(entities,prefabs,reachable):
@@ -73,7 +74,7 @@ def axis_quad(box):
     return np.array([[x1,y1],[x2,y1],[x2,y2],[x1,y2]],np.float32)
 
 
-def physics_profile(native):
+def physics_profile(native,interactions=False):
     definitions=[('player','player','CapsuleCollider',None,None),
                  ('spider','hazard','SphereCollider','spider',None),
                  ('flying_normal','hazard','SphereCollider','eye_enemy','normal'),
@@ -85,6 +86,18 @@ def physics_profile(native):
                  ('capsule_hazard','hazard','CapsuleCollider','trap',None),
                  ('cue','cue','cue',None,None),('rope','rope','segment',None,None),
                  ('platform','platform','segment',None,None),('floating_platform','floating_platform','segment',None,None)]
+    rules=json.loads(INTERACTIONS.read_text())if interactions else None
+    if interactions:
+        definitions.extend([('fruit_box','slice_target','BoxCollider','slice_target',None),
+                            ('fruit_capsule','slice_target','CapsuleCollider','slice_target',None),
+                            ('muppet_bomb','hazard','SphereCollider','spider',None)])
+        for resource,rule in rules['resources'].items():
+            family=native['families'].get(resource)
+            if family is None:continue
+            config=family['configs'].get(str(rule['type_id']))
+            if (rule['script']not in family['script_types']or config is None
+                    or any(config.get(k)!=rule[k]for k in ('damage','species'))):
+                raise ValueError(f'Original interaction CFG/script differs from reviewed evidence: {resource}')
     classes=[dict(name=n,kind=k,shape=s,motion_kind=m,phase=p,members=[])
              for n,k,s,m,p in definitions]
     mapping=[]
@@ -93,6 +106,11 @@ def physics_profile(native):
         elif c['kind']in('rope','platform','floating_platform'):
             index={'rope':10,'platform':11,'floating_platform':12}[c['kind']]
         elif c['shape']=='cue':index=9
+        elif interactions and c.get('resource')in rules['resources']:
+            rule=rules['resources'][c['resource']]
+            if c['shape']!=rule['shape']:
+                raise ValueError(f'Unreviewed interaction collider shape: {c["name"]}')
+            index=next(i for i,entry in enumerate(classes)if entry['name']==rule['class'])
         elif c['shape']=='BoxCollider':index=4
         elif c['shape']=='CapsuleCollider':index=8
         else:
@@ -103,9 +121,13 @@ def physics_profile(native):
             elif 'EnemyPinball'in scripts:index=3
             else:index=5
         mapping.append(index);classes[index]['members'].append(c['name'])
-    return dict(version=2,task='obb',geometry='gameplay_plane',taxonomy='physics',classes=classes,
+    result=dict(version=2,task='obb',geometry='gameplay_plane',taxonomy='physics',classes=classes,
                 native_targets=native,class_mapping=mapping,families=native['families'],type_bindings=native['type_bindings'],
                 provenance='Shared native collider/motion classes; original resources/configs remain in the profile')
+    if interactions:
+        result.update(interaction_rules=rules,interaction_rules_sha256=hashlib.sha256(INTERACTIONS.read_bytes()).hexdigest(),
+                      target_policy_confidence=.8)
+    return result
 
 
 def clipped_quad(quad):
@@ -232,7 +254,8 @@ def targets(raw,profile):
     return result,counts
 
 
-def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=False,support_band_px=4):
+def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=False,support_band_px=4,interactions=False):
+    if interactions and not physics:raise ValueError('Interaction taxonomy requires the standard physics profile')
     if not 4<=support_band_px<=32:raise ValueError('Support supervision band must be 4..32 px')
     if {p.resolve()for p in train}&{p.resolve()for p in validation}:
         raise ValueError('Whole native episodes must be disjoint')
@@ -245,7 +268,7 @@ def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=F
     if plan.get('mode')!=6:raise ValueError('Only Gale resource pools may enter this dataset')
     profile=schema(json.loads(entities_path.read_text()),json.loads(prefabs_path.read_text()),plan['reachable_enemy_types'])
     profile['support_band_px']=support_band_px
-    if physics:profile=physics_profile(profile)
+    if physics:profile=physics_profile(profile,interactions=interactions)
     output.mkdir(parents=True,exist_ok=False)
     episodes=[*train,*validation];name_counts=Counter(folder.name for folder in episodes)
     episode_keys={str(folder):(folder.name if name_counts[folder.name]==1 else
@@ -254,6 +277,7 @@ def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=F
     manifest=dict(task='standard Ultralytics YOLO26 OBB',profile='profile.json',splits={},sources={},
                   image_episode_keys=episode_keys,
                   source_hashes={str(p):hashlib.sha256(p.read_bytes()).hexdigest()for p in(entities_path,prefabs_path,plan_path,Path(__file__))})
+    if interactions:manifest['source_hashes'][str(INTERACTIONS)]=hashlib.sha256(INTERACTIONS.read_bytes()).hexdigest()
     for split,folders in [('train',train),('val',validation)]:
         (output/'images'/split).mkdir(parents=True);(output/'labels'/split).mkdir(parents=True)
         counts=Counter();per_class=Counter()

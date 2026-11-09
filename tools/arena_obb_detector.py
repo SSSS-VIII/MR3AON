@@ -44,10 +44,13 @@ def decode(quads,ids,scores,profile,player_x=180.):
                 supports.append(dict(kind=kind,a=a,b=b,confidence=confidence))
         elif kind=='cue':
             cues.append(dict(box=box,confidence=confidence,resource=meta.get('resource')))
-        elif kind=='hazard':
+        elif kind in('hazard','slice_target'):
             shape=meta['shape'];phase=meta.get('phase')
             motion_kind=meta.get('motion_kind')
             resource=meta.get('resource')
+            if kind=='slice_target'and confidence<profile.get('target_policy_confidence',.8):
+                # Low-confidence target predictions remain conservative obstacles.
+                motion_kind='trap'
             if not motion_kind:
                 family=profile.get('families',{}).get(resource,{})
                 scripts=family.get('script_types',[])
