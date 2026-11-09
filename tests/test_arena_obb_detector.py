@@ -101,3 +101,34 @@ def test_reusing_loaded_model_resets_role_association_between_independent_episod
         def reset_tracking(self):self.player_x=180.
     detector=Detector();ObbPerception(detector)
     assert detector.player_x==180.
+
+
+def test_observed_rush_speed_is_shared_with_a_later_ready_enemy_using_pixels_only():
+    from arena_vision import Detection
+    class Detector:
+        last_ms=1
+        tick=0
+        def detect(self,rgb):
+            t=self.tick*.04;self.tick+=1
+            phase='rush'if t<.2 else'ready'
+            box=Box(600-1200*t-15,185,30,30)if phase=='rush'else Box(585,105,30,30)
+            return Box(172,210,16,40),[Detection(box,'eye_enemy',.99,phase=='rush',phase=='ready',phase)],\
+                [dict(kind='rope',a=(0,260),b=(640,260),confidence=.99)],[]
+    actor=ObbPerception(Detector())
+    for i in range(6):obs=actor.observe(np.zeros((360,640,3),np.uint8),i*.04)
+    ready=next(t for t in obs['tracks']if t.attack_phase=='ready')
+    assert obs['observed_rush_velocity']==pytest.approx(-1200)
+    assert ready.future(.4).center[0]==pytest.approx(480)
+
+
+def test_rush_fit_rejects_static_false_phase_and_ignores_own_capsule_horizontal_offsets():
+    from arena_vision import Tracker,Detection
+    tracker=Tracker(adaptive=True,adaptive_rush_speed=True)
+    for i in range(4):
+        t=i*.04
+        rows=tracker.update([Detection(Box(585-1200*t,185,30,30),'eye_enemy',.99,True,False,'rush')],t,(180+150*t,260))
+    assert rows[0].rush_fit_velocity==pytest.approx(-1200)
+    assert rows[0].future(.2).center[0]==pytest.approx(600-1200*.12-1200*.2)
+    static=Tracker(adaptive=True,adaptive_rush_speed=True)
+    for i in range(4):rows=static.update([Detection(Box(585,185,30,30),'eye_enemy',.99,True,False,'rush')],i*.04,(180,260))
+    assert rows[0].rush_fit_velocity is None

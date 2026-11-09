@@ -11,6 +11,7 @@ CROW=PRIORS['straight_crow']
 
 def configure_crow(track,detection,stamp):
     phase=detection.attack_phase
+    previous=track.attack_phase
     track.attack_phase=phase
     if phase=='ready':
         if track.ready_started is None or stamp-track.ready_started>.65:
@@ -27,13 +28,29 @@ def configure_crow(track,detection,stamp):
         track.rush_target_w=max(track.box.w,track.rush_target_w)
         track.rush_target_h=max(track.box.h,track.rush_target_h)
         track.rush_scale_remaining=CROW['scale_seconds']
+    if track.adaptive_rush_speed:
+        if phase!='rush'or previous!='rush':
+            track.rush_history.clear();track.rush_fit_velocity=None
+        if phase=='rush':
+            # Absolute image positions avoid treating an own flip's capsule
+            # offset as a change in the enemy's rush speed.
+            track.rush_history.append((stamp,track.box.center[0]))
+            if len(track.rush_history)>=3:
+                data=np.asarray(track.rush_history);times=data[:,0]-stamp
+                if -times[0]>=.04:
+                    design=np.column_stack((np.ones(len(times)),times))
+                    fit,_,_,_=np.linalg.lstsq(design,data[:,1],rcond=None)
+                    residual=float(np.sqrt(np.mean((design@fit-data[:,1])**2)))
+                    track.rush_fit_velocity=float(fit[1])if residual<2 and -2400<fit[1]<-600 else None
+                    if track.rush_fit_velocity is not None:track.rush_velocity=track.rush_fit_velocity
 
 
 def crow_geometry(track,seconds,scale):
     from arena_vision import Box
     ready=max(0,track.ready_remaining)if track.attack_phase=='ready'else 0.
     moving=max(0,seconds-ready)
-    velocity=(CROW['world_rush_speed']-CROW['reference_run_speed'])*scale
+    velocity=(track.rush_velocity if track.rush_velocity is not None else
+              (CROW['world_rush_speed']-CROW['reference_run_speed'])*scale)
     growth=min(1,moving/max(1e-9,track.rush_scale_remaining))
     w=track.box.w+(max(track.rush_target_w,track.box.w)-track.box.w)*growth
     h=track.box.h+(max(track.rush_target_h,track.box.h)-track.box.h)*growth

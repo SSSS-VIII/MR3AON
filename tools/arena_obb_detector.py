@@ -97,7 +97,8 @@ class ObbPerception(Perception):
     def __init__(self,detector):
         super().__init__();self.detector=detector;self.visual_role=True
         if hasattr(detector,'reset_tracking'):detector.reset_tracking()
-        self.tracker=Tracker(adaptive=True);self.supports=VisualSupports();self.last_seen_player=None
+        self.tracker=Tracker(adaptive=True,adaptive_rush_speed=True);self.supports=VisualSupports();self.last_seen_player=None
+        self.rush_models={};self.rush_prior=None
 
     def observe(self,rgba,stamp):
         rgb=rgba[:,:,:3];player,detections,segments,cues=self.detector.detect(rgb)
@@ -107,9 +108,19 @@ class ObbPerception(Perception):
             player=player_future(self.last_observation,stamp-self.last_observation['time']);predicted=True
         support=self.supports.observe(segments,player,stamp)
         result=self._finish(rgb,stamp,player,detections,support_observation=support)
+        for track in result['tracks']:
+            if (track.rush_fit_velocity is not None and track.confidence>=.8
+                    and track.box.x>5 and track.box.x+track.box.w<635):
+                self.rush_models[track.id]=(track.seen,track.rush_fit_velocity)
+        self.rush_models={k:v for k,v in self.rush_models.items()if stamp-v[0]<1.2}
+        if self.rush_models:self.rush_prior=float(np.median([v[1]for v in self.rush_models.values()]))
+        for track in result['tracks']:
+            if track.attack_phase in('ready','rush')and track.rush_fit_velocity is None:
+                track.rush_velocity=self.rush_prior
         result.update(scale_px=SCALE,stand_w=motion.DATA['stand_width']*SCALE,
                       stand_h=motion.DATA['stand_height']*SCALE,geometry='gameplay_plane',
                       detector='standard_yolo26n_obb',detector_ms=self.detector.last_ms,cues=cues,
+                      observed_rush_velocity=self.rush_prior,
                       visible_supports=support['segments'],player_predicted=predicted,
                       player_seen_age=None if self.last_seen_player is None else stamp-self.last_seen_player)
         return result

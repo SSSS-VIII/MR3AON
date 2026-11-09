@@ -83,6 +83,10 @@ class Track:
     quad: tuple | None = None
     angular_velocity: float = 0.
     angular_history: deque = field(default_factory=lambda: deque(maxlen=10))
+    adaptive_rush_speed: bool = False
+    rush_history: deque = field(default_factory=lambda: deque(maxlen=6))
+    rush_fit_velocity: float | None = None
+    rush_velocity: float | None = None
 
     def update(self, detection, stamp, player):
         if self.quad is not None or detection.quad is not None:
@@ -238,8 +242,8 @@ class Track:
 
 
 class Tracker:
-    def __init__(self,adaptive=False):
-        self.adaptive=adaptive
+    def __init__(self,adaptive=False,adaptive_rush_speed=False):
+        self.adaptive=adaptive;self.adaptive_rush_speed=adaptive_rush_speed
         self.tracks = []
         self.next_id = 1
 
@@ -268,6 +272,7 @@ class Tracker:
         for i, d in enumerate(detections):
             if i not in used:
                 t = Track(self.next_id, d.box, d.kind, d.confidence, stamp)
+                t.adaptive_rush_speed=self.adaptive_rush_speed
                 if self.adaptive:
                     t.adaptive_velocity=True;t.history=deque(maxlen=64)
                 self.next_id += 1
