@@ -260,3 +260,20 @@ def test_search_returns_to_upper_rope_after_threats_leave():
     assert policy.choose(obs)==(None,'clear')
     obs['time']=1.8
     assert policy.choose(obs)==('jump','neutral_above')
+
+
+def test_visible_hazards_keep_tracking_while_role_is_outside_image():
+    from arena_vision import Perception
+    p=Perception();p.support_mode='rope';p.rope=260.;p.last_rope_hint=1.
+    rgb=np.full((360,640,3),128,np.uint8)
+    role=Box(172,210,16,37)
+    def enemy(phase):return Detection(Box(440,210,22,22),'eye_enemy',.9,False,phase=='ready',phase)
+    first=p._finish(rgb,1.,role,[enemy('normal')])
+    missing=p._finish(rgb,1.1,None,[enemy('ready')])
+    assert missing['player']is None and missing['phase']=='unknown'
+    assert missing['tracks'][0].id==first['tracks'][0].id
+    assert missing['tracks'][0].observations==2
+    assert missing['tracks'][0].ready_started==pytest.approx(1.05)
+    returned=p._finish(rgb,1.2,role,[enemy('ready')])
+    assert returned['tracks'][0].observations==3
+    assert returned['tracks'][0].ready_remaining==pytest.approx(.15)

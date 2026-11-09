@@ -625,6 +625,11 @@ class Perception:
             tracks = self.tracker.update(detections, stamp, (px,support if support is not None else py))
             self.previous_player, self.last = player, stamp
             self.previous_vertical = vertical
+        elif on_rope and self.rope is not None and self.previous_player is not None:
+            # A high jump can leave the image while enemies remain visible.
+            # Keep their state history using the visible camera reference;
+            # missing role pixels still prohibit choosing an input.
+            tracks=self.tracker.update(detections,stamp,(self.previous_player.center[0],self.rope))
         result=dict(time=stamp, player=player, silhouette=body[1] if body else None,
                     rope=self.rope, phase=phase, vy=self.player_velocity, jumps=self.jump_count,
                     tracks=tracks, detections=detections,terrain=terrain,
