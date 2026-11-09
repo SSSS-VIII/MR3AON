@@ -3,16 +3,30 @@ local E,U=MR3A,CS.UnityEngine
 local inspectFlags=CS.System.Reflection.BindingFlags.__CastFrom(52)
 local deadField=typeof(CS.EnemyBase):GetField('_dead',inspectFlags)
 local enemyInfoField=typeof(CS.EnemyBase):GetField('_enemyInfo',inspectFlags)
+local enemyPropertyField=typeof(CS.EnemyBase):GetField('_enemyBaseProperty',inspectFlags)
 local supportType=typeof(CS.LevelBlockCollider)
 local airGroundType=typeof(CS.ItemAirGround)
 local supportDataField=supportType:GetField('_levelBlockInfo',inspectFlags)
 local controllerTypes={}
+local parameterIds={enemy_infos={},base_properties={}}
+local parameterCounts={enemy_infos=0,base_properties=0}
+local function register_parameters(kind,value,updates)
+ if not value then return nil end
+ local id=parameterIds[kind][value]
+ if id then return id end
+ id=parameterCounts[kind]+1;parameterCounts[kind]=id;parameterIds[kind][value]=id
+ local entry={id=id,type=value:GetType().FullName}
+ local ok,data=pcall(function()return json.parse(U.JsonUtility.ToJson(value))end)
+ if ok then entry.initial_parameters=data else entry.error=tostring(data)end
+ updates[kind][#updates[kind]+1]=entry
+ return id
+end
 local function controller_fields(tp)
  local key=tp.FullName
  if controllerTypes[key]then return controllerTypes[key]end
  local fields={}
  for _,name in ipairs({'_currState','_currStateTime','_stayTime','_rushDistance','_currAnim',
-  '_moveSpeed','_rushSpeed','_rotateSpeed','_rotationSpeed','_angleSpeed','_shootTime',
+  '_moveSpeed','_currentMoveSpeed','_rushSpeed','_rotateSpeed','_rotationSpeed','_angleSpeed','_shootTime',
   '_shootInterval','_shootTimer','_currTime','_delayTime','_remainTime','_rushDir','_moveDir','_direction'})do
   local parent=tp
   while parent do
@@ -67,7 +81,9 @@ function E.vision_labels(include_scene)
  local n=CS.NinjaController.Instance.NinjaScript
  local out={label_schema=4,frame=U.Time.frameCount,tick=CS.GameManager.Instance.GameInfo._totalFrameCount,
   time=CS.GameManager.Instance.GameInfo._totalTime,engineTime=U.Time.time,width=640,height=360,
-  physics=E.state().physics,health=n.CurrentHp,role={point=point(n.transform.position),colliders={}},objects={},supports={},
+  physics=E.state().physics,health=n.CurrentHp,god=n:IsGodMode(),mounted=n.IsMountState,
+  role={point=point(n.transform.position),colliders={}},objects={},supports={},
+  parameter_updates={enemy_infos={},base_properties={}},parameter_reference_base=1,
   camera={projection=matrix(cam.projectionMatrix),world_to_camera=matrix(cam.worldToCameraMatrix)}}
  local cols=n.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
  for i=0,cols.Length-1 do local c=cols[i]
@@ -82,7 +98,20 @@ function E.vision_labels(include_scene)
    row.dead=deadField:GetValue(o)
    local info=enemyInfoField:GetValue(o)
    if info then row.source_type_id=CS.System.Convert.ToInt32(info._enemyType)end
+   row.enemy_info_reference=register_parameters('enemy_infos',info,out.parameter_updates)
    row.family_type_id=row.source_type_id;row.resource_family=o.name
+   local property=enemyPropertyField:GetValue(o)
+   if property then
+    row.base_property_reference=register_parameters('base_properties',property,out.parameter_updates)
+    -- Optional diagnostic values: failure must stay explicit and must not
+    -- discard the original geometry/labels or alter the native enemy.
+    local ok,value=pcall(function()
+     return {current_speed=o.CurrentSpeed,
+      max_health=o.MaxHp,current_health=o.CurrentHp,damage_ratio=o.DamageRatio,
+      damage_type=tostring(o.EnemyDamageType),damage_role=o.DamageRole}
+    end)
+    if ok then row.runtime_parameters=value else row.runtime_parameters_error=tostring(value)end
+   end
    local ancestor=o.transform.parent and o.transform.parent:GetComponentInParent(typeof(CS.EnemyBase))
    if ancestor then row.parent_enemy_id=ancestor:GetInstanceID()end
    while ancestor and (not row.family_type_id or row.family_type_id==0)do
