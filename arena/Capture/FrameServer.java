@@ -4,6 +4,11 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.Process;
+import android.os.SystemClock;
+import android.view.InputDevice;
+import android.view.InputEvent;
+import android.view.KeyCharacterMap;
+import android.view.KeyEvent;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -14,10 +19,52 @@ import java.nio.ByteBuffer;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.MessageDigest;
+import java.util.HashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-/** Android-side capture only. No game injection, desktop API, codec or input events. */
+/** Android pixels and explicit keyboard pulses. No game injection or desktop API. */
 public final class FrameServer {
     private static final int VERSION = 1;
+
+    private static final class Keys {
+        final Object manager;
+        final Method inject;
+        final HashMap<Integer, KeyEvent> held = new HashMap<Integer, KeyEvent>();
+        final ScheduledExecutorService releases = Executors.newSingleThreadScheduledExecutor();
+        Keys() throws Exception {
+            Class<?> type = Class.forName("android.hardware.input.InputManager");
+            manager = type.getMethod("getInstance").invoke(null);
+            inject = type.getMethod("injectInputEvent", InputEvent.class, int.class);
+        }
+        synchronized void tap(final int code) throws Exception {
+            if (held.containsKey(code)) return;
+            long now = SystemClock.uptimeMillis();
+            KeyEvent event = new KeyEvent(now, now, KeyEvent.ACTION_DOWN, code, 0, 0,
+                    KeyCharacterMap.VIRTUAL_KEYBOARD, 0, 0, InputDevice.SOURCE_KEYBOARD);
+            if (!Boolean.TRUE.equals(inject.invoke(manager, event, 0))) {
+                throw new IOException("Keyboard injection was rejected");
+            }
+            held.put(code, event);
+            releases.schedule(new Runnable() {
+                public void run() {
+                    try { release(code); } catch (Exception error) { error.printStackTrace(System.err); }
+                }
+            }, 30, TimeUnit.MILLISECONDS);
+        }
+        synchronized void release(int code) throws Exception {
+            KeyEvent event = held.remove(code);
+            if (event != null) inject.invoke(manager, KeyEvent.changeAction(event, KeyEvent.ACTION_UP), 0);
+        }
+        synchronized void close() throws Exception {
+            releases.shutdownNow();
+            for (KeyEvent event : held.values()) {
+                inject.invoke(manager, KeyEvent.changeAction(event, KeyEvent.ACTION_UP), 0);
+            }
+            held.clear();
+        }
+    }
 
     public static void main(String[] args) throws Exception {
         if (args.length != 3) throw new IllegalArgumentException("width height session-token required");
@@ -68,13 +115,14 @@ public final class FrameServer {
         }
         out.writeInt(0x4d523341); // MR3A
         out.flush();
+        Keys keys = null;
         try {
             while (true) {
                 int command;
                 try { command = in.readInt(); } catch (EOFException end) { break; }
                 long sequence = in.readLong();
                 if (command == 0) break;
-                if (command != 1 && command != 2) throw new IOException("Unknown capture command");
+                if (command < 1 || command > 5) throw new IOException("Unknown capture command");
                 long start = System.nanoTime(), captured = start, ready = start;
                 if (command == 1) {
                     Object shot = capture.invoke(null, captureArgs);
@@ -98,6 +146,11 @@ public final class FrameServer {
                         if (gpu != null) gpu.recycle();
                         if (hardware != null) closeBuffer.invoke(hardware);
                     }
+                } else if (command >= 3) {
+                    if (keys == null) keys = new Keys();
+                    keys.tap(command == 3 ? KeyEvent.KEYCODE_K
+                            : command == 4 ? KeyEvent.KEYCODE_S : KeyEvent.KEYCODE_P);
+                    captured = ready = System.nanoTime();
                 }
                 out.writeInt(0x4d523346); // MR3F
                 out.writeInt(VERSION);
@@ -112,6 +165,8 @@ public final class FrameServer {
                 if (command == 1) out.write(pixels);
                 out.flush();
             }
-        } finally { socket.close(); }
+        } finally {
+            try { if (keys != null) keys.close(); } finally { socket.close(); }
+        }
     }
 }

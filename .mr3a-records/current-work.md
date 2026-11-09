@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-09：用户已确认结构化视觉方案并授权首版闭环试跑。高速取图增加原版K/S/P脉冲，真实跳跃/下翻及38项相关回归通过，见 [低延迟按键](archived/2026-11-09-arena-fast-key-pulses.md)。识别、差分速度/轨迹、状态机和避障策略正在arena试验，尚未通过多个板子；完整结果另行归档。未操作main。
+
 2026-11-09：用户否决首轮图像循环策略。已完成Android原生高速取图（无宿主桌面/合成器API依赖）：动态640×360中位4.7ms/P95 6.6ms，1280×720中位10.3ms/P95 12.1ms；预热后1500帧最大8.4ms，像素与原PNG完全一致，47项回归通过。见 [高速取图](archived/2026-11-09-arena-native-fast-capture.md)。当前只交付捕获工具，ArenaEnv未替换；[结构化视觉方案](../arena/visual-control-proposal.md)待用户确认，识别/跟踪/训练均未动手。旧RawZip测量与撤回依据见 [首轮调研](archived/2026-11-09-arena-visual-policy-research.md)。死亡回合平台回收异常及启动RPC短超时另已记录，未在本任务改游戏代码。
 
 2026-11-09：本地客户端迁移阶段已汇总为 [迁移报告](archived/2026-11-09-arena-client-migration-report.md)，包含原资源恢复、最终原APK/GameOnly/Lua桥方案、轻改机制、实测和6002入口待查项。用户已要求发至本人Gmail，邮件正文及Markdown附件发送成功（message/thread：1a1be8813783dcaa）。接续调研以截图为输入的实时策略，重点是延迟测量与建模，训练模型尚未实现。

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Persistent Android pixel capture for arena; no desktop capture or training code."""
+"""Persistent Android pixels and explicit key pulses for the isolated arena."""
 from __future__ import annotations
 
 import argparse
@@ -45,14 +45,17 @@ def build_server():
     classes = BUILD / 'classes'
     classes.mkdir(parents=True, exist_ok=True)
     dex.parent.mkdir(parents=True, exist_ok=True)
-    commands = [
-        ['java', '-jar', str(ecj), '-1.8', '-bootclasspath', str(sdk / 'android.jar'),
-         '-d', str(classes), str(SOURCE)],
-        ['java', '-cp', str(sdk / 'd8.jar'), 'com.android.tools.r8.D8', '--lib', str(sdk / 'android.jar'),
-         '--min-api', '26', '--output', str(dex.parent),
-         str(classes / 'dev/mr3a/arena/capture/FrameServer.class')],
-    ]
-    for command in commands:
+    outputs = classes / 'dev/mr3a/arena/capture'
+    for old in outputs.glob('FrameServer*.class'):
+        old.unlink()
+    compile_command = ['java', '-jar', str(ecj), '-1.8', '-bootclasspath', str(sdk / 'android.jar'),
+                       '-d', str(classes), str(SOURCE)]
+    # Build D8's inputs after ECJ, including the key-release scheduler's classes.
+    for command in (compile_command, None):
+        if command is None:
+            command = ['java', '-cp', str(sdk / 'd8.jar'), 'com.android.tools.r8.D8',
+                       '--lib', str(sdk / 'android.jar'), '--min-api', '26', '--output', str(dex.parent),
+                       *map(str, sorted(outputs.glob('FrameServer*.class')))]
         result = subprocess.run(command, capture_output=True, timeout=60)
         if result.returncode:
             raise RuntimeError(result.stderr.decode(errors='replace'))
@@ -103,7 +106,7 @@ class FastCapture:
     """One owner, one outstanding request, one fresh Android capture per request.
 
     A held InstanceSession lease permits the same owner to use session.adb for
-    other device commands. No game state, keyboard handler or training API changes.
+    other device commands. Key pulses use the original Android keyboard handler.
     """
     def __init__(self, session, *, width=1280, height=720, timeout=2):
         if session.spec.name != 'arena':
@@ -202,6 +205,13 @@ class FastCapture:
 
     def capture(self):
         return self._exchange(1)
+
+    def tap(self, action):
+        """30ms Android key pulse; acknowledgment is enqueue time, not physics consumption."""
+        commands = {'jump': 3, 'down': 4, 'pause': 5}
+        if action not in commands:
+            raise ValueError('Action must be jump, down or pause')
+        return self._exchange(commands[action])
 
     def calibrate_clock(self, count=8):
         """Offset estimate with an RTT/2 uncertainty; not an exposure timestamp."""

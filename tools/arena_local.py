@@ -9,6 +9,7 @@ import sys
 import tempfile
 import time
 import uuid
+from contextlib import nullcontext
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "agent"))
@@ -22,13 +23,13 @@ class LocalClient:
             raise ValueError("Local client controls are restricted to the isolated arena instance")
         self.session = session
 
-    def execute(self, code, timeout=20):
+    def execute(self, code, timeout=20, *, lease_held=False):
         if not isinstance(code, str) or len(code.encode("utf8")) >= 1048576:
             raise ValueError("Local command must be a string smaller than 1 MiB")
         identity = uuid.uuid4().hex
         remote = f"{FOLDER}/command-{identity}.tmp"
         request = {"id": identity, "code": code}
-        with self.session.control(), tempfile.TemporaryDirectory(prefix="mr3a-arena-") as folder:
+        with (nullcontext() if lease_held else self.session.control()), tempfile.TemporaryDirectory(prefix="mr3a-arena-") as folder:
             path = Path(folder) / "request.json"
             path.write_text(json.dumps(request, ensure_ascii=False), encoding="utf8")
             result = self.session.adb("push", str(path), remote)

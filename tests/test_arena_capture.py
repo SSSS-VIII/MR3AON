@@ -43,6 +43,34 @@ def test_partial_frames_preserve_rgba_and_sequence():
     assert not thread.is_alive()
 
 
+@pytest.mark.parametrize('action,command', [('jump', 3), ('down', 4), ('pause', 5)])
+def test_key_pulses_have_ordered_payload_free_acknowledgments(action, command):
+    capture = FastCapture(session(), width=16, height=16)
+    client, server = socket.socketpair()
+    capture._socket = client
+    def producer():
+        with server:
+            kind, sequence = REQUEST.unpack(server.recv(REQUEST.size))
+            assert kind == command
+            server.sendall(HEADER.pack(b'MR3F', 1, kind, 0, 0, 0, sequence, 100, 200, 300))
+    thread = threading.Thread(target=producer)
+    thread.start()
+    try:
+        ack = capture.tap(action)
+        assert ack.rgba == b'' and ack.sequence == 1
+    finally:
+        client.close()
+        thread.join(timeout=2)
+    assert not thread.is_alive()
+
+
+def test_unknown_action_is_rejected_before_touching_channel():
+    capture = FastCapture(session())
+    with pytest.raises(ValueError, match='Action'):
+        capture.tap('reset')
+    assert capture._sequence == 0
+
+
 @pytest.mark.parametrize('size,seq', [(0xffffffff, 1), (1024, 99)])
 def test_rejects_invalid_length_and_stale_frame_without_reading_payload(size, seq):
     capture = FastCapture(session(), width=16, height=16)
