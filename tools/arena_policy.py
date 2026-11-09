@@ -1,5 +1,6 @@
 """Short-horizon avoidance over visual objects, support and native action priors."""
 from arena_vision import Box,player_future,native_motion_box,can_air_down
+from arena_oriented import is_box,transform,touching_capsule
 import arena_motion as motion
 
 
@@ -66,7 +67,14 @@ class Avoider:
             t=step*.04
             p=self._path(obs,action,t)
             for track in objects:
-                if track.id not in hits and touching(p,self._hazard(track,t),shape='box'if track.kind=='trap'else'ellipse'):
+                if track.id in hits:continue
+                hazard=self._hazard(track,t)
+                if getattr(track,'quad',None)is not None and track.collider_shape=='BoxCollider':
+                    quad=transform(track.quad,track.angular_velocity*t,hazard.center)
+                    collision=touching_capsule(p,quad,margin=4)
+                else:
+                    collision=touching(p,hazard,shape='box'if is_box(track)else'ellipse')
+                if collision:
                     hits[track.id]=(t,track)
         cost=sum(100*(1+(.8-t)*2) for t,_ in hits.values())
         return cost,min((t for t,_ in hits.values()),default=10),hits

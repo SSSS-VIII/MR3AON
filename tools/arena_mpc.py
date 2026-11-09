@@ -5,6 +5,7 @@ from arena_vision import advance_player,native_motion_box,create_motion,can_air_
 from arena_policy import VisualAvoider
 import arena_motion as motion
 from arena_object_motion import PRIORS
+from arena_oriented import is_box,transform,swept_capsules
 
 
 @dataclass
@@ -118,7 +119,16 @@ class MpcAvoider(VisualAvoider):
         times=np.arange(self.STEPS*2+1)*self.STEP/2
         boxes=np.array([[[b.center[0],b.center[1],b.w/2,b.h/2]
                          for track in tracks for b in[self._hazard(track,t)]]for t in times])
-        box_hazards=np.array([t.kind=='trap'for t in tracks])
+        box_hazards=np.array([is_box(t)for t in tracks])
+        oriented=np.array([getattr(t,'quad',None)is not None and t.collider_shape=='BoxCollider'for t in tracks])
+        has_oriented=bool(np.any(oriented))
+        if has_oriented:
+            indices=np.flatnonzero(oriented)
+            quads=np.array([[transform(tracks[j].quad,tracks[j].angular_velocity*t,boxes[i,j,:2])
+                             for j in indices]for i,t in enumerate(times)])
+            radius=np.linalg.norm(quads[0]-quads[0].mean(axis=1,keepdims=True),axis=2).max(axis=1)
+            step_angle=np.array([abs(tracks[j].angular_velocity)*self.STEP/2 for j in indices])
+            sagitta=radius*(1-np.cos(np.minimum(np.pi,step_angle)/2))
         beam=[Node(obs)];now=obs['time']
         for step in range(self.STEPS):
             branches=[]
@@ -138,6 +148,12 @@ class MpcAvoider(VisualAvoider):
                                   box_hazards=box_hazards,
                                   box_vertical_margin=PRIORS['trap_prediction']['vertical_margin_px']+
                                     times[index+1]*PRIORS['trap_prediction']['vertical_growth_px_per_second'])
+                if has_oriented:
+                    collision=swept_capsules(positions[sample],positions[sample+1],quads[index],quads[index+1],
+                        margin_x=8+times[index+1]*8,
+                        margin_y=PRIORS['trap_prediction']['vertical_margin_px']+
+                                 times[index+1]*PRIORS['trap_prediction']['vertical_growth_px_per_second'],sagitta=sagitta)
+                    d[:,oriented]=np.where(collision,0,np.maximum(1.,d[:,oriented]))
                 distances.append(d);near.append(np.maximum(0,1.4-d).sum(axis=1)*.002)
             pool={}
             for i,(node,state,half,end,name)in enumerate(branches):

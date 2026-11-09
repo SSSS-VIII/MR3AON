@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-09：旋转四角/角速度/胶囊扫掠已接经典跟踪及Reactive/MPC，6项新保护通过；原生oracle仅钩等连续运动改善，突发攻击仍不能预知，尚未接视觉实机，见[旋转碰撞](archived/2026-11-09-arena-oriented-motion-collision.md)。共享13物理类标准YOLO的同集验证危险物空间召回78.76→84.33%，支撑仍差，未切默认，见[类别试验](archived/2026-11-09-arena-yolo-physics-taxonomy.md)。全arena209通过/2依赖跳过。原生批采继续，禁止并发查询arena。
+
 2026-11-09：标准YOLO OBB资源/形状pilot完成12epoch及719帧独立验收：严格危险物召回76.5%、角色70.5%、浮台12.4%，未达部署，默认v4保留；7项新数据/评分测试通过。批采已22回合/30家族，继续补全训练覆盖，见[OBB试验](archived/2026-11-09-arena-standard-yolo-obb-pilot.md)。
 
 2026-11-09：有限原生批采首12回合2747帧/19家族、真实续跑通过，正在收满36窗口×三分集108回合。标准YOLO26n-OBB首轮12epoch完成（仅13个训练家族），正在独立评分，默认八类v4不切换，详见[全对象交接](archived/2026-11-09-arena-resource-coverage-wip.md)。

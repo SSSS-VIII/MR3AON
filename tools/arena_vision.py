@@ -38,6 +38,9 @@ class Detection:
     active: bool = False
     arming: bool = False
     attack_phase: str | None = None
+    resource: str | None = None
+    collider_shape: str | None = None
+    quad: tuple | None = None
 
 
 @dataclass
@@ -75,8 +78,17 @@ class Track:
     rush_target_w: float = 0
     rush_target_h: float = 0
     horizontal_stopped: bool = False
+    resource: str | None = None
+    collider_shape: str | None = None
+    quad: tuple | None = None
+    angular_velocity: float = 0.
+    angular_history: deque = field(default_factory=lambda: deque(maxlen=10))
 
     def update(self, detection, stamp, player):
+        if self.quad is not None or detection.quad is not None:
+            from arena_oriented import update_rotation
+            update_rotation(self,detection,stamp)
+        self.resource=detection.resource;self.collider_shape=detection.collider_shape
         self.box, self.kind, self.confidence, self.seen = (
             detection.box, detection.kind, detection.confidence, stamp)
         self.active = detection.active
@@ -186,12 +198,22 @@ class Track:
             dy=bounce_y(self.box.center[1],self.vy,seconds,floor=self.floor_y,
                         gravity_up=self.gravity_up,gravity_down=self.gravity_down,
                         rebound=self.rebound_speed)-self.box.center[1]
-        return Box(self.box.x + self.vx * seconds+.5*ax*horizon*horizon,
+        forecast=Box(self.box.x + self.vx * seconds+.5*ax*horizon*horizon,
                    self.box.y+dy,
                    self.box.w, self.box.h)
+        if self.quad is not None and self.collider_shape=='BoxCollider':
+            from arena_oriented import bounds,transform
+            return Box(*bounds(transform(self.quad,self.angular_velocity*seconds,forecast.center)))
+        return forecast
+
+    def future_quad(self,seconds):
+        if self.quad is None:return None
+        from arena_oriented import transform
+        return transform(self.quad,self.angular_velocity*seconds,self.future(seconds).center)
 
     def at(self,seconds):
         result=replace(self,box=self.future(seconds))
+        if self.quad is not None:result.quad=self.future_quad(seconds)
         if self.attack_phase in ('ready','rush'):
             moving=max(0,seconds-self.ready_remaining)
             result.ready_remaining=max(0,self.ready_remaining-seconds)
@@ -233,6 +255,8 @@ class Tracker:
                 ox,oy=player[0]-t.reference[0],player[1]-t.reference[1]
                 distance = math.hypot(x-(tx+ox),y-(ty+oy))
                 compatible=(d.kind==t.kind or {d.kind,t.kind}<={'eye_enemy','spider'})
+                if d.collider_shape and t.collider_shape and ((d.collider_shape=='BoxCollider')!=(t.collider_shape=='BoxCollider')):
+                    compatible=False
                 if (compatible and distance < max(35, min(180, 1600 * elapsed + 12))
                         and abs(y-(ty+oy)) < max(19,abs(t.vy)*elapsed+12)):
                     pairs.append((distance, i, t.id))
@@ -259,7 +283,8 @@ class Tracker:
                 dx,dy=player[0]-t.reference[0],player[1]-t.reference[1]
                 b=Box(b.x+dx,b.y+dy,b.w,b.h)
                 output.append(replace(prediction,box=b,confidence=t.confidence-age*.6,
-                                      reference=player,floor_y=prediction.floor_y+dy))
+                                      reference=player,floor_y=prediction.floor_y+dy,
+                                      quad=tuple((x+dx,y+dy)for x,y in prediction.quad)if prediction.quad else None))
             else:
                 output.append(t)
         return output
@@ -813,7 +838,8 @@ def overlay(rgb, observation, action=None, reason=''):
             x=int(terrain['edge']);cv2.line(image,(x,180),(x,310),(255,0,255),2)
     for t in observation['tracks']:
         color = (0, 0, 255) if t.confidence >= .7 else (140, 140, 140)
-        rect(t.box, color)
+        if getattr(t,'quad',None)is not None:cv2.polylines(image,[np.asarray(t.quad,np.int32)],True,color,1)
+        else:rect(t.box, color)
         x, y = t.box.center
         cv2.arrowedLine(image, (int(x), int(y)), (int(x+t.vx*.2), int(y+t.vy*.2)), color, 1)
         path=np.array([[int(t.future(dt).center[0]),int(t.future(dt).center[1])]
