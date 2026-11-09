@@ -165,6 +165,11 @@ def targets(raw,profile):
             center=clipped.mean(0)
             if center[1]>275 and(center[0]<135 or center[0]>515):return
             result.append((cls,clipped.tolist()));counts['targets']+=1
+            meta=profile['classes'][cls]
+            if meta['kind']=='hazard':
+                counts['resource:'+meta['resource']]+=1
+                if len(meta.get('type_ids',[]))==1:
+                    counts['type:'+str(meta['type_ids'][0])]+=1
     for collider in row['role']['colliders']or[]:add(0,collider_quad(collider))
     for obj in row.get('objects')or[]:
         if obj.get('dead')or not obj.get('renderers'):continue
@@ -237,6 +242,12 @@ def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=F
                     text.append(str(cls)+' '+' '.join(f'{v:.7f}'for v in coordinates.ravel())+'\n')
                 (output/'labels'/split/Path(name).with_suffix('.txt')).write_text(''.join(text))
         manifest['splits'][split]=dict(counts=counts,class_targets=per_class)
+        if split=='train':
+            # Resampling decisions use actual positive training labels only,
+            # never validation/test sightings or source pool references.
+            for key,prefix in [('native_training_targets_by_resource','resource:'),
+                               ('native_training_targets_by_type','type:')]:
+                manifest[key]={k[len(prefix):]:v for k,v in counts.items()if k.startswith(prefix)}
     for resource,family in profile['families'].items():
         family['observed_training_names']=sorted(runtime_names[resource])
         family['observed_training_types']=sorted(runtime_types[resource])

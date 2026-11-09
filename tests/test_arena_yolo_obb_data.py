@@ -33,6 +33,8 @@ def test_compound_collider_and_visible_cue_labels_preserve_physical_shape_and_ph
         dict(id=2,name='unknown',family_type_id=238,renderers=[dict(box=[400,180,420,200])],colliders=[])])
     labels,stats=targets(row,p)
     assert [p['classes'][c]['name']for c,q in labels]==['Crow__SphereCollider__ready','type_238__cue__normal']
+    assert stats['resource:Crow']==1 and stats['resource:type_238']==0
+    assert stats['type:238']==0
     row['objects'][0]['colliders'][0]['owner_id']=2
     with pytest.raises(ValueError,match='ownership'):targets(row,p)
 

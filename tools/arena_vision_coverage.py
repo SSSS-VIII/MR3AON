@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 
-def build_plan(catalog,entities,placements,known,minimum=100):
+def build_plan(catalog,entities,placements,known,minimum=100,known_types=None,excluded_specs=()):
     if catalog.get('mode')!=6:
         raise ValueError('Only original Gale mode pools are supported')
     if minimum<1:
@@ -43,10 +43,15 @@ def build_plan(catalog,entities,placements,known,minimum=100):
     unbound=sorted(i for i in reachable if i in enemies and enemies[i].get('config')is not None
                    and not enemies[i].get('resource_name'))
     all_resources=set().union(*(set(c['resources'])for c in candidates))if candidates else set()
+    # Compute the authoritative missing set before excluding failed entries.
+    # Otherwise an unsafe entry could make its resources silently disappear.
+    candidates=[c for c in candidates if not any(
+        all(c['spec'].get(k)==v for k,v in excluded.items())for excluded in excluded_specs)]
     covered={r for r,n in known.items()if n>=minimum};uncovered=all_resources-covered
-    unknown=set(missing)
+    known_types=known_types or{}
+    unknown={i for i in missing if known_types.get(str(i),known_types.get(i,0))<minimum}
     target=sorted(uncovered);selected=[]
-    while uncovered or unknown:
+    while candidates and(uncovered or unknown):
         candidate=min(candidates,key=lambda c:(-len(set(c['resources'])&uncovered)-len(set(c['unresolved_types'])&unknown),
                       c['spec'].get('sample_block',0),c['spec']['level'],c['spec']['map'],c['spec']['start'],c['spec']['board']))
         new=set(candidate['resources'])&uncovered
@@ -56,6 +61,7 @@ def build_plan(catalog,entities,placements,known,minimum=100):
         uncovered-=new
         unknown-=probes
     return dict(mode=6,minimum_native_frame_targets=minimum,known_native_counts=known,
+                known_native_counts_by_type=known_types,excluded_specs=list(excluded_specs),
                 reachable_enemy_types=sorted(reachable),missing_current_config=missing,
                 unbound_resource_types=unbound,target_resources=target,selected=selected,
                 not_planned=sorted(uncovered),not_planned_unresolved_types=sorted(unknown),
@@ -67,12 +73,16 @@ def main():
     p.add_argument('--catalog',type=Path,required=True);p.add_argument('--entities',type=Path,required=True)
     p.add_argument('--placements',type=Path,required=True);p.add_argument('--known-native',type=Path,required=True)
     p.add_argument('--minimum',type=int,default=100);p.add_argument('--output',type=Path,required=True)
+    p.add_argument('--exclude',type=Path,help='JSON list of original entry specs with observed preparation failures')
     a=p.parse_args()
-    known=json.loads(a.known_native.read_text())['native_training_targets_by_resource']
+    evidence=json.loads(a.known_native.read_text());known=evidence['native_training_targets_by_resource']
+    excluded=json.loads(a.exclude.read_text())if a.exclude else[]
     result=build_plan(json.loads(a.catalog.read_text()),json.loads(a.entities.read_text()),
-                      [json.loads(s)for s in a.placements.read_text().splitlines()],known,a.minimum)
+                      [json.loads(s)for s in a.placements.read_text().splitlines()],known,a.minimum,
+                      evidence.get('native_training_targets_by_type'),excluded)
     result['source_hashes']={str(path):hashlib.sha256(path.read_bytes()).hexdigest()
                              for path in(a.catalog,a.entities,a.placements,a.known_native)}
+    if a.exclude:result['source_hashes'][str(a.exclude)]=hashlib.sha256(a.exclude.read_bytes()).hexdigest()
     with a.output.open('x')as out:out.write(json.dumps(result,indent=2)+'\n')
     print(json.dumps(dict(selected_boards=len(result['selected']),resources=len(result['target_resources']),
                           missing_config=result['missing_current_config'],unbound=result['unbound_resource_types'])))

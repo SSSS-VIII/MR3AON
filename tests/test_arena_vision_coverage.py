@@ -39,3 +39,25 @@ def test_long_board_resources_require_distinct_generated_block_windows():
     assert len(result['selected'])==2
     assert {r['spec']['sample_block']for r in result['selected']}=={19,35}
     assert all(len(r['new_resources'])==1 for r in result['selected'])
+
+
+def test_failed_entry_exclusion_uses_other_original_windows_without_hiding_missing_assets():
+    catalog=dict(mode=6,levels=[dict(id=1,maps=[dict(id=2)])],
+                 maps={'2':dict(slots=[dict(pool=[dict(id=10),dict(id=11)])],loop=[])})
+    entities=[dict(kind='enemies',type_id=1,resource_name='A',config={}),
+              dict(kind='enemies',type_id=2,resource_name='B',config={})]
+    placements=[dict(kind='enemies',stage=s,type_id=t)for s,t in[(10,1),(10,2),(11,1)]]
+    result=build_plan(catalog,entities,placements,{},excluded_specs=[dict(board=10)])
+    assert result['selected'][0]['spec']['board']==11
+    assert result['not_planned']==['B']and result['target_resources']==['A','B']
+    empty=build_plan(catalog,entities,placements,{},excluded_specs=[dict(level=1)])
+    assert not empty['selected']and empty['not_planned']==['A','B']
+
+
+def test_observed_unconfigured_types_can_be_complete_but_static_missing_config_stays_visible():
+    catalog=dict(mode=6,levels=[dict(id=1,maps=[dict(id=2)])],
+                 maps={'2':dict(slots=[dict(pool=[dict(id=10)])],loop=[])})
+    placements=[dict(kind='enemies',stage=10,type_id=238)]
+    result=build_plan(catalog,[],placements,{},known_types={'238':150})
+    assert not result['selected']and result['missing_current_config']==[238]
+    assert result['not_planned_unresolved_types']==[]
