@@ -86,7 +86,7 @@ class MpcAvoider(VisualAvoider):
 
     def uses_search(self,obs):
         return bool(obs.get('player')and obs.get('rope')is not None and not obs.get('terrain')
-                    and any(t.kind=='pinball'or t.attack_phase is not None for t in self._objects(obs)))
+                    and any(t.kind in ('pinball','trap')or t.attack_phase is not None for t in self._objects(obs)))
 
     def _options(self,state,stamp):
         names=[None]

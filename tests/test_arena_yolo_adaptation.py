@@ -300,3 +300,13 @@ def test_rectangular_sweep_checks_between_samples_and_leaves_spheres_unchanged()
     mixed=swept_distances(player,player,before,after,0,[True,False])
     assert mixed[0,0]<1
     assert mixed[0,1]==old[0,1]and mixed[0,1]>1
+
+
+def test_rectangular_traps_use_rolling_action_search_on_rope():
+    from arena_mpc import MpcAvoider
+    from arena_vision import Track
+    threat=Track(1,Box(420,180,40,80),'trap',.95,1.,observations=4,vx=-550)
+    obs=dict(player=Box(172,210,16,37),rope=260.,phase='rope_above',jumps=0,
+             tracks=[threat],terrain=None,time=1.,motion=None,scale_px=39.5)
+    assert MpcAvoider().uses_search(obs)
+    assert not MpcAvoider().uses_search(dict(obs,terrain={'y':260.}))
