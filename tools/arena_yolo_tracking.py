@@ -1,20 +1,25 @@
 #!/usr/bin/env python3
-"""Offline native-paired trajectory audit; privileged labels never drive inputs."""
+"""Legacy six/eight-class sphere trajectory audit; labels never drive inputs."""
 import argparse
 import hashlib
 import json
 from pathlib import Path
 import cv2
-from arena_yolo_detector import YoloDetector,YoloPerception,DEFAULT_WEIGHTS
+from arena_yolo_detector import YoloDetector,YoloPerception,ROOT
+from arena_obb_detector import profile_path
 from arena_vision_dataset import audit
 
+LEGACY_WEIGHTS=ROOT/'debug/arena-client/yolo/finetune/fit-claw-v4/weights/best.pt'
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--weights',type=Path,default=DEFAULT_WEIGHTS)
+    p.add_argument('--weights',type=Path,default=LEGACY_WEIGHTS)
     p.add_argument('--episode',type=Path,required=True)
     p.add_argument('--output',type=Path,required=True)
     a=p.parse_args()
+    metadata=profile_path(a.weights)
+    if metadata.is_file()and json.loads(metadata.read_text()).get('task')=='obb':
+        p.error('This audit uses legacy semantic classes; use arena_obb_replay.py for OBB state replay and arena_yolo_obb_score.py for native geometry')
     if a.output.exists():raise FileExistsError(a.output)
     cv2.setNumThreads(1)
     result=audit(a.episode,perception=YoloPerception(YoloDetector(a.weights)))
