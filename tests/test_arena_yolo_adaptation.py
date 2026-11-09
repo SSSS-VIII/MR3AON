@@ -162,3 +162,15 @@ def test_occluded_ball_camera_shift_moves_floor_with_predicted_body():
     original=t.future(.3);shifted=predicted.future(.2)
     assert shifted.center==pytest.approx((original.center[0],original.center[1]-30))
     assert t.floor_y==240  # Retained last-seen state stays in its original frame.
+
+
+def test_action_commit_uses_projected_landing_state_instead_of_old_jump_count():
+    from arena_vision import Perception
+    p=Perception();p.jump_count=1
+    state=dict(time=1.8,player=Box(173,211,14.4,37.44),phase='rope_above',rope=260,
+               scale_px=40,stand_w=14.4,stand_h=37.44,motion=None,jumps=0,terrain=None)
+    p.action('jump',1.8,state)
+    assert p.active_motion['name']=='jump1'and p.jump_count==1
+    state.update(time=2.05,phase='jump1_rising',jumps=1,motion=p.active_motion)
+    p.action('jump',2.05,state)
+    assert p.active_motion['name']=='jump2'and p.jump_count==2

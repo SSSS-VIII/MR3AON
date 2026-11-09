@@ -272,8 +272,14 @@ class Perception:
             if phase=='rope_below':
                 name='rope_up';self.jump_count=0
             else:
-                name='jump1' if not self.jump_count else 'jump2'
-                self.jump_count=min(2,self.jump_count+1)
+                # The supplied observation is projected to input receipt. It
+                # may already have landed while the last captured frame was
+                # still airborne; commit the same state the planner used.
+                jumps=current.get('jumps',self.jump_count)if current else self.jump_count
+                if phase in ('rope_above','ground'):
+                    jumps=0
+                name='jump1' if not jumps else 'jump2'
+                self.jump_count=min(2,jumps+1)
         elif action == 'down':
             self.last_flip = stamp
             if phase=='rope_above':
