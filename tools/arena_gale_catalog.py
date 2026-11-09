@@ -8,6 +8,19 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def has_game_start(stage):
+    for group in stage['_levelBlockInfos']:
+        for block in group:
+            for item in block.get('itemInfos', []):
+                if item.get('_itemType') == 3:
+                    return True
+                if item.get('_itemType') == 100 and any(
+                        action.get('_actionType') == 23
+                        for action in item.get('_itemInfoCustom', {}).get('_levelActionDataList', [])):
+                    return True
+    return False
+
+
 def classify_board(stage):
     """Classify placement randomness separately from native action randomness.
 
@@ -85,7 +98,7 @@ def build_catalog(config: Path, dataset: Path):
                     raise ValueError(f'Non-Gale board {stage_id}')
                 blocks = [block for group_ in stage['_levelBlockInfos'] for block in group_]
                 pool.append(dict(id=stage_id, weight=candidate['_weight'],
-                                 blocks=len(blocks), classification=classify_board(stage), entry=entry_info(blocks), opening=stage.get('_stageUseFor') == 1))
+                                 blocks=len(blocks), startsGame=has_game_start(stage), classification=classify_board(stage), entry=entry_info(blocks), opening=stage.get('_stageUseFor') == 1))
             if pool and all(candidate['opening'] for candidate in pool):
                 opening.append(dict(group=group_index, pool=pool))
             else:
@@ -97,7 +110,7 @@ def build_catalog(config: Path, dataset: Path):
             if stage.get('_levelDataType', 0) != 6:
                 raise ValueError(f'Non-Gale loop board {stage_id}')
             blocks = [block for group_ in stage['_levelBlockInfos'] for block in group_]
-            loop.append(dict(id=stage_id, weight=candidate['_weight'], blocks=len(blocks),
+            loop.append(dict(id=stage_id, weight=candidate['_weight'], blocks=len(blocks), startsGame=has_game_start(stage),
                              classification=classify_board(stage), entry=entry_info(blocks), opening=False))
         maps[str(identity)] = dict(id=identity, ground=source['_groundType']['value__'],
                                    difficulty=source['_difficultyLevel'], opening=opening, slots=slots, loop=loop)

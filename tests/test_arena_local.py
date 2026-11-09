@@ -212,3 +212,40 @@ assert(r.resetting and items and enemies and scene)
 io.write('ok')
 ''')
     assert subprocess.check_output([lua, str(script)], text=True) == 'ok'
+
+def test_reset_readiness_waits_for_new_living_ninja(tmp_path):
+    lua = shutil.which('luajit')
+    if not lua:
+        pytest.skip('LuaJIT unavailable')
+    script = tmp_path / 'ready.lua'
+    script.write_text('local SOURCE=' + json.dumps(str(ROOT / 'arena/Local/environment.lua')) + r'''
+MR3A={seedHook=true}
+local old={CurrentHp=5000};local new={CurrentHp=5000}
+local state,content='Game: 8','Running: 1'
+local controller={NinjaScript=old}
+local co
+local runner={StartCoroutine=function(self,f)co=coroutine.create(f);assert(coroutine.resume(co))end}
+CS={System={Reflection={BindingFlags={__CastFrom=function(v)return v end}}},
+ UnityEngine={Time={timeScale=1,realtimeSinceStartup=0},EventSystems={EventTrigger={}},
+ GameObject={Find=function()return {GetComponent=function()return runner end}end}},
+ NinjaController={Instance=controller},GameManager={Instance={GetCurFSMStateID=function()return state end}}}
+setmetatable(CS.GameManager.Instance,{__index=function(_,k)if k=='CurrContentState'then return content end end})
+typeof=function(t)return t end
+package.preload['common/util']=function()return {cs_generator=function(f)return f end}end
+coroutine.step=function()coroutine.yield()end
+dofile(SOURCE)
+MR3A.state=function()return {}end
+MR3A.wait_ready(old)
+assert(not MR3A.resetJob.done and CS.UnityEngine.Time.timeScale==1)
+controller.NinjaScript=new;state='LoadingGame: 9'
+assert(coroutine.resume(co));assert(not MR3A.resetJob.done)
+state='Game: 8';new.CurrentHp=0
+assert(coroutine.resume(co));assert(not MR3A.resetJob.done)
+new.CurrentHp=5000;content='WaitGameStart: 0'
+assert(coroutine.resume(co));assert(not MR3A.resetJob.done)
+content='Running: 1'
+assert(coroutine.resume(co));assert(MR3A.resetJob.done and not MR3A.resetJob.error)
+assert(CS.UnityEngine.Time.timeScale==0)
+io.write('ok')
+''')
+    assert subprocess.check_output([lua, str(script)], text=True) == 'ok'

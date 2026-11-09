@@ -270,14 +270,20 @@ function E.enter()
     return E.state()
 end
 
-function E.wait_ready()
+function E.wait_ready(previousNinja)
     local gm=CS.GameManager.Instance
     E.resetJob={done=false,seed=E.seed}
     local runner=U.GameObject.Find('MR3A_LocalControl'):GetComponent(typeof(U.EventSystems.EventTrigger))
     runner:StartCoroutine(require('common/util').cs_generator(function()
         local ok,err=pcall(function()
             local deadline=U.Time.realtimeSinceStartup+60
-            while tostring(gm:GetCurFSMStateID())~='Game: 8' or tostring(gm.CurrContentState)~='Running: 1' do
+            while true do
+                local controller=CS.NinjaController.Instance
+                local ninja=controller and controller.NinjaScript
+                if tostring(gm:GetCurFSMStateID())=='Game: 8' and ninja and ninja~=previousNinja
+                    and ninja.CurrentHp>0 and E.ensure_battle_start then E.ensure_battle_start(ninja) end
+                if tostring(gm:GetCurFSMStateID())=='Game: 8' and tostring(gm.CurrContentState)=='Running: 1'
+                    and ninja and ninja~=previousNinja and ninja.CurrentHp>0 then break end
                 assert(U.Time.realtimeSinceStartup<deadline,'Reset did not enter the battle')
                 coroutine.step()
             end
@@ -291,6 +297,8 @@ end
 
 function E.reset(seed, chapter, level)
     local gm=CS.GameManager.Instance
+    local controller=CS.NinjaController and CS.NinjaController.Instance
+    local previousNinja=controller and controller.NinjaScript
     assert(gm._isOnlyGame and gm.GameInfo.OfflineGame,'Requires offline GameOnly')
     assert(type(seed)=='number' and seed%1==0 and seed>=0 and seed<=2147483647,'Invalid seed')
     assert(not E.busy,'An advance is active')
@@ -313,7 +321,7 @@ function E.reset(seed, chapter, level)
     E.role_defaults()
     gm:PreloadLevelData(E.mode,chapter or 1,level or 1)
     gm:EnterGameScene()
-    E.wait_ready()
+    E.wait_ready(previousNinja)
     return {resetting=true,seed=seed,chapter=chapter or 1,level=level or 1}
 end
 

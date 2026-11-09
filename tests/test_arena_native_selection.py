@@ -24,8 +24,8 @@ local function group(ids)
 end
 local catalog={mode=6,routes={{id=1,levels={{id=1,maps={7}}}}},
  levels={{id=1,maps={{id=7,chapter=1,level=1}}}},maps={['7']={absoluteLevel=1,
- opening={{group=1,pool={{id=90}}}},slots={
- {position=1,group=2,pool={{id=11},{id=12}}},
+ opening={{group=1,pool={{id=90,startsGame=false}}}},slots={
+ {position=1,group=2,pool={{id=11,startsGame=true},{id=12,startsGame=false}}},
  {position=2,group=3,pool={{id=21},{id=22}}},
  {position=3,group=4,pool={{id=31},{id=32}}}},loop={{id=81},{id=82}}}}}
 MR3A={nativePinHooks=true,role_defaults=function()end,reset=function()end}
@@ -33,6 +33,32 @@ CS={System={IO={File={ReadAllText=function()return '' end}},Reflection={BindingF
  UnityEngine={Application={persistentDataPath='/local'}},GameManager={Instance={GameInfo={GetRealCombatType=function()return 6 end}}}}
 json={parse=function()return catalog end}
 dofile(SOURCE)
+assert(not MR3A.needs_round_start(catalog.maps['7'],11))
+assert(MR3A.needs_round_start(catalog.maps['7'],12))
+assert(not MR3A.needs_round_start(catalog.maps['7'],999))
+local function managed(t)
+ function t:GetType()return {GetField=function(_,name)return {GetValue=function(_,obj)return obj[name]end}end}end
+ return t
+end
+local first={_stageID=12}
+local level=managed({_levelBaseInfo={_levelID=7},_stageList=list({managed({_stageBaseInfo=first})})})
+local gm=CS.GameManager.Instance
+local calls=0
+gm._isOnlyGame=true;gm.GameInfo.OfflineGame=true;gm.CurrContentState='WaitGameStart: 0'
+function gm:StartGameContent()calls=calls+1;self.CurrContentState='Running: 1'end
+CS.LevelManager={Instance={GameLevelInfo=level}}
+CS.Util={Enum2Int=function(v)return v end}
+MR3A.resetJob={}
+local ninja=managed({__ninjaPhysicsState=13})
+MR3A.ensure_battle_start(ninja)
+assert(calls==1 and MR3A.resetJob.nativeStartForContinuation==12)
+MR3A.ensure_battle_start(ninja);assert(calls==1)
+gm.CurrContentState='WaitGameStart: 0';first._stageID=11
+MR3A.ensure_battle_start(ninja);assert(calls==1) -- Preserve an existing start trigger.
+first._stageID=12;gm.GameInfo.OfflineGame=false
+MR3A.ensure_battle_start(ninja);assert(calls==1)
+gm.GameInfo.OfflineGame=true;ninja.__ninjaPhysicsState=0
+MR3A.ensure_battle_start(ninja);assert(calls==1) -- Initialization must finish first.
 local s=MR3A.validate_selection({level=1,map=7,start=2,pins={['2']=22,['4']=82}})
 assert(s.chapter==1 and s.level==1 and s.absoluteLevel==1)
 MR3A.nativeSelection=s

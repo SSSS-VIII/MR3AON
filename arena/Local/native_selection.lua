@@ -8,6 +8,35 @@ E.catalog=json.parse(CS.System.IO.File.ReadAllText(file))
 assert(E.catalog.mode==6,'Gale catalog required')
 local catalog=E.catalog
 
+function E.needs_round_start(map,firstID)
+    for _,group in ipairs(map.opening) do
+        for _,v in ipairs(group.pool) do if v.startsGame~=false then return false end end
+    end
+    for _,v in ipairs(map.slots[1].pool) do
+        if v.id==firstID then return v.startsGame==false end
+    end
+    return false
+end
+
+function E.ensure_battle_start(ninja)
+    local gm=CS.GameManager.Instance
+    if not gm._isOnlyGame or not gm.GameInfo.OfflineGame or gm.GameInfo:GetRealCombatType()~=6
+        or tostring(gm.CurrContentState)~='WaitGameStart: 0' then return end
+    if CS.Util.Enum2Int(get(ninja,'__ninjaPhysicsState'))==0 then return end
+    local level=CS.LevelManager.Instance.GameLevelInfo
+    if not level then return end
+    local map=catalog.maps[tostring(get(level,'_levelBaseInfo')._levelID)]
+    local stages=get(level,'_stageList')
+    if not map or not stages or stages.Count==0 then return end
+    local firstID=get(stages[0],'_stageBaseInfo')._stageID
+    if E.needs_round_start(map,firstID) then
+        -- Continuation boards can have no start trigger at all. Initialize the
+        -- new local round through the client's API, without changing the board.
+        gm:StartGameContent()
+        E.resetJob.nativeStartForContinuation=firstID
+    end
+end
+
 function E.validate_selection(s)
     assert(type(s)=='table','Selection required')
     local chapter,level=s.chapter,s.level

@@ -86,3 +86,16 @@ def test_scroll_route_start_is_grouped_under_actual_level(tmp_path):
     result = build_catalog(config, tmp_path)
     assert result['levels'] == [dict(id=3, maps=[dict(id=11, chapter=3, level=1)])]
     assert result['maps']['11']['absoluteLevel'] == 3
+
+
+def test_start_detection_uses_action_type_and_preserves_continuation_boards(tmp_path):
+    from arena_gale_catalog import has_game_start
+    make = lambda items: {'_levelBlockInfos': [[{'itemInfos': items}]]}
+    assert not has_game_start(make([]))
+    assert has_game_start(make([{'_itemType': 3}]))
+    assert has_game_start(make([{'_itemType': 100, '_itemInfoCustom': {
+        '_levelActionDataList': [{'_actionType': 23, '_actionName': '关闭水面'}]}}]))
+    assert not has_game_start(make([{'_itemType': 100, '_itemInfoCustom': {
+        '_levelActionDataList': [{'_actionType': 29, '_actionName': 'GameStart'}]}}]))
+    catalog = build_catalog(files(tmp_path), tmp_path)
+    assert catalog['maps']['1']['slots'][0]['pool'][1]['startsGame'] is False
