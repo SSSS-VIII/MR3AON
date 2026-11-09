@@ -20,6 +20,12 @@ DEFAULT_WEIGHTS=ROOT/PROFILE['weights']
 def make_perception(weights):
     from arena_obb_detector import profile_path
     path=profile_path(weights)
+    if Path(weights).resolve()==DEFAULT_WEIGHTS.resolve():
+        if hashlib.sha256(Path(weights).read_bytes()).hexdigest()!=PROFILE['sha256']:
+            raise ValueError('Arena checkpoint differs from the reviewed profile')
+        if PROFILE.get('profile_sha256'):
+            if not path.is_file()or hashlib.sha256(path.read_bytes()).hexdigest()!=PROFILE['profile_sha256']:
+                raise ValueError('Arena geometry metadata differs from the reviewed profile')
     if path.is_file()and json.loads(path.read_text()).get('task')=='obb':
         from arena_obb_detector import ObbDetector,ObbPerception
         return ObbPerception(ObbDetector(weights))
