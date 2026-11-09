@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-09：有限原生批采首12回合2747帧/19家族、真实续跑通过，正在收满36窗口×三分集108回合。标准YOLO26n-OBB首轮12epoch完成（仅13个训练家族），正在独立评分，默认八类v4不切换，详见[全对象交接](archived/2026-11-09-arena-resource-coverage-wip.md)。
+
 2026-11-09：schema4已补原ItemAirGround浮台/死亡偏移/原引用匹配（普通sourceId全0不能当ID），132帧引用复投影最大0.0245px；采样器用原跳跃延长困难段0.6→7秒，仍有死亡。首12回合2747帧/19原生家族，199通过/2依赖跳过；完整批采继续，见[浮台采集](archived/2026-11-09-arena-floating-support-collection.md)。
 
 2026-11-09：原浮空平台Main被移入旧场景后，缓存克隆跨重开复用导致失效；已补原DestroyAllPools，连续7→3关级采集重开成功，原平台池4个有效Main，11项环境回归通过。零宽连接段直接开采会跌落，正在补前置采样距离；见[缓存生命周期](archived/2026-11-09-arena-reset-prefab-pool-lifetime.md)。
