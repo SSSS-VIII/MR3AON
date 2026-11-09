@@ -60,7 +60,16 @@ MR3A.ensure_battle_start(ninja);assert(calls==1)
 gm.GameInfo.OfflineGame=true;ninja.__ninjaPhysicsState=0
 MR3A.ensure_battle_start(ninja);assert(calls==1) -- Initialization must finish first.
 local s=MR3A.validate_selection({level=1,map=7,start=2,pins={['2']=22,['4']=82}})
-assert(s.chapter==1 and s.level==1 and s.absoluteLevel==1)
+assert(s.chapter==1 and s.level==1 and s.absoluteLevel==1 and s.sample_block==nil)
+local sample=MR3A.validate_selection({level=1,map=7,start=2,sample_block=9})
+assert(sample.sample_block==9)
+assert(not pcall(MR3A.validate_selection,{level=1,map=7,sample_block=-1}))
+assert(not pcall(MR3A.validate_selection,{level=1,map=7,sample_block=1.5}))
+local shifted=managed({StageStartX=7300,_finalBlockList=list({{_pointStart={x=894.63}},{_pointStart={x=1145.53}}})})
+assert(math.abs(MR3A.native_sample_target(shifted,1)-7550.9)<.0001)
+assert(MR3A.native_sample_target(shifted,nil)==7300)
+assert(MR3A.native_sample_target(shifted,2)==nil)
+
 MR3A.nativeSelection=s
 local groups=list({group({90}),group({11,12}),group({21,22}),group({31,32})})
 local loop=group({81,82})

@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-09：小块定点+schema3物理归属/支撑标签实测135帧，237/238电球各自部件已正确归属，采集源/原travel可复现；112重置异常已定位为空SpriteRenderer入原池，待追来源，见[小块与物理标注](archived/2026-11-09-arena-native-block-physics-labels.md)。
+
 2026-11-09：离线配对连接op7及两个原渲染边界同步已核验；同seed蜘蛛框横误差P90约9.24→0.41px，最终step3中位125ms，普通取图仍3.4ms。collector/全对象补采另行收口，见[配对通道](archived/2026-11-09-arena-paired-socket-capture.md)。
 
 2026-11-09：全对象补采开发中：32个真实小块窗口，schema3按部件归属/变换标注；238已有原生实景（此前Cfg缺失判断不能当不可生成）。新固定配对通道中位101→56ms，普通截图仍约3–4ms；当前未批量/未训下一版，详见[覆盖采集工作草稿](archived/2026-11-09-arena-resource-coverage-wip.md)。

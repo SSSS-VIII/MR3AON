@@ -76,6 +76,8 @@ function E.validate_selection(s)
     local count=#map.slots+(#map.loop>0 and 1 or 0)
     local start=s.start or 1
     assert(type(start)=='number' and start%1==0 and start>=1 and start<=count,'Unknown board position')
+    local sampleBlock=s.sample_block
+    assert(sampleBlock==nil or type(sampleBlock)=='number'and sampleBlock%1==0 and sampleBlock>=0,'Invalid native sample block')
     local pins={}
     for position,id in pairs(s.pins or {}) do
         position=tonumber(position)
@@ -88,7 +90,14 @@ function E.validate_selection(s)
             pins[tostring(position)]=id
         end
     end
-    return {chapter=chapter,level=level,absoluteLevel=map.absoluteLevel,map=s.map,start=start,pins=pins}
+    return {chapter=chapter,level=level,absoluteLevel=map.absoluteLevel,map=s.map,start=start,pins=pins,sample_block=sampleBlock}
+end
+
+function E.native_sample_target(stage,index)
+    if index==nil then return stage.StageStartX end
+    local blocks=get(stage,'_finalBlockList')
+    if blocks.Count==0 or index>=blocks.Count then return nil end
+    return stage.StageStartX+blocks[index]._pointStart.x-blocks[0]._pointStart.x
 end
 
 -- Re-capture only when environment.lua has supplied a new baseline function.
@@ -214,7 +223,7 @@ function E.native_select(spec,seed)
             assert(stages.Count==#map.slots,'Full original map is required')
             ninja=CS.NinjaController.Instance.NinjaScript
             local beforeBuffs=buffs(ninja)
-            if s.start>1 then
+            if s.start>1 or s.sample_block~=nil and s.sample_block>0 then
                 E.travel.phase='rush'
                 local mount=CS.MountController.Instance
                 -- Boss/loop blocks extend while running. Use the original
@@ -229,13 +238,18 @@ function E.native_select(spec,seed)
                     assert(U.Time.realtimeSinceStartup<deadline,'Dragon rush timed out')
                     assert(CS.LevelManager.Instance.GameLevelInfo==level,'Left the selected map before arrival')
                     E.travel.currentBoard=ground_stage(ninja)+1
+                    local activeGround=ninja._GroundCollider
+                    E.travel.currentBlock=activeGround and activeGround.BelongToBlockIndex or -1
                     if not target then
                         local stage=s.start<=stages.Count and stages[s.start-1] or get(level,'_currLoopStage')
-                        if stage and stage.StageStartX>0 and get(stage,'_currBlockIndex')>0 then
-                            targetStage=stage;target=stage.StageStartX
-                            E.travel.target=target
-                            mount.CurrStartRushRemainDis=math.max(1,target-ninja.transform.position.x-40)
+                        if stage and (stage.StageStartX>0 or s.sample_block~=nil) and get(stage,'_currBlockIndex')>0 then
+                            target=E.native_sample_target(stage,s.sample_block)
+                            if target then
+                                targetStage=stage;E.travel.target=target
+                                mount.CurrStartRushRemainDis=math.max(1,target-ninja.transform.position.x-40)
+                            end
                         end
+                        assert(E.travel.currentBoard<=s.start,'Requested sample block was not generated before leaving its board')
                     end
                     if ninja.IsMountState then mounted=true end
                     if mounted and not ninja.IsMountState and native_grounded(ninja) then
@@ -269,6 +283,7 @@ function E.native_select(spec,seed)
                 assert(ground_stage(ninja)==s.start-1,'Left the selected board during landing')
                 assert(ninja.CurrentHp>0,'Died at the selected entrance')
                 E.travel.groundStageIndex=ground_stage(ninja)
+                E.travel.sampleBlock=ninja._GroundCollider.BelongToBlockIndex
             end
             E.travel.fullMapStages=stages.Count
             if s.start<=stages.Count then
