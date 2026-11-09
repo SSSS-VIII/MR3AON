@@ -38,6 +38,18 @@ def schema(entities,prefabs,reachable):
         if entity.get('config')is None:
             # Raw unresolved IDs are probed, never assigned a guessed prefab.
             family['shapes'].update(SHAPES)
+    for entity in entities:
+        if entity['kind']!='runtime_enemies':continue
+        resource=entity['resource_name']
+        if resource in families:continue
+        family=dict(resource=resource,type_ids=[],source_type_id=0,shapes=set(),script_types=set(),configs={},
+                    prefabs=list(entity['prefabs']),straight_bat=False,native_zero_source=True)
+        for key in entity['prefabs']:
+            prefab=prefabs[key]
+            family['shapes'].update(c['component']for c in prefab['colliders']if c['component']in SHAPES)
+            family['script_types'].update(s['class_name']for s in prefab['scripts'])
+            family['straight_bat']|=any(s['class_name']=='EnemyStraightBat'for s in prefab['scripts'])
+        families[resource]=family
     classes=[dict(name='player',kind='player',shape='CapsuleCollider')]
     for resource,family in sorted(families.items()):
         for shape in sorted(family['shapes']|{'cue'}):

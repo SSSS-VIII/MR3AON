@@ -15,7 +15,10 @@ def observe(folders):
         for line in path.open():
             for obj in json.loads(line).get('objects')or[]:
                 identity=obj.get('family_type_id',obj.get('source_type_id',0))
-                if identity<=0:continue
+                if identity<0:continue
+                if identity==0:
+                    if obj.get('dead')or not obj.get('renderers')or not any(c.get('tag')=='Enemy'for c in obj.get('colliders')or[]):continue
+                    identity='zero:'+obj.get('resource_family',obj['name']).split('(Clone)',1)[0]
                 entry=observed.setdefault(identity,dict(names=set(),scripts=set(),shapes=set(),object_frames=0))
                 entry['names'].add(obj.get('resource_family',obj['name']).split('(Clone)',1)[0])
                 entry['scripts'].add(obj['type']);entry['shapes'].update(c['type']for c in obj.get('colliders')or[])
@@ -26,7 +29,24 @@ def observe(folders):
 def extend(entities,prefabs,observed,configs,resources):
     entities=deepcopy(entities);prefabs=deepcopy(prefabs);index={e['type_id']:e for e in entities if e['kind']=='enemies'}
     extra=[]
-    for identity,evidence in sorted(observed.items()):
+    for identity,evidence in sorted(observed.items(),key=lambda pair:str(pair[0])):
+        if isinstance(identity,str)and identity.startswith('zero:'):
+            name=identity[5:]
+            existing=next((e for e in entities if e.get('resource_name')==name),None)
+            if existing:
+                existing['zero_source_runtime_evidence']=evidence
+                continue
+            assets=[a for a in resources.containers if a.endswith('/'+name.lower()+'.prefab')]
+            if len(assets)!=1:raise ValueError(f'Original zero-source prefab must be unique: {name}: {assets}')
+            asset=assets[0];keys=[];scripts=set()
+            for bundle,root_id in sorted({(source['bundle'],pointer['m_PathID'])for source,pointer in resources.containers[asset]}):
+                key=bundle+'::'+asset+'#'+str(root_id)
+                if key not in prefabs:prefabs[key]=resources.prefab(asset,bundle,root_id)
+                keys.append(key);scripts.update(s['class_name']for s in prefabs[key]['scripts'])
+            if not set(evidence['scripts'])<=scripts:raise ValueError(f'Native and original zero-source scripts differ: {name}')
+            entities.append(dict(kind='runtime_enemies',type_id=None,source_type_id=0,resource_name=name,config=None,
+                prefabs=keys,runtime_generated=True,native_spawn_verified=True,runtime_verified=False,runtime_evidence=evidence))
+            continue
         old=index.get(identity)
         if old and old.get('gale_usage',{}).get('placements',0)>0:continue
         if old:
@@ -82,5 +102,6 @@ if __name__=='__main__':
     (a.output/'dataset-ontology.json').write_text(json.dumps(ontology_plan(json.loads(a.plan.read_text()),extra),indent=2)+'\n')
     sources.update({str(path):hashlib.sha256(path.read_bytes()).hexdigest()for path in(a.entities,a.prefabs,a.configs,a.plan)})
     report=dict(runtime_generated_types=extra,source_hashes=sources,resource_exports=resources.exports,
+                zero_source_resources=[e['resource_name']for e in entities if e['kind']=='runtime_enemies'],
                 scope='Native spawn evidence plus exact original CFG/Prefab binding; not direct board placements or detector acceptance')
     (a.output/'runtime-generated.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report),flush=True)
