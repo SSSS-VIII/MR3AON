@@ -1,5 +1,6 @@
 """失败结算真实画面回放：有本轮参与授权才能点确定，成功战报继续兼容。"""
 import json
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -7,7 +8,6 @@ import sys
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-
 
 @pytest.mark.parametrize('case', ['failed', 'success', 'old_rule', 'inactive', 'no_title', 'no_button'])
 def test_native_receiver_settlement_handles_short_failure_title(case):
@@ -21,6 +21,26 @@ def test_native_receiver_settlement_handles_short_failure_title(case):
         x, y, width, height = report['box']
         assert 521 <= x < x + width <= 767
         assert 408 <= y < y + height <= 717
+
+
+@pytest.mark.parametrize(('text', 'matches'), [
+    ('A级每日是赏', True),  # 11-10第四场实际OCR，随后卡在结算页。
+    ('A级每日悬赏', True),
+    ('S级每日悬赏', True),
+    ('讨伐失败', True),
+    ('失败', True),
+    ('恭喜获得', True),
+    ('已达到每日悬赏奖励次数上限', True),  # 横幅仍须其它授权/确认按钮联合命中。
+    ('准备', False),
+    ('没有奖励', False),
+    ('失败重试提示', False),
+])
+def test_receiver_settlement_title_accepts_observed_ocr_without_reward_gate(text, matches):
+    pipeline = json.loads((ROOT/'assets/resource/pipeline/每日悬赏小号.json').read_text())
+    expected = pipeline['悬赏小号结算标题']['recognition']['param']['expected']
+    assert any(re.search(pattern, text) for pattern in expected) is matches
+    if text == 'A级每日是赏':
+        assert re.search('每日悬赏|讨伐失败|^失败$|恭喜获得', text) is None
 
 
 def _replay(case):
