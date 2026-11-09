@@ -46,6 +46,8 @@
 
 ## 视觉训练接口
 
+实时视觉试跑现有`./tools/run-arena-vision --pin 1:1101 --boards 3`，包含基础识别、速度/轨迹和原动作控制，结束显示暂停菜单。当前有伤跑过三块，策略尚不稳定、未训练网络；计时、日志和限制见 [首版说明](visual-baseline.md)。下方同步ArenaEnv接口仍供步进和标注使用。
+
 `tools/arena_env.py` 的同步接口接收0/none、1/jump、2/down，返回原PNG、原状态、原分数增量、死亡标记和实际步数。PNG是观测；state/layout是可选的训练标注，不应作为纯视觉策略的输入。每次step结束都会暂停，死亡后必须reset；close只暂停并保留环境。
 
 ```python

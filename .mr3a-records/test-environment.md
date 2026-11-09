@@ -135,6 +135,8 @@ main保存计划已加入工坊挑战，单次入口为 `./run [名字] --once -
 
 ## 原客户端竞技场本地环境
 
+实时结构化视觉入口为`./tools/run-arena-vision --seed 42 --map 1 --pin 1:1101 --boards 3`，默认40Hz，复用arena InstanceSession与同一控制租约。结束恢复原暂停菜单，原图/估计和验收分开记录；有伤通过单独标记。当前仅首版基线，未训练神经网络，运行限制及实测见 [视觉基线](../arena/visual-baseline.md)。暂停原collider标注为`tools/arena_snapshot_labels.py`，原动作校准为`tools/arena_motion_probe.py`，均保留原游戏机制。
+
 高速捕获独立工具为 `.venv/bin/python tools/arena_capture.py --frames 300`，arena已运行即可，默认1280×720 RGBA；不改游戏APK或训练接口。使用Android13常驻辅助进程与命名设备数据通道，启动完成包含3帧预热；无宿主桌面/合成器截图API依赖，验证见 [高速取图](archived/2026-11-09-arena-native-fast-capture.md)。
 
 当前为疾风/基础小黑5000血，暂停页不显示HP。选关通灵兽固定4倍冲刺，骑乘中原生吸取飞镖球，落地关闭自身额外能力。P或原屏幕暂停键打开选关页，定位沿原传送符/通灵兽完整跑图；Boss/奖励循环可能耗时数分钟，交互菜单到达后直接开跑，训练接口仍保持暂停。`--no-focus`及训练ArenaEnv隐藏菜单；训练结束后重新运行正常入口恢复交互菜单。重开先走原Item/Enemy回收，不能省略后只销毁Scene。详见 [原机制选关](../arena/selection.md)。

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+mr3a_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+export PYTHONPATH="${mr3a_root}/debug/arena-client/vision-v1/python:${mr3a_root}/tools:${mr3a_root}/agent${PYTHONPATH:+:${PYTHONPATH}}"
+exec "${mr3a_root}/.venv/bin/python" "${mr3a_root}/tools/arena_visual_runner.py" "$@"
