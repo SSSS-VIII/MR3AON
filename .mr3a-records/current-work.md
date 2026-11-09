@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-09：补采计划升级32小块窗口，含226/238/257原生探测，不凭Cfg缺失跳过；全arena191通过/2依赖跳过。批采执行器已写、待实测，原地面池空引用来源仍在查。见[补采计划](archived/2026-11-09-arena-native-coverage-planner.md)。
+
 2026-11-09：小块定点+schema3物理归属/支撑标签实测135帧，237/238电球各自部件已正确归属，采集源/原travel可复现；112重置异常已定位为空SpriteRenderer入原池，待追来源，见[小块与物理标注](archived/2026-11-09-arena-native-block-physics-labels.md)。
 
 2026-11-09：离线配对连接op7及两个原渲染边界同步已核验；同seed蜘蛛框横误差P90约9.24→0.41px，最终step3中位125ms，普通取图仍3.4ms。collector/全对象补采另行收口，见[配对通道](archived/2026-11-09-arena-paired-socket-capture.md)。
