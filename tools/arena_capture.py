@@ -180,31 +180,51 @@ class FastCapture:
     def __exit__(self, *exc):
         self.close()
 
-    def _exchange(self, command):
+    def _exchange(self, command,payload=b'',paired=False):
         if self._socket is None:
             raise RuntimeError('Open FastCapture before requesting a frame')
         self._sequence += 1
         sequence = self._sequence
         try:
             begin = time.perf_counter_ns()
-            self._socket.sendall(REQUEST.pack(command, sequence))
+            self._socket.sendall(REQUEST.pack(command, sequence)+payload)
             deadline = time.monotonic() + self.timeout
             values = HEADER.unpack(read_exact(self._socket, HEADER.size, deadline))
             magic, version, kind, width, height, size, seq, start, captured, ready = values
-            expected = self.width * self.height * 4 if command == 1 else 0
+            image=command in (1,7)
+            expected = self.width * self.height * 4 if image else 0
             if (magic != b'MR3F' or version != VERSION or kind != command or seq != sequence
                     or size != expected or not 0 < start <= captured <= ready
-                    or (width, height) != ((self.width, self.height) if command == 1 else (0, 0))):
+                    or (width, height) != ((self.width, self.height) if image else (0, 0))):
                 raise ValueError('Invalid or out-of-order Android capture frame')
             data = read_exact(self._socket, size, deadline)
+            if paired:
+                length=struct.unpack('>I',read_exact(self._socket,4,deadline))[0]
+                if not 0<length<=8*1024*1024:
+                    raise ValueError('Invalid native paired label length')
+                job=json.loads(read_exact(self._socket,length,deadline))
+                identity=self.token+f'{sequence:016x}'
+                if (not isinstance(job,dict)or job.get('identity')!=identity or not job.get('done')
+                        or job.get('error')or not isinstance(job.get('labels'),dict)):
+                    raise ValueError('Invalid or stale native paired labels')
+                from arena_native_json import normalize_arrays
+                labels=normalize_arrays(job['labels'])
             received = time.perf_counter_ns()
-            return Frame(width, height, seq, begin, received, start, captured, ready, data)
+            frame=Frame(width, height, seq, begin, received, start, captured, ready, data)
+            return (frame,labels)if paired else frame
         except Exception:
             self.close()
             raise
 
     def capture(self):
         return self._exchange(1)
+
+    def paired_step(self,ticks,action='none'):
+        """Advance original paused physics and return its paired image/labels."""
+        actions={'none':0,'jump':1,'down':2}
+        if type(ticks)is not int or not 1<=ticks<=10 or action not in actions:
+            raise ValueError('Paired step requires ticks 1..10 and none/jump/down')
+        return self._exchange(7,struct.pack('>II',ticks,actions[action]),paired=True)
 
     def tap(self, action):
         """Android key pulse (slide holds S for 500ms); ack is enqueue, not consumption."""

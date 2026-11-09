@@ -10,8 +10,10 @@ function E.paired_step(ticks,action,identity)
  E.advance(ticks,action)
  E.pairedRunner:StartCoroutine(require('common/util').cs_generator(function()
   while E.busy do coroutine.step()end
-  -- Let the original camera's LateUpdate finish while physics stays paused.
-  coroutine.step()
+  -- Finish two original render boundaries after freezing physics so the
+  -- compositor has latched a frame with the same transforms/camera as labels.
+  coroutine.yield(U.WaitForEndOfFrame())
+  coroutine.yield(U.WaitForEndOfFrame())
   if E.pairedIdentity~=identity then return end
   local ok,labels=pcall(E.vision_labels)
   local result={identity=identity,done=true,action=action,error=E.job.error}

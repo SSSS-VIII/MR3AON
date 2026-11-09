@@ -128,3 +128,51 @@ def test_cleanup_only_signals_verified_own_worker(same_token):
     kills = [c for c in own.adb.call_args_list if c.args[1] == 'kill']
     assert len(kills) == int(same_token)
     assert capture.remote_stderr == 'device diagnostic'
+
+
+def test_paired_packet_preserves_image_and_checks_native_identity():
+    import json
+    import struct
+    capture=FastCapture(session(),width=16,height=16);capture.token='a'*32
+    client,server=socket.socketpair();capture._socket=client;pixels=bytes(range(256))*4
+    def producer():
+        with server:
+            command,seq=REQUEST.unpack(server.recv(REQUEST.size))
+            assert command==7 and struct.unpack('>II',server.recv(8))==(3,1)
+            labels=dict(frame=23,tick=60,objects={'1':{'id':19}})
+            job=json.dumps(dict(identity='a'*32+f'{seq:016x}',done=True,labels=labels)).encode()
+            packet=HEADER.pack(b'MR3F',1,7,16,16,len(pixels),seq,100,200,300)+pixels+struct.pack('>I',len(job))+job
+            for i in range(0,len(packet),11):server.sendall(packet[i:i+11])
+    thread=threading.Thread(target=producer);thread.start()
+    try:
+        frame,labels=capture.paired_step(3,'jump')
+        assert frame.rgba==pixels and frame.sequence==1
+        assert labels['objects']==[{'id':19}]and labels['tick']==60
+    finally:
+        client.close();thread.join(timeout=2)
+    assert not thread.is_alive()
+
+
+@pytest.mark.parametrize('ticks,action',[(0,'none'),(11,'none'),(True,'jump'),(3,'reset')])
+def test_invalid_paired_step_cannot_send_arbitrary_native_commands(ticks,action):
+    capture=FastCapture(session())
+    with pytest.raises(ValueError,match='Paired'):
+        capture.paired_step(ticks,action)
+    assert capture._sequence==0
+
+
+@pytest.mark.parametrize('metadata',[{'identity':'old','done':True,'labels':{}},
+                                     {'identity':'a'*32+'0000000000000001','done':True,'labels':{},'error':'failed'}])
+def test_failed_or_stale_native_pair_is_not_reused(metadata):
+    import json
+    import struct
+    capture=FastCapture(session(),width=16,height=16);capture.token='a'*32
+    client,server=socket.socketpair();capture._socket=client
+    pixels=b'\0'*1024;data=json.dumps(metadata).encode()
+    server.sendall(HEADER.pack(b'MR3F',1,7,16,16,1024,1,1,2,3)+pixels+struct.pack('>I',len(data))+data)
+    try:
+        with pytest.raises(ValueError,match='paired'):
+            capture.paired_step(1)
+        assert capture._socket is None
+    finally:
+        client.close();server.close()

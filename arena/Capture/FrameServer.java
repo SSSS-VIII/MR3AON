@@ -14,6 +14,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.net.ServerSocket;
@@ -23,10 +26,74 @@ import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.json.JSONObject;
 
-/** Android pixels and explicit keyboard pulses. No game injection or desktop API. */
+/** Android pixels, explicit key pulses and opt-in local paired collection. */
 public final class FrameServer {
     private static final int VERSION = 1;
+    private static final int MAX_LABELS = 8 * 1024 * 1024;
+    private static final File CONTROL = new File("/sdcard/Android/data/com.pandadastudio.ninjamustdie3/files/arena-control");
+
+    private static JSONObject readJson(File file) throws Exception {
+        long length = file.length();
+        if (!file.exists() || length == 0) return null;
+        if (length > MAX_LABELS) throw new IOException("Native label file exceeds its bound");
+        byte[] data = new byte[(int) length];
+        try (DataInputStream input = new DataInputStream(new FileInputStream(file))) {
+            input.readFully(data);
+        } catch (EOFException partial) { return null; }
+        try { return new JSONObject(new String(data, "UTF-8")); }
+        catch (org.json.JSONException partial) { return null; }
+    }
+
+    private static byte[] pairedStep(int ticks, int action, String identity) throws Exception {
+        if (ticks < 1 || ticks > 10 || action < 0 || action > 2) {
+            throw new IOException("Invalid native paired step");
+        }
+        String name = action == 0 ? "none" : action == 1 ? "jump" : "down";
+        File command = new File(CONTROL, "command.json");
+        File temporary = new File(CONTROL, "command-" + identity + ".tmp");
+        if (command.exists()) throw new IOException("Native command slot is occupied");
+        JSONObject request = new JSONObject();
+        request.put("id", identity);
+        request.put("code", "return MR3A.paired_step(" + ticks + ",\"" + name + "\",\"" + identity + "\")");
+        try (FileOutputStream output = new FileOutputStream(temporary)) {
+            output.write(request.toString().getBytes("UTF-8"));
+        }
+        if (!temporary.renameTo(command)) {
+            temporary.delete();
+            throw new IOException("Cannot publish native paired command");
+        }
+        long deadline = SystemClock.elapsedRealtime() + 8000;
+        boolean acknowledged = false;
+        try {
+            while (SystemClock.elapsedRealtime() < deadline) {
+                JSONObject response = readJson(new File(CONTROL, "result.json"));
+                if (response != null && identity.equals(response.optString("id"))) {
+                    acknowledged = true;
+                    if (!command.delete() && command.exists()) throw new IOException("Cannot clear acknowledged command");
+                    if (!response.optBoolean("ok")) throw new IOException(response.optString("error"));
+                    break;
+                }
+                Thread.sleep(1);
+            }
+        } finally {
+            if (!acknowledged) command.delete();
+        }
+        if (!acknowledged) throw new IOException("Native paired command was not acknowledged");
+        while (SystemClock.elapsedRealtime() < deadline) {
+            JSONObject result = readJson(new File(CONTROL, "paired-collection.json"));
+            if (result != null && identity.equals(result.optString("identity")) && result.optBoolean("done")) {
+                if (!result.isNull("error") && !result.optString("error").isEmpty()) {
+                    throw new IOException(result.optString("error"));
+                }
+                if (result.optJSONObject("labels") == null) throw new IOException("Native paired labels are missing");
+                return result.toString().getBytes("UTF-8");
+            }
+            Thread.sleep(1);
+        }
+        throw new IOException("Native paired step did not finish");
+    }
 
     private static final class Keys {
         final Object manager;
@@ -131,9 +198,16 @@ public final class FrameServer {
                 try { command = in.readInt(); } catch (EOFException end) { break; }
                 long sequence = in.readLong();
                 if (command == 0) break;
-                if (command < 1 || command > 6) throw new IOException("Unknown capture command");
+                if (command < 1 || command > 7) throw new IOException("Unknown capture command");
                 long start = System.nanoTime(), captured = start, ready = start;
-                if (command == 1) {
+                byte[] labels = null;
+                if (command == 7) {
+                    int ticks = in.readInt(), action = in.readInt();
+                    String identity = args[2] + String.format(java.util.Locale.ROOT, "%016x", sequence);
+                    labels = pairedStep(ticks, action, identity);
+                }
+                boolean image = command == 1 || command == 7;
+                if (image) {
                     Object shot = capture.invoke(null, captureArgs);
                     captured = System.nanoTime();
                     if (shot == null) throw new IOException("Display capture returned null");
@@ -165,14 +239,15 @@ public final class FrameServer {
                 out.writeInt(0x4d523346); // MR3F
                 out.writeInt(VERSION);
                 out.writeInt(command);
-                out.writeInt(command == 1 ? width : 0);
-                out.writeInt(command == 1 ? height : 0);
-                out.writeInt(command == 1 ? pixels.length : 0);
+                out.writeInt(image ? width : 0);
+                out.writeInt(image ? height : 0);
+                out.writeInt(image ? pixels.length : 0);
                 out.writeLong(sequence);
                 out.writeLong(start);
                 out.writeLong(captured);
                 out.writeLong(ready);
-                if (command == 1) out.write(pixels);
+                if (image) out.write(pixels);
+                if (labels != null) { out.writeInt(labels.length); out.write(labels); }
                 out.flush();
             }
         } finally {
