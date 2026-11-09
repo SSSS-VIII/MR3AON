@@ -174,3 +174,49 @@ def test_action_commit_uses_projected_landing_state_instead_of_old_jump_count():
     state.update(time=2.05,phase='jump1_rising',jumps=1,motion=p.active_motion)
     p.action('jump',2.05,state)
     assert p.active_motion['name']=='jump2'and p.jump_count==2
+
+
+def test_state_head_uses_learned_ready_rush_classes_instead_of_colour_guess():
+    from types import SimpleNamespace
+    from arena_yolo_detector import YoloDetector
+    detector=object.__new__(YoloDetector);detector.player_x=180;detector.options={};detector.state_classes=True
+    class Data:
+        def cpu(self):return self
+        def numpy(self):return np.array([[400,150,430,180,.9,2],[450,150,480,180,.9,6],[500,150,530,180,.9,7]])
+    class Model:
+        def predict(self,image,**options):return[SimpleNamespace(boxes=SimpleNamespace(data=Data()))]
+    detector.model=Model()
+    _,objects=detector.detect(np.full((360,640,3),(200,20,20),np.uint8))
+    assert [(o.arming,o.active)for o in objects]==[(False,False),(True,False),(False,True)]
+
+
+def test_learned_ready_state_waits_then_predicts_native_dash_and_collider_growth():
+    from arena_projection import SCALE
+    from arena_vision import Track
+    t=Track(1,Box(400,200,22,22),'eye_enemy',.9,0)
+    t.update(Detection(t.box,'eye_enemy',.9,False,True,'ready'),1,(180,260))
+    assert t.future(.2).center==pytest.approx(t.box.center)
+    after=t.future(.4)
+    assert after.center[0]==pytest.approx(t.box.center[0]-24*SCALE*.1)
+    assert after.w==pytest.approx(22*1.3)
+    assert t.at(.25).future(.15).center==pytest.approx(after.center)
+    assert t.at(.32).future(.08).w==pytest.approx(after.w)
+    t.update(Detection(Box(400,200,26,26),'eye_enemy',.9,False,True,'ready'),1.1,(180,260))
+    assert t.future(.4).w==pytest.approx(22*1.3)  # Never compound the 30% scale.
+    t.update(Detection(t.box,'spider',.9),1.1,(180,260))
+    assert t.attack_phase is None  # A new class cannot inherit the dash model.
+
+
+def test_identity_association_uses_dash_prediction_when_mean_velocity_still_lags():
+    from arena_vision import Track
+    from arena_projection import SCALE
+    tracker=Tracker(adaptive=True)
+    moving=Track(1,Box(400,200,28,28),'eye_enemy',.9,1,
+                 vx=0,observations=8,reference=(180,260),attack_phase='rush',
+                 rush_target_w=28,rush_target_h=28)
+    tracker.tracks=[moving];tracker.next_id=2
+    actual=Box(400-24*SCALE*.025,200,28,28)
+    tracker.update([Detection(Box(400,200,28,28),'eye_enemy',.9),
+                    Detection(actual,'eye_enemy',.9,True,False,'rush')],1.025,(180,260))
+    retained=next(t for t in tracker.tracks if t.id==1)
+    assert retained.box.x==pytest.approx(actual.x)

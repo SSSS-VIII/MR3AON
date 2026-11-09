@@ -57,7 +57,7 @@ class MpcAvoider(VisualAvoider):
 
     def uses_search(self,obs):
         return bool(obs.get('player')and obs.get('rope')is not None and not obs.get('terrain')
-                    and any(t.kind=='pinball'for t in self._objects(obs)))
+                    and any(t.kind=='pinball'or t.attack_phase is not None for t in self._objects(obs)))
 
     def _options(self,state,stamp):
         names=[None]
@@ -76,8 +76,8 @@ class MpcAvoider(VisualAvoider):
         tracks=self._objects(obs)
         if not tracks:return None,'clear'
         # The reactive native-action controller is cheaper and currently better
-        # on simple entry/dash hazards. Search is needed for bouncing crossings;
-        # select it by observed object type, never stage or elapsed board time.
+        # on unmodelled entry/dash hazards. Search uses bouncing crossings and
+        # learned native attack phases, never stage or elapsed board time.
         if not self.uses_search(obs):
             return super().choose(obs)
         # Precompute all object forecasts once, outside the search branches.

@@ -37,6 +37,7 @@ class Detection:
     confidence: float
     active: bool = False
     arming: bool = False
+    attack_phase: str | None = None
 
 
 @dataclass
@@ -67,6 +68,12 @@ class Track:
     gravity_down: float = 0
     floor_y: float = 0
     rebound_speed: float = 0
+    attack_phase: str | None = None
+    ready_started: float | None = None
+    ready_remaining: float = 0
+    rush_scale_remaining: float = 0
+    rush_target_w: float = 0
+    rush_target_h: float = 0
 
     def update(self, detection, stamp, player):
         self.box, self.kind, self.confidence, self.seen = (
@@ -77,6 +84,9 @@ class Track:
         x, y = self.box.center
         self.history.append((stamp, x - player[0], y - player[1]))
         self.observations += 1
+        if detection.attack_phase is not None or self.attack_phase is not None:
+            from arena_object_motion import configure_crow
+            configure_crow(self,detection,stamp)
         all_samples=np.asarray(self.history)
         samples=all_samples[-10:]
         if len(samples) < 3 or samples[-1, 0] - samples[0, 0] < .035:
@@ -151,6 +161,10 @@ class Track:
             fit_ballistic(self,SCALE)
 
     def future(self, seconds):
+        if self.attack_phase in ('ready','rush'):
+            from arena_object_motion import crow_geometry
+            from arena_projection import SCALE
+            return crow_geometry(self,seconds,SCALE)
         horizon=min(seconds,.25)
         ax,ay=(self.ax,self.ay) if self.curve_count>=3 else (0,0)
         dy=self.vy*seconds+.5*ay*horizon*horizon
@@ -168,6 +182,13 @@ class Track:
 
     def at(self,seconds):
         result=replace(self,box=self.future(seconds))
+        if self.attack_phase in ('ready','rush'):
+            moving=max(0,seconds-self.ready_remaining)
+            result.ready_remaining=max(0,self.ready_remaining-seconds)
+            result.rush_scale_remaining=max(0,self.rush_scale_remaining-moving)
+            if result.ready_remaining<=0:
+                result.attack_phase='rush';result.active=True;result.arming=False
+            return result
         if self.ballistic:
             from arena_object_motion import bounce_state
             _,result.vy=bounce_state(self.box.center[1],self.vy,seconds,floor=self.floor_y,
@@ -192,17 +213,18 @@ class Tracker:
 
     def update(self, detections, stamp, player):
         available = {t.id: t for t in self.tracks if stamp - t.seen < .22}
+        predicted={identity:t.future(stamp-t.seen).center for identity,t in available.items()}
         pairs = []
         for i, d in enumerate(detections):
             for t in available.values():
                 elapsed=stamp-t.seen
-                tx, ty = t.box.center
+                tx, ty = predicted[t.id]
                 x, y = d.box.center
                 ox,oy=player[0]-t.reference[0],player[1]-t.reference[1]
-                distance = math.hypot(x-(tx+t.vx*elapsed+ox),y-(ty+t.vy*elapsed+oy))
+                distance = math.hypot(x-(tx+ox),y-(ty+oy))
                 compatible=(d.kind==t.kind or {d.kind,t.kind}<={'eye_enemy','spider'})
                 if (compatible and distance < max(35, min(180, 1600 * elapsed + 12))
-                        and abs(y-(ty+t.vy*elapsed+oy)) < max(19,abs(t.vy)*elapsed+12)):
+                        and abs(y-(ty+oy)) < max(19,abs(t.vy)*elapsed+12)):
                     pairs.append((distance, i, t.id))
         used, matched = set(), set()
         for _, i, identity in sorted(pairs):

@@ -4,7 +4,38 @@ import json
 from pathlib import Path
 import numpy as np
 
-DATA=json.loads((Path(__file__).resolve().parents[1]/'arena/vision-object-priors.json').read_text())['pinball']
+PRIORS=json.loads((Path(__file__).resolve().parents[1]/'arena/vision-object-priors.json').read_text())
+DATA=PRIORS['pinball']
+CROW=PRIORS['straight_crow']
+
+
+def configure_crow(track,detection,stamp):
+    phase=detection.attack_phase
+    track.attack_phase=phase
+    if phase=='ready':
+        if track.ready_started is None or stamp-track.ready_started>.65:
+            track.ready_started=stamp
+            track.rush_target_w=track.box.w*CROW['collision_scale']
+            track.rush_target_h=track.box.h*CROW['collision_scale']
+        track.ready_remaining=max(0,CROW['ready_seconds']-(stamp-track.ready_started))
+        track.rush_scale_remaining=CROW['scale_seconds']
+    elif phase=='rush':
+        track.ready_remaining=0.
+        track.rush_target_w=max(track.box.w,track.rush_target_w)
+        track.rush_target_h=max(track.box.h,track.rush_target_h)
+        track.rush_scale_remaining=CROW['scale_seconds']
+
+
+def crow_geometry(track,seconds,scale):
+    from arena_vision import Box
+    ready=max(0,track.ready_remaining)if track.attack_phase=='ready'else 0.
+    moving=max(0,seconds-ready)
+    velocity=(CROW['world_rush_speed']-CROW['reference_run_speed'])*scale
+    growth=min(1,moving/max(1e-9,track.rush_scale_remaining))
+    w=track.box.w+(max(track.rush_target_w,track.box.w)-track.box.w)*growth
+    h=track.box.h+(max(track.rush_target_h,track.box.h)-track.box.h)*growth
+    x,y=track.box.center
+    return Box(x+velocity*moving-w/2,y+track.vy*seconds-h/2,w,h)
 
 
 def fit_ballistic(track,scale):

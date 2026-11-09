@@ -6,12 +6,12 @@ import hashlib
 import cv2
 import numpy as np
 from arena_yolo import offline_sdk
-from arena_yolo_data import NAMES
+from arena_yolo_data import NAMES,STATE_NAMES
 from arena_vision import Box,Detection,Perception,Tracker,player_future
 from arena_projection import sphere_plane,capsule_plane,SCALE
 import arena_motion as motion
 
-KINDS={1:'spider',2:'eye_enemy',3:'pinball',4:'trap',5:'projectile'}
+KINDS={1:'spider',2:'eye_enemy',3:'pinball',4:'trap',5:'projectile',6:'eye_enemy',7:'eye_enemy'}
 ROOT=Path(__file__).resolve().parents[1]
 PROFILE=json.loads((ROOT/'arena/vision-detector.json').read_text())
 DEFAULT_WEIGHTS=ROOT/PROFILE['weights']
@@ -27,8 +27,9 @@ class YoloDetector:
         torch.set_num_threads(2)
         self.model=offline_sdk().YOLO(str(weights));self.confidence=confidence;self.player_x=180.
         names=list(self.model.names.values())if isinstance(self.model.names,dict)else self.model.names
-        if names!=NAMES:
-            raise ValueError(f'Expected arena detector classes {NAMES}, got {names}')
+        if names not in (NAMES,STATE_NAMES):
+            raise ValueError(f'Unexpected arena detector classes: {names}')
+        self.state_classes=names==STATE_NAMES
         self.options=dict(device=0,imgsz=640,conf=confidence,verbose=False,quantize=16,max_det=100)
         dummy=np.zeros((360,640,3),np.uint8)
         for _ in range(6):self.model.predict(dummy,**self.options)
@@ -51,15 +52,16 @@ class YoloDetector:
                 continue
             if box.center[1]<55 or box.center[1]>345:
                 continue
-            arming=False
-            if cls==2:
+            arming=cls==6
+            if cls==2 and not self.state_classes:
                 patch=rgb[max(0,int(y1)):min(360,int(y2)+1),max(0,int(x1)):min(640,int(x2)+1),:3]
                 if patch.size:
                     r,g,b=[patch[:,:,i].astype(np.float32)for i in range(3)]
                     arming=float(((r>85)&(r>g*1.7)&(r>b*1.2)&(g<115)).mean())>.14
-            if cls in (1,2,3):
+            if cls in (1,2,3,6,7):
                 box=sphere_plane(box)
-            hazards.append(Detection(box,KINDS[cls],float(confidence),False,arming))
+            phase=({2:'normal',6:'ready',7:'rush'}.get(cls))if self.state_classes else None
+            hazards.append(Detection(box,KINDS[cls],float(confidence),cls==7,arming,phase))
         self.last_ms=(time.perf_counter()-start)*1000
         if player is not None:self.player_x=player.center[0]
         return player,hazards
@@ -99,7 +101,8 @@ prior; it must not overwrite the current collider box measured by the detector.
         for track in result['tracks']:
             # The red appearance can persist after a dash begins. Measured
             # horizontal motion supplies attack state, not a board-time script.
-            if track.kind=='eye_enemy'and track.observations>=3 and track.vx<-750:
+            if (track.kind=='eye_enemy'and track.observations>=3 and track.vx<-750
+                    and track.attack_phase!='ready'):
                 track.active=True
         result.update(detector_ms=self.detector.last_ms,player_predicted=predicted,
                       detector='fine_tuned_yolo26n',player_seen_age=None if self.last_seen_player is None else stamp-self.last_seen_player)

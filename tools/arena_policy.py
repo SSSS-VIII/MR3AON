@@ -149,6 +149,8 @@ class VisualAvoider(Avoider):
     Flying enemies retain the measured trajectory and wind-up/dash prior.
     """
     def _hazard(self,track,t):
+        if track.attack_phase in ('ready','rush'):
+            return track.future(t)
         box=super()._hazard(track,t)
         if track.kind=='spider' and track.sine_count<2:
             box.y=track.box.y
