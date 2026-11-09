@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-09：用户否决首轮图像循环策略。已完成Android原生高速取图（无宿主桌面/合成器API依赖）：动态640×360中位4.7ms/P95 6.6ms，1280×720中位10.3ms/P95 12.1ms；预热后1500帧最大8.4ms，像素与原PNG完全一致，47项回归通过。见 [高速取图](archived/2026-11-09-arena-native-fast-capture.md)。当前只交付捕获工具，ArenaEnv未替换；[结构化视觉方案](../arena/visual-control-proposal.md)待用户确认，识别/跟踪/训练均未动手。旧RawZip测量与撤回依据见 [首轮调研](archived/2026-11-09-arena-visual-policy-research.md)。死亡回合平台回收异常及启动RPC短超时另已记录，未在本任务改游戏代码。
+
 2026-11-09：本地客户端迁移阶段已汇总为 [迁移报告](archived/2026-11-09-arena-client-migration-report.md)，包含原资源恢复、最终原APK/GameOnly/Lua桥方案、轻改机制、实测和6002入口待查项。用户已要求发至本人Gmail，邮件正文及Markdown附件发送成功（message/thread：1a1be8813783dcaa）。接续调研以截图为输入的实时策略，重点是延迟测量与建模，训练模型尚未实现。
 
 2026-11-09：疾风菜单合并传送符入场重复，由30条变19张（第6关2张）；保留原30份地图及玩法候选，旧ID/暂停页板号换算通过。44项相关回归、两张第6关菜单开局、map54旧ID开局及map52第8块定位通过，原窗口已更新并暂停。另发现待修复项：map51第2块/map54第3块版型6002接近入口时死亡，尚未定位死因，未计入验收；见 [地图入场去重](archived/2026-11-09-arena-map-entry-deduplication.md)。

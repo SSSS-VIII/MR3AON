@@ -70,6 +70,20 @@ env.close()
 
 这是本地环境接口，尚未训练视觉模型或实现自动竞技场策略。动作1/2表示一次原按钮按下与释放；二段跳需要后续再次发送jump。重置前检查种子/章节/关卡范围，并由原NCONFIG校验实际存在的关卡。
 
+训练须先评审[结构化视觉控制方案](visual-control-proposal.md)：陷阱识别与运动分析、人物位置和动作状态，再交给小型决策器；当前没有实现识别器或训练器。[首轮方案](../.mr3a-records/archived/2026-11-09-arena-visual-policy-research.md)已撤回，仅保留测量与原因。迁移过程见[阶段报告](../.mr3a-records/archived/2026-11-09-arena-client-migration-report.md)。
+
+## 独立高速取图
+
+在arena已运行时执行：
+
+```bash
+.venv/bin/python tools/arena_capture.py --frames 300
+```
+
+默认保留1280×720原画面。Android 13常驻辅助进程调用原显示捕获接口，通过本命名设备的直接数据通道回传RGBA8888；不使用PNG/视频编解码，不连接宿主桌面或合成器截图接口。构建使用本机忽略目录中已有的Android工具，产物留在debug/arena-client/fast-capture。进程及数据通道复用InstanceSession作用域，退出回收自有辅助进程；不改游戏APK或操作菜单。
+
+Python调用为 `with FastCapture(InstanceSession("arena")) as capture: frame = capture.capture()`（从arena_capture导入FastCapture）；`frame.array()`是原RGBA数组视图，带请求序号和捕获时序。该API单独提供，尚未替换上面的ArenaEnv训练接口。请求到整帧数据的实测及长尾边界见[高速取图记录](../.mr3a-records/archived/2026-11-09-arena-native-fast-capture.md)。
+
 ## 实测范围
 
 早期HP100基线已验证冷启动、原画面/跳跃/下翻、死亡后复位、固定步与实际地图导出；当前5000血版本另验证K/S/P、菜单选关、版型切换、R/N重放、原传送符专用地图和Boss循环后的真实板内落地。原重开前现显式回收持久池对象，独立复现的旧敌人残留问题已修复。同种子布局复现与换种子路线变化均已实测。初始模型插值可能有微小位置差异，尚不保证逐像素确定。当前仅保留疾风模式；其它角色及每一种随机情况未逐一验收；当前依托Waydroid原运行时，独立Unity工程移植仍未完成。
