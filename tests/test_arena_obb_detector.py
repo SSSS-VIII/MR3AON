@@ -132,3 +132,14 @@ def test_rush_fit_rejects_static_false_phase_and_ignores_own_capsule_horizontal_
     static=Tracker(adaptive=True,adaptive_rush_speed=True)
     for i in range(4):rows=static.update([Detection(Box(585,185,30,30),'eye_enemy',.99,True,False,'rush')],i*.04,(180,260))
     assert rows[0].rush_fit_velocity is None
+
+
+def test_debug_overlay_draws_float_neural_supports_without_rounding_physics_measurements():
+    from arena_vision import overlay
+    class Detector:
+        last_ms=1
+        def detect(self,rgb):
+            return Box(172,210,16,40),[],[dict(kind='platform',a=(0,260.25),b=(640,260.25),confidence=.99)],[]
+    pixels=np.zeros((360,640,3),np.uint8);obs=ObbPerception(Detector()).observe(pixels,0)
+    image=overlay(pixels,obs)
+    assert image.shape==(360,640,3)and obs['terrain']['samples'][50][1]==253.25

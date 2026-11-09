@@ -866,7 +866,7 @@ def overlay(rgb, observation, action=None, reason=''):
     if terrain:
         for x,y,solid in terrain['samples']:
             if solid:
-                cv2.circle(image,(x,y),1,(0,255,255),-1)
+                cv2.circle(image,(int(round(x)),int(round(y))),1,(0,255,255),-1)
         if terrain['edge']is not None:
             x=int(terrain['edge']);cv2.line(image,(x,180),(x,310),(255,0,255),2)
     for t in observation['tracks']:
