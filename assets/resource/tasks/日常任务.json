@@ -96,7 +96,14 @@
             ],
             "group": [
                 "daily"
-            ]
+            ],
+            "pipeline_override": {
+                "开大": {
+                    "next": [
+                        "bossfight"
+                    ]
+                }
+            }
         },
         {
             "name": "每日悬赏小号",
