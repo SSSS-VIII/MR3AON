@@ -91,9 +91,11 @@ class VisualSupports:
             if y is None or py is None:continue
             distance=abs(abs(y-py)-30)if s['kind']=='rope'else abs(y-py-30)
             if distance<18:choices.append((distance,s,y))
+        foot_support=None
         if choices:
             _,selected,y=min(choices,key=lambda c:c[0])
             self.mode='rope'if selected['kind']=='rope'else'ground';self.reference_y=y
+            if self.mode=='ground':foot_support=selected
         # Keep mode through a jump, while current detected lines supply camera
         # height. A missing line is never fabricated as solid ground.
         ropes=[s for s in segments if s['kind']=='rope'and s['a'][0]-10<=px<=s['b'][0]+10]
@@ -105,7 +107,9 @@ class VisualSupports:
         ground=[s for s in segments if s['kind']!='rope']
         if self.mode!='rope'and ground:
             expected=self.reference_y if self.reference_y is not None else(py+30 if py is not None else 260)
-            selected=min(ground,key=lambda s:abs((height(s,min(max(px,s['a'][0]),s['b'][0]))or 0)-expected))
+            selected=foot_support or min(ground,key=lambda s:(
+                abs((height(s,min(max(px,s['a'][0]),s['b'][0]))or 0)-expected),
+                max(0,s['a'][0]-px,px-s['b'][0])))
             y=height(selected,min(max(px,selected['a'][0]),selected['b'][0]));self.reference_y=y
             terrain=describe_terrain(ground,selected,px)
         return dict(mode=self.mode,rope=rope,terrain=terrain,segments=segments)

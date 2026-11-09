@@ -143,3 +143,12 @@ def test_debug_overlay_draws_float_neural_supports_without_rounding_physics_meas
     pixels=np.zeros((360,640,3),np.uint8);obs=ObbPerception(Detector()).observe(pixels,0)
     image=overlay(pixels,obs)
     assert image.shape==(360,640,3)and obs['terrain']['samples'][50][1]==253.25
+
+
+def test_more_confident_far_platform_cannot_replace_equal_height_support_beneath_player():
+    segments=[dict(kind='platform',a=(330,260),b=(640,260),confidence=.99),
+              dict(kind='platform',a=(0,260),b=(230,260),confidence=.9)]
+    state=VisualSupports().observe(segments,Box(172,210,16,40),0)
+    assert state['mode']=='ground'and state['terrain']['at_player']
+    assert state['terrain']['edge']==230 and state['terrain']['landing']==330
+    assert not next(s[2]for s in state['terrain']['samples']if s[0]==280)
