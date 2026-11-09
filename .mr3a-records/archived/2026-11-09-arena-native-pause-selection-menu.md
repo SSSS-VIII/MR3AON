@@ -13,3 +13,7 @@
 原客户端实际点击第1关/地图2/第2块/10021，启动原通灵兽，完整7板保留、真实到达、HP5000/GodMode=false，继续按钮TimeScale1且菜单隐藏，P后TimeScale0且菜单显示；截图new-menu-{loop,progress,arrival}.png在忽略目录native-mechanisms。无限段8010的分页/选中显示通过。后续动态原生StageStartX修正只在定位模块，菜单不接管原行为。
 
 完整进程重启加载所有模块后，K跳14、S翻3、P的1/0切换及菜单显隐，R同种子42和N种子43重放11032/真实脚下索引2均通过；原屏幕跳跃、下翻、右上暂停按钮实际点击也通过，未改原按钮回调。未出现menuError/keyboardError。最终相关63项回归通过；实际控制结果final-controls.json、touch-controls.json和final-menu.png留忽略目录。未宣称全部509种版型入口均无伤，原Boss/奖励流程可能导致定位耗时数分钟。
+
+## 用户反馈后的交互修正
+
+用户实际发现首块入场黑幕被暂停，先前仅检查Game8/Running不充分。菜单现在成功后自动开跑，并移除页面实现说明；复现、补齐回收与实际点击验收见 [黑屏修正](2026-11-09-arena-menu-start-black-screen.md)。本文早先“到达后暂停”仅为旧菜单行为，当前只有训练接口继续保持该契约。

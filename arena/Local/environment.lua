@@ -298,10 +298,13 @@ function E.reset(seed, chapter, level)
     U.Time.captureFramerate=60
     U.Time.timeScale=1
     gm:PauseGameContent()
-    -- Recycle while the old managers still own their objects. Scene teardown
-    -- alone leaves active enemies/items under the persistent native pool root.
+    -- Use the native level teardown order while the old ownership graph is
+    -- intact, including block-owned events/platforms and pooled screen effects.
+    CS.LevelPoolManager.Instance:RecycleAllBlock()
     CS.ItemManager.Instance:ClearAllActiveItem()
     CS.EnemyManager.Instance:ClearAllActiveEnemy()
+    CS.InGameResourceFactory.Instance.SpawnPool:DespawnAll()
+    CS.LevelPoolManager.Instance:RecycleAllMainAirGround()
     gm:ClearAllObjectsInScene()
     U.Random.InitState(seed)
     gm.GameInfo=E.new_info(chapter,level)
