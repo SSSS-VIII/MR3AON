@@ -224,8 +224,10 @@ class Tracker:
             if age:
                 prediction=t.at(age)
                 b=prediction.box
-                b=Box(b.x+player[0]-t.reference[0],b.y+player[1]-t.reference[1],b.w,b.h)
-                output.append(replace(prediction,box=b,confidence=t.confidence-age*.6))
+                dx,dy=player[0]-t.reference[0],player[1]-t.reference[1]
+                b=Box(b.x+dx,b.y+dy,b.w,b.h)
+                output.append(replace(prediction,box=b,confidence=t.confidence-age*.6,
+                                      reference=player,floor_y=prediction.floor_y+dy))
             else:
                 output.append(t)
         return output

@@ -147,3 +147,18 @@ def test_delay_projection_advances_flip_and_landing_state_with_geometry():
              motion=dict(name='jump1',started=start),phase='jump1_falling',jumps=1)
     landed=extrapolate(air,1.9)
     assert landed['phase']=='rope_above'and landed['motion']is None and landed['jumps']==0
+
+
+def test_occluded_ball_camera_shift_moves_floor_with_predicted_body():
+    from arena_vision import Track
+    tracker=Tracker(adaptive=True)
+    t=Track(1,Box(450,200,36,36),'pinball',.93,0,ballistic=True,
+            gravity_up=320,gravity_down=320,floor_y=240,rebound_speed=280,vy=180,
+            vx=-500,reference=(180,260))
+    tracker.tracks=[t]
+    predicted=tracker.update([],.1,(180,230))[0]
+    assert predicted.floor_y==210
+    assert predicted.reference==(180,230)
+    original=t.future(.3);shifted=predicted.future(.2)
+    assert shifted.center==pytest.approx((original.center[0],original.center[1]-30))
+    assert t.floor_y==240  # Retained last-seen state stays in its original frame.
