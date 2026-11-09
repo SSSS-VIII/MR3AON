@@ -30,6 +30,22 @@ from arena_policy import Avoider
 from arena_mpc import MpcAvoider
 from runtime import InstanceSession
 import cv2
+import numpy as np
+
+
+class InitialPixels:
+    """Wait once for the original scene's black entrance, without sending keys."""
+    def __init__(self):
+        self.first_visible_elapsed=None
+        self.black_frames=0
+
+    def check(self,rgba,elapsed):
+        if self.first_visible_elapsed is not None:return 'ready'
+        if np.any(rgba[:,:,:3]):
+            self.first_visible_elapsed=elapsed
+            return 'ready'
+        self.black_frames+=1
+        return 'timeout'if elapsed>=2 else'waiting'
 
 
 class Recorder:
@@ -174,6 +190,7 @@ def run(args):
     consume_times=[];chain_times=[]
     board_entries=[];had_damage=False
     actions, count, max_stage, status, final = [], 0, -1, 'duration', initial
+    initial_pixels=InitialPixels()
     begin = time.monotonic()
     with (args.output / 'vision.jsonl').open('w') as estimates, (args.output / 'evaluation.jsonl').open('w') as evaluations:
         with FastCapture(session, width=640, height=360) as cap:
@@ -194,6 +211,9 @@ def run(args):
                         intervals.append((loop-previous_loop)*1000)
                     previous_loop=loop
                     frame = cap.capture()
+                    readiness=initial_pixels.check(frame.array(),loop-begin)
+                    if readiness=='timeout':
+                        status='initial_black_frame';break
                     start = time.perf_counter()
                     crc=zlib.crc32(frame.rgba)
                     is_fresh=crc!=previous_crc
@@ -206,7 +226,7 @@ def run(args):
                     now=(time.perf_counter_ns()-clock['offset_ns'])/1e9
                     age=(now-latest['time'])*1000
                     ages.append(age)
-                    if age>150:
+                    if age>150 and readiness!='waiting':
                         status='stale_frame';break
                     # One native render-frame input prior, independently of actual
                     # measured pixel age. Neither number is a photon-time guarantee.
@@ -217,7 +237,7 @@ def run(args):
                     compute_prior=percentile(samples,90)/1000 if samples else (.01 if expensive else 0.)
                     obs=extrapolate(latest,now+1/60+compute_prior)
                     decision_start=time.perf_counter()
-                    action, reason = policy.choose(obs)
+                    action, reason = ((None,'waiting_initial_pixels')if readiness=='waiting'else policy.choose(obs))
                     compute_ms=(time.perf_counter()-decision_start)*1000
                     samples.append(compute_ms);policy_times.append(compute_ms)
                     compute_priors.append(compute_prior*1000)
@@ -300,6 +320,8 @@ def run(args):
                   dropped_recording_frames=recorder.dropped,fresh_frames=fresh,
                   fresh_frame_interval_ms=timing(fresh_intervals),observation_age_ms=timing(ages),
                   input_delay_prior_ms=1000/60)
+    report.update(initial_black_frames=initial_pixels.black_frames,
+                  first_visible_elapsed=initial_pixels.first_visible_elapsed)
     report.update(sent_keys=sent_keys,observed_keys=final.get('keys',{}),
                   unity_keydown_ms=timing(consume_times),capture_to_unity_ms=timing(chain_times),
                   board_entries=board_entries,had_damage=had_damage)
