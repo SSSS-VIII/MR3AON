@@ -6,6 +6,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 from arena_vision import Box, Perception
+from arena_native_json import normalize_arrays
 
 
 def native_box(row):
@@ -20,6 +21,7 @@ def native_box(row):
 
 
 def objects(row, visible=False):
+    row=normalize_arrays(row)
     out={}
     for obj in row.get('objects',[]) or []:
         box=native_box(obj)
@@ -60,10 +62,31 @@ def replay(folder,perception=None):
         yield row,obs,objects(row),match([t for t in obs['tracks']if in_roi(t.box)],objects(row,True))
 
 
+def continuous_identity(rows,start,end,identity):
+    """Reject absent/recycled native pool IDs before scoring a future target.
+
+    InstanceID identifies the pooled component, not one spawn. An absence,
+    resource change or teleport must not be scored as a movement prediction.
+    """
+    previous=None
+    for row,_,truth,_ in rows[start:end+1]:
+        if identity not in truth:
+            return False
+        obj,box=truth[identity]
+        if previous:
+            before,old,stamp=previous
+            if (obj.get('name')!=before.get('name') or obj['type']!=before['type']
+                    or np.linalg.norm(np.subtract(box.center,old.center))>
+                       max(96,2500*(row['t']-stamp))):
+                return False
+        previous=obj,box,row['t']
+    return True
+
+
 def audit(folder,forecaster=None,perception=None):
     counts=Counter();errors=defaultdict(list);forecast=defaultdict(list)
     rows=list(replay(folder,perception));times=np.asarray([r[0]['t'] for r in rows])
-    for row,obs,truth,assigned in rows:
+    for index,(row,obs,truth,assigned) in enumerate(rows):
         visible=objects(row,True)
         counts['visible']+=len(visible)
         counts['proposals']+=sum(bool(t.confidence>=.7 and in_roi(t.box)) for t in obs['tracks'])
@@ -75,6 +98,9 @@ def audit(folder,forecaster=None,perception=None):
                 j=int(np.argmin(abs(times-row['t']-horizon)))
                 actual=times[j]-row['t']
                 if abs(actual-horizon)>.045 or identity not in rows[j][2] or track.observations<4:
+                    continue
+                if not continuous_identity(rows,index,j,identity):
+                    counts['skipped_pool_reuse']+=1
                     continue
                 future=rows[j][2][identity][1]
                 predicted=forecaster.predict(track,actual) if forecaster else track.future(actual)

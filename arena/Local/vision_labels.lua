@@ -29,8 +29,20 @@ function E.vision_labels(include_scene)
    local row={id=o:GetInstanceID(),type=o:GetType().Name,name=o.name,point=point(o.transform.position),colliders={}}
    row.renderers={}
    local renderers=o.gameObject:GetComponentsInChildren(typeof(U.Renderer),true)
+   local selected={};local hasModel=false
+   local field=typeof(CS.EnemyBase):GetField('_allRenderObj',CS.System.Reflection.BindingFlags.__CastFrom(52))
+   if field then local groups=field:GetValue(o)
+    if groups then local count=groups:GetType().IsArray and groups.Length or groups.Count
+     for k=0,count-1 do if groups[k] then
+      local parts=groups[k]:GetComponentsInChildren(typeof(U.Renderer),true)
+      for q=0,parts.Length-1 do selected[parts[q]:GetInstanceID()]=true;hasModel=true end
+     end end
+    end
+   end
    for j=0,renderers.Length-1 do local r=renderers[j]
-    if r.enabled and r.gameObject.activeInHierarchy and r:GetType().Name~='ParticleSystemRenderer' then
+    local spriteVisible=r:GetType().Name~='SpriteRenderer' or r.color.a>.1
+    if r.enabled and r.gameObject.activeInHierarchy and spriteVisible and r:GetType().Name~='ParticleSystemRenderer'
+     and (not hasModel or selected[r:GetInstanceID()]) then
      row.renderers[#row.renderers+1]={name=r.name,type=r:GetType().Name,box=box(r.bounds)}
     end
    end

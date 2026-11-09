@@ -14,28 +14,34 @@ import hashlib
 import json
 from pathlib import Path
 import time
+import uuid
+import random
 import cv2
-from arena_local import LocalClient, ROOT
+from arena_local import LocalClient, ROOT,FOLDER
 from arena_capture import FastCapture
 from arena_visual_runner import prepare
 from runtime import InstanceSession
+from arena_native_json import normalize_arrays
 
 
-def collect(output, *, seed=42, board=11012, seconds=18, ticks=4):
+def collect(output, *, seed=42, board=11012, seconds=18, ticks=4,explore=False):
     output.mkdir(parents=True,exist_ok=False)
     cv2.setNumThreads(1)
     session=InstanceSession('arena'); client=LocalClient(session)
     source=(ROOT/'arena/Local/vision_labels.lua').read_text()
+    paired=(ROOT/'arena/Local/paired_collection.lua').read_text()
+    rng=random.Random(seed);last_action=-10
     count=0
     try:
         initial=prepare(client,seed,1,1,{'1':board})
-        client.execute('assert(load('+json.dumps(source)+'))();return true')
+        client.execute('assert(load('+json.dumps(source)+'))();assert(load('+json.dumps(paired)+'))();return true')
         (output/'setup.json').write_text(json.dumps(dict(seed=seed,board=board,ticks=ticks,
-            seconds=seconds,initial=initial,label_sha256=hashlib.sha256(source.encode()).hexdigest()),indent=2)+'\n')
+            seconds=seconds,initial=initial,explore=explore,
+            label_sha256=hashlib.sha256(source.encode()).hexdigest(),
+            paired_sha256=hashlib.sha256(paired.encode()).hexdigest()),indent=2)+'\n')
         with FastCapture(session,width=640,height=360) as capture, (output/'labels.jsonl').open('w') as log:
-            start=None
+            start=None;labels=client.execute('return MR3A.vision_labels()',lease_held=True)
             while True:
-                labels=client.execute('return MR3A.vision_labels()',lease_held=True)
                 if start is None:
                     start=labels['engineTime']
                 frame=capture.capture()
@@ -48,19 +54,35 @@ def collect(output, *, seed=42, board=11012, seconds=18, ticks=4):
                     print(json.dumps(dict(frames=count,time=labels['t'],health=labels['health'])),flush=True)
                 if labels['t']>=seconds or labels['health']<=0:
                     break
-                client.execute(f'return MR3A.advance({ticks},"none")',lease_held=True)
+                action='none'
+                if explore and labels['t']-last_action>.65 and rng.random()<.12:
+                    action=rng.choice(['jump','down']);last_action=labels['t']
+                identity=uuid.uuid4().hex
+                client.execute(f'return MR3A.paired_step({ticks},"{action}","{identity}")',lease_held=True)
                 deadline=time.monotonic()+10
                 while True:
-                    job=client.execute('return {done=MR3A.job.done,error=MR3A.job.error}',lease_held=True)
-                    if job['done']:
+                    result=session.adb('shell','cat',FOLDER+'/paired-collection.json')
+                    try:
+                        job=json.loads(result.stdout)
+                    except ValueError:
+                        job={}
+                    if job.get('done')and job.get('identity')==identity:
                         if job.get('error'):
                             raise RuntimeError(job['error'])
+                        labels=normalize_arrays(job['labels']);labels['previous_action']=action
                         break
                     if time.monotonic()>deadline:
                         raise TimeoutError('Native collection step')
                     time.sleep(.01)
         return dict(output=str(output),frames=count,seconds=labels['t'],health=labels['health'])
     finally:
+        # An interrupted host read must let the already-running original advance
+        # complete; pausing it halfway would leave E.busy until its native timeout.
+        deadline=time.monotonic()+3
+        while time.monotonic()<deadline:
+            if not client.execute('return MR3A.busy'):
+                break
+            time.sleep(.05)
         client.execute('MR3A.pause();MR3A.menu_suppressed=false;MR3A.enable_menu();return true')
 
 
@@ -71,10 +93,11 @@ def main():
     parser.add_argument('--board',type=int,default=11012)
     parser.add_argument('--seconds',type=float,default=18)
     parser.add_argument('--ticks',type=int,default=4)
+    parser.add_argument('--explore',action='store_true',help='Sample original jump/flip actions for pose coverage')
     args=parser.parse_args()
     if not 0<args.seconds<=90 or not 1<=args.ticks<=10:
         parser.error('Collection limits out of range')
-    print(json.dumps(collect(args.output,seed=args.seed,board=args.board,seconds=args.seconds,ticks=args.ticks)))
+    print(json.dumps(collect(args.output,seed=args.seed,board=args.board,seconds=args.seconds,ticks=args.ticks,explore=args.explore)))
 
 
 if __name__=='__main__':
