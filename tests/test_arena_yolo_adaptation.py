@@ -220,3 +220,12 @@ def test_identity_association_uses_dash_prediction_when_mean_velocity_still_lags
                     Detection(actual,'eye_enemy',.9,True,False,'rush')],1.025,(180,260))
     retained=next(t for t in tracker.tracks if t.id==1)
     assert retained.box.x==pytest.approx(actual.x)
+
+
+def test_batched_sweeps_keep_each_candidate_and_each_hazard_independent():
+    from arena_mpc import swept_distances
+    players=np.array([[177,228.5,14,37],[177,68.5,14,37],[177,224,8,8]],float)
+    before=np.array([[140,228,12,12],[140,70,12,12]],float)
+    after=np.array([[215,228,12,12],[215,70,12,12]],float)
+    collisions=swept_distances(players,players,before,after,0)<1
+    assert collisions.tolist()==[[True,False],[False,True],[True,False]]

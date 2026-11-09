@@ -25,28 +25,41 @@ def start_action(state,name):
                 jumps=1 if name=='jump1'else 2 if name=='jump2'else 0)
 
 
-def swept_distance(before,after,old,new,margin):
-    """Distance to a swept capsule spine, normalized by collision radii.
+def player_array(states):
+    return np.array([[*s['player'].center,s['player'].w,s['player'].h]for s in states])
 
-    Testing isolated future frames can miss a fast crossing between samples.
-    Retain the larger endpoint capsule for this short interval, conservatively.
+
+def swept_distances(before,after,old,new,margin):
+    """All candidate capsules against all hazards in one broadcast operation.
+
+    Player rows are centerX/centerY/width/height, hazard rows centerX/centerY/
+    radiusX/radiusY. Preserve the same conservative swept geometry per pair.
     """
-    radius=max(min(before.w,before.h),min(after.w,after.h))/2
-    rx=np.maximum(old[:,2],new[:,2])+radius+margin
-    ry=np.maximum(old[:,3],new[:,3])+radius+margin
-    a=(old[:,:2]-before.center)/np.column_stack((rx,ry))
-    b=(new[:,:2]-after.center)/np.column_stack((rx,ry))
-    spine=max(0,(before.h-before.w)/2,(after.h-after.w)/2)/ry
-    def endpoint(p):return p[:,0]**2+np.maximum(0,abs(p[:,1])-spine)**2
-    distance=np.minimum(endpoint(a),endpoint(b));v=b-a;norm=np.sum(v*v,axis=1)
+    radius=np.maximum(np.minimum(before[:,2],before[:,3]),np.minimum(after[:,2],after[:,3]))/2
+    rx=np.maximum(old[:,2],new[:,2])[None,:]+radius[:,None]+margin
+    ry=np.maximum(old[:,3],new[:,3])[None,:]+radius[:,None]+margin
+    radii=np.stack((rx,ry),axis=2)
+    a=(old[None,:,:2]-before[:,None,:2])/radii
+    b=(new[None,:,:2]-after[:,None,:2])/radii
+    core=np.maximum(0,np.maximum((before[:,3]-before[:,2])/2,(after[:,3]-after[:,2])/2))
+    spine=core[:,None]/ry
+    def endpoint(p):return p[:,:,0]**2+np.maximum(0,abs(p[:,:,1])-spine)**2
+    distance=np.minimum(endpoint(a),endpoint(b));v=b-a;norm=np.sum(v*v,axis=2)
     for sign in(-1,1):
-        end=np.column_stack((np.zeros(len(spine)),sign*spine))
-        fraction=np.clip(np.sum((end-a)*v,axis=1)/np.maximum(norm,1e-12),0,1)
-        distance=np.minimum(distance,np.sum((a+fraction[:,None]*v-end)**2,axis=1))
-    fraction=-a[:,0]/np.where(abs(v[:,0])>1e-9,v[:,0],1e-9)
-    intersects=(fraction>=0)&(fraction<=1)&(abs(a[:,1]+fraction*v[:,1])<=spine)
+        end=np.stack((np.zeros_like(spine),sign*spine),axis=2)
+        fraction=np.clip(np.sum((end-a)*v,axis=2)/np.maximum(norm,1e-12),0,1)
+        distance=np.minimum(distance,np.sum((a+fraction[:,:,None]*v-end)**2,axis=2))
+    fraction=-a[:,:,0]/np.where(abs(v[:,:,0])>1e-9,v[:,:,0],1e-9)
+    intersects=(fraction>=0)&(fraction<=1)&(abs(a[:,:,1]+fraction*v[:,:,1])<=spine)
     distance[intersects]=0
     return distance
+
+
+def swept_distance(before,after,old,new,margin):
+    """Single-candidate interface for geometry checks and diagnostics."""
+    a=np.array([[*before.center,before.w,before.h]])
+    b=np.array([[*after.center,after.w,after.h]])
+    return swept_distances(a,b,old,new,margin)[0]
 
 
 class MpcAvoider(VisualAvoider):
@@ -86,33 +99,38 @@ class MpcAvoider(VisualAvoider):
                          for track in tracks for b in[self._hazard(track,t)]]for t in times])
         beam=[Node(obs)];now=obs['time']
         for step in range(self.STEPS):
-            pool={}
+            branches=[]
             for node in beam:
                 options=self._options(node.state,node.state['time'])
                 if step==0 and now-self.last_action<.17:options=[None]
                 for name in options:
                     state=start_action(node.state,name)if name else node.state
                     half=advance(state,self.STEP/2);end=advance(state,self.STEP)
-                    hits=set(node.hits);cost=node.cost
-                    before=state
-                    for sample,current in enumerate((half,end)):
-                        index=step*2+sample
-                        distance=swept_distance(before['player'],current['player'],
-                            boxes[index],boxes[index+1],8+times[index+1]*8)
-                        for index in np.flatnonzero(distance<1):
-                            identity=tracks[index].id
-                            if identity not in hits:
-                                cost+=1000*(1-.2*(step+1)/self.STEPS);hits.add(identity)
-                        cost+=float(np.maximum(0,1.4-distance).sum())*.002
-                        before=current
-                    count=node.actions+bool(name)
-                    if name:cost+=.05 if name.startswith('jump')else .03
-                    first=name if step==0 else node.first
-                    active=end.get('motion');age=0 if not active else round(end['time']-active['started'],3)
-                    key=(end['phase'],age,round(end['player'].center[1]/3),end['jumps'])
-                    candidate=Node(end,cost,first,frozenset(hits),count)
-                    if key not in pool or candidate.cost<pool[key].cost:
-                        pool[key]=candidate
+                    branches.append((node,state,half,end,name))
+            positions=[player_array([b[index]for b in branches])for index in(1,2,3)]
+            distances=[];near=[]
+            for sample in(0,1):
+                index=step*2+sample
+                d=swept_distances(positions[sample],positions[sample+1],
+                                  boxes[index],boxes[index+1],8+times[index+1]*8)
+                distances.append(d);near.append(np.maximum(0,1.4-d).sum(axis=1)*.002)
+            pool={}
+            for i,(node,state,half,end,name)in enumerate(branches):
+                hits=set(node.hits);cost=node.cost
+                for sample in(0,1):
+                    for index in np.flatnonzero(distances[sample][i]<1):
+                        identity=tracks[index].id
+                        if identity not in hits:
+                            cost+=1000*(1-.2*(step+1)/self.STEPS);hits.add(identity)
+                    cost+=float(near[sample][i])
+                count=node.actions+bool(name)
+                if name:cost+=.05 if name.startswith('jump')else .03
+                first=name if step==0 else node.first
+                active=end.get('motion');age=0 if not active else round(end['time']-active['started'],3)
+                key=(end['phase'],age,round(end['player'].center[1]/3),end['jumps'])
+                candidate=Node(end,cost,first,frozenset(hits),count)
+                if key not in pool or candidate.cost<pool[key].cost:
+                    pool[key]=candidate
             beam=sorted(pool.values(),key=lambda n:(n.cost,n.actions))[:self.BEAM]
         best=min(beam,key=lambda n:(n.cost,n.actions))
         if not best.first:return None,'mpc_wait'
