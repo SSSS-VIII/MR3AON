@@ -4,6 +4,7 @@ local inspectFlags=CS.System.Reflection.BindingFlags.__CastFrom(52)
 local deadField=typeof(CS.EnemyBase):GetField('_dead',inspectFlags)
 local enemyInfoField=typeof(CS.EnemyBase):GetField('_enemyInfo',inspectFlags)
 local supportType=typeof(CS.LevelBlockCollider)
+local airGroundType=typeof(CS.ItemAirGround)
 local supportDataField=supportType:GetField('_levelBlockInfo',inspectFlags)
 local controllerTypes={}
 local function controller_fields(tp)
@@ -45,6 +46,7 @@ function E.vision_labels(include_scene)
   local kind=c:GetType().Name
   local rotation=c.transform.rotation
   local row={id=c:GetInstanceID(),owner_id=owner,name=c.name,box=box(c.bounds),type=kind,
+   bounds_center=vector(c.bounds.center),bounds_extents=vector(c.bounds.extents),
    trigger=c.isTrigger,layer=c.gameObject.layer,tag=c.tag,local_to_world=matrix(c.transform.localToWorldMatrix),
    lossy_scale=vector(c.transform.lossyScale),world_rotation={x=rotation.x,y=rotation.y,z=rotation.z,w=rotation.w}}
   if kind=='BoxCollider' then
@@ -56,11 +58,14 @@ function E.vision_labels(include_scene)
   elseif kind=='SphereCollider'or kind=='CapsuleCollider' then
    row.center=vector(c.center);row.world_center=vector(c.transform:TransformPoint(c.center));row.radius=c.radius
    if kind=='CapsuleCollider'then row.height=c.height;row.direction=c.direction end
+   local b=c.bounds
+   row.plane_quad={point(U.Vector3(b.min.x,b.min.y,b.center.z)),point(U.Vector3(b.max.x,b.min.y,b.center.z)),
+    point(U.Vector3(b.max.x,b.max.y,b.center.z)),point(U.Vector3(b.min.x,b.max.y,b.center.z))}
   end
   return row
  end
  local n=CS.NinjaController.Instance.NinjaScript
- local out={label_schema=3,frame=U.Time.frameCount,tick=CS.GameManager.Instance.GameInfo._totalFrameCount,
+ local out={label_schema=4,frame=U.Time.frameCount,tick=CS.GameManager.Instance.GameInfo._totalFrameCount,
   time=CS.GameManager.Instance.GameInfo._totalTime,engineTime=U.Time.time,width=640,height=360,
   physics=E.state().physics,health=n.CurrentHp,role={point=point(n.transform.position),colliders={}},objects={},supports={},
   camera={projection=matrix(cam.projectionMatrix),world_to_camera=matrix(cam.worldToCameraMatrix)}}
@@ -137,6 +142,12 @@ function E.vision_labels(include_scene)
  local ground=n._GroundCollider
  out.stage_index=ground and ground.BelongToStageIndex or -1
  out.support_id=ground and ground:GetInstanceID()or nil
+ out.base_support_id=out.support_id
+ local airSupport=n.OnAirGround
+ out.air_support_source_id=airSupport and not airSupport._isFree and airSupport.sourceId or nil
+ if airSupport and not airSupport._isFree then
+  out.air_reference={left=airSupport._leftX,right=airSupport._rightX,top=airSupport._topY,bottom=airSupport._bottomY}
+ end
  out.block_index=ground and ground.BelongToBlockIndex or -1
  local level=CS.LevelManager.Instance.GameLevelInfo
  local stages=level:GetType():GetField('_stageList',inspectFlags):GetValue(level)
@@ -155,7 +166,33 @@ function E.vision_labels(include_scene)
      out.supports[#out.supports+1]={id=support:GetInstanceID(),start=a,finish=b,
       kind=support.IsLine and 'rope' or support.IsGround and 'platform' or 'other',
       stage_index=support.BelongToStageIndex,block_index=support.BelongToBlockIndex,
-      hidden=data._hideGround,ground_type=tostring(data._groundType),switch=tostring(support.groundSwitchType)}
+      hidden=data._hideGround,has_air_ground=support.HasAirGround,
+      death_offset_y=data._isDeadBlockOffsetY,ground_type=tostring(data._groundType),switch=tostring(support.groundSwitchType)}
+    end
+   end
+  end
+ end
+ local platforms=U.Object.FindObjectsOfType(airGroundType)
+ for i=0,platforms.Length-1 do local platform=platforms[i];local info=platform.AirGroundInfo
+  if platform.enabled and platform.isActive and platform.gameObject.activeInHierarchy and info and not info._isFree then
+   local z=platform.transform.position.z
+   local a,b=point(U.Vector3(info._leftX,info._topY,z)),point(U.Vector3(info._rightX,info._topY,z))
+   if a.z>0 and b.z>0 and math.max(a.x,b.x)>-16 and math.min(a.x,b.x)<656
+    and math.max(a.y,b.y)>-16 and math.min(a.y,b.y)<376 then
+    local visible=false
+    local renderers=platform:GetComponentsInChildren(typeof(U.Renderer),true)
+    for j=0,renderers.Length-1 do local r=renderers[j]
+     if r.enabled and r.gameObject.activeInHierarchy and(r:GetType().Name~='SpriteRenderer'or r.color.a>.1)then visible=true end
+    end
+    out.supports[#out.supports+1]={id=platform:GetInstanceID(),source='ItemAirGround',source_id=info.sourceId,
+     start=a,finish=b,kind='platform',floating=true,hidden=not visible,
+     transparent=info._transparent,avoid_fall=info._isAvoidFall,
+     speed={x=info._speedX,y=info._speedY},world_top=info._topY,world_bottom=info._bottomY,
+     world_left=info._leftX,world_right=info._rightX}
+    -- Ordinary generated platforms can all have sourceId=0; compare the
+    -- actual native AirGroundInfo reference instead of treating it as an ID.
+    if airSupport and CS.System.Object.ReferenceEquals(info,airSupport)then
+     out.air_reference_id=platform:GetInstanceID();out.support_id=out.air_reference_id
     end
    end
   end

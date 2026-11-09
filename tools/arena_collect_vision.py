@@ -21,9 +21,11 @@ from arena_capture import FastCapture
 from arena_visual_runner import prepare
 from runtime import InstanceSession
 from arena_native_json import normalize_arrays
+from arena_collection_actions import choose_action
 
 COLLECTION_SOURCE=Path(__file__).read_bytes()
 PREPARATION_SOURCE=(ROOT/'tools/arena_visual_runner.py').read_bytes()
+EXPLORATION_SOURCE=(ROOT/'tools/arena_collection_actions.py').read_bytes()
 COLLECTION_SHA256=hashlib.sha256(COLLECTION_SOURCE).hexdigest()
 PREPARATION_SHA256=hashlib.sha256(PREPARATION_SOURCE).hexdigest()
 
@@ -43,10 +45,13 @@ def collect(output, *, seed=42, board=11012, seconds=18, ticks=4,explore=False,p
         sources=output/'sources';sources.mkdir()
         for name,data in {'collector.py.txt':COLLECTION_SOURCE,'preparation.py.txt':PREPARATION_SOURCE,
                           'environment.lua.txt':environment.encode(),'native_selection.lua.txt':native.encode(),'vision_labels.lua.txt':source.encode(),
-                          'paired_collection.lua.txt':paired.encode()}.items():
+                          'paired_collection.lua.txt':paired.encode(),'exploration.py.txt':EXPLORATION_SOURCE}.items():
             (sources/name).write_bytes(data)
         client.execute('assert(load('+json.dumps(environment)+'))();assert(load('+json.dumps(native)+'))();return true')
-        initial=prepare(client,seed,level,map_id,selected,start=start,sample_block=sample_block,timeout=620)
+        def progress(job):
+            print(json.dumps(dict(preparing=True,phase=job.get('phase'),board=job.get('currentBoard'),
+                                  block=job.get('currentBlock'),target=job.get('target'))),flush=True)
+        initial=prepare(client,seed,level,map_id,selected,start=start,sample_block=sample_block,timeout=620,progress=progress)
         client.execute('assert(load('+json.dumps(source)+'))();assert(load('+json.dumps(paired)+'))();return true')
         layout=normalize_arrays(client.execute('return MR3A.vision_resolved_layout()'))
         (output/'layout.json').write_text(json.dumps(layout,indent=2)+'\n')
@@ -55,6 +60,8 @@ def collect(output, *, seed=42, board=11012, seconds=18, ticks=4,explore=False,p
             seconds=seconds,initial=initial,native_travel=travel,explore=explore,pins=selected,start=start,level=level,map=map_id,sample_block=sample_block,
             collection_sha256=COLLECTION_SHA256,preparation_sha256=PREPARATION_SHA256,
             environment_sha256=hashlib.sha256(environment.encode()).hexdigest(),
+            exploration_policy='native_support_edge_then_random_pose'if explore else 'none',
+            exploration_sha256=hashlib.sha256(EXPLORATION_SOURCE).hexdigest(),
             native_selection_sha256=hashlib.sha256(native.encode()).hexdigest(),
             label_sha256=hashlib.sha256(source.encode()).hexdigest(),
             paired_sha256=hashlib.sha256(paired.encode()).hexdigest()),indent=2)+'\n')
@@ -74,11 +81,11 @@ def collect(output, *, seed=42, board=11012, seconds=18, ticks=4,explore=False,p
                     print(json.dumps(dict(frames=count,time=labels['t'],health=labels['health'])),flush=True)
                 if labels['t']>=seconds or labels['health']<=0:
                     break
-                action='none'
-                if explore and labels['t']-last_action>.65 and rng.random()<.12:
-                    action=rng.choice(['jump','down']);last_action=labels['t']
+                action,reason=choose_action(labels,rng,last_action)if explore else ('none','idle')
+                if action!='none':last_action=labels['t']
                 frame,labels=capture.paired_step(ticks,action)
                 labels['previous_action']=action
+                labels['data_action_reason']=reason
         return dict(output=str(output),frames=count,seconds=labels['t'],health=labels['health'])
     finally:
         # An interrupted host read must let the already-running original advance

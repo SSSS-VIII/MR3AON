@@ -236,6 +236,7 @@ function E.native_select(spec,seed)
                 local targetStage
                 while true do
                     assert(U.Time.realtimeSinceStartup<deadline,'Dragon rush timed out')
+                    assert(ninja.CurrentHp>0,'Died before the native carrier reached the sample')
                     assert(CS.LevelManager.Instance.GameLevelInfo==level,'Left the selected map before arrival')
                     E.travel.currentBoard=ground_stage(ninja)+1
                     local activeGround=ninja._GroundCollider
