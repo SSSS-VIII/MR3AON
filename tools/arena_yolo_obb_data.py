@@ -200,11 +200,12 @@ def targets(raw,profile):
     for support in row.get('supports')or[]:
         if support.get('hidden')or support['kind']not in('rope','platform'):continue
         kind='floating_platform'if support.get('floating')else support['kind']
-        add(support_ids[kind],segment_quad(support['start'],support['finish']))
+        add(support_ids[kind],segment_quad(support['start'],support['finish'],profile.get('support_band_px',4)))
     return result,counts
 
 
-def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=False):
+def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=False,support_band_px=4):
+    if not 4<=support_band_px<=32:raise ValueError('Support supervision band must be 4..32 px')
     if {p.resolve()for p in train}&{p.resolve()for p in validation}:
         raise ValueError('Whole native episodes must be disjoint')
     def episode_keys(folders):
@@ -215,6 +216,7 @@ def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=F
     plan=json.loads(plan_path.read_text())
     if plan.get('mode')!=6:raise ValueError('Only Gale resource pools may enter this dataset')
     profile=schema(json.loads(entities_path.read_text()),json.loads(prefabs_path.read_text()),plan['reachable_enemy_types'])
+    profile['support_band_px']=support_band_px
     if physics:profile=physics_profile(profile)
     output.mkdir(parents=True,exist_ok=False)
     runtime_names=defaultdict(set);runtime_types=defaultdict(set)
@@ -263,5 +265,6 @@ if __name__=='__main__':
     for name in('output','entities','prefabs','plan'):p.add_argument('--'+name,type=Path,required=True)
     p.add_argument('--train',type=Path,nargs='+',required=True);p.add_argument('--validation',type=Path,nargs='+',required=True)
     p.add_argument('--physics',action='store_true',help='Share classes by original collider and motion family, retaining the full resource profile')
-    a=p.parse_args();result=build(a.output,a.train,a.validation,a.entities,a.prefabs,a.plan,a.physics)
+    p.add_argument('--support-band',type=float,default=4,help='Training band only; inference recovers the original zero-thickness centerline')
+    a=p.parse_args();result=build(a.output,a.train,a.validation,a.entities,a.prefabs,a.plan,a.physics,a.support_band)
     print(json.dumps(result['splits']),flush=True)

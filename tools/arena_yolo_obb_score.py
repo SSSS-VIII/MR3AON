@@ -88,6 +88,14 @@ def resource_recalls(native_truth,truth,prediction,native_classes,classes):
     return counts
 
 
+def centerline_truth(row,profile,truth):
+    native=profile.get('native_targets',profile)
+    if native.get('support_band_px',4)==4:return truth
+    original,_=targets(row,dict(native,support_band_px=4))
+    return([(profile['class_mapping'][c],q)for c,q in original]
+           if profile.get('taxonomy')=='physics'else original)
+
+
 def score(weights,profile_path,episodes,output,stride=1):
     profile=json.loads(profile_path.read_text());classes=profile['classes']
     output.mkdir(parents=True,exist_ok=False);cv2.setNumThreads(1)
@@ -122,12 +130,13 @@ def score(weights,profile_path,episodes,output,stride=1):
                 strict=match(truth,predicted,classes)
                 for resource,counter in resource_recalls(native_truth,truth,predicted,native_profile['classes'],classes).items():
                     per_resource.setdefault(resource,Counter()).update(counter)
-                for c,q in truth:
+                line_truth=centerline_truth(row,profile,truth)
+                for c,q in line_truth:
                     if classes[c]['kind']in support_counts:support_counts[classes[c]['kind']]['targets']+=1
                 for c,q,s in predicted:
                     if classes[c]['kind']in support_counts:support_counts[classes[c]['kind']]['predictions']+=1
-                for i,j,error in match_support_lines(truth,predicted,classes):
-                    support_counts[classes[truth[i][0]]['kind']]['matched']+=1;line_errors.append(error)
+                for i,j,error in match_support_lines(line_truth,predicted,classes):
+                    support_counts[classes[line_truth[i][0]]['kind']]['matched']+=1;line_errors.append(error)
                 for c,q in truth:
                     counts[c]['targets']+=1;groups[classes[c]['kind']]['targets']+=1
                 for c,q,s in predicted:
@@ -150,8 +159,9 @@ def score(weights,profile_path,episodes,output,stride=1):
                 original_resource_recall={k:dict(c,spatial_recall=c['matched']/max(1,c['targets']))
                                           for k,c in per_resource.items()},
                 original_resource_scope='Truth-resource spatial recall only; shared model classes do not predict original resource identity',
-                support_line_criteria=dict(max_y_error_px=6,overlap_fraction_of_longer=.5,
+                support_line_criteria=dict(max_y_error_px=6,overlap_fraction_of_longer=.5,reference_band_px=4,
                     matched_max_y_error_median=float(np.median(line_errors))if line_errors else None),
+                support_supervision_band_px=native_profile.get('support_band_px',4),
                 hazards_ignoring_phase=summarize(modes['resource']),spatial_hazards=summarize(modes['geometry']),
                 wall_ms=dict(median=float(np.median(times)),p95=float(np.percentile(times,95))),
                 scope='Native gameplay-plane OBBs; spatial matches alone do not prove correct resource/phase/shape or successful control')

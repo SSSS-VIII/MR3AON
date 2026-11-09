@@ -128,3 +128,16 @@ def test_shared_model_keeps_original_resource_recall_without_claiming_identity_p
     assert result['Crow']['targets']==1 and result['Crow']['matched']==1
     assert result['type_238']['targets']==1 and result['type_238']['matched']==0
     assert 'precision'not in result['Crow']
+
+
+def test_support_training_band_changes_only_padding_while_physical_centerline_stays_exact():
+    from arena_obb_detector import support_segment
+    p=profile();row=dict(label_schema=4,role=dict(colliders=[]),objects=[],
+                        supports=[dict(kind='rope',start=dict(x=50,y=260),finish=dict(x=590,y=260))])
+    narrow,_=targets(row,p);wide,_=targets(row,dict(p,support_band_px=12))
+    assert support_segment(narrow[0][1])==support_segment(wide[0][1])==((50.,260.),(590.,260.))
+    a=np.asarray(narrow[0][1]);b=np.asarray(wide[0][1])
+    assert np.ptp(a[:,1])==4 and np.ptp(b[:,1])==12
+    from arena_yolo_obb_score import centerline_truth
+    fixed=centerline_truth(row,dict(p,support_band_px=12),wide)
+    assert np.ptp(np.asarray(fixed[0][1])[:,1])==4
