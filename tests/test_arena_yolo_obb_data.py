@@ -91,3 +91,24 @@ def test_shared_physics_classes_retain_original_ontology_and_separate_attack_pha
     assert shared['class_mapping'][names.index('type_238__BoxCollider__normal')]==4
     assert shared['class_mapping'][names.index('type_238__SphereCollider__normal')]==5
     assert shared['native_targets']['families']['Crow']['type_ids']==[101,102]
+
+
+def test_thin_support_line_metric_distinguishes_pixel_error_from_missing_geometry():
+    from arena_yolo_obb_score import match,match_support_lines
+    p=profile();classes=p['classes'];rope=next(i for i,c in enumerate(classes)if c['kind']=='rope')
+    def q(x1,x2,y):return segment_quad(dict(x=x1,y=y),dict(x=x2,y=y)).tolist()
+    truth=[(rope,q(0,640,260))];predicted=[(rope,q(0,640,263),.9)]
+    assert not match(truth,predicted,classes)
+    assert match_support_lines(truth,predicted,classes)==[(0,0,3.)]
+    assert not match_support_lines(truth,[(rope,q(0,100,260),.9)],classes)
+    assert not match_support_lines(truth,[(rope,q(0,640,270),.9)],classes)
+
+
+def test_native_zero_type_clone_requires_both_exact_prefab_root_and_original_script():
+    from arena_yolo_obb_data import object_resource
+    p=profile()
+    obj=dict(family_type_id=0,source_type_id=0,name='Crow(Clone)(Clone)',type='EnemyStraightBat')
+    assert object_resource(obj,p)=='Crow'
+    assert object_resource(dict(obj,type='Unknown'),p)is None
+    assert object_resource(dict(obj,name='CrowFake(Clone)'),p)is None
+    assert object_resource(dict(obj,family_type_id=238,name='Crow'),p)=='type_238'

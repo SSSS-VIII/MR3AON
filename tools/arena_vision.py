@@ -583,16 +583,21 @@ class Perception:
             detections.append(Detection(Box(float(x), float(y), float(w), float(h)), kind, confidence))
         return self._finish(rgb,stamp,player,detections,body)
 
-    def _finish(self,rgb,stamp,player,detections,body=None):
+    def _finish(self,rgb,stamp,player,detections,body=None,support_observation=None):
         phase = 'unknown'
         tracks = []
         support=None
-        rope_hint=arrow_score(rgb,95)>.5
+        rope_hint=support_observation is None and arrow_score(rgb,95)>.5
         if rope_hint:
             self.support_mode='rope';self.last_rope_hint=stamp
         on_rope=self.support_mode=='rope'
         terrain=None
-        if not on_rope:
+        if support_observation is not None:
+            self.support_mode=support_observation['mode']
+            on_rope=self.support_mode=='rope'
+            self.rope=support_observation['rope']
+            terrain=support_observation['terrain']
+        elif not on_rope:
             terrain=self.ground.observe(rgb,player,stamp)
         elif (stamp-self.last_rope_hint>1.5 and not self.jump_count and stamp-self.last_action>1.):
             candidate=self.ground.observe(rgb,player,stamp)
@@ -711,12 +716,16 @@ def native_motion_box(observation,name,seconds):
     return result
 
 
-def cap_landing(observation,box,seconds,name):
+def cap_landing(observation,box,seconds,name,forecast_seconds=None):
     if seconds<motion.DATA['profiles'][name]['apex']:
         return box
     support=None
     terrain=observation.get('terrain')
-    if terrain and terrain['y']is not None:
+    if terrain and terrain.get('source')=='neural_segments':
+        from arena_support import landing_height
+        support=landing_height(terrain,box.center[0],seconds if forecast_seconds is None else forecast_seconds,
+                               observation['player'].center[1])
+    elif terrain and terrain['y']is not None:
         x=observation['player'].center[0]+(terrain['speed']or 14*observation.get('scale_px',41.))*seconds
         samples=terrain['samples']
         sample=min(samples,key=lambda s:abs(s[0]-x))if samples else None
@@ -746,10 +755,17 @@ def player_future(observation,seconds):
         h=observation.get('stand_h',p.h)*b[4]/motion.DATA['stand_height']
         result=Box(cx-w/2,cy-h/2,w,h)
         if active['name'].startswith('jump'):
-            result=cap_landing(observation,result,elapsed+seconds,active['name'])
+            result=cap_landing(observation,result,elapsed+seconds,active['name'],forecast_seconds=seconds)
         return result
     phase=observation['phase']
     if phase in ('ground','slide','rope_above','rope_below','unknown'):
+        terrain=observation.get('terrain')
+        if phase in('ground','slide')and terrain and terrain.get('source')=='neural_segments'and terrain['at_player']:
+            from arena_support import height
+            selected=next(s for s in terrain['segments']if s['id']==terrain['selected_id'])
+            current_y=height(selected,p.center[0]);future_y=height(selected,p.center[0],seconds)
+            if current_y is not None and future_y is not None:
+                return Box(p.x,p.y+future_y-current_y,p.w,p.h)
         return p
     scale=observation.get('scale_px',41.)
     vy=observation.get('vy',0.)
@@ -766,7 +782,11 @@ def player_future(observation,seconds):
         dy=vy*seconds+.5*down*seconds*seconds
     terrain=observation.get('terrain')
     landing=None
-    if terrain and terrain['y']is not None:
+    if terrain and terrain.get('source')=='neural_segments':
+        from arena_support import landing_height
+        surface=landing_height(terrain,p.center[0],seconds,p.center[1])
+        if surface is not None:landing=surface-.75*scale
+    elif terrain and terrain['y']is not None:
         x=p.center[0]+(terrain['speed']or 550)*seconds
         samples=terrain['samples']
         sample=min(samples,key=lambda s:abs(s[0]-x)) if samples else None
@@ -785,6 +805,10 @@ def advance_player(observation,seconds):
     if observation['player']is None:
         return current
     current['player']=player_future(observation,seconds)
+    terrain=current.get('terrain')
+    if terrain and terrain.get('source')=='neural_segments':
+        from arena_support import advance_terrain
+        current['terrain']=advance_terrain(terrain,seconds,current['player'].center[0])
     active=observation.get('motion')
     if active:
         elapsed=current['time']-active['started'];name=active['name']
@@ -792,8 +816,11 @@ def advance_player(observation,seconds):
         if motion.is_rope_transition(name)and elapsed>=motion.duration(name,active):
             current.update(motion=None,jumps=0)
         elif name.startswith('jump')and 'falling'in current['phase']:
-            support=observation.get('rope');terrain=observation.get('terrain')
-            if terrain and terrain['y']is not None:support=terrain['y']+7
+            support=current.get('rope');terrain=current.get('terrain')
+            if terrain and terrain.get('source')=='neural_segments':
+                from arena_support import landing_height
+                support=landing_height(terrain,current['player'].center[0],0,current['player'].center[1])
+            elif terrain and terrain['y']is not None:support=terrain['y']+7
             if support is not None:
                 landing=support-.75*observation.get('scale_px',41.)
                 if abs(current['player'].center[1]-landing)<.15:

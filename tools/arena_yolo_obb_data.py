@@ -135,6 +135,20 @@ def segment_quad(a,b,thickness=4):
     return np.array([p-normal,q-normal,q+normal,p+normal],np.float32)
 
 
+def object_resource(obj,profile):
+    family_id=obj.get('family_type_id',obj.get('source_type_id'))
+    resource=profile['type_bindings'].get(str(family_id))
+    if resource is not None:return resource
+    # Native FlyBamboo controller clones have EnemyInfo._enemyType == 0.
+    # Resolve only an exact original prefab root AND matching original script;
+    # never assign a meaning to zero, guess an unknown ID or use fuzzy names.
+    name=obj.get('resource_family',obj.get('name','')).split('(Clone)',1)[0]
+    family=profile['families'].get(name)
+    if family and obj.get('type')in family['script_types']:
+        return name
+    return None
+
+
 def targets(raw,profile):
     if profile.get('taxonomy')=='physics':
         native,counts=targets(raw,profile['native_targets'])
@@ -154,8 +168,7 @@ def targets(raw,profile):
     for collider in row['role']['colliders']or[]:add(0,collider_quad(collider))
     for obj in row.get('objects')or[]:
         if obj.get('dead')or not obj.get('renderers'):continue
-        family_id=obj.get('family_type_id',obj.get('source_type_id'))
-        resource=profile['type_bindings'].get(str(family_id))
+        resource=object_resource(obj,profile)
         if resource is None:
             counts['unbound_family']+=1;continue
         physical=[]
@@ -212,7 +225,7 @@ def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=F
                 row=normalize_arrays(json.loads(line));labels,stats=targets(row,profile);counts.update(stats);counts['frames']+=1
                 if split=='train':
                     for obj in row.get('objects')or[]:
-                        resource=profile['type_bindings'].get(str(obj.get('family_type_id',obj.get('source_type_id'))))
+                        resource=object_resource(obj,profile)
                         if resource:
                             runtime_names[resource].add(obj.get('resource_family',obj['name']).split('(Clone)',1)[0])
                             runtime_types[resource].add(obj['type'])

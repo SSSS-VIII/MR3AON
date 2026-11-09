@@ -17,6 +17,15 @@ PROFILE=json.loads((ROOT/'arena/vision-detector.json').read_text())
 DEFAULT_WEIGHTS=ROOT/PROFILE['weights']
 
 
+def make_perception(weights):
+    from arena_obb_detector import profile_path
+    path=profile_path(weights)
+    if path.is_file()and json.loads(path.read_text()).get('task')=='obb':
+        from arena_obb_detector import ObbDetector,ObbPerception
+        return ObbPerception(ObbDetector(weights))
+    return YoloPerception(YoloDetector(weights))
+
+
 class YoloDetector:
     def __init__(self,weights,confidence=.3):
         weights=Path(weights)

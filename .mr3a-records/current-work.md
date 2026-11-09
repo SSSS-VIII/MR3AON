@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-09：标准OBB纯像素接口已接角色/复合四角/支撑中心线与浮台运动；576帧离线检测至状态P95 13.85ms，弱pilot支撑仍漏，尚未在设备控制/未切默认。原FlyBamboo零类型克隆经原根名+script双匹配追回808训练目标；需重训后重新验收，见[视觉接口](archived/2026-11-09-arena-obb-visual-adapter.md)。
+
 2026-11-09：原参数增量引用已随配对原帧存档，w18三种子504帧/6959对象帧所有引用前置定义、0读取错误/god=false；226/238/257均有原生生成证据，257的EnemyKill触发语义未证明，不能凭名字判断。见[参数归档](archived/2026-11-09-arena-native-parameter-registry.md)。
 
 2026-11-09：旋转四角/角速度/胶囊扫掠已接经典跟踪及Reactive/MPC，6项新保护通过；原生oracle仅钩等连续运动改善，突发攻击仍不能预知，尚未接视觉实机，见[旋转碰撞](archived/2026-11-09-arena-oriented-motion-collision.md)。共享13物理类标准YOLO的同集验证危险物空间召回78.76→84.33%，支撑仍差，未切默认，见[类别试验](archived/2026-11-09-arena-yolo-physics-taxonomy.md)。全arena209通过/2依赖跳过。原生批采继续，禁止并发查询arena。

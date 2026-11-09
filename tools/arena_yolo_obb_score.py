@@ -10,6 +10,30 @@ import cv2
 import numpy as np
 from arena_yolo import offline_sdk
 from arena_yolo_obb_data import targets
+from arena_obb_detector import support_segment
+
+
+def match_support_lines(truth,prediction,classes,tolerance=6.):
+    """Score physical centerlines separately from thin-band polygon IoU."""
+    candidates=[]
+    for i,(c,q)in enumerate(truth):
+        if classes[c]['shape']!='segment':continue
+        a,b=map(np.asarray,support_segment(q))
+        for j,(d,r,_)in enumerate(prediction):
+            if classes[d]['kind']!=classes[c]['kind']:continue
+            x,y=map(np.asarray,support_segment(r))
+            lo=max(a[0],x[0]);hi=min(b[0],y[0])
+            lengths=(b[0]-a[0],y[0]-x[0])
+            if min(lengths)<4 or hi-lo<.5*max(lengths):continue
+            xs=np.array([lo,hi]);ay=a[1]+(b[1]-a[1])*(xs-a[0])/lengths[0]
+            by=x[1]+(y[1]-x[1])*(xs-x[0])/lengths[1]
+            error=float(np.max(abs(ay-by)))
+            if error<=tolerance:candidates.append((error,i,j))
+    used_t=set();used_p=set();pairs=[]
+    for error,i,j in sorted(candidates):
+        if i not in used_t and j not in used_p:
+            used_t.add(i);used_p.add(j);pairs.append((i,j,error))
+    return pairs
 
 
 def polygon_iou(a,b):
@@ -56,6 +80,7 @@ def score(weights,profile_path,episodes,output,stride=1):
     for _ in range(5):model.predict(np.zeros((360,640,3),np.uint8),**options)
     counts={i:Counter()for i in range(len(classes))};modes={m:Counter()for m in('resource','geometry')}
     groups={k:Counter()for k in('player','hazard','cue','rope','platform','floating_platform')}
+    support_counts={k:Counter()for k in('rope','platform','floating_platform')};line_errors=[]
     times=[];frames=0
     with(output/'predictions.jsonl').open('w')as predictions:
         for episode in episodes:
@@ -71,6 +96,12 @@ def score(weights,profile_path,episodes,output,stride=1):
                     if y<55 or(y>275 and(x<135 or x>515)):continue
                     predicted.append((int(c),q.tolist(),float(s)))
                 strict=match(truth,predicted,classes)
+                for c,q in truth:
+                    if classes[c]['kind']in support_counts:support_counts[classes[c]['kind']]['targets']+=1
+                for c,q,s in predicted:
+                    if classes[c]['kind']in support_counts:support_counts[classes[c]['kind']]['predictions']+=1
+                for i,j,error in match_support_lines(truth,predicted,classes):
+                    support_counts[classes[truth[i][0]]['kind']]['matched']+=1;line_errors.append(error)
                 for c,q in truth:
                     counts[c]['targets']+=1;groups[classes[c]['kind']]['targets']+=1
                 for c,q,s in predicted:
@@ -89,6 +120,9 @@ def score(weights,profile_path,episodes,output,stride=1):
                 sha256=hashlib.sha256(weights.read_bytes()).hexdigest(),profile_sha256=hashlib.sha256(profile_path.read_bytes()).hexdigest(),
                 confidence=.25,polygon_iou=.5,per_class={classes[i]['name']:summarize(c)for i,c in counts.items()if c},
                 strict_groups={k:summarize(c)for k,c in groups.items()},
+                support_centerlines={k:summarize(c)for k,c in support_counts.items()},
+                support_line_criteria=dict(max_y_error_px=6,overlap_fraction_of_longer=.5,
+                    matched_max_y_error_median=float(np.median(line_errors))if line_errors else None),
                 hazards_ignoring_phase=summarize(modes['resource']),spatial_hazards=summarize(modes['geometry']),
                 wall_ms=dict(median=float(np.median(times)),p95=float(np.percentile(times,95))),
                 scope='Native gameplay-plane OBBs; spatial matches alone do not prove correct resource/phase/shape or successful control')

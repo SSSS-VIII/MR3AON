@@ -146,8 +146,8 @@ def run(args):
     args.output.mkdir(parents=True, exist_ok=False)
     detector_weights=getattr(args,'detector_weights',None)
     if detector_weights:
-        from arena_yolo_detector import YoloDetector,YoloPerception
-        perception=YoloPerception(YoloDetector(detector_weights))
+        from arena_yolo_detector import make_perception
+        perception=make_perception(detector_weights)
         detector_info=dict(weights=str(detector_weights),sha256=hashlib.sha256(detector_weights.read_bytes()).hexdigest())
     else:
         perception=Perception();detector_info=None
@@ -160,7 +160,8 @@ def run(args):
              'tools/arena_capture.py','arena/Capture/FrameServer.java','tools/arena_yolo_detector.py',
              'tools/arena_yolo_data.py','tools/arena_visual_runner.py','tools/arena_projection.py',
              'arena/vision-camera.json','tools/arena_mpc.py','tools/arena_object_motion.py',
-             'arena/vision-object-priors.json','arena/vision-detector.json')
+             'arena/vision-object-priors.json','arena/vision-detector.json','tools/arena_oriented.py',
+             'tools/arena_obb_detector.py','tools/arena_support.py')
     source_hashes={name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest()for name in sources}
     (args.output / 'setup.json').write_text(json.dumps(dict(seed=args.seed, level=args.level,
         map=args.map, pins=pins, observe=args.observe_only, initial=initial,sources=source_hashes,
