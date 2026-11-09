@@ -50,6 +50,8 @@
 
 实时视觉试跑现有`./tools/run-arena-vision --pin 1:1101 --boards 3`，包含基础识别、速度/轨迹和原动作控制，结束显示暂停菜单。当前有伤跑过三块，策略尚不稳定、未训练网络；计时、日志和限制见 [首版说明](visual-baseline.md)。下方同步ArenaEnv接口仍供步进和标注使用。
 
+现成YOLOE另已接通原资产视觉提示并做离线识别验收；目前准确性失败，尚未替换上述控制器。未训练/微调，见[YOLO实测](yolo-evaluation.md)。
+
 `tools/arena_env.py` 的同步接口接收0/none、1/jump、2/down，返回原PNG、原状态、原分数增量、死亡标记和实际步数。PNG是观测；state/layout是可选的训练标注，不应作为纯视觉策略的输入。每次step结束都会暂停，死亡后必须reset；close只暂停并保留环境。
 
 ```python
@@ -74,7 +76,7 @@ env.close()
 
 这是本地环境接口，尚未训练视觉模型或实现自动竞技场策略。动作1/2表示一次原按钮按下与释放；二段跳需要后续再次发送jump。重置前检查种子/章节/关卡范围，并由原NCONFIG校验实际存在的关卡。
 
-训练须先评审[结构化视觉控制方案](visual-control-proposal.md)：陷阱识别与运动分析、人物位置和动作状态，再交给小型决策器；当前没有实现识别器或训练器。[首轮方案](../.mr3a-records/archived/2026-11-09-arena-visual-policy-research.md)已撤回，仅保留测量与原因。迁移过程见[阶段报告](../.mr3a-records/archived/2026-11-09-arena-client-migration-report.md)。
+已按[结构化视觉控制方案](visual-control-proposal.md)实现首版识别/跟踪和决策基线；现成YOLO的后续试验尚未通过识别验收，当前没有训练器在运行。[首轮方案](../.mr3a-records/archived/2026-11-09-arena-visual-policy-research.md)已撤回，仅保留测量与原因。迁移过程见[阶段报告](../.mr3a-records/archived/2026-11-09-arena-client-migration-report.md)。
 
 ## 独立高速取图
 

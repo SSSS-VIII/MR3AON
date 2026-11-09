@@ -10,7 +10,7 @@ from runtime import InstanceSession
 from PIL import Image
 
 
-def snapshot(output):
+def snapshot(output,*,scene=False):
     output.mkdir(parents=True,exist_ok=False)
     session=InstanceSession('arena')
     client=LocalClient(session)
@@ -20,7 +20,7 @@ def snapshot(output):
                        'assert(load('+json.dumps(source)+'))();return true')
         with FastCapture(session,width=640,height=360)as capture:
             frame=capture.capture()
-            labels=client.execute('return MR3A.vision_labels()',lease_held=True)
+            labels=client.execute('return MR3A.vision_labels('+str(scene).lower()+')',lease_held=True)
             Image.frombytes('RGBA',(640,360),frame.rgba).convert('RGB').save(output/'frame.png')
             (output/'labels.json').write_text(json.dumps(labels,indent=2)+'\n')
         return labels
@@ -31,8 +31,9 @@ def snapshot(output):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output',type=Path,default=ROOT/'debug/arena-client/vision-labels'/str(time.time_ns()))
+    parser.add_argument('--scene',action='store_true',help='Also export visible scene colliders and native support fields')
     args=parser.parse_args()
-    labels=snapshot(args.output)
+    labels=snapshot(args.output,scene=args.scene)
     print(json.dumps(dict(output=str(args.output),objects=len(labels['objects']),tick=labels['tick'])))
 
 
