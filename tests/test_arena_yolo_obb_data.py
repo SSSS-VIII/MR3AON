@@ -141,3 +141,14 @@ def test_support_training_band_changes_only_padding_while_physical_centerline_st
     from arena_yolo_obb_score import centerline_truth
     fixed=centerline_truth(row,dict(p,support_band_px=12),wide)
     assert np.ptp(np.asarray(fixed[0][1])[:,1])==4
+
+
+def test_unknown_visible_spawn_is_reported_instead_of_becoming_silent_background():
+    p=profile();quad=[dict(x=x,y=y)for x,y in [(300,180),(330,180),(330,210),(300,210)]]
+    obj=dict(id=7,name='SpawnedBullet',type='NativeBullet',family_type_id=153,renderers=[dict(box=[300,180,330,210])],
+             colliders=[dict(owner_id=7,tag='Enemy',type='BoxCollider',plane_quad=quad)])
+    row=dict(label_schema=4,role=dict(colliders=[]),objects=[obj],supports=[])
+    labels,stats=targets(row,p)
+    assert not labels and stats['unbound_visible_targets']==1 and stats['unbound_visible_type:153']==1
+    for point in quad:point['x']+=1000
+    assert targets(row,p)[1]['unbound_visible_targets']==0

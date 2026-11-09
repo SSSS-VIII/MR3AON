@@ -126,6 +126,14 @@ def collider_quad(collider):
     return axis_quad([plane.x,plane.y,plane.x+plane.w,plane.y+plane.h])
 
 
+def visible_quad(quad):
+    clipped=clipped_quad(quad)if quad is not None else None
+    if clipped is not None:
+        center=clipped.mean(0)
+        if center[1]>275 and(center[0]<135 or center[0]>515):return None
+    return clipped
+
+
 def segment_quad(a,b,thickness=4):
     delta=np.array([b['x']-a['x'],b['y']-a['y']],float)
     length=np.linalg.norm(delta)
@@ -160,10 +168,8 @@ def targets(raw,profile):
     support_ids={c['kind']:i for i,c in enumerate(profile['classes'])if c['shape']=='segment'}
     result=[];counts=Counter()
     def add(cls,quad):
-        clipped=clipped_quad(quad)if quad is not None else None
+        clipped=visible_quad(quad)
         if clipped is not None:
-            center=clipped.mean(0)
-            if center[1]>275 and(center[0]<135 or center[0]>515):return
             result.append((cls,clipped.tolist()));counts['targets']+=1
             meta=profile['classes'][cls]
             if meta['kind']=='hazard':
@@ -173,9 +179,17 @@ def targets(raw,profile):
     for collider in row['role']['colliders']or[]:add(0,collider_quad(collider))
     for obj in row.get('objects')or[]:
         if obj.get('dead')or not obj.get('renderers'):continue
+        for collider in obj.get('colliders')or[]:
+            if collider.get('owner_id')!=obj['id']:raise ValueError('Native collider ownership mismatch')
         resource=object_resource(obj,profile)
         if resource is None:
-            counts['unbound_family']+=1;continue
+            counts['unbound_family']+=1
+            for collider in obj.get('colliders')or[]:
+                if collider.get('tag')=='Enemy'and visible_quad(collider_quad(collider))is not None:
+                    counts['unbound_visible_targets']+=1
+                    identity=obj.get('family_type_id',obj.get('source_type_id'))
+                    counts['unbound_visible_type:'+str(identity)]+=1
+            continue
         physical=[]
         for collider in obj.get('colliders')or[]:
             if collider.get('owner_id')!=obj['id']:raise ValueError('Native collider ownership mismatch')
@@ -190,7 +204,9 @@ def targets(raw,profile):
             for collider in physical:
                 key=(resource,collider['type'],phase)
                 if key not in keys:
-                    counts['unconfigured_shape']+=1;continue
+                    counts['unconfigured_shape']+=1
+                    if visible_quad(collider_quad(collider))is not None:counts['unconfigured_visible_targets']+=1
+                    continue
                 add(keys[key],collider_quad(collider))
         else:
             boxes=[r['box']for r in obj['renderers']]
@@ -230,6 +246,8 @@ def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=F
             manifest['sources'][str(folder)]=dict(split=split,sha256=hashlib.sha256(labels_file.read_bytes()).hexdigest())
             for line in labels_file.open():
                 row=normalize_arrays(json.loads(line));labels,stats=targets(row,profile);counts.update(stats);counts['frames']+=1
+                if stats['unbound_visible_targets']or stats['unconfigured_visible_targets']:
+                    raise ValueError(f'Visible native collider has no ontology target: {folder}/{row["image"]}: {dict(stats)}')
                 if split=='train':
                     for obj in row.get('objects')or[]:
                         resource=object_resource(obj,profile)

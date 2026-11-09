@@ -110,12 +110,14 @@ def score(weights,profile_path,episodes,output,stride=1):
     groups={k:Counter()for k in('player','hazard','cue','rope','platform','floating_platform')}
     support_counts={k:Counter()for k in('rope','platform','floating_platform')};line_errors=[]
     per_resource={};native_profile=profile.get('native_targets',profile)
+    uncovered=Counter()
     times=[];frames=0
     with(output/'predictions.jsonl').open('w')as predictions:
         for episode in episodes:
             rows=[json.loads(s)for s in(episode/'labels.jsonl').open()]
             for row in rows[::stride]:
-                native_truth,_=targets(row,native_profile)
+                native_truth,stats=targets(row,native_profile)
+                uncovered.update({k:v for k,v in stats.items()if k.startswith('unbound_visible')or k=='unconfigured_visible_targets'})
                 truth=([(profile['class_mapping'][c],q)for c,q in native_truth]
                        if profile.get('taxonomy')=='physics'else native_truth)
                 pixels=cv2.imread(str(episode/row['image']))
@@ -152,6 +154,7 @@ def score(weights,profile_path,episodes,output,stride=1):
                 if frames<8:result.save(str(output/f'{frames:04d}.jpg'))
                 frames+=1
     report=dict(frames=frames,episodes=[str(p)for p in episodes],checkpoint=str(weights),
+                ontology_coverage_accepted=not bool(uncovered),uncovered_native_geometry=dict(uncovered),
                 sha256=hashlib.sha256(weights.read_bytes()).hexdigest(),profile_sha256=hashlib.sha256(profile_path.read_bytes()).hexdigest(),
                 confidence=.25,polygon_iou=.5,per_class={classes[i]['name']:summarize(c)for i,c in counts.items()if c},
                 strict_groups={k:summarize(c)for k,c in groups.items()},
