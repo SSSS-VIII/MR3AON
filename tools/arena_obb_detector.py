@@ -79,6 +79,9 @@ class ObbDetector:
         for _ in range(6):self.model.predict(np.zeros((360,640,3),np.uint8),**self.options)
         self.player_x=180.;self.last_ms=0.
 
+    def reset_tracking(self):
+        self.player_x=180.
+
     def detect(self,rgb):
         begin=time.perf_counter()
         result=self.model.predict(cv2.cvtColor(rgb[:,:,:3],cv2.COLOR_RGB2BGR),**self.options)[0]
@@ -93,6 +96,7 @@ class ObbPerception(Perception):
     """Only pixels and committed own inputs enter this state estimator."""
     def __init__(self,detector):
         super().__init__();self.detector=detector;self.visual_role=True
+        if hasattr(detector,'reset_tracking'):detector.reset_tracking()
         self.tracker=Tracker(adaptive=True);self.supports=VisualSupports();self.last_seen_player=None
 
     def observe(self,rgba,stamp):

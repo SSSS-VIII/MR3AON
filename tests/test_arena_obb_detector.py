@@ -93,3 +93,11 @@ def test_neural_platform_at_same_height_across_gap_does_not_report_character_as_
     result=perception.observe(np.zeros((360,640,4),np.uint8),0)
     assert result['terrain']['at_player']is False
     assert result['phase']=='air_falling'
+
+
+def test_reusing_loaded_model_resets_role_association_between_independent_episodes():
+    class Detector:
+        player_x=2.
+        def reset_tracking(self):self.player_x=180.
+    detector=Detector();ObbPerception(detector)
+    assert detector.player_x==180.
