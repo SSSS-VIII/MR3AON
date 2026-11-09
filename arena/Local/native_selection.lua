@@ -46,6 +46,22 @@ function E.validate_selection(s)
                 for _,map in ipairs(entry.maps) do if map.id==s.map then chapter=map.chapter;level=map.level end end
             end
         end
+        -- Hidden entry-route duplicates remain valid raw IDs for existing API
+        -- profiles. Resolve their original route without rewriting any slots.
+        if not chapter then
+            for _,route in ipairs(catalog.routes) do
+                local offset=route.id>=3 and route.id-1 or 0
+                for _,entry in ipairs(route.levels) do
+                    if entry.id+offset==level then
+                        for _,id in ipairs(entry.maps) do
+                            if id==s.map then chapter=route.id;level=entry.id;break end
+                        end
+                    end
+                    if chapter then break end
+                end
+                if chapter then break end
+            end
+        end
     end
     local allowed=false
     for _,route in ipairs(catalog.routes) do

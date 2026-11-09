@@ -99,3 +99,89 @@ def test_start_detection_uses_action_type_and_preserves_continuation_boards(tmp_
         '_levelActionDataList': [{'_actionType': 29, '_actionName': 'GameStart'}]}}]))
     catalog = build_catalog(files(tmp_path), tmp_path)
     assert catalog['maps']['1']['slots'][0]['pool'][1]['startsGame'] is False
+
+
+def duplicate_files(tmp_path):
+    config = files(tmp_path)
+    config.write_text(json.dumps([{'key_path': [1], 'values': [[
+        {'levelID': 1, 'nextLevelID': 1, 'levelDataList': [4, 1]}]]}]))
+    portal = dict(_levelDataType=6, _levelBlockInfos=[[{'itemInfos': [
+        {'_itemType': 81}, {'_itemType': 100, '_itemInfoCustom': {'_levelActionDataList': [
+            {'_actionType': 15, '_finalParamList': [{'_effectName': 'Portal'}]},
+            {'_actionType': 5, '_finalParamList': [{'_changeType': 14}]}]}}]}]])
+    (tmp_path / 'stage_endless_gale_80.json').write_text(json.dumps(portal))
+    path = tmp_path / 'level_endless_gale_4.bytes.json'
+    source = json.loads((tmp_path / 'level_endless_gale_1.bytes.json').read_text())
+    source[0]['_levelID'] = 4
+    source[0]['_stageRandomGroup'].insert(1, {'_stageRandomList': [{'_stageID': 80, '_weight': 1}]})
+    path.write_text(json.dumps(source))
+    return config, path
+
+
+def test_menu_merges_portal_entry_but_keeps_original_groups_and_ids(tmp_path):
+    config, _ = duplicate_files(tmp_path)
+    catalog = build_catalog(config, tmp_path)
+    assert [v['id'] for v in catalog['levels'][0]['maps']] == [1]
+    assert catalog['routes'][0]['levels'][0]['maps'] == [4, 1]
+    assert len(catalog['maps']['4']['slots']) == 2  # Original entry remains playable via API.
+    assert catalog['maps']['4']['slots'][1]['group'] == 3
+    assert catalog['maps']['4']['menuMap'] == 1
+    assert catalog['maps']['4']['menuBoardOffset'] == 1
+    assert 'menuMap' not in catalog['maps']['1']
+
+
+def test_entry_route_with_smaller_pool_uses_original_complete_representative(tmp_path):
+    config, path = duplicate_files(tmp_path)
+    source = json.loads(path.read_text())
+    source[0]['_stageRandomGroup'][-1]['_stageRandomList'].pop()
+    path.write_text(json.dumps(source))
+    catalog = build_catalog(config, tmp_path)
+    assert [v['id'] for v in catalog['levels'][0]['maps']] == [1]
+    assert [v['id'] for v in catalog['maps']['1']['slots'][0]['pool']] == [11, 12]
+    assert [v['id'] for v in catalog['maps']['4']['slots'][1]['pool']] == [11]
+
+
+@pytest.mark.parametrize('difference', ['weight', 'speed', 'difficulty', 'loop', 'change_stage'])
+def test_gameplay_differences_are_not_merged(tmp_path, difference):
+    config, path = duplicate_files(tmp_path)
+    source = json.loads(path.read_text())
+    group = source[0]['_stageRandomGroup'][-1]
+    if difference == 'weight':
+        group['_stageRandomList'][0]['_weight'] += 1
+    elif difference == 'speed':
+        group['_stageSpeed'] = 30
+    elif difference == 'difficulty':
+        source[0]['_difficultyLevel'] += 1
+    elif difference == 'loop':
+        source[0]['_loopRandomStage'] = {'_stageRandomList': [{'_stageID': 12, '_weight': 1}]}
+    else:
+        source[0]['changeToStageList'] = [12]
+    path.write_text(json.dumps(source))
+    assert [v['id'] for v in build_catalog(config, tmp_path)['levels'][0]['maps']] == [1, 4]
+
+
+def test_portal_action_inside_gameplay_is_not_discarded_as_entry(tmp_path):
+    config, path = duplicate_files(tmp_path)
+    source = json.loads(path.read_text())
+    groups = source[0]['_stageRandomGroup']
+    groups.append(groups.pop(1))
+    path.write_text(json.dumps(source))
+    assert [v['id'] for v in build_catalog(config, tmp_path)['levels'][0]['maps']] == [1, 4]
+
+
+def test_ordinary_maps_with_different_ground_are_not_entry_duplicates(tmp_path):
+    config, path = duplicate_files(tmp_path)
+    source = json.loads(path.read_text())
+    source[0]['_stageRandomGroup'].pop(1)
+    source[0]['_groundType']['value__'] = 8
+    path.write_text(json.dumps(source))
+    assert [v['id'] for v in build_catalog(config, tmp_path)['levels'][0]['maps']] == [1, 4]
+
+
+def test_portal_prefix_with_enemy_is_not_hidden(tmp_path):
+    config, _ = duplicate_files(tmp_path)
+    path = tmp_path / 'stage_endless_gale_80.json'
+    source = json.loads(path.read_text())
+    source['_levelBlockInfos'][0][0]['enemyInfos'] = [{'_enemyType': 1}]
+    path.write_text(json.dumps(source))
+    assert [v['id'] for v in build_catalog(config, tmp_path)['levels'][0]['maps']] == [1, 4]

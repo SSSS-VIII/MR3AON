@@ -88,6 +88,13 @@ for _,bad in ipairs({{level=1,map=8},{level=1,map=7,start=5},
  {level=1,map=7,pins={['1']=22}},{level=1,map=7,pins={['4']=11}}})do
  assert(not pcall(MR3A.validate_selection,bad))
 end
+-- Hidden duplicate IDs still resolve to their original scroll route and slots.
+catalog.routes[2]={id=3,levels={{id=1,maps={24}}}}
+catalog.maps['24']={absoluteLevel=3,menuMap=7,menuBoardOffset=1,
+ opening={},slots={{pool={{id=3100}}},{pool={{id=3101}}}},loop={}}
+local alias=MR3A.validate_selection({level=3,map=24,start=2,pins={['2']=3101}})
+assert(alias.chapter==3 and alias.level==1 and alias.map==24 and alias.start==2 and alias.pins['2']==3101)
+assert(not pcall(MR3A.validate_selection,{level=1,map=24,start=2}))
 local removed={}
 CS.GameBuffManager={Instance={RemoveBuff=function(self,n,id)removed[#removed+1]=id end}}
 MR3A.remove_carrier_buffs({}, {['100']={id=100,fromRole=true}}, {

@@ -8,6 +8,64 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def is_scroll_entry(stage):
+    """Recognize the native portal cutscene by actual items/actions, not its ID."""
+    blocks = [b for group in stage['_levelBlockInfos'] for b in group]
+    if any(b.get('enemyInfos') for b in blocks):
+        return False
+    items = [i for b in blocks for i in b.get('itemInfos', [])]
+    actions = [a for i in items for a in i.get('_itemInfoCustom', {}).get('_levelActionDataList', [])]
+    return (all(i.get('_itemType') in (81, 100) for i in items)
+            and any(i.get('_itemType') == 81 for i in items)
+            and any(a.get('_actionType') == 15 and any(
+                p.get('_effectName') == 'Portal' for p in a.get('_finalParamList', [])) for a in actions)
+            and any(a.get('_actionType') == 5 and any(
+                p.get('_changeType') == 14 for p in a.get('_finalParamList', [])) for a in actions))
+
+
+# These describe the route's initial scene/line context, before its portal.
+# They stay intact in the original map; only menu identity excludes them.
+ENTRY_CONTEXT = {'_levelID', '_stageRandomGroup', '_themeCtrlGround', '_groundType',
+                 '_ninjaBornPos', '_lineSuffix', '_lineIsScaleMode',
+                 'addAirGroundAvoidFall', 'addEnemyGround'}
+
+
+def map_covers(left, right):
+    """Same ordered gameplay, allowing an entry route to have fewer candidates."""
+    if left['settings'] != right['settings'] or len(left['groups']) != len(right['groups']):
+        return False
+    for a, b in zip(left['groups'], right['groups']):
+        if {k: v for k, v in a.items() if k != '_stageRandomList'} != {
+                k: v for k, v in b.items() if k != '_stageRandomList'}:
+            return False
+        if not all(v in a['_stageRandomList'] for v in b['_stageRandomList']):
+            return False
+    return True
+
+
+def unique_maps(pool, maps, content):
+    # Prefer an original map containing every candidate, then the shortest entry.
+    # Never synthesize a union of pools or alter the client's source groups.
+    ordered = sorted(pool.values(), key=lambda v: (
+        -sum(len(g['_stageRandomList']) for g in content[v['id']]['groups']),
+        content[v['id']]['offset'], v['id']))
+    representatives = []
+    for entry in ordered:
+        identity = entry['id']
+        representative = next((v for v in representatives
+                               if map_covers(content[v['id']], content[identity])
+                               and (content[v['id']]['offset'] != content[identity]['offset']
+                                    or (content[v['id']]['groups'] == content[identity]['groups']
+                                        and content[v['id']]['context'] == content[identity]['context']))), None)
+        if representative is None:
+            representatives.append(entry)
+        else:
+            maps[str(identity)]['menuMap'] = representative['id']
+            maps[str(identity)]['menuBoardOffset'] = (
+                content[identity]['offset'] - content[representative['id']]['offset'])
+    return sorted(representatives, key=lambda v: v['id'])
+
+
 def has_game_start(stage):
     for group in stage['_levelBlockInfos']:
         for block in group:
@@ -80,20 +138,24 @@ def build_catalog(config: Path, dataset: Path):
             levels.append(dict(id=value['levelID'], next=value['nextLevelID'], maps=ids))
         routes.append(dict(id=chapter, levels=sorted(levels, key=lambda v: v['id']),
                            label=f'路线 {chapter}' + ('（完整）' if chapter <= 2 else '（跳关）')))
-    maps = {}
+    maps, content = {}, {}
     for identity in sorted(map_ids):
         source = json.loads((dataset / f'level_endless_gale_{identity}.bytes.json').read_text())[0]
         if source['_levelDataType']['value__'] != 6:
             raise ValueError('A non-Gale map cannot enter this catalog')
-        slots, opening = [], []
+        slots, opening, gameplay = [], [], []
+        entry_offset = 0
+        in_entry = True
         for group_index, group in enumerate(source['_stageRandomGroup'], 1):
             pool = []
+            scroll_pool = True
             for candidate in group['_stageRandomList']:
                 stage_id = candidate['_stageID']
                 path = dataset / f'stage_endless_gale_{stage_id}.json'
                 if not path.exists():
                     raise ValueError(f'Missing Gale board {stage_id}')
                 stage = json.loads(path.read_text())
+                scroll_pool = scroll_pool and is_scroll_entry(stage)
                 if stage.get('_levelDataType', 0) != 6:
                     raise ValueError(f'Non-Gale board {stage_id}')
                 blocks = [block for group_ in stage['_levelBlockInfos'] for block in group_]
@@ -103,6 +165,11 @@ def build_catalog(config: Path, dataset: Path):
                 opening.append(dict(group=group_index, pool=pool))
             else:
                 slots.append(dict(position=len(slots) + 1, group=group_index, pool=pool))
+                if in_entry and pool and scroll_pool:
+                    entry_offset += 1
+                else:
+                    in_entry = False
+                    gameplay.append(group)
         loop = []
         for candidate in source.get('_loopRandomStage', {}).get('_stageRandomList', []):
             stage_id = candidate['_stageID']
@@ -114,6 +181,11 @@ def build_catalog(config: Path, dataset: Path):
                              classification=classify_board(stage), entry=entry_info(blocks), opening=False))
         maps[str(identity)] = dict(id=identity, ground=source['_groundType']['value__'],
                                    difficulty=source['_difficultyLevel'], opening=opening, slots=slots, loop=loop)
+        content[identity] = dict(groups=gameplay, offset=entry_offset,
+                                context={k: v for k, v in source.items() if k in ENTRY_CONTEXT
+                                         and k not in ('_levelID', '_stageRandomGroup')},
+                                settings={k: v for k, v in source.items() if k not in ENTRY_CONTEXT
+                                          and not (k == 'changeToStageList' and not v)})
     # The original scroll routes 3..6 begin at absolute levels 3..6.
     # Keep raw route indices for the client; present absolute levels to humans.
     absolute = {}
@@ -127,7 +199,7 @@ def build_catalog(config: Path, dataset: Path):
                 old = maps[str(identity)].setdefault('absoluteLevel', ordinal)
                 if old != ordinal:
                     raise ValueError(f'Conflicting absolute level for map {identity}')
-    levels = [dict(id=k, maps=[v for _, v in sorted(pool.items())]) for k, pool in sorted(absolute.items())]
+    levels = [dict(id=k, maps=unique_maps(pool, maps, content)) for k, pool in sorted(absolute.items())]
     return dict(version=1, mode=6, routes=sorted(routes, key=lambda v: v['id']), maps=maps, levels=levels)
 
 
@@ -141,7 +213,8 @@ def main():
     catalog = build_catalog(a.config, a.dataset)
     a.output.parent.mkdir(parents=True, exist_ok=True)
     a.output.write_text(json.dumps(catalog, ensure_ascii=False, separators=(',', ':')))
-    print(f"Gale catalog: {len(catalog['routes'])} routes, {len(catalog['maps'])} maps → {a.output}")
+    visible = sum(len(level['maps']) for level in catalog['levels'])
+    print(f"Gale catalog: {len(catalog['routes'])} routes, {len(catalog['maps'])} source maps, {visible} menu maps → {a.output}")
 
 
 if __name__ == '__main__':

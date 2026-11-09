@@ -185,12 +185,19 @@ function E.sync_menu()
     local base=level:GetType():GetField('_levelBaseInfo',CS.System.Reflection.BindingFlags.__CastFrom(52)):GetValue(level)
     local identity=base._levelID
     if not E.catalog.maps[tostring(identity)] then identity=E.nativeSelection and E.nativeSelection.map or M.map or E.catalog.levels[1].maps[1].id end
-    M.map=identity;M.absoluteLevel=E.catalog.maps[tostring(M.map)].absoluteLevel;M.seed=E.seed
-    local selection=E.nativeSelection and E.nativeSelection.map==M.map and E.nativeSelection
-    M.position=selection and selection.start or 1
+    local source=E.catalog.maps[tostring(identity)]
+    M.map=source.menuMap or identity;M.absoluteLevel=source.absoluteLevel;M.seed=E.seed
+    local selection=E.nativeSelection and E.nativeSelection.map==identity and E.nativeSelection
+    local offset=source.menuBoardOffset or 0
+    M.position=selection and math.max(1,selection.start-offset) or 1
     M.page=math.floor((M.position-1)/6)+1;M.variantPage=1
     M.pins={}
-    if selection then for k,v in pairs(selection.pins) do M.pins[k]=v end end
+    if selection then
+        for k,v in pairs(selection.pins) do
+            local position=tonumber(k)-offset
+            if position>0 then M.pins[tostring(position)]=v end
+        end
+    end
     local selected=slots(E.catalog.maps[tostring(M.map)])[M.position]
     if selected then M.variantPage=variant_page(selected,M.pins[tostring(M.position)]) end
 end
