@@ -13,6 +13,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import socket
 import subprocess
 import tempfile
 import time
@@ -197,13 +198,17 @@ class InstanceSession:
             raise RuntimeError(f"实例 {self.spec.name} 返回了其它环境的地址，拒绝连接")
         return address + ":5555"
 
-    def _adb_result(self, *args: str, timeout: float = 20, target: bool = True, input_data: bytes | None = None):
+    def _adb_command(self, args, *, target=True):
         command = [shutil.which("adb") or "/usr/bin/adb", "-P", str(self.spec.adb_port)]
         if target:
             if not self._serial:
                 self._serial = self._address()
             command.extend(["-s", self._serial])
         command.extend(args)
+        return command
+
+    def _adb_result(self, *args: str, timeout: float = 20, target: bool = True, input_data: bytes | None = None):
+        command = self._adb_command(args, target=target)
         return subprocess.run(command, input=input_data, capture_output=True, timeout=timeout, env=self.spec.environment(self._serial))
 
     def _adb(self, *args: str, timeout: float = 20, target: bool = True):
@@ -212,12 +217,7 @@ class InstanceSession:
             raise RuntimeError(f"实例 {self.spec.name} 设备操作失败：{result.stderr.decode(errors='replace').strip()}")
         return result.stdout
 
-    def adb(self, *args: str, timeout: float = 20, input_data: bytes | None = None) -> subprocess.CompletedProcess:
-        """在持有控制权时执行设备命令，保留二进制输出、stderr 和退出码。
-
-        只开放本实例的设备传输；服务器、连接和目标选择仍由设备层管理。
-        宿主文件传输的路径权限由上层控制器按自己的工作目录校验。
-        """
+    def _validate_device_adb(self, args):
         if not self._owns_control:
             raise RuntimeError("ADB 操作须先通过 control() 取得实例控制权")
         host_commands = {
@@ -229,11 +229,66 @@ class InstanceSession:
             raise ValueError("ADB 参数须为不含空字节的字符串")
         if args[0].startswith("-") or args[0] in host_commands:
             raise ValueError("设备目标、ADB 服务器和端口由实例层管理，不能从设备命令切换")
+
+    def adb(self, *args: str, timeout: float = 20, input_data: bytes | None = None) -> subprocess.CompletedProcess:
+        """在持有控制权时执行设备命令，保留二进制输出、stderr 和退出码。
+
+        只开放本实例的设备传输；服务器、连接和目标选择仍由设备层管理。
+        宿主文件传输的路径权限由上层控制器按自己的工作目录校验。
+        """
+        self._validate_device_adb(args)
         if not 0 < timeout <= 300:
             raise ValueError("ADB 超时须在 0–300 秒内")
         if input_data is not None and not isinstance(input_data, bytes):
             raise ValueError("ADB 标准输入须为 bytes")
         return self._adb_result(*args, timeout=timeout, input_data=input_data)
+
+    @contextmanager
+    def adb_stream(self, *args: str):
+        """在control租约内使用本实例的常驻双向管道，退出时仅回收自有子进程。
+
+        调用者负责协议超时及读取stderr；不切换设备、不重启ADB服务器。
+        close_fds防止常驻设备监视进程继承控制锁。
+        """
+        self._validate_device_adb(args)
+        process = subprocess.Popen(self._adb_command(args), stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0,
+                                   close_fds=True, env=self.spec.environment(self._serial))
+        try:
+            yield process
+        finally:
+            if process.stdin and not process.stdin.closed:
+                process.stdin.close()
+            try:
+                process.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                process.terminate()
+                try:
+                    process.wait(timeout=1)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait(timeout=1)
+            finally:
+                for stream in (process.stdout, process.stderr):
+                    if stream:
+                        stream.close()
+
+    @contextmanager
+    def device_socket(self, port: int, *, timeout=2):
+        """连接本命名设备上的数据服务；不创建ADB转发或选择其它设备地址。"""
+        if not self._owns_control:
+            raise RuntimeError("设备数据通道须先通过 control() 取得实例控制权")
+        if type(port) is not int or not 1024 <= port <= 65535:
+            raise ValueError("设备服务端口须在1024..65535内")
+        if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not 0 < timeout <= 10:
+            raise ValueError("设备数据通道超时须在(0, 10]内")
+        address = self._address().rsplit(':', 1)[0]
+        connection = socket.create_connection((address, port), timeout=timeout)
+        try:
+            connection.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            yield connection
+        finally:
+            connection.close()
 
     def ensure_ready(self, timeout: float = 180) -> str:
         # 恢复也保持启动入口选择；后台运行仍完成 Android、DHCP 与 ADB 的全部准备。
