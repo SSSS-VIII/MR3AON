@@ -12,11 +12,13 @@ def main():
     p.add_argument('--weights',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
     p.add_argument('--transfer',type=Path,help='Load compatible fine-tuned weights over the standard base checkpoint')
     p.add_argument('--epochs',type=int,default=30);p.add_argument('--batch',type=int,default=8)
+    p.add_argument('--freeze',type=int,default=10,help='Standard Trainer freeze count; 0 fine-tunes the full existing model')
     p.add_argument('--imgsz',type=int,default=640);a=p.parse_args()
-    # The standard model/trainer remain intact; only the first backbone layers
-    # are frozen during this small-data adaptation.
+    # Use the standard model and Trainer; larger native datasets may adapt the
+    # full existing backbone while small-data runs retain the frozen default.
     if a.output.exists():
         p.error('Use a new output directory')
+    if a.freeze<0:p.error('Freeze count must be nonnegative')
     if not a.weights.is_file():
         raise FileNotFoundError(a.weights)
     sdk=offline_sdk();model=sdk.YOLO(str(a.weights))
@@ -24,7 +26,7 @@ def main():
         if not a.transfer.is_file():raise FileNotFoundError(a.transfer)
         model.load(str(a.transfer))
     model.train(data=str(a.data.resolve()),epochs=a.epochs,batch=a.batch,imgsz=a.imgsz,device=0,
-        workers=2,cache=False,amp=True,freeze=10,seed=17,deterministic=True,plots=False,
+        workers=2,cache=False,amp=True,freeze=a.freeze,seed=17,deterministic=True,plots=False,
         project=str(a.output.resolve().parent),name=a.output.name,exist_ok=False,
         optimizer='AdamW',lr0=.001,cos_lr=True,patience=10,close_mosaic=5,mosaic=.25,
         mixup=0,fliplr=0,flipud=0,hsv_h=.015,hsv_s=.2,hsv_v=.25,translate=.05,scale=.2)

@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-10：完整7059训练/6972验证原帧、59正标签原资源的标准YOLO26n-OBB正在官方freeze0/24epoch训练；默认小样本freeze10保留。16窗口新种子仅train补采也在串行运行（coverage-v7，session54358），禁止同时控制arena。见[完整微调](archived/2026-11-10-arena-full-backbone-finetune.md)。
+
 2026-11-10：新OBB按像素实测冲刺速度校正较快关级，标准YOLO缓存验证0.2秒340对横误差中位52.2→6.51px，0.4秒310对107.8→14.1px；是匹配对象预测，未实机，旧默认未变。LK仅2.5%可用已撤回，见[实测冲刺](archived/2026-11-10-arena-observed-rush-speed.md)。
 
 2026-11-10：可见未绑定/未配置Collider现会拒绝构造，评分显式报覆盖不全；70类型扩展目录检查60个train/val回合缺项0。12px带模型自身键回放628帧状态89.31%、中心P95 4.36px，仍有绳漏、未实机。见[未绑定保护](archived/2026-11-10-arena-unbound-geometry-guard.md)。完整批采接近结束，随后全量训练/实机。
