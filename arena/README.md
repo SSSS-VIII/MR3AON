@@ -44,6 +44,8 @@
 
 本地完整提取数据位于 `debug/arena-client/dataset/`，2029张配置表位于 `nconfig-all/`，4813份Lua位于 `lua-recovered/`，157种有配置实体的503包原资源闭包位于 `arena-entities-complete/`（上述路径均相对 `debug/arena-client/`）。恢复方法见 [客户端数据](../docs/develop/竞技场客户端数据.md) 和 [资源恢复](../docs/develop/竞技场原版资源恢复.md)。
 
+完整疾风引用、地面/绳索、预制体碰撞配置及84幅原生参考图见[对象目录](entity-catalog.md)。目录含明确的缺项与动态状态待核对标记，不能等同于检测器已覆盖全部机关。
+
 ## 视觉训练接口
 
 实时视觉试跑现有`./tools/run-arena-vision --pin 1:1101 --boards 3`，包含基础识别、速度/轨迹和原动作控制，结束显示暂停菜单。当前有伤跑过三块，策略尚不稳定、未训练网络；计时、日志和限制见 [首版说明](visual-baseline.md)。下方同步ArenaEnv接口仍供步进和标注使用。
