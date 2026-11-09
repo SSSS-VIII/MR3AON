@@ -114,3 +114,17 @@ def test_native_zero_type_clone_requires_both_exact_prefab_root_and_original_scr
     assert object_resource(dict(obj,type='Unknown'),p)is None
     assert object_resource(dict(obj,name='CrowFake(Clone)'),p)is None
     assert object_resource(dict(obj,family_type_id=238,name='Crow'),p)=='type_238'
+
+
+def test_shared_model_keeps_original_resource_recall_without_claiming_identity_precision():
+    from arena_yolo_obb_score import resource_recalls
+    p=profile();shared=physics_profile(p)
+    crow=next(i for i,c in enumerate(p['classes'])if c['name']=='Crow__SphereCollider__normal')
+    other=next(i for i,c in enumerate(p['classes'])if c['name']=='type_238__SphereCollider__normal')
+    q=[[300,200],[330,200],[330,230],[300,230]];r=[[400,200],[430,200],[430,230],[400,230]]
+    native=[(crow,q),(other,r)];mapped=[(shared['class_mapping'][c],b)for c,b in native]
+    # One shared shape prediction cannot cover a separate, missed resource.
+    result=resource_recalls(native,mapped,[(2,q,.9)],p['classes'],shared['classes'])
+    assert result['Crow']['targets']==1 and result['Crow']['matched']==1
+    assert result['type_238']['targets']==1 and result['type_238']['matched']==0
+    assert 'precision'not in result['Crow']

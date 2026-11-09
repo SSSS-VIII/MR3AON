@@ -68,6 +68,26 @@ def summarize(counter):
                 recall=counter['matched']/max(1,counter['targets']))
 
 
+def resource_recalls(native_truth,truth,prediction,native_classes,classes):
+    """Recall by original truth resource even when model classes are shared.
+
+    A shared detector does not predict original resource identity, so no
+    per-resource precision or recognition accuracy may be inferred here.
+    """
+    selected=[i for i,(c,q)in enumerate(truth)if classes[c]['kind']=='hazard']
+    t=[truth[i]for i in selected];p=[r for r in prediction if classes[r[0]]['kind']=='hazard']
+    counts={}
+    for index in selected:
+        meta=native_classes[native_truth[index][0]]
+        counts.setdefault(meta['resource'],Counter())['targets']+=1
+    for i,j in match(t,p,classes,'geometry'):
+        resource=native_classes[native_truth[selected[i]][0]]['resource'];counter=counts[resource]
+        counter['matched']+=1
+        if classes[t[i][0]]['shape']==classes[p[j][0]]['shape']:counter['shape_matched']+=1
+        if t[i][0]==p[j][0]:counter['class_matched']+=1
+    return counts
+
+
 def score(weights,profile_path,episodes,output,stride=1):
     profile=json.loads(profile_path.read_text());classes=profile['classes']
     output.mkdir(parents=True,exist_ok=False);cv2.setNumThreads(1)
@@ -81,12 +101,16 @@ def score(weights,profile_path,episodes,output,stride=1):
     counts={i:Counter()for i in range(len(classes))};modes={m:Counter()for m in('resource','geometry')}
     groups={k:Counter()for k in('player','hazard','cue','rope','platform','floating_platform')}
     support_counts={k:Counter()for k in('rope','platform','floating_platform')};line_errors=[]
+    per_resource={};native_profile=profile.get('native_targets',profile)
     times=[];frames=0
     with(output/'predictions.jsonl').open('w')as predictions:
         for episode in episodes:
             rows=[json.loads(s)for s in(episode/'labels.jsonl').open()]
             for row in rows[::stride]:
-                truth,_=targets(row,profile);pixels=cv2.imread(str(episode/row['image']))
+                native_truth,_=targets(row,native_profile)
+                truth=([(profile['class_mapping'][c],q)for c,q in native_truth]
+                       if profile.get('taxonomy')=='physics'else native_truth)
+                pixels=cv2.imread(str(episode/row['image']))
                 begin=time.perf_counter();result=model.predict(pixels,**options)[0]
                 quads=result.obb.xyxyxyxy.cpu().numpy();conf=result.obb.conf.cpu().numpy();ids=result.obb.cls.cpu().numpy()
                 times.append((time.perf_counter()-begin)*1000)
@@ -96,6 +120,8 @@ def score(weights,profile_path,episodes,output,stride=1):
                     if y<55 or(y>275 and(x<135 or x>515)):continue
                     predicted.append((int(c),q.tolist(),float(s)))
                 strict=match(truth,predicted,classes)
+                for resource,counter in resource_recalls(native_truth,truth,predicted,native_profile['classes'],classes).items():
+                    per_resource.setdefault(resource,Counter()).update(counter)
                 for c,q in truth:
                     if classes[c]['kind']in support_counts:support_counts[classes[c]['kind']]['targets']+=1
                 for c,q,s in predicted:
@@ -121,6 +147,9 @@ def score(weights,profile_path,episodes,output,stride=1):
                 confidence=.25,polygon_iou=.5,per_class={classes[i]['name']:summarize(c)for i,c in counts.items()if c},
                 strict_groups={k:summarize(c)for k,c in groups.items()},
                 support_centerlines={k:summarize(c)for k,c in support_counts.items()},
+                original_resource_recall={k:dict(c,spatial_recall=c['matched']/max(1,c['targets']))
+                                          for k,c in per_resource.items()},
+                original_resource_scope='Truth-resource spatial recall only; shared model classes do not predict original resource identity',
                 support_line_criteria=dict(max_y_error_px=6,overlap_fraction_of_longer=.5,
                     matched_max_y_error_median=float(np.median(line_errors))if line_errors else None),
                 hazards_ignoring_phase=summarize(modes['resource']),spatial_hazards=summarize(modes['geometry']),
