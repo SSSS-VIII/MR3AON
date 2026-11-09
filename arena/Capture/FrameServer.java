@@ -54,15 +54,24 @@ public final class FrameServer {
             }, durationMs, TimeUnit.MILLISECONDS);
         }
         synchronized void release(int code) throws Exception {
-            KeyEvent event = held.remove(code);
-            if (event != null) inject.invoke(manager, KeyEvent.changeAction(event, KeyEvent.ACTION_UP), 0);
+            KeyEvent event = held.get(code);
+            if (event != null) {
+                KeyEvent up = new KeyEvent(event.getDownTime(), SystemClock.uptimeMillis(),
+                        KeyEvent.ACTION_UP, code, 0, event.getMetaState(), event.getDeviceId(),
+                        event.getScanCode(), event.getFlags(), event.getSource());
+                if (!Boolean.TRUE.equals(inject.invoke(manager, up, 0))) {
+                    throw new IOException("Keyboard release was rejected");
+                }
+                held.remove(code);
+            }
         }
         synchronized void close() throws Exception {
             releases.shutdownNow();
-            for (KeyEvent event : held.values()) {
-                inject.invoke(manager, KeyEvent.changeAction(event, KeyEvent.ACTION_UP), 0);
+            Exception failure = null;
+            for (Integer code : held.keySet().toArray(new Integer[0])) {
+                try { release(code); } catch (Exception error) { if (failure == null) failure = error; }
             }
-            held.clear();
+            if (failure != null) throw failure;
         }
     }
 
@@ -150,7 +159,7 @@ public final class FrameServer {
                     if (keys == null) keys = new Keys();
                     keys.tap(command == 3 ? KeyEvent.KEYCODE_K
                             : command == 4 || command == 6 ? KeyEvent.KEYCODE_S : KeyEvent.KEYCODE_P,
-                            command == 6 ? 500 : 30);
+                            command == 6 ? 500 : 80);
                     captured = ready = System.nanoTime();
                 }
                 out.writeInt(0x4d523346); // MR3F
