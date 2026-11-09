@@ -87,7 +87,7 @@ class MpcAvoider(VisualAvoider):
         if obs.get('rope')is None or obs.get('terrain'):
             return super().choose(obs)
         tracks=self._objects(obs)
-        if not tracks:return None,'clear'
+        if not tracks:return super().choose(obs)
         # The reactive native-action controller is cheaper and currently better
         # on unmodelled entry/dash hazards. Search uses bouncing crossings and
         # learned native attack phases, never stage or elapsed board time.

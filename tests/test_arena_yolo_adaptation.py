@@ -250,3 +250,13 @@ def test_ready_onset_is_between_exposures_not_at_the_later_image():
     t.update(Detection(t.box,'eye_enemy',.9,False,True,'ready'),1.06,(180,260))
     assert t.ready_started==pytest.approx(1.03)
     assert t.ready_remaining==pytest.approx(.27)
+
+
+def test_search_returns_to_upper_rope_after_threats_leave():
+    from arena_mpc import MpcAvoider
+    policy=MpcAvoider()
+    obs=dict(player=Box(172,240,16,37),rope=219.,phase='rope_below',
+             jumps=0,tracks=[],terrain=None,time=1.)
+    assert policy.choose(obs)==(None,'clear')
+    obs['time']=1.8
+    assert policy.choose(obs)==('jump','neutral_above')
