@@ -306,6 +306,7 @@ function E.reset(seed, chapter, level)
     U.Time.captureFramerate=60
     U.Time.timeScale=1
     gm:PauseGameContent()
+    if E.clear_mount_training then E.clear_mount_training() end
     -- Use the native level teardown order while the old ownership graph is
     -- intact, including block-owned events/platforms and pooled screen effects.
     CS.LevelPoolManager.Instance:RecycleAllBlock()

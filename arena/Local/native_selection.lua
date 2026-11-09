@@ -204,6 +204,7 @@ function E.native_select(spec,seed)
                 -- Boss/loop blocks extend while running. Use the original
                 -- generated StageStartX, never a sum of static block widths.
                 mount:RushAtGameStart(true,100000)
+                E.travel.rushSpeed=E.set_mount_rush_speed(mount.Mount)
                 U.Time.captureFramerate=60;U.Time.timeScale=1
                 local mounted=false
                 local target

@@ -58,7 +58,7 @@ class LocalClient:
                 self.session.adb("push", str(catalog), f"{FOLDER}/catalog-native.tmp").check_returncode()
                 self.session.adb("shell", "mv", f"{FOLDER}/catalog-native.tmp", f"{FOLDER}/catalog-native.json").check_returncode()
         chunks = []
-        for name in ("environment", "native_selection", "native_boss", "native_menu"):
+        for name in ("environment", "native_mount", "native_selection", "native_boss", "native_menu"):
             path = ROOT / f"arena/Local/{name}.lua"
             if path.exists():
                 chunks.append("assert(load(" + json.dumps(path.read_text(), ensure_ascii=False) + ", '@mr3a-" + name + "'))()")
