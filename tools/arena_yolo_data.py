@@ -15,6 +15,11 @@ import numpy as np
 from arena_native_json import normalize_arrays
 
 NAMES=['player','spider','flying','pinball','trap','projectile']
+STATE_NAMES=NAMES+['flying_ready','flying_rush']
+
+
+class MissingControllerState(ValueError):
+    pass
 
 
 def category(resource):
@@ -44,7 +49,7 @@ def clipped(box):
     return [float(x1),float(y1),float(x2),float(y2)]
 
 
-def annotations(row):
+def annotations(row,states=False):
     row=normalize_arrays(row)
     result=[]
     role=envelope([c['box']for c in row['role']['colliders']])
@@ -52,6 +57,8 @@ def annotations(row):
         box=clipped(role)
         if box:result.append((0,box))
     for obj in row.get('objects',[])or[]:
+        if obj.get('dead'):
+            continue
         # New captures distinguish hidden state from an active EnemyBase. Legacy
         # captures are accepted only for always-rendered basic enemy families.
         resource=obj['name'].split('(Clone)',1)[0]
@@ -66,7 +73,15 @@ def annotations(row):
         if cy<55 or (cy>275 and (cx<135 or cx>515)):
             continue
         box=clipped(box)
-        if box:result.append((category(resource),box))
+        if box:
+            cls=category(resource)
+            if states and obj['type']=='EnemyStraightBat':
+                state=obj.get('controller',{}).get('_currState')
+                if state is None:
+                    raise MissingControllerState('Visible straight crow lacks native controller state')
+                state=state.split(':')[0]
+                cls={'ready':6,'rushToNinja':7}.get(state,2)
+            result.append((cls,box))
     return result
 
 
@@ -128,7 +143,7 @@ def synthesize(background,base_labels,bank,rng):
     return image,labels,resources
 
 
-def build(output,train,validation,references,synthetic=1600):
+def build(output,train,validation,references,synthetic=1600,states=False):
     overlap={p.resolve()for p in train}&{p.resolve()for p in validation}
     if overlap:
         raise ValueError('Episodes must be disjoint across splits')
@@ -139,7 +154,12 @@ def build(output,train,validation,references,synthetic=1600):
             (output/part/split).mkdir(parents=True)
         for folder in folders:
             for line in(folder/'labels.jsonl').open():
-                row=json.loads(line);labels=annotations(row);name=folder.name+'-'+row['image']
+                row=json.loads(line)
+                try:labels=annotations(row,states)
+                except MissingControllerState:
+                    counts[split+'_skipped_missing_state']+=1
+                    continue
+                name=folder.name+'-'+row['image']
                 dest=output/'images'/split/name;dest.symlink_to((folder/row['image']).resolve())
                 (output/'labels'/split/Path(name).with_suffix('.txt')).write_text(label_text(labels))
                 records.append(dict(split=split,origin='native',episode=str(folder),image=name,labels=len(labels)))
@@ -160,7 +180,9 @@ def build(output,train,validation,references,synthetic=1600):
     if not backgrounds:
         raise ValueError('Need enemy-free training backgrounds')
     bank=sprite_bank(references)
-    for split,n,seed in [('train',synthetic,17),('val',max(100,synthetic//6),119)]:
+    if states:
+        bank=[r for r in bank if r['resource']!='EnemyStraightCrow']
+    for split,n,seed in [('train',synthetic,17),('val',0 if states else max(100,synthetic//6),119)]:
         rng=np.random.default_rng(seed)
         for i in range(n):
             file,base=backgrounds[int(rng.integers(len(backgrounds)))];image=cv2.imread(str(file))
@@ -169,12 +191,13 @@ def build(output,train,validation,references,synthetic=1600):
             (output/'labels'/split/Path(name).with_suffix('.txt')).write_text(label_text(labels))
             records.append(dict(split=split,origin='composite',image=name,resources=resources,labels=len(labels)))
             counts[split+'_synthetic']+=1
-    config=dict(path=str(output.resolve()),train='images/train',val='images/val',names=NAMES)
+    names=STATE_NAMES if states else NAMES
+    config=dict(path=str(output.resolve()),train='images/train',val='images/val',names=names)
     (output/'data.yaml').write_text(json.dumps(config,indent=2)+'\n')
     (output/'manifest.json').write_text(json.dumps(dict(counts=counts,train=[str(p)for p in train],
         validation=[str(p)for p in validation],target='native collider envelope; items negative',
         source_hashes={str(p):hashlib.sha256((p/'labels.jsonl').read_bytes()).hexdigest()for p in train+validation},
-        references=str(references),classes=NAMES),indent=2)+'\n')
+        references=str(references),classes=names),indent=2)+'\n')
     (output/'samples.jsonl').write_text(''.join(json.dumps(r)+'\n'for r in records))
     print(json.dumps(dict(counts=counts,templates=len(bank))),flush=True)
 
@@ -183,4 +206,5 @@ if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=Path,required=True)
     p.add_argument('--train',type=Path,nargs='+',required=True);p.add_argument('--validation',type=Path,nargs='+',required=True)
     p.add_argument('--references',type=Path,required=True);p.add_argument('--synthetic',type=int,default=1600)
-    a=p.parse_args();build(a.output,a.train,a.validation,a.references,a.synthetic)
+    p.add_argument('--states',action='store_true',help='Native-labelled straight-crow ready/rush classes')
+    a=p.parse_args();build(a.output,a.train,a.validation,a.references,a.synthetic,a.states)
