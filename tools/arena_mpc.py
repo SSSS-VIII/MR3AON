@@ -5,7 +5,7 @@ from arena_vision import advance_player,native_motion_box,create_motion,can_air_
 from arena_policy import VisualAvoider
 import arena_motion as motion
 from arena_object_motion import PRIORS
-from arena_oriented import is_box,transform,swept_capsules
+from arena_oriented import is_box,swept_capsules
 
 
 @dataclass
@@ -124,8 +124,12 @@ class MpcAvoider(VisualAvoider):
         has_oriented=bool(np.any(oriented))
         if has_oriented:
             indices=np.flatnonzero(oriented)
-            quads=np.array([[transform(tracks[j].quad,tracks[j].angular_velocity*t,boxes[i,j,:2])
-                             for j in indices]for i,t in enumerate(times)])
+            base=np.array([tracks[j].quad for j in indices]);offsets=base-base.mean(axis=1,keepdims=True)
+            angles=times[:,None]*np.array([tracks[j].angular_velocity for j in indices])[None,:]
+            cos=np.cos(angles)[:,:,None];sin=np.sin(angles)[:,:,None]
+            quads=np.stack((offsets[None,:,:,0]*cos-offsets[None,:,:,1]*sin,
+                            offsets[None,:,:,0]*sin+offsets[None,:,:,1]*cos),axis=-1)
+            quads+=boxes[:,indices,None,:2]
             radius=np.linalg.norm(quads[0]-quads[0].mean(axis=1,keepdims=True),axis=2).max(axis=1)
             step_angle=np.array([abs(tracks[j].angular_velocity)*self.STEP/2 for j in indices])
             sagitta=radius*(1-np.cos(np.minimum(np.pi,step_angle)/2))

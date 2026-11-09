@@ -72,3 +72,16 @@ def test_actual_policy_and_search_use_observed_quad_instead_of_empty_aabb_corner
     assert VisualAvoider()._risk(dict(obs,tracks=[replace(track,quad=None,collider_shape=None)]),'none')[0]>0
     other=replace(track,id=2,quad=transform(q,0,(550,100)),box=Box(*bounds(transform(q,0,(550,100)))),angular_velocity=1.)
     assert MpcAvoider().choose(dict(obs,tracks=[track,other]))==(None,'mpc_wait')
+
+
+def test_sweep_culling_preserves_pair_identity_and_per_obstacle_rotation_padding():
+    before=np.array([[100,200,10,40],[300,200,10,40],[500,300,10,40]],float)
+    after=before.copy();after[:,0]+=50
+    old=np.array([[[145,180],[155,180],[155,220],[145,220]],
+                  [[700,300],[710,300],[710,350],[700,350]]],float)
+    new=old.copy();new[1,:,0]-=170
+    actual=swept_capsules(before,after,old,new,2,3,np.array([0,4]))
+    assert actual.tolist()==[[True,False],[False,False],[False,True]]
+    for i in range(3):
+        for j in range(2):
+            assert actual[i,j]==swept_capsules(before[i:i+1],after[i:i+1],old[j:j+1],new[j:j+1],2,3,j*4)[0,0]

@@ -81,29 +81,37 @@ def swept_capsules(before,after,old,new,margin_x=0,margin_y=0,sagitta=0):
     """
     a=np.asarray(old)[None,:,:,:]-before[:,None,None,:2]
     b=np.asarray(new)[None,:,:,:]-after[:,None,None,:2]
-    points=np.concatenate((a,b),axis=2)
     radius=np.maximum(np.minimum(before[:,2],before[:,3]),np.minimum(after[:,2],after[:,3]))/2
     core_x=np.maximum(0,np.maximum((before[:,2]-before[:,3])/2,(after[:,2]-after[:,3])/2))
     core_y=np.maximum(0,np.maximum((before[:,3]-before[:,2])/2,(after[:,3]-after[:,2])/2))
-    old_edges=np.roll(a,-1,axis=2)-a;new_edges=np.roll(b,-1,axis=2)-b
-    bridges=(b[:,:,:,None,:]-a[:,:,None,:,:]).reshape(*a.shape[:2],16,2)
-    edges=np.concatenate((old_edges,new_edges,bridges),axis=2)
+    sagitta=np.broadcast_to(np.asarray(sagitta),a.shape[:2])
+    lower=np.minimum(a.min(axis=2),b.min(axis=2));upper=np.maximum(a.max(axis=2),b.max(axis=2))
+    extent=np.stack((radius+core_x+margin_x,radius+core_y+margin_y),axis=1)[:,None,:]+sagitta[:,:,None]
+    possible=np.all((lower<=extent)&(upper>=-extent),axis=2)
+    rows,cols=np.nonzero(possible);result=np.zeros(a.shape[:2],bool)
+    if not len(rows):return result
+    # Reject separated AABBs before constructing expensive candidate axes.
+    # Each remaining row is one actual player/obstacle pair, not their product.
+    a=a[rows,cols];b=b[rows,cols];points=np.concatenate((a,b),axis=1)
+    radius=radius[rows];core_x=core_x[rows];core_y=core_y[rows];sagitta=sagitta[rows,cols,None]
+    old_edges=np.roll(a,-1,axis=1)-a;new_edges=np.roll(b,-1,axis=1)-b
+    bridges=(b[:,:,None,:]-a[:,None,:,:]).reshape(len(a),16,2)
+    edges=np.concatenate((old_edges,new_edges,bridges),axis=1)
     normals=np.stack((-edges[...,1],edges[...,0]),axis=-1)
-    spine=np.stack((core_x,core_y),axis=1)[:,None,None,:]
-    directions=np.concatenate((points-spine,points+spine),axis=2)
-    fixed=np.broadcast_to(np.eye(2),(*a.shape[:2],2,2))
-    axes=np.concatenate((normals,directions,fixed),axis=2)
+    spine=np.stack((core_x,core_y),axis=1)[:,None,:]
+    directions=np.concatenate((points-spine,points+spine),axis=1)
+    fixed=np.broadcast_to(np.eye(2),(len(a),2,2))
+    axes=np.concatenate((normals,directions,fixed),axis=1)
     norm=np.linalg.norm(axes,axis=-1,keepdims=True);valid=norm[...,0]>1e-10
     axes=axes/np.maximum(norm,1e-10)
-    projection=np.einsum('nkad,nkpd->nkap',axes,points)
-    sagitta=np.asarray(sagitta)
-    if sagitta.ndim==1:sagitta=sagitta[None,:,None]
-    support=(radius[:,None,None]+abs(axes[...,0])*core_x[:,None,None]
-             +abs(axes[...,1])*core_y[:,None,None]
+    projection=np.einsum('mad,mpd->map',axes,points)
+    support=(radius[:,None]+abs(axes[...,0])*core_x[:,None]
+             +abs(axes[...,1])*core_y[:,None]
              +abs(axes[...,0])*(margin_x+sagitta)
              +abs(axes[...,1])*(margin_y+sagitta))
     separated=(projection.min(-1)>support)|(projection.max(-1)<-support)
-    return ~np.any(separated&valid,axis=-1)
+    result[rows,cols]=~np.any(separated&valid,axis=-1)
+    return result
 
 
 def is_box(track):
