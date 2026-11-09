@@ -1,7 +1,16 @@
 {
   "model": "Ultralytics YOLO26n",
-  "weights": "debug/arena-client/yolo/finetune/fit-v2/weights/best.pt",
-  "sha256": "61a8c70a322094e9d0ceeab3153b27671c8aa4cd20096dcac33370599586389a",
-  "classes": ["player", "spider", "flying", "pinball", "trap", "projectile"],
-  "evaluation": "Experimental: independent native detection evaluation and partial arena board tests; not full Gale acceptance"
+  "weights": "debug/arena-client/yolo/finetune/fit-claw-v4/weights/best.pt",
+  "sha256": "6a03514e61f94ab8efd7dcee33c9e5fb9c218a91f8e9a643e3900661dcd29256",
+  "classes": [
+    "player",
+    "spider",
+    "flying",
+    "pinball",
+    "trap",
+    "projectile",
+    "flying_ready",
+    "flying_rush"
+  ],
+  "evaluation": "Experimental: held-out native collider detections and partial arena board control; six native resource families, not full Gale acceptance"
 }
