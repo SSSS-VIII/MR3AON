@@ -24,7 +24,7 @@ from runtime import InstanceSession
 from arena_native_json import normalize_arrays
 
 
-def collect(output, *, seed=42, board=11012, seconds=18, ticks=4,explore=False,pins=None,start=1):
+def collect(output, *, seed=42, board=11012, seconds=18, ticks=4,explore=False,pins=None,start=1,level=1,map_id=1):
     output.mkdir(parents=True,exist_ok=False)
     cv2.setNumThreads(1)
     session=InstanceSession('arena'); client=LocalClient(session)
@@ -34,10 +34,10 @@ def collect(output, *, seed=42, board=11012, seconds=18, ticks=4,explore=False,p
     count=0
     try:
         selected={str(start):board}|(pins or {})
-        initial=prepare(client,seed,1,1,selected,start=start)
+        initial=prepare(client,seed,level,map_id,selected,start=start)
         client.execute('assert(load('+json.dumps(source)+'))();assert(load('+json.dumps(paired)+'))();return true')
         (output/'setup.json').write_text(json.dumps(dict(seed=seed,board=board,ticks=ticks,
-            seconds=seconds,initial=initial,explore=explore,pins=selected,start=start,
+            seconds=seconds,initial=initial,explore=explore,pins=selected,start=start,level=level,map=map_id,
             collection_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             preparation_sha256=hashlib.sha256((ROOT/"tools/arena_visual_runner.py").read_bytes()).hexdigest(),
             label_sha256=hashlib.sha256(source.encode()).hexdigest(),
@@ -96,15 +96,17 @@ def main():
     parser.add_argument('--board',type=int,default=11012)
     parser.add_argument('--seconds',type=float,default=18)
     parser.add_argument('--start',type=int,default=1,help='Native board position at which paired collection begins')
+    parser.add_argument('--level',type=int,default=1,help='Native absolute Gale level')
+    parser.add_argument('--map',type=int,default=1,help='Map ID in the native level pool')
     parser.add_argument('--ticks',type=int,default=4)
     parser.add_argument('--explore',action='store_true',help='Sample original jump/flip actions for pose coverage')
     parser.add_argument('--pin',action='append',default=[],help='Native board choice position:variant')
     args=parser.parse_args()
-    if not 0<args.seconds<=90 or not 1<=args.ticks<=10 or args.start<1:
+    if not 0<args.seconds<=90 or not 1<=args.ticks<=10 or min(args.start,args.level,args.map)<1:
         parser.error('Collection limits out of range')
     pins={key:int(value)for key,value in(item.split(':',1)for item in args.pin)}
     print(json.dumps(collect(args.output,seed=args.seed,board=args.board,seconds=args.seconds,ticks=args.ticks,
-                             explore=args.explore,pins=pins,start=args.start)))
+                             explore=args.explore,pins=pins,start=args.start,level=args.level,map_id=args.map)))
 
 
 if __name__=='__main__':
