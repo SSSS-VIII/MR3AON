@@ -3,12 +3,14 @@ from arena_vision import Box,player_future,native_motion_box
 import arena_motion as motion
 
 
-def touching(player,hazard,margin=4):
+def touching(player,hazard,margin=4,*,shape="ellipse"):
     """Capsule/expanded-ellipse approximation, never a replacement game collider."""
     x,y=player.center;hx,hy=hazard.center
     dx=max(0,abs(x-hx)-max(0,(player.w-player.h)/2))
     dy=max(0,abs(y-hy)-max(0,(player.h-player.w)/2))
     radius=min(player.w,player.h)/2
+    if shape=='box':
+        return max(0,dx-hazard.w/2)**2+max(0,dy-hazard.h/2)**2<(radius+margin)**2
     return (dx/(hazard.w/2+radius+margin))**2+(dy/(hazard.h/2+radius+margin))**2<1
 
 
@@ -62,7 +64,7 @@ class Avoider:
             t=step*.04
             p=self._path(obs,action,t)
             for track in objects:
-                if track.id not in hits and touching(p,self._hazard(track,t)):
+                if track.id not in hits and touching(p,self._hazard(track,t),shape='box'if track.kind=='trap'else'ellipse'):
                     hits[track.id]=(t,track)
         cost=sum(100*(1+(.8-t)*2) for t,_ in hits.values())
         return cost,min((t for t,_ in hits.values()),default=10),hits

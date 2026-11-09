@@ -277,3 +277,26 @@ def test_visible_hazards_keep_tracking_while_role_is_outside_image():
     returned=p._finish(rgb,1.2,role,[enemy('ready')])
     assert returned['tracks'][0].observations==3
     assert returned['tracks'][0].ready_remaining==pytest.approx(.15)
+
+
+def test_trap_box_corners_are_not_replaced_by_an_inscribed_ellipse():
+    from arena_policy import touching
+    from arena_mpc import swept_distances
+    player=Box(188,188,10,10);hazard=Box(100,100,100,100)
+    assert not touching(player,hazard,margin=0)
+    assert touching(player,hazard,margin=0,shape='box')
+    assert not touching(Box(204,204,10,10),hazard,margin=0,shape='box')
+    roles=np.array([[193,193,10,10],[250,250,10,10]],float)
+    traps=np.array([[150,150,50,50]],float)
+    assert (swept_distances(roles,roles,traps,traps,0,[True])<1).tolist()==[[True],[False]]
+
+
+def test_rectangular_sweep_checks_between_samples_and_leaves_spheres_unchanged():
+    from arena_mpc import swept_distances
+    player=np.array([[193,193,10,10]],float)
+    before=np.array([[100,150,20,50],[150,150,50,50]],float)
+    after=np.array([[280,150,20,50],[150,150,50,50]],float)
+    old=swept_distances(player,player,before,after,0)
+    mixed=swept_distances(player,player,before,after,0,[True,False])
+    assert mixed[0,0]<1
+    assert mixed[0,1]==old[0,1]and mixed[0,1]>1

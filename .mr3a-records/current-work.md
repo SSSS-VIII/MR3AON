@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-09：依据原隐藏爪BoxCollider修正trap预测误用内接椭圆，55项相关/全arena174项通过、2依赖跳过；实机待v4权重。四段claw采集结束，63随机探索在20.88秒跌落，保留349帧独立验收，不重选好样本；官方Trainer进行12epoch适配。见[矩形预测范围](archived/2026-11-09-arena-rectangular-hazard-prediction.md)。
+
 2026-11-09：配对采集已复用原生start指定位置，首段claw60确认11031/序号2、368帧723个隐藏爪目标；claw62/61/63继续采集，后续用官方Trainer补八类模型，尚未验收。见[定点原生采集](archived/2026-11-09-arena-native-targeted-collection.md)。
 
 2026-11-09：八类闭环复现及真实失败范围已同步arena文档/回放。仅重启arena应用完成诊断资源引用清理，启动确认5000血；最初56/58误选蜘蛛已排除，现按原目录第三位置11031采集60/62训练、61验证、63独立测试，当前属开发中，默认权重不切换。见[检查点](archived/2026-11-09-arena-visual-checkpoint.md)。

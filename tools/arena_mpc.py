@@ -29,11 +29,11 @@ def player_array(states):
     return np.array([[*s['player'].center,s['player'].w,s['player'].h]for s in states])
 
 
-def swept_distances(before,after,old,new,margin):
+def swept_distances(before,after,old,new,margin,box_hazards=None):
     """All candidate capsules against all hazards in one broadcast operation.
 
     Player rows are centerX/centerY/width/height, hazard rows centerX/centerY/
-    radiusX/radiusY. Preserve the same conservative swept geometry per pair.
+    halfWidth/halfHeight. Preserve the same conservative swept geometry per pair.
     """
     radius=np.maximum(np.minimum(before[:,2],before[:,3]),np.minimum(after[:,2],after[:,3]))/2
     rx=np.maximum(old[:,2],new[:,2])[None,:]+radius[:,None]+margin
@@ -52,6 +52,22 @@ def swept_distances(before,after,old,new,margin):
     fraction=-a[:,:,0]/np.where(abs(v[:,:,0])>1e-9,v[:,:,0],1e-9)
     intersects=(fraction>=0)&(fraction<=1)&(abs(a[:,:,1]+fraction*v[:,:,1])<=spine)
     distance[intersects]=0
+    if box_hazards is not None and np.any(box_hazards):
+        # Unknown trap orientation uses its observed AABB conservatively.
+        # An ellipse inscribed in that box would miss its dangerous corners.
+        relative=old[None,:,:2]-before[:,None,:2]
+        velocity=(new[None,:,:2]-after[:,None,:2])-relative
+        extent=np.maximum(old[:,2:],new[:,2:])[None,:,:]+radius[:,None,None]+margin
+        extent=np.broadcast_to(extent,relative.shape).copy();extent[:,:,1]+=core[:,None]
+        parallel=abs(velocity)<1e-9;safe=np.where(parallel,1.,velocity)
+        lo=(-extent-relative)/safe;hi=(extent-relative)/safe
+        enter=np.minimum(lo,hi);leave=np.maximum(lo,hi)
+        outside=abs(relative)>extent
+        enter=np.where(parallel,np.where(outside,np.inf,-np.inf),enter)
+        leave=np.where(parallel,np.where(outside,-np.inf,np.inf),leave)
+        crossing=np.maximum(0,enter.max(axis=2))<=np.minimum(1,leave.min(axis=2))
+        rectangular=np.where(crossing,0,np.maximum(1.,distance))
+        distance=np.where(np.asarray(box_hazards)[None,:],rectangular,distance)
     return distance
 
 
@@ -97,6 +113,7 @@ class MpcAvoider(VisualAvoider):
         times=np.arange(self.STEPS*2+1)*self.STEP/2
         boxes=np.array([[[b.center[0],b.center[1],b.w/2,b.h/2]
                          for track in tracks for b in[self._hazard(track,t)]]for t in times])
+        box_hazards=np.array([t.kind=='trap'for t in tracks])
         beam=[Node(obs)];now=obs['time']
         for step in range(self.STEPS):
             branches=[]
@@ -112,7 +129,8 @@ class MpcAvoider(VisualAvoider):
             for sample in(0,1):
                 index=step*2+sample
                 d=swept_distances(positions[sample],positions[sample+1],
-                                  boxes[index],boxes[index+1],8+times[index+1]*8)
+                                  boxes[index],boxes[index+1],8+times[index+1]*8,
+                                  box_hazards=box_hazards)
                 distances.append(d);near.append(np.maximum(0,1.4-d).sum(axis=1)*.002)
             pool={}
             for i,(node,state,half,end,name)in enumerate(branches):
