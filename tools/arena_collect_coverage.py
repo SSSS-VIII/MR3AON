@@ -58,7 +58,13 @@ def jobs_for(plan,splits,base_seed):
         raise ValueError('Expected distinct train/val/test splits')
     if plan.get('mode')!=6:
         raise ValueError('Only Gale collection is supported')
-    return [dict(split=split,window=i,seed=base_seed+i*3+offsets[split],spec=entry['spec'],
+    if any('replay_training_seed'in e for e in plan['selected'])and list(splits)!=['train']:
+        raise ValueError('A recorded training seed can only be revisited in the training split')
+    for entry in plan['selected']:
+        seed=entry.get('replay_training_seed',0)
+        if not isinstance(seed,int)or isinstance(seed,bool)or not 0<=seed<=2147483647:
+            raise ValueError('Invalid recorded training seed')
+    return [dict(split=split,window=i,seed=entry.get('replay_training_seed',base_seed+i*3+offsets[split]),spec=entry['spec'],
                  expected_resources=entry['resources'],expected_types=entry['enemy_types'])
             for i,entry in enumerate(plan['selected'])for split in splits]
 

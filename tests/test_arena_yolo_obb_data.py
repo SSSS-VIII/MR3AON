@@ -152,3 +152,19 @@ def test_unknown_visible_spawn_is_reported_instead_of_becoming_silent_background
     assert not labels and stats['unbound_visible_targets']==1 and stats['unbound_visible_type:153']==1
     for point in quad:point['x']+=1000
     assert targets(row,p)[1]['unbound_visible_targets']==0
+
+
+def test_revisited_training_seed_in_another_collection_cannot_overwrite_episode_images(tmp_path):
+    import json
+    folders=[tmp_path/'first'/'train-w00-s1-a1',tmp_path/'second'/'train-w00-s1-a1']
+    for folder in folders:
+        folder.mkdir(parents=True)
+        (folder/'setup.json').write_text(json.dumps(dict(seed=1,level=1,map=1)))
+        (folder/'labels.jsonl').write_text(json.dumps(dict(label_schema=4,image='000000.png',role=dict(colliders=[]),objects=[],supports=[]))+'\n')
+        (folder/'000000.png').write_bytes(b'original frame placeholder')
+    for name,value in [('entities',[]),('prefabs',{}),('plan',dict(mode=6,reachable_enemy_types=[]))]:
+        (tmp_path/name).write_text(json.dumps(value))
+    out=tmp_path/'data';manifest=build(out,folders,[],tmp_path/'entities',tmp_path/'prefabs',tmp_path/'plan')
+    assert manifest['splits']['train']['counts']['frames']==2
+    images=list((out/'images/train').iterdir())
+    assert len(images)==2 and {p.resolve()for p in images}=={(f/'000000.png').resolve()for f in folders}

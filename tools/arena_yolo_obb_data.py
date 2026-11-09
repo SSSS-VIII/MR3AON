@@ -235,8 +235,12 @@ def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=F
     profile['support_band_px']=support_band_px
     if physics:profile=physics_profile(profile)
     output.mkdir(parents=True,exist_ok=False)
+    episodes=[*train,*validation];name_counts=Counter(folder.name for folder in episodes)
+    episode_keys={str(folder):(folder.name if name_counts[folder.name]==1 else
+                 hashlib.sha256(str(folder.resolve()).encode()).hexdigest()[:12]+'-'+folder.name)for folder in episodes}
     runtime_names=defaultdict(set);runtime_types=defaultdict(set)
     manifest=dict(task='standard Ultralytics YOLO26 OBB',profile='profile.json',splits={},sources={},
+                  image_episode_keys=episode_keys,
                   source_hashes={str(p):hashlib.sha256(p.read_bytes()).hexdigest()for p in(entities_path,prefabs_path,plan_path,Path(__file__))})
     for split,folders in [('train',train),('val',validation)]:
         (output/'images'/split).mkdir(parents=True);(output/'labels'/split).mkdir(parents=True)
@@ -254,7 +258,7 @@ def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=F
                         if resource:
                             runtime_names[resource].add(obj.get('resource_family',obj['name']).split('(Clone)',1)[0])
                             runtime_types[resource].add(obj['type'])
-                name=folder.name+'-'+row['image']
+                name=episode_keys[str(folder)]+'-'+row['image']
                 (output/'images'/split/name).symlink_to((folder/row['image']).resolve())
                 text=[]
                 for cls,quad in labels:
