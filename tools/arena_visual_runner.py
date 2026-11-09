@@ -99,8 +99,8 @@ class Evaluator:
             raise RuntimeError('Evaluation reader did not stop')
 
 
-def prepare(client, seed, level, map_id, pins):
-    spec = dict(level=level, map=map_id, start=1, pins=pins)
+def prepare(client, seed, level, map_id, pins, *, start=1):
+    spec = dict(level=level, map=map_id, start=start, pins=pins)
     client.execute('return MR3A.native_select(' + lua(spec) + ',' + str(seed) + ')')
     deadline = time.monotonic() + 90
     while time.monotonic() < deadline:

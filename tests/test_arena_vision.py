@@ -234,3 +234,16 @@ def test_escape_followup_rechecks_new_hazards_before_second_input(stay,jump,expe
     assert action==expected
     assert reason==('complete_under_rope_escape'if expected else'clear')
     assert policy.followup_until<1.3
+
+
+def test_collection_prepares_selected_native_board_without_changing_default_start():
+    from arena_visual_runner import prepare
+    class Client:
+        def __init__(self):self.calls=[]
+        def execute(self,code,**kwargs):
+            self.calls.append(code)
+            return {'done':True}if code=='return MR3A.travel'else {'prepared':True}
+    direct=Client();prepare(direct,60,1,1,{'3':11031},start=3)
+    assert '["start"]=3'in direct.calls[0]and '["3"]=11031'in direct.calls[0]
+    default=Client();prepare(default,60,1,1,{'1':1101})
+    assert '["start"]=1'in default.calls[0]
