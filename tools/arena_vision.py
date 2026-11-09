@@ -623,7 +623,8 @@ class Perception:
                 if dt > .005:
                     self.player_velocity = .6 * self.player_velocity + .4 * (
                         vertical - self.previous_vertical) / dt
-            if (support is not None and 16 < abs(py-support) < 43
+            support_available=(support_observation is None or on_rope or bool(terrain and terrain['at_player']))
+            if (support_available and support is not None and 16 < abs(py-support) < 43
                     and stamp-self.last_action > .25):
                 phase = ('rope_above' if py < support else 'rope_below') if on_rope else 'ground'
                 if stamp - self.last_action > .22 and not self.active_motion:

@@ -82,3 +82,14 @@ def test_future_landing_uses_prediction_horizon_and_advances_moving_surfaces_onc
     assert predicted['player'].center[1]==pytest.approx(228)
     assert predicted['terrain']['y']+7==pytest.approx(258)
     assert predicted['terrain']['segments'][0]['a'][0]==pytest.approx(-20)
+
+
+def test_neural_platform_at_same_height_across_gap_does_not_report_character_as_grounded():
+    class Detector:
+        last_ms=1
+        def detect(self,rgb):
+            return Box(172,210,16,40),[],[dict(kind='platform',a=(230,260),b=(640,260),confidence=.9)],[]
+    perception=ObbPerception(Detector())
+    result=perception.observe(np.zeros((360,640,4),np.uint8),0)
+    assert result['terrain']['at_player']is False
+    assert result['phase']=='air_falling'

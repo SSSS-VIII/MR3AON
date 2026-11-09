@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-09：神经支撑有前方同高平台但脚下是缺口时不再报ground，7项接口回归通过；离线状态验收须回放采集器previous_action，不能用未回放按键的air数量判状态正确，见[缺口状态](archived/2026-11-09-arena-neural-gap-state.md)。
+
 2026-11-09：4524训练/4599验证原帧、47个有正标签原资源的标准共享物理YOLO在训练（fit-physics-coverage23，12epoch），独立测试未混入；全批108回合仍执行。评分器已补按原真值资源的漏检账本，不冒称共享模型输出原资源ID，见[原资源召回](archived/2026-11-09-arena-original-resource-recall.md)。
 
 2026-11-09：旋转扫掠先做保守候选筛选再逐真实对计算，12885随机对与旧实现相同；模拟12机关规划中位83.5→21.6ms，非实机延迟，见[旋转性能](archived/2026-11-09-arena-oriented-collision-performance.md)。
