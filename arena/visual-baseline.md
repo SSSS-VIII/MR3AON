@@ -1,8 +1,23 @@
 # 竞技场实时视觉基线
 
-当前默认入口已使用微调后的标准YOLO26n，接通高速取图、对象跟踪、人物状态及原按键避障。多轮完整三块累计受伤360–600，最新一轮600；蜘蛛板无伤，飞行怪和弹球仍不稳定，尚未完成整个疾风竞技场。训练不是自写网络，见[适配记录](../.mr3a-records/archived/2026-11-09-arena-standard-yolo-finetune.md)。
+当前使用微调后的标准YOLO26n，接通高速取图、对象跟踪、人物状态及原按键避障。默认入口保留六类版本；八类状态实验版已取得一次连续三板无伤，后续多种子仍有受伤和一次跌落，尚未稳定整个疾风竞技场。训练使用官方网络与Trainer，见[状态适配](../.mr3a-records/archived/2026-11-09-arena-yolo-crow-state-adaptation.md)。
 
-## 当前版本
+八类版识别普通/预备/冲刺，跟踪和动作规划使用同一套运动外推，并根据原生冲刺速度及碰撞体增大预测路径。59个冻结输入保持决策一致的批量扫掠优化，将规划P95约24ms降至5ms，实机约7ms；完整截图请求→Unity按键P95约41–55ms。单次历史无伤为states-planning48，不代表当前多种子稳定；受伤和失败目录均保留，见[状态规划](../.mr3a-records/archived/2026-11-09-arena-learned-state-planning.md)、[性能与误差](../.mr3a-records/archived/2026-11-09-arena-vectorized-planning.md)。
+
+实验版通过以下命令指定权重，其余设备隔离与原生关卡机制相同：
+
+```bash
+./tools/run-arena-vision --detector-weights debug/arena-client/yolo/finetune/fit-states-v3/weights/best.pt \
+  --seed 48 --map 1 --pin 1:1101 --pin 2:11022 --pin 3:11032 --boards 3
+```
+
+## 最新复验与未完成项
+
+重新检查两步动作后的rechecked-state47/48/54累计伤害120/约240/480，均完整完成三板；不固定板子的unpinned-state55按原池抽得11011→11022→1103，三板伤害360。完整回放在`debug/arena-client/yolo/finetune/unpinned-state55/replay.mp4`；历史一次无伤回放在`states-planning48/replay.mp4`，不能混为当前稳定结果。
+
+八类模型在test49抽样209个原帧上，弹球12/12严格匹配；隐藏爪122个目标仅17个严格匹配，召回13.9%。因此保留实验入口，不升级默认权重，继续补隐藏爪的原生实景多状态数据。当前171项arena回归通过、2项缺少Crypto/UnityPy跳过；范围见[第二步输入与补查](../.mr3a-records/archived/2026-11-09-arena-escape-recheck.md)。
+
+## 六类默认版本的基线
 
 六类检测覆盖角色、蜘蛛、飞行怪、弹球、其它机关和投射物；参考图包含多种原资源，不能把参考图增强当作全类别实景验收。相机标定消除三维包围框投影膨胀，球体/角色胶囊恢复到游戏平面，尺度39.505px/世界单位。绳及地面继续用线段/前景几何；当前角色位置以检测为准，原动作时序只作预测。弹球加入重力/反弹模型及约0.96秒滚动动作搜索，每帧只执行第一步；简单落下/冲刺使用原动作短时比较。策略无板号、原坐标或原角色状态输入。
 
