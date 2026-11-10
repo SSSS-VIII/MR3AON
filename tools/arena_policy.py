@@ -128,12 +128,13 @@ class Avoider:
         p,stamp=obs['player'],obs['time']
         if p is None:
             return None,'unknown_player'
+        landing_ready=bool(obs.get('ground_contact_observed')and stamp-self.last_action>=.1)
         ground=obs.get('terrain')
         if ground and ground['y']is not None:
             edge=ground['edge']
             if (edge is not None and obs['phase'] in ('ground','slide')
                     and -20<edge-p.center[0]<max(48,(ground['speed']or 0)*.14)
-                    and stamp-self.last_action>.3):
+                    and(stamp-self.last_action>.3 or landing_ready)):
                 self.last_action=stamp
                 return 'jump','ground_edge'
             if (obs['jumps']==1 and 'falling' in obs['phase'] and not ground['at_player']
@@ -151,7 +152,7 @@ class Avoider:
                 self.last_action=stamp
                 return 'jump','complete_under_rope_escape'
         early_down=can_air_down(obs)and stamp-self.last_action>=.1
-        if stamp-self.last_action<.32 and not early_down:
+        if stamp-self.last_action<.32 and not(early_down or landing_ready):
             return None,'action_transition'
         if obs['phase']=='rope_below' and obs.get('rope')is not None:
             upper=Box(p.x,2*obs['rope']-p.y-p.h,p.w,p.h)
@@ -184,7 +185,7 @@ class Avoider:
             if first.active or not first.arming:
                 candidates.append(('jump',.05))
         if can_air_down(obs):candidates.append(('air_down',.03))
-        if stamp-self.last_action<.32:
+        if stamp-self.last_action<.32 and not landing_ready:
             candidates=[c for c in candidates if c[0]=='air_down']
         if obs['phase']=='ground' and ground:
             candidates.append(('slide',.02))

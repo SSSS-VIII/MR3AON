@@ -736,6 +736,9 @@ class Perception:
                     motion_reference='support' if support is not None else 'player',
                     scale_px=self.body_height*.73/.936,stand_w=self.body_height*.36,
                     stand_h=self.body_height*.73,motion=self.active_motion,vx=self.player_horizontal_velocity)
+        result['ground_contact_observed']=bool(self.visual_role and player_observed and player
+            and phase=='ground'and not self.active_motion and support_available
+            and player.h>=.65*(self.motion_origin['stand_h']if self.motion_origin else self.body_height*.73))
         self.last_observation=result
         if support_observation is not None:
             result['rope_segment']=support_observation.get('rope_segment')
@@ -795,6 +798,10 @@ def constrain_ground_motion(before,after):
 
 
 def can_air_down(observation):
+    if (observation.get('player')is not None and observation.get('rope')is None
+            and(observation.get('terrain')or{}).get('source')=='neural_segments'):
+        return (observation['phase'].startswith(('jump','air_'))
+                and ground_down_target(observation)is not None)
     surface,destination=down_surface(observation)
     allowed=(observation.get('player')is not None and surface is not None
             and observation['phase'].startswith(('jump','air_'))
@@ -825,17 +832,54 @@ def down_contact(observation,active):
     return p.h>=.65*observation.get('stand_h',motion.DATA['stand_height']*scale)and abs(p.center[1]-target)<=8
 
 
+def air_down_lead(observation):
+    delay=motion.DATA['air_down']['input_delay'];previous=observation.get('motion')
+    if previous and previous['name'].startswith('jump'):
+        elapsed=max(0,observation['time']-previous['started'])
+        return motion.point(previous['name'],elapsed+delay)[1]-motion.point(previous['name'],elapsed)[1]
+    return -observation.get('vy',0.)*delay/observation.get('scale_px',41.)
+
+
+def ground_down_target(observation):
+    """Intersect native downward motion with each actually visible moving top.
+
+    The role need not already be horizontally above its eventual landing. Solve
+    contact time first, then require the original finite segment at that time;
+    never fabricate a floor across the gap between two platforms.
+    """
+    from arena_support import height
+    p=observation['player'];scale=observation.get('scale_px',41.);ox,oy=current_offsets(observation)
+    x=p.center[0]-ox*scale;vx=observation.get('vx',0.)
+    lead=air_down_lead(observation);prior=motion.DATA['air_down'];choices=[]
+    for s in observation['terrain']['segments']:
+        if s['kind']=='rope'or s.get('confidence',1.)<.25:continue
+        a,b=s['a'],s['b']
+        if b[0]-a[0]<4:continue
+        slope=(b[1]-a[1])/(b[0]-a[0])
+        surface=a[1]+slope*(x-a[0])
+        target=(surface-p.center[1])/scale-.75-oy
+        velocity=(s.get('vy',0.)+slope*(vx-s.get('vx',0.)))/scale
+        relative=prior['speed']-velocity
+        if target<=0 or relative<=0:continue
+        contact=(target+lead+prior['speed']*prior['input_delay'])/relative
+        if not prior['input_delay']<=contact<=1.:continue
+        settled=contact+prior['settle_seconds']
+        if height(s,x+vx*contact,contact)is None or height(s,x+vx*settled,settled)is None:continue
+        choices.append(dict(height=target,lead=lead,destination='ground',surface_velocity=velocity,
+                            contact_seconds=contact,surface_id=s['id']))
+    return min(choices,key=lambda c:c['contact_seconds'])if choices else None
+
+
 def create_motion(observation,name,stamp=None):
     active=dict(name=name,started=observation['time']if stamp is None else stamp)
     if name=='air_down':
         scale=observation.get('scale_px',41.);p=observation['player'];ox,oy=current_offsets(observation)
+        if (observation.get('rope')is None and(observation.get('terrain')or{}).get('source')=='neural_segments'):
+            target=ground_down_target(observation)
+            if target is None:raise ValueError('No visible ground intersects the native down trajectory')
+            return dict(active,**target,offset_x=ox,offset_y=oy,width=p.w/scale,height_box=p.h/scale)
         surface,destination=down_surface(observation);future,_=down_surface(observation,.04)
-        delay=motion.DATA['air_down']['input_delay'];previous=observation.get('motion')
-        if previous and previous['name'].startswith('jump'):
-            elapsed=max(0,observation['time']-previous['started'])
-            lead=motion.point(previous['name'],elapsed+delay)[1]-motion.point(previous['name'],elapsed)[1]
-        else:
-            lead=-observation.get('vy',0.)*delay/scale
+        lead=air_down_lead(observation)
         active.update(height=max(0,(surface-p.center[1])/scale+(.75 if destination=='rope'else -.75)-oy),lead=lead,
                       destination=destination,surface_velocity=(future-surface)/(.04*scale)if future is not None else 0.,
                       offset_x=ox,offset_y=oy,width=p.w/scale,height_box=p.h/scale)

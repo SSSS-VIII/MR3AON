@@ -38,13 +38,35 @@ def test_ground_down_targets_the_top_surface_and_follows_its_slope(slope):
     assert active['surface_velocity']==pytest.approx(-5*slope)
     landed=advance_player(start_action(obs,'air_down'),.4)
     assert landed['phase']=='ground'and landed['motion']is None
-    assert landed['player'].center[1]==pytest.approx(230-80*slope)
+    # Down changes the original collider X offset; the intercepted slope is
+    # evaluated at the root, not the pre-input standing capsule center.
+    assert landed['player'].center[1]==pytest.approx(230-(80-motion.DATA['stand_offset_x']*40)*slope)
     actor=Perception();actor.action('down',1,obs)
     assert actor.active_motion['destination']=='ground'
 
 
 def test_a_gap_is_not_a_valid_ground_down_landing_surface():
     obs=airborne();obs['terrain']['segments'][0]['a']=(250,260)
+    assert not can_air_down(obs)
+
+
+def test_down_can_intercept_a_visible_platform_that_is_ahead_of_the_current_root():
+    obs=airborne();s=obs['terrain']['segments'][0]
+    s.update(a=(195,260),b=(250,260))
+    assert can_air_down(obs)
+    active=create_motion(obs,'air_down')
+    assert active['contact_seconds']>.075  # Entry occurs before contact.
+    landed=advance_player(start_action(obs,'air_down'),active['contact_seconds']+.02)
+    assert landed['phase']=='ground'
+    # A platform reached only after the role has already fallen below its top
+    # is a wall, not a valid late teleport onto the surface.
+    s.update(a=(225,260),b=(280,260))
+    assert not can_air_down(obs)
+
+
+def test_down_rejects_a_narrow_platform_that_has_passed_before_landing():
+    obs=airborne();s=obs['terrain']['segments'][0]
+    s.update(a=(160,260),b=(190,260))
     assert not can_air_down(obs)
 
 
@@ -79,6 +101,20 @@ def test_native_down_waits_for_visible_contact_before_accepting_another_jump():
     assert extrapolated['motion']is not None
     landed=actor._finish(rgba,1.45,standing,[],support_observation=support)
     assert landed['phase']=='ground'and landed['motion']is None
+    assert landed['ground_contact_observed']
+    assert not extrapolated['ground_contact_observed']
+
+
+def test_confirmed_landing_can_relaunch_before_a_short_platform_has_passed():
+    obs=airborne();obs.update(player=Box(172,211.28,16,37.44),phase='ground',jumps=0,
+                            ground_contact_observed=True)
+    obs['terrain']['edge']=205
+    policy=Avoider();policy.last_action=.84
+    assert policy.choose(obs)==('jump','ground_edge')
+    policy=Avoider();policy.last_action=.84
+    assert policy.choose(dict(obs,ground_contact_observed=False))==(None,'action_transition')
+    policy=Avoider();policy.last_action=.95
+    assert policy.choose(obs)==(None,'action_transition')
 
 
 def test_input_delay_projection_cannot_acknowledge_future_ground_contact():
