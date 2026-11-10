@@ -15,6 +15,7 @@ import os
 import zlib
 import hashlib
 import subprocess
+import gc
 from collections import deque
 
 # Tiny per-object regressions must not keep a BLAS worker pool spinning beside
@@ -31,6 +32,23 @@ from arena_mpc import MpcAvoider
 from runtime import InstanceSession
 import cv2
 import numpy as np
+
+
+class PausedCollections:
+    """Defer cyclic tracing until original gameplay is paused again.
+
+    Ordinary reference-counted boxes/arrays/tensors are still released. A full
+    scan of imported Torch objects can otherwise pause an MPC frame for >100ms.
+    """
+    def __enter__(self):
+        self.was_enabled=gc.isenabled();self.collected=0
+        if self.was_enabled:
+            gc.collect();gc.disable()
+        return self
+
+    def __exit__(self,*error):
+        if self.was_enabled:
+            gc.enable();self.collected=gc.collect()
 
 
 class InitialPixels:
@@ -198,7 +216,7 @@ def run(args):
     actions, count, max_stage, status, final = [], 0, -1, 'duration', initial
     initial_pixels=InitialPixels()
     begin = time.monotonic()
-    with (args.output / 'vision.jsonl').open('w') as estimates, (args.output / 'evaluation.jsonl').open('w') as evaluations:
+    with PausedCollections()as collections,(args.output / 'vision.jsonl').open('w') as estimates, (args.output / 'evaluation.jsonl').open('w') as evaluations:
         with FastCapture(session, width=640, height=360) as cap:
             clock=cap.calibrate_clock()
             resumed = False
@@ -332,6 +350,8 @@ def run(args):
                   unity_keydown_ms=timing(consume_times),capture_to_unity_ms=timing(chain_times),
                   board_entries=board_entries,had_damage=had_damage)
     report['evaluation_error']=evaluator.error
+    report['cyclic_gc_deferred']=collections.was_enabled
+    report['cycles_collected_after_pause']=collections.collected
     report['policy_compute_ms']=timing(policy_times)
     report['policy_compute_prior_ms']=timing(compute_priors)
     report['fresh_perception_policy_ms']=timing(fresh_vision_times)
