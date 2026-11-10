@@ -76,14 +76,34 @@ def fit_ballistic(track,scale):
     design=np.column_stack((np.ones(len(t)),t))
     fit,_,_,_=np.linalg.lstsq(design,ys-.5*acceleration*t*t,rcond=None)
     error=float(np.sqrt(np.mean((design@fit+.5*acceleration*t*t-ys)**2)))
-    if error>4:
+    # A short near-apex arc is indistinguishable from a stationary object.
+    # Reject the class gravity prior only after a longer, consistently straight
+    # observed window contradicts it; do not change a known bounce on one frame.
+    evidence=np.asarray(track.history)
+    evidence=evidence[evidence[:,0]>=evidence[-1,0]-.4]
+    contradicted=False
+    if len(evidence)>=6 and evidence[-1,0]-evidence[0,0]>=.3:
+        et=evidence[:,0]-evidence[-1,0];ey=evidence[:,2]
+        linear_design=np.column_stack((np.ones(len(et)),et))
+        linear,_,_,_=np.linalg.lstsq(linear_design,ey,rcond=None)
+        curve=.5*acceleration*et*et
+        gravity,_,_,_=np.linalg.lstsq(linear_design,ey-curve,rcond=None)
+        linear_error=float(np.sqrt(np.mean((linear_design@linear-ey)**2)))
+        gravity_error=float(np.sqrt(np.mean((linear_design@gravity+curve-ey)**2)))
+        contradicted=linear_error<.8 and gravity_error>2*max(.05,linear_error)
+    if error>4 or contradicted:
         return
     track.vy=float(fit[1]);track.ballistic=True
     track.gravity_up=DATA['accelerated_up']*scale
     track.gravity_down=DATA['accelerated_down']*scale
+    segment=track.floor_segment
+    track.floor_vy=0.
+    if segment:
+        a,b=segment['a'],segment['b'];slope=(b[1]-a[1])/(b[0]-a[0])
+        track.floor_vy=segment['vy']+slope*(track.vx-segment['vx'])
     if not track.rebound_speed:
         track.rebound_speed=DATA['rebound_speed']*scale
-    if track.vy<-60:
+    if track.vy<-60 and track.floor_y is not None and abs(track.floor_vy)<1:
         height=max(0,track.floor_y-track.box.center[1])
         # Ascent energy estimates the individual rebound impulse without a
         # privileged parameter query or needing to have seen the floor contact.
@@ -91,7 +111,28 @@ def fit_ballistic(track,scale):
         track.rebound_speed=.7*track.rebound_speed+.3*energy
 
 
-def bounce_state(y,velocity,seconds,*,floor,gravity_up,gravity_down,rebound):
+def floor_horizon(track):
+    segment=track.floor_segment
+    if segment is None:return math.inf
+    relative=track.vx-segment['vx'];x=track.box.center[0]
+    if relative<0:return math.inf if segment.get('left_clipped',False)else max(0,(x-segment['a'][0])/-relative)
+    if relative>0:return math.inf if segment.get('right_clipped',False)else max(0,(segment['b'][0]-x)/relative)
+    return math.inf
+
+
+def pinball_state(track,seconds):
+    known=min(seconds,floor_horizon(track))if track.floor_y is not None else 0.
+    y,velocity=bounce_state(track.box.center[1],track.vy,known,
+        floor=track.floor_y if track.floor_y is not None else math.inf,
+        floor_velocity=track.floor_vy,gravity_up=track.gravity_up,
+        gravity_down=track.gravity_down,rebound=track.rebound_speed)
+    if known<seconds:
+        y,velocity=bounce_state(y,velocity,seconds-known,floor=math.inf,
+            gravity_up=track.gravity_up,gravity_down=track.gravity_down,rebound=track.rebound_speed)
+    return y,velocity
+
+
+def bounce_state(y,velocity,seconds,*,floor,gravity_up,gravity_down,rebound,floor_velocity=0.):
     """Advance constant-gravity arcs with an instantaneous floor impulse."""
     remaining=max(0,seconds);y=min(y,floor)
     for _ in range(16):
@@ -101,13 +142,16 @@ def bounce_state(y,velocity,seconds,*,floor,gravity_up,gravity_down,rebound):
             until=-velocity/gravity_up;step=min(remaining,until)
             y+=velocity*step+.5*gravity_up*step*step
             velocity+=gravity_up*step;remaining-=step
+            floor+=floor_velocity*step
             if step>=until-1e-9:velocity=0.
         else:
             distance=max(0,floor-y)
-            until=(-velocity+math.sqrt(velocity**2+2*gravity_down*distance))/gravity_down
+            relative=velocity-floor_velocity
+            until=(-relative+math.sqrt(relative**2+2*gravity_down*distance))/gravity_down
             step=min(remaining,until)
             y+=velocity*step+.5*gravity_down*step*step
             velocity+=gravity_down*step;remaining-=step
+            floor+=floor_velocity*step
             if step>=until-1e-9:
                 y=floor;velocity=-max(1,rebound)
     return y,velocity

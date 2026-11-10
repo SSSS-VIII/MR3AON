@@ -70,7 +70,9 @@ class Track:
     ballistic: bool = False
     gravity_up: float = 0
     gravity_down: float = 0
-    floor_y: float = 0
+    floor_y: float | None = 0
+    floor_vy: float = 0.
+    floor_segment: dict | None = None
     rebound_speed: float = 0
     attack_phase: str | None = None
     ready_started: float | None = None
@@ -101,7 +103,13 @@ class Track:
         self.arming = detection.arming
         self.reference = player
         self.confidence_history.append(detection.confidence)
-        self.floor_y=(player[1]if support_y is None else support_y)-self.box.h/2
+        if callable(support_y):
+            floor=support_y(detection)
+            self.floor_y=floor['y']-self.box.h/2 if floor is not None else None
+            self.floor_segment=floor['segment']if floor is not None else None
+        else:
+            self.floor_y=(player[1]if support_y is None else support_y)-self.box.h/2
+            self.floor_segment=None
         x, y = self.box.center
         self.history.append((stamp, x - player[0], y - player[1]))
         self.observations += 1
@@ -202,10 +210,8 @@ class Track:
             angle=self.sine_frequency*seconds
             dy=self.sine_a*math.sin(angle)+self.sine_b*(math.cos(angle)-1)
         if self.ballistic:
-            from arena_object_motion import bounce_y
-            dy=bounce_y(self.box.center[1],self.vy,seconds,floor=self.floor_y,
-                        gravity_up=self.gravity_up,gravity_down=self.gravity_down,
-                        rebound=self.rebound_speed)-self.box.center[1]
+            from arena_object_motion import pinball_state
+            dy=pinball_state(self,seconds)[0]-self.box.center[1]
         forecast=Box(self.box.x + self.vx * seconds+.5*ax*horizon*horizon,
                    self.box.y+dy,
                    self.box.w, self.box.h)
@@ -230,9 +236,15 @@ class Track:
                 result.attack_phase='rush';result.active=True;result.arming=False
             return result
         if self.ballistic:
-            from arena_object_motion import bounce_state
-            _,result.vy=bounce_state(self.box.center[1],self.vy,seconds,floor=self.floor_y,
-                gravity_up=self.gravity_up,gravity_down=self.gravity_down,rebound=self.rebound_speed)
+            from arena_object_motion import pinball_state,floor_horizon
+            _,result.vy=pinball_state(self,seconds)
+            result.floor_y=(self.floor_y+self.floor_vy*seconds
+                            if self.floor_y is not None and seconds<=floor_horizon(self)else None)
+            if self.floor_segment:
+                result.floor_segment=dict(self.floor_segment)
+                for key in ('a','b'):
+                    x,y=self.floor_segment[key]
+                    result.floor_segment[key]=(x+self.floor_segment['vx']*seconds,y+self.floor_segment['vy']*seconds)
         elif self.sine_count>=2:
             angle=self.sine_frequency*seconds
             result.sine_a=self.sine_a*math.cos(angle)-self.sine_b*math.sin(angle)
@@ -298,8 +310,13 @@ class Tracker:
                 b=prediction.box
                 dx,dy=player[0]-t.reference[0],player[1]-t.reference[1]
                 b=Box(b.x+dx,b.y+dy,b.w,b.h)
+                floor_segment=prediction.floor_segment
+                if floor_segment:
+                    floor_segment=dict(floor_segment)
+                    for key in ('a','b'):floor_segment[key]=(floor_segment[key][0]+dx,floor_segment[key][1]+dy)
                 output.append(replace(prediction,box=b,confidence=t.confidence-age*.6,
-                                      reference=player,floor_y=prediction.floor_y+dy,
+                                      reference=player,floor_y=prediction.floor_y+dy if prediction.floor_y is not None else None,
+                                      floor_segment=floor_segment,
                                       quad=tuple((x+dx,y+dy)for x,y in prediction.quad)if prediction.quad else None))
             else:
                 output.append(t)
@@ -605,6 +622,10 @@ class Perception:
         phase = 'unknown'
         tracks = []
         support=None
+        floor_query=None
+        if support_observation and support_observation.get('tracking_reference')is not None:
+            from arena_object_support import object_support
+            floor_query=lambda d:object_support(support_observation['segments'],d)
         rope_hint=support_observation is None and arrow_score(rgb,95)>.5
         if rope_hint:
             self.support_mode='rope';self.last_rope_hint=stamp
@@ -686,7 +707,7 @@ class Perception:
             # Use the visible rope as vertical camera reference. A player's flip
             # must not become a fictitious upward velocity of every crow.
             reference=(support_observation.get('tracking_reference')if support_observation else None)
-            tracks = self.tracker.update(detections, stamp, reference or (px,support if support is not None else py),support)
+            tracks = self.tracker.update(detections, stamp, reference or (px,support if support is not None else py),floor_query or support)
             self.previous_player, self.last = player, stamp
             self.previous_vertical = vertical
         elif on_rope and self.rope is not None and self.previous_player is not None:
@@ -694,7 +715,7 @@ class Perception:
             # Keep their state history using the visible camera reference;
             # missing role pixels still prohibit choosing an input.
             reference=(support_observation.get('tracking_reference')if support_observation else None)
-            tracks=self.tracker.update(detections,stamp,reference or (self.previous_player.center[0],self.rope),self.rope)
+            tracks=self.tracker.update(detections,stamp,reference or (self.previous_player.center[0],self.rope),floor_query or self.rope)
         result=dict(time=stamp, player=player, silhouette=body[1] if body else None,
                     rope=self.rope, phase=phase, vy=self.player_velocity, jumps=self.jump_count,
                     tracks=tracks, detections=detections,terrain=terrain,
