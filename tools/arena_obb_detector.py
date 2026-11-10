@@ -118,21 +118,43 @@ class ObbDetector:
         self.sha256=hashlib.sha256(weights.read_bytes()).hexdigest()
         self.options=dict(device=0,imgsz=640,conf=confidence,verbose=False,quantize=16,max_det=150)
         for _ in range(6):self.model.predict(np.zeros((360,640,3),np.uint8),**self.options)
-        self.player_x=180.;self.last_ms=0.;self.phase_refiner=phase_refiner
+        self.player_x=180.;self.player_box=None;self.last_ms=0.;self.phase_refiner=phase_refiner
+        self.last_player_roi_ms=0.;self.last_player_source='missing'
+        for _ in range(3):self.model.predict(np.zeros((240,240,3),np.uint8),**dict(self.options,imgsz=320))
 
     def reset_tracking(self):
-        self.player_x=180.
+        self.player_x=180.;self.player_box=None
+
+    def recover_player(self,bgr):
+        if self.player_box is None:return None
+        start=time.perf_counter();cx,cy=self.player_box.center
+        x=max(0,min(bgr.shape[1]-240,int(cx)-120));y=max(0,min(bgr.shape[0]-240,int(cy)-120))
+        crop=bgr[y:y+240,x:x+240]
+        result=self.model.predict(crop,**dict(self.options,imgsz=320))[0].obb
+        ids=result.cls.cpu().numpy();scores=result.conf.cpu().numpy();quads=result.xyxyxyxy.cpu().numpy()
+        indices=[i for i,c in enumerate(ids)if self.profile['classes'][int(c)]['kind']=='player']
+        translated=[quads[i]+np.array([x,y])for i in indices]
+        player=decode(translated,[ids[i]for i in indices],[scores[i]for i in indices],self.profile,self.player_x)[0]
+        self.last_player_roi_ms=(time.perf_counter()-start)*1000
+        return player
 
     def detect(self,rgb):
         begin=time.perf_counter()
+        self.last_player_roi_ms=0.;self.last_player_source='missing'
         bgr=cv2.cvtColor(rgb[:,:,:3],cv2.COLOR_RGB2BGR)
         result=self.model.predict(bgr,**self.options)[0]
         obb=result.obb
         decoded=decode(obb.xyxyxyxy.cpu().numpy(),obb.cls.cpu().numpy(),obb.conf.cpu().numpy(),self.profile,self.player_x)
+        player,hazards,supports,cues=decoded
+        if player is not None:self.last_player_source='full_frame'
+        else:
+            player=self.recover_player(bgr)
+            if player is not None:self.last_player_source='local_roi'
+        decoded=player,hazards,supports,cues
         if self.phase_refiner is not None:
             player,hazards,supports,cues=decoded
             decoded=player,hazards,supports,self.phase_refiner.refine(bgr,cues)
-        if decoded[0]is not None:self.player_x=decoded[0].center[0]
+        if decoded[0]is not None:self.player_x=decoded[0].center[0];self.player_box=decoded[0]
         self.last_ms=(time.perf_counter()-begin)*1000
         return decoded
 
@@ -217,4 +239,6 @@ class ObbPerception(Perception):
                       player_seen_age=None if self.last_seen_player is None else stamp-self.last_seen_player)
         refiner=getattr(self.detector,'phase_refiner',None)
         if refiner is not None:result['bamboo_phase_ms']=refiner.last_ms
+        result['player_detection_source']=getattr(self.detector,'last_player_source',None)
+        result['player_roi_ms']=getattr(self.detector,'last_player_roi_ms',0.)
         return result
