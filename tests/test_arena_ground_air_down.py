@@ -122,3 +122,54 @@ def test_input_delay_projection_cannot_acknowledge_future_ground_contact():
     active=dict(obs,motion=actor.active_motion,phase='flip_down')
     projected=advance_player(active,.4)
     assert projected['phase']=='flip_down'and projected['motion']['contact_pending']
+
+
+def test_observed_normal_body_ends_down_lock_after_a_missed_short_platform_contact():
+    actor=Perception();actor.visual_role=True;actor.action('down',1.,airborne())
+    support=dict(mode='ground',rope=None,terrain=None,segments=[],tracking_reference=(0.,0.),rope_segments=[])
+    pixels=np.zeros((360,640,3),np.uint8)
+    actor._finish(pixels,1.4,Box(176,160,8,8),[],support_observation=support)
+    # Native 60011 trace: rollToGround -> fallFromRun; the full collider is
+    # visible while its root foot and the small platform are below the view.
+    body=Box(172,315,16,37.44)
+    first=actor._finish(pixels,1.425,body,[],support_observation=support)
+    assert first['phase']=='flip_down'
+    final=actor._finish(pixels,1.475,body,[],support_observation=support)
+    assert final['phase']=='air_falling'and final['motion']is None
+    assert final['down_action_end_observed']and not final['ground_contact_observed']
+    from arena_mpc import MpcAvoider
+    assert 'jump1'in MpcAvoider()._options(final,final['time'])
+
+
+def test_predicted_body_cannot_bridge_the_action_end_confirmation_window():
+    actor=Perception();actor.visual_role=True;actor.action('down',1.,airborne())
+    support=dict(mode='ground',rope=None,terrain=None,segments=[],tracking_reference=(0.,0.),rope_segments=[])
+    pixels=np.zeros((360,640,3),np.uint8);body=Box(172,315,16,37.44)
+    actor._finish(pixels,1.4,body,[],support_observation=support)
+    predicted=actor._finish(pixels,1.46,body,[],support_observation=support,player_observed=False)
+    assert predicted['motion']and not predicted['down_action_end_observed']
+    first=actor._finish(pixels,1.475,body,[],support_observation=support)
+    assert first['motion']and not first['down_action_end_observed']
+    final=actor._finish(pixels,1.525,body,[],support_observation=support)
+    assert final['motion']is None and final['down_action_end_observed']
+
+
+def test_first_jump_ascent_shape_does_not_confirm_native_down_exit():
+    actor=Perception();actor.visual_role=True;actor.action('down',1.,airborne())
+    support=dict(mode='ground',rope=None,terrain=None,segments=[],tracking_reference=(0.,0.),rope_segments=[])
+    pixels=np.zeros((360,640,3),np.uint8)
+    for t in [1.4,1.45,1.5]:
+        observed=actor._finish(pixels,t,Box(172,315,16,.624*40),[],support_observation=support)
+    assert observed['motion']and observed['phase']=='flip_down'
+
+
+def test_missing_role_resets_action_end_confirmation():
+    actor=Perception();actor.visual_role=True;actor.action('down',1.,airborne())
+    support=dict(mode='ground',rope=None,terrain=None,segments=[],tracking_reference=(0.,0.),rope_segments=[])
+    pixels=np.zeros((360,640,3),np.uint8);body=Box(172,315,16,37.44)
+    actor._finish(pixels,1.4,body,[],support_observation=support)
+    actor._finish(pixels,1.425,None,[],support_observation=support)
+    resumed=actor._finish(pixels,1.46,body,[],support_observation=support)
+    assert resumed['motion']and not resumed['down_action_end_observed']
+    ended=actor._finish(pixels,1.51,body,[],support_observation=support)
+    assert ended['motion']is None and ended['down_action_end_observed']

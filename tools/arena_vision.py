@@ -632,6 +632,10 @@ class Perception:
         return self._finish(rgb,stamp,player,detections,body)
 
     def _finish(self,rgb,stamp,player,detections,body=None,support_observation=None,player_observed=True):
+        down_action_end_observed=False
+        if self.active_motion and (player is None or not player_observed):
+            self.active_motion=dict(self.active_motion)
+            self.active_motion.pop('pose_restore_since',None)
         phase = 'unknown'
         tracks = []
         support=None
@@ -709,7 +713,24 @@ class Perception:
                         rope_segments=(support_observation or{}).get('rope_segments',[]),terrain=terrain,
                         scale_px=self.motion_origin['scale'],vx=self.player_horizontal_velocity,
                         stand_h=self.motion_origin['stand_h']),self.active_motion)
-                    if arrived:
+                    recovered=False
+                    if (not arrived and requires and self.active_motion.get('destination')=='ground'
+                            and player_observed and player.h>=.85*self.motion_origin['stand_h']
+                            and player.w>=.8*self.motion_origin['stand_w']):
+                        since=self.active_motion.get('pose_restore_since',stamp)
+                        self.active_motion=dict(self.active_motion,pose_restore_since=since)
+                        recovered=stamp-since>=.035
+                    elif self.active_motion.get('pose_restore_since')is not None:
+                        self.active_motion=dict(self.active_motion)
+                        self.active_motion.pop('pose_restore_since',None)
+                    if recovered:
+                        # Original rollToGround can land briefly and leave a
+                        # narrow platform between images (fallFromRun). Normal
+                        # body restoration ends its compact input lock; absent
+                        # visible support still means airborne, not grounded.
+                        self.active_motion=None;self.jump_count=0;phase='air_falling'
+                        down_action_end_observed=True
+                    elif arrived:
                         if requires:phase='ground'if self.active_motion.get('destination')=='ground'else'rope_below'
                         self.active_motion=None;self.jump_count=0
                     else:
@@ -749,6 +770,7 @@ class Perception:
         result['ground_contact_observed']=bool(self.visual_role and player_observed and player
             and phase=='ground'and (not self.active_motion or motion.is_ground_transition(self.active_motion['name']))and support_available
             and player.h>=.65*(self.motion_origin['stand_h']if self.motion_origin else self.body_height*.73))
+        result['down_action_end_observed']=down_action_end_observed
         self.last_observation=result
         if support_observation is not None:
             result['rope_segment']=support_observation.get('rope_segment')
