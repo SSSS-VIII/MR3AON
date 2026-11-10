@@ -138,7 +138,7 @@ class MpcAvoider(VisualAvoider):
         airborne_ground=bool(obs.get('terrain')and obs['terrain'].get('source')=='neural_segments'
                              and obs.get('phase','').startswith(('jump','air_')))
         return bool(obs.get('player')and (obs.get('rope')is not None and not obs.get('terrain')or airborne_ground)
-                    and (self.rope_exit(obs)or self._targets(obs)or any(t.kind in ('pinball','trap','terrain_wall')or t.attack_phase is not None for t in self._objects(obs))))
+                    and (self.rope_exit(obs)or self._targets(obs)or any(t.kind in ('pinball','trap','arrow','terrain_wall')or t.attack_phase is not None for t in self._objects(obs))))
 
     def _options(self,state,stamp):
         names=[None]

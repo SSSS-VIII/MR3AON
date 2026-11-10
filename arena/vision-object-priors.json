@@ -38,5 +38,25 @@
     "vertical_growth_px_per_second": 6,
     "source": "claw61 validation, rope-facing bbox edge P95; horizontal timing uncertainty kept separately",
     "source_sha256": "e5a6b9f71d6ca5c8c5563d5ab4875226b99a2acffe14efae17d5b016e344085f"
+  },
+  "arrow": {
+    "gravity_prior": 25,
+    "velocity_gain": 3.5,
+    "source": "Original EnemyArrow.StateLogic integrates gravity*deltaTime*3.5; train 34110/34111 fire:1 observations all gravity=25, horizontal acceleration=0",
+    "scope": "Calibration hypothesis only; straight/stuck and confirmed visual quadratic compete; not asserted for all arrow subtypes; ahead-of-role initial leftward speed/orientation prior is a calibration assumption, then measured velocity replaces it",
+    "source_sha256": {
+      "train-s34110": "9fc23da28347c2f41692cd64d811e248e7a92ca6cf3e2ad6c69db614b73a5ee4",
+      "train-s34111": "2fc38b565c94b83017354c0287b83e5000b5a633ddfac84c7a9f631a904a7918"
+    },
+    "horizontal_speed_prior": 30,
+    "body_length": 2.200000047683716,
+    "body_width": 0.07000000029802322,
+    "penetration_depth": [
+      0.5,
+      1.0
+    ],
+    "contact_tick_seconds": 0.016666666666666666,
+    "geometry_source": "Original EnemyArrow BoxCollider size/center and child identity transform; ctor initializes depth[-1,-.5], ResetEnemyInfo uses Random_Level, ShootIntoGround clamps root and freezes flight; UpdateCollider preserves tail",
+    "geometry_source_sha256": "71327362114fa63de1c27e9461ce29903d33c4ebba2a08ec9027c3088a1cf5ce"
   }
 }

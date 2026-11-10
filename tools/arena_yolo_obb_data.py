@@ -307,8 +307,22 @@ def targets(raw,profile):
     return result,counts
 
 
-def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=False,support_band_px=4,interactions=False,bamboo_phases=False,arrow_family=False):
+def supervision_quad(cls,quad):
+    """A learnable arrow band preserves its physical centerline, not width."""
+    band=cls.get('supervision_band_px')
+    if band is None:return quad
+    q=np.asarray(quad,float);center=q.mean(0);edges=(q[1]-q[0],q[2]-q[1]);edge=max(edges,key=lambda e:float(e@e))
+    length=float(np.linalg.norm(edge));unit=edge/max(length,1e-6);normal=np.array([-unit[1],unit[0]])*band/2
+    a=center-unit*length/2;b=center+unit*length/2
+    expanded=np.array([a-normal,b-normal,b+normal,a+normal],np.float32)
+    clipped=visible_quad(expanded)
+    return clipped if clipped is not None else quad
+
+
+def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=False,support_band_px=4,interactions=False,bamboo_phases=False,arrow_family=False,arrow_band_px=None):
     if interactions and not physics:raise ValueError('Interaction taxonomy requires the standard physics profile')
+    if arrow_band_px is not None and(not physics or not arrow_family or not 4<=arrow_band_px<=16):
+        raise ValueError('Arrow supervision band requires its original physics family and 4..16 pixels')
     if not 4<=support_band_px<=32:raise ValueError('Support supervision band must be 4..32 px')
     if {p.resolve()for p in train}&{p.resolve()for p in validation}:
         raise ValueError('Whole native episodes must be disjoint')
@@ -322,6 +336,10 @@ def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=F
     profile=schema(json.loads(entities_path.read_text()),json.loads(prefabs_path.read_text()),plan['reachable_enemy_types'],bamboo_phases,arrow_family)
     profile['support_band_px']=support_band_px
     if physics:profile=physics_profile(profile,interactions=interactions)
+    if arrow_band_px is not None:
+        arrow=next(c for c in profile['classes']if c['name']=='arrow')
+        arrow.update(supervision_band_px=float(arrow_band_px),inference_short_side_world=.07000000029802322)
+        profile['arrow_supervision_scope']='Training band only; targets() and physical scoring keep original native quads; inference restores the exported 0.07-world collider width'
     output.mkdir(parents=True,exist_ok=False)
     episodes=[*train,*validation];name_counts=Counter(folder.name for folder in episodes)
     episode_keys={str(folder):(folder.name if name_counts[folder.name]==1 else
@@ -357,7 +375,7 @@ def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=F
                 (output/'images'/split/name).symlink_to((folder/row['image']).resolve())
                 text=[]
                 for cls,quad in labels:
-                    coordinates=np.asarray(quad)/[640,360];per_class[str(cls)]+=1
+                    coordinates=np.asarray(supervision_quad(profile['classes'][cls],quad))/[640,360];per_class[str(cls)]+=1
                     text.append(str(cls)+' '+' '.join(f'{v:.7f}'for v in coordinates.ravel())+'\n')
                 (output/'labels'/split/Path(name).with_suffix('.txt')).write_text(''.join(text))
         manifest['splits'][split]=dict(counts=counts,class_targets=per_class)

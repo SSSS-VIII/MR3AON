@@ -10,7 +10,7 @@ import cv2
 import numpy as np
 from arena_yolo import offline_sdk
 from arena_yolo_obb_data import targets,MissingBambooPhase
-from arena_obb_detector import support_segment
+from arena_obb_detector import support_segment,physical_quad
 
 PHYSICAL_KINDS={'hazard','slice_target'}
 
@@ -149,11 +149,12 @@ def score(weights,profile_path,episodes,output,stride=1):
                 begin=time.perf_counter();result=model.predict(pixels,**options)[0]
                 quads=result.obb.xyxyxyxy.cpu().numpy();conf=result.obb.conf.cpu().numpy();ids=result.obb.cls.cpu().numpy()
                 times.append((time.perf_counter()-begin)*1000)
-                predicted=[]
+                predicted=[];raw_predictions=[]
                 for c,q,s in zip(ids,quads,conf):
                     x,y=q.mean(0)
                     if y<55 or(y>275 and(x<135 or x>515)):continue
-                    predicted.append((int(c),q.tolist(),float(s)))
+                    raw_predictions.append((int(c),q.tolist(),float(s)))
+                    predicted.append((int(c),physical_quad(q,classes[int(c)]).tolist(),float(s)))
                 strict=match(truth,predicted,classes)
                 interactions.update(interaction_confusions(truth,predicted,classes,profile.get('target_policy_confidence',.8)))
                 physical_t=[r for r in truth if classes[r[0]]['kind']in PHYSICAL_KINDS]
@@ -179,8 +180,9 @@ def score(weights,profile_path,episodes,output,stride=1):
                     hazards=[t for t in truth if classes[t[0]]['kind']=='hazard']
                     p=[t for t in predicted if classes[t[0]]['kind']=='hazard']
                     modes[mode].update(targets=len(hazards),predictions=len(p),matched=len(match(hazards,p,classes,mode)))
-                predictions.write(json.dumps(dict(episode=str(episode),image=row['image'],truth=truth,
-                                                  predictions=predicted,matched=len(strict)))+'\n')
+                record=dict(episode=str(episode),image=row['image'],truth=truth,predictions=predicted,matched=len(strict))
+                if any(c.get('inference_short_side_world')for c in classes):record['raw_predictions']=raw_predictions
+                predictions.write(json.dumps(record)+'\n')
                 if frames<8:result.save(str(output/f'{frames:04d}.jpg'))
                 frames+=1
     report=dict(frames=frames,episodes=[str(p)for p in episodes],checkpoint=str(weights),

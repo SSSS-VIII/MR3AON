@@ -43,6 +43,8 @@ class Detection:
     collider_shape: str | None = None
     quad: tuple | None = None
     velocity_prior: tuple | None = None
+    scene_velocity_x: float | None = None
+    geometry_restored: bool = False
 
 
 @dataclass
@@ -306,7 +308,11 @@ class Tracker:
                 used.add(i); matched.add(identity)
         for i, d in enumerate(detections):
             if i not in used:
-                t = Track(self.next_id, d.box, d.kind, d.confidence, stamp)
+                track_type=Track
+                if d.kind=='arrow':
+                    from arena_arrow_motion import ArrowTrack
+                    track_type=ArrowTrack
+                t = track_type(self.next_id, d.box, d.kind, d.confidence, stamp)
                 t.adaptive_rush_speed=self.adaptive_rush_speed
                 if self.adaptive:
                     t.adaptive_velocity=True;t.history=deque(maxlen=64)
@@ -1191,7 +1197,7 @@ def serializable(observation):
         if isinstance(v, deque):
             return list(v)
         if hasattr(v, '__dataclass_fields__'):
-            return {k: pack(x) for k, x in vars(v).items()}
+            return {k: pack(x) for k, x in vars(v).items()if k!='_forecast_cache'}
         if isinstance(v, dict):
             return {k: pack(x) for k,x in v.items()}
         if isinstance(v, (list,tuple)):

@@ -27,6 +27,17 @@ def support_segment(quad):
     return tuple(map(float,a)),tuple(map(float,b))
 
 
+def physical_quad(quad,meta):
+    """Restore exported collider width after a wider training-only arrow band."""
+    width=meta.get('inference_short_side_world')
+    q=np.asarray(quad,float)
+    if width is None:return q
+    center=q.mean(0);edges=(q[1]-q[0],q[2]-q[1]);edge=max(edges,key=lambda e:float(e@e))
+    length=float(np.linalg.norm(edge));unit=edge/max(1e-6,length);normal=np.array([-unit[1],unit[0]])*width*SCALE/2
+    a=center-unit*length/2;b=center+unit*length/2
+    return np.array([a-normal,b-normal,b+normal,a+normal])
+
+
 def missing_role_prediction(observation,stamp,age):
     if not observation or observation.get('player')is None:return None,None
     predicted=player_future(observation,stamp-observation['time'])
@@ -45,6 +56,7 @@ def decode(quads,ids,scores,profile,player_x=180.):
     for quad,cls,confidence in zip(quads,ids,scores):
         q=np.asarray(quad,float);meta=profile['classes'][int(cls)]
         if q.shape!=(4,2)or not np.isfinite(q).all():continue
+        q=physical_quad(q,meta)
         cx,cy=q.mean(0)
         if cy<55 or(cy>275 and(cx<135 or cx>515)):continue
         kind=meta['kind'];box=Box(*bounds(q));confidence=float(confidence)
@@ -155,8 +167,15 @@ class ObbPerception(Perception):
             dy=support['tracking_reference'][1]-self.last_observation.get('camera_reference_y',0.)
             player=Box(player.x,player.y+dy,player.w,player.h)
         for detection in detections:
+            if detection.kind=='arrow':
+                detection.scene_velocity_x=support['scene_vx']if support['scene_motion_observed']else None
+                from arena_arrow_motion import restore_tail
+                restore_tail(detection,support['segments'])
             if detection.kind=='bamboo':
                 detection.velocity_prior=(-60*SCALE+(support['scene_vx']if support['scene_motion_observed']else -10*SCALE),0.)
+            elif detection.kind=='arrow'and detection.box.center[0]>(player.center[0]if player else 180.):
+                from arena_arrow_motion import velocity_prior
+                detection.velocity_prior=velocity_prior(detection,support['scene_vx']if support['scene_motion_observed']else None)
         result=self._finish(rgb,stamp,player,detections,support_observation=support,player_observed=not predicted)
         observed_vx=result['vx']
         # With a reliable static-scene flow the forward-running root cannot
