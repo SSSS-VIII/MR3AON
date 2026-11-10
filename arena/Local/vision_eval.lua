@@ -24,6 +24,60 @@ local function last_hurt_reference(n)
     return out
 end
 
+-- Capture only on an actual health drop. This is an evaluation witness, never
+-- an actor observation; reading one role and one retained enemy avoids a scene
+-- scan during live input. The original hurt response may already have run.
+function E.vision_hit_geometry(n)
+    local cam=U.Camera.main
+    local function vector(p)return {x=p.x,y=p.y,z=p.z}end
+    local function point(p)
+        local q=cam:WorldToViewportPoint(p)
+        return {x=q.x*640,y=(1-q.y)*360,z=q.z}
+    end
+    local function colliders(o,role)
+        local result={}
+        if not o or not o.gameObject then return result end
+        local all=o.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
+        for i=0,all.Length-1 do local c=all[i]
+            if c.enabled and c.gameObject.activeInHierarchy and
+                    ((role and c.name=='Role')or(not role and c.tag=='Enemy')) then
+                local bounds=c.bounds
+                local row={id=c:GetInstanceID(),name=c.name,type=c:GetType().Name,
+                    world_center=vector(bounds.center),world_extents=vector(bounds.extents),
+                    plane_quad={},lossy_scale=vector(c.transform.lossyScale)}
+                if row.type=='BoxCollider' then
+                    row.size=vector(c.size);row.center=vector(c.center)
+                    for _,s in ipairs({{-1,-1},{1,-1},{1,1},{-1,1}})do
+                        row.plane_quad[#row.plane_quad+1]=point(c.transform:TransformPoint(
+                            c.center+U.Vector3(s[1]*c.size.x/2,s[2]*c.size.y/2,0)))
+                    end
+                else
+                    for _,s in ipairs({{-1,-1},{1,-1},{1,1},{-1,1}})do
+                        row.plane_quad[#row.plane_quad+1]=point(U.Vector3(
+                            bounds.center.x+s[1]*bounds.extents.x,
+                            bounds.center.y+s[2]*bounds.extents.y,bounds.center.z))
+                    end
+                end
+                result[#result+1]=row
+            end
+        end
+        return result
+    end
+    local enemy=lastHurtField:GetValue(n)
+    local state
+    if enemy then
+        local tp=enemy:GetType()
+        while tp do
+            local f=tp:GetField('_enemyState',flags)
+            if f then state=tostring(f:GetValue(enemy));break end
+            tp=tp.BaseType
+        end
+    end
+    return {role=colliders(n,true),enemy=colliders(enemy,false),enemy_state=state,
+        role_root=vector(n.transform.position),camera=vector(cam.transform.position),
+        scope='Post-health-drop original geometry; hurt response may already have changed the role'}
+end
+
 function E.vision_interactions()
     local function task(t)
         if not t then return nil end
@@ -93,6 +147,8 @@ function E.sample_vision_health()
             physics=tostring(get(n,'__ninjaPhysicsState'))}
         local ok,value=pcall(last_hurt_reference,n)
         if ok then event.last_hurt_reference=value else event.reference_error=tostring(value)end
+        local geometry_ok,geometry=pcall(E.vision_hit_geometry,n)
+        if geometry_ok then event.geometry=geometry else event.geometry_error=tostring(geometry)end
         E.visionEvalLastHealthDrop=event
     end
     for _,pair in ipairs({{'jump',U.KeyCode.K},{'down',U.KeyCode.S}}) do
