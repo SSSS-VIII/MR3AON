@@ -155,3 +155,31 @@ def test_real_picli_uses_directory_flags_without_copying_binary(tmp_path):
     assert path.read_bytes() == before
     assert (tmp_path / "config/maa_option.json").is_file()
     assert not (tmp_path / "MaaPiCli").exists()
+
+
+@pytest.mark.parametrize(('output', 'expected'), [
+    ('inet 192.168.241.112/24 brd 192.168.241.255', '192.168.241.112:5555'),
+    ('inet6 fe80::1/64', None),
+    ('inet 192.168.240.112/24', None),
+    ('inet 192.168.241.112/24\ninet 192.168.241.113/24', None),
+])
+def test_missing_dhcp_status_queries_only_named_android_and_checks_subnet(registry, output, expected):
+    session = InstanceSession("small", registry=registry)
+    with patch.object(session, 'status', return_value={'session': 'RUNNING', 'ip address': 'UNKNOWN'}), \
+            patch.object(session, '_backend', return_value=output) as backend:
+        if expected:
+            assert session._address() == expected
+        else:
+            with pytest.raises(RuntimeError):
+                session._address()
+        backend.assert_called_once_with('shell', 'ip', 'addr', 'show', 'dev', 'eth0',
+                                        root=True, timeout=10)
+
+
+def test_stopped_android_does_not_query_container_address(registry):
+    session = InstanceSession("small", registry=registry)
+    with patch.object(session, 'status', return_value={'session': 'STOPPED', 'ip address': 'UNKNOWN'}), \
+            patch.object(session, '_backend') as backend:
+        with pytest.raises(RuntimeError):
+            session._address()
+        backend.assert_not_called()

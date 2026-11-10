@@ -11,6 +11,7 @@ from dataclasses import dataclass
 import fcntl
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import socket
@@ -72,7 +73,6 @@ class InstanceSpec:
             MR3A_WORK_ROOT=str(self.work_root),
             MR3A_WAYDROID_SLOT=str(self.slot),
             ADB_SERVER_SOCKET=f"tcp:{self.adb_port}",
-            MR3A_REAL_ADB=shutil.which("adb") or "/usr/bin/adb",
         )
         if serial:
             env.update(MR3A_ADB_SERIAL=serial, ANDROID_SERIAL=serial)
@@ -190,8 +190,18 @@ class InstanceSession:
     def _address(self) -> str:
         status = self.status()
         address = status.get("ip address", "UNKNOWN")
-        if status.get("session") != "RUNNING" or address == "UNKNOWN":
+        if status.get("session") != "RUNNING":
             raise RuntimeError(f"实例 {self.spec.name} 的 Android 尚未运行或没有地址")
+        if not address or address == "UNKNOWN":
+            # Waydroid status reads the DHCP lease file, which may be empty
+            # while the running Android still owns its address. Query only
+            # this named container, then apply the same subnet guard below.
+            output = self._backend("shell", "ip", "addr", "show", "dev", "eth0",
+                                   root=True, timeout=10)
+            addresses = set(re.findall(r"\binet\s+([0-9.]+)/", output))
+            if len(addresses) != 1:
+                raise RuntimeError(f"实例 {self.spec.name} 的 Android 尚未运行或没有唯一地址")
+            address = addresses.pop()
         import ipaddress
         target = ipaddress.ip_address(address)
         expected = ipaddress.ip_network(f"192.168.{240 + self.spec.slot}.0/24")
@@ -386,9 +396,9 @@ class InstanceSession:
     def bind_config(self) -> None:
         config = json.loads(self.spec.config_path.read_text())
         serial = self._serial or self._address()
-        # Bound the CLI's native ADB subprocess too: its pipe read may block
-        # past the framework timeout, preventing any pipeline recovery callback.
-        adb = str(self.spec.project_root / "tools/maa-adb")
+        # The CLI matches this exact path against toolkit discovery to obtain
+        # controller methods/config; a wrapper path breaks that lookup.
+        adb = shutil.which("adb") or "/usr/bin/adb"
         config["adb"] = {
             "adb_path": adb, "address": serial, "name": serial + "-" + adb,
         }

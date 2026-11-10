@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-# CLI transport only; InstanceSession still owns the device and ADB server.
-# GNU timeout owns a separate process group and closes stdout on timeout,
-# unblocking MaaFramework's synchronous pipe read without killing the server.
-set -euo pipefail
-exec /usr/bin/timeout --kill-after=2s 20s "${MR3A_REAL_ADB:-/usr/bin/adb}" "$@"

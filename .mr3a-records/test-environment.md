@@ -27,9 +27,11 @@
 
 `--no-window` 仍准备 Android、DHCP、ADB 和截图尺寸，只跳过 `show-full-ui`；本次启动的 Agent 恢复也保持后台模式。不带此参数仍按原样打开窗口。小鲤的 `~/xiaoli/run xiaoli` 已自动附加该参数，停止入口不变；已存在的窗口不因此被关闭。
 
-## CLI ADB调用期限
+## CLI ADB与地址恢复
 
-命名入口给MaaPiCli绑定共享`tools/maa-adb`，由GNU timeout限制每条ADB子命令20秒、终止后2秒仍未退出再强制回收，避免同步截图管道卡住而无法进入流水线恢复。真实ADB路径由`MR3A_REAL_ADB`传入；同名serial、ADB_SERVER_SOCKET和服务器生命周期仍由InstanceSession管理。不会kill-server或关闭其它实例；InstanceSession自身API的显式超时不变。框架可能重试多种截图方式，因此不是整次连接/恢复20秒的承诺。旧运行会话需要正常重启run加载绑定，不能热替换。
+CLI必须绑定工具自动发现的真实ADB路径（通常`/usr/bin/adb`），设备name也按该路径生成。不能直接换成包装器路径：当前定制CLI按name/path匹配工具发现结果，未匹配时无法补齐截图/输入方法和config，会导致控制器创建失败。此前20秒包装器方案已撤回，原生同步截图阻塞保护仍待另行实现。
+
+Waydroid状态IP为UNKNOWN时，仅查询同名Android的eth0地址并校验该实例固定子网；不会猜地址或选择其它实例。Android有旧IP却无默认路由、宿主ARP失败时，仍需恢复该命名环境的网络，本次main已通过同名重启恢复。
 
 ## 文件归属
 
