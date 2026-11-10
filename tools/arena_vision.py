@@ -382,6 +382,8 @@ class Perception:
             self.sliding_until=stamp+.55
         if name and current and current['player']:
             self.active_motion=create_motion(current,name,stamp)
+            if name=='air_down'and self.visual_role:
+                self.active_motion['requires_contact']=True
             ox,oy=current_offsets(current)
             p=current['player'];scale=current.get('scale_px',41.)
             support=current.get('rope')
@@ -618,7 +620,7 @@ class Perception:
             detections.append(Detection(Box(float(x), float(y), float(w), float(h)), kind, confidence))
         return self._finish(rgb,stamp,player,detections,body)
 
-    def _finish(self,rgb,stamp,player,detections,body=None,support_observation=None):
+    def _finish(self,rgb,stamp,player,detections,body=None,support_observation=None,player_observed=True):
         phase = 'unknown'
         tracks = []
         support=None
@@ -691,7 +693,18 @@ class Perception:
                 name=self.active_motion['name'];elapsed=max(0,stamp-self.active_motion['started'])
                 phase=motion.phase(name,elapsed,self.active_motion)
                 if motion.is_rope_transition(name)and elapsed>=motion.duration(name,self.active_motion):
-                    self.active_motion=None;self.jump_count=0
+                    requires=self.active_motion.get('requires_contact',False)
+                    arrived=not requires or player_observed and down_contact(dict(
+                        player=player,rope=self.rope,rope_segment=(support_observation or{}).get('rope_segment'),
+                        rope_segments=(support_observation or{}).get('rope_segments',[]),terrain=terrain,
+                        scale_px=self.motion_origin['scale'],vx=self.player_horizontal_velocity,
+                        stand_h=self.motion_origin['stand_h']),self.active_motion)
+                    if arrived:
+                        if requires:phase='ground'if self.active_motion.get('destination')=='ground'else'rope_below'
+                        self.active_motion=None;self.jump_count=0
+                    else:
+                        self.active_motion=dict(self.active_motion,contact_pending=True)
+                        phase='flip_down'
                 elif name.startswith('jump')and 'falling' in phase and support is not None:
                     available=on_rope or bool(terrain and terrain['at_player'])
                     landing=support-.75*self.motion_origin['scale']
@@ -802,6 +815,15 @@ def down_surface(observation,seconds=0):
     return None,None
 
 
+def down_contact(observation,active):
+    """A restored collider at the visible surface acknowledges native landing."""
+    surface,destination=down_surface(observation)
+    if surface is None or destination!=active.get('destination'):return False
+    p=observation['player'];scale=observation.get('scale_px',41.)
+    target=surface+(.75 if destination=='rope'else -.75)*scale
+    return p.h>=.65*observation.get('stand_h',motion.DATA['stand_height']*scale)and abs(p.center[1]-target)<=8
+
+
 def create_motion(observation,name,stamp=None):
     active=dict(name=name,started=observation['time']if stamp is None else stamp)
     if name=='air_down':
@@ -895,6 +917,17 @@ def player_future(observation,seconds):
     p=observation['player']
     active=observation.get('motion')
     if active:
+        if active.get('contact_pending'):
+            scale=observation.get('scale_px',41.)
+            cx=p.center[0]+observation.get('vx',0.)*seconds
+            cy=p.center[1]+motion.DATA['air_down']['speed']*scale*seconds
+            surface,destination=down_surface(observation,seconds)
+            w,h=p.w,p.h
+            if surface is not None:
+                target=surface+(.75 if destination=='rope'else -.75)*scale
+                if p.center[1]<=target<=cy:
+                    cy=target;w=observation.get('stand_w',w);h=observation.get('stand_h',h)
+            return Box(cx-w/2,cy-h/2,w,h)
         elapsed=max(0,observation['time']-active['started'])
         a=motion.point(active['name'],elapsed,active);b=motion.point(active['name'],elapsed+seconds,active)
         scale=observation.get('scale_px',41.)
@@ -989,7 +1022,9 @@ def advance_player(observation,seconds):
         elapsed=current['time']-active['started'];name=active['name']
         current['phase']=motion.phase(name,elapsed,active)
         if motion.is_rope_transition(name)and elapsed>=motion.duration(name,active):
-            current.update(motion=None,jumps=0)
+            if active.get('requires_contact'):
+                current.update(motion=dict(active,contact_pending=True),phase='flip_down',jumps=0)
+            else:current.update(motion=None,jumps=0)
         elif name.startswith('jump')and 'falling'in current['phase']:
             support=current.get('rope');terrain=current.get('terrain')
             if terrain and terrain.get('source')=='neural_segments':

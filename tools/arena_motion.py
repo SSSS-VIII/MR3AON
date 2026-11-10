@@ -49,6 +49,7 @@ def point(name,t,parameters=None):
 
 
 def phase(name,t,parameters=None):
+    if name=='air_down'and parameters.get('contact_pending'):return 'flip_down'
     if is_rope_transition(name):
         below=name in ('rope_down','air_down')
         if t<duration(name,parameters):

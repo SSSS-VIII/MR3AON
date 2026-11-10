@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 import pytest
 pytest.importorskip('cv2')
+import numpy as np
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
 import arena_motion as motion
 from arena_vision import Box,can_air_down,create_motion,native_motion_box,advance_player,Perception
@@ -57,3 +58,31 @@ def test_reactive_controller_can_cancel_an_airborne_jump_before_old_320ms_lock()
     assert policy.choose(airborne())[0]=='down'
     policy=Threat();policy.last_action=.95
     assert policy.choose(airborne())==(None,'action_transition')
+
+
+def test_native_down_waits_for_visible_contact_before_accepting_another_jump():
+    actor=Perception();actor.visual_role=True
+    obs=airborne();actor.action('down',1.,obs)
+    support=dict(mode='ground',rope=None,terrain=obs['terrain'],segments=obs['terrain']['segments'],
+                 tracking_reference=(0.,0.),rope_segments=[])
+    rgba=np.zeros((360,640,3),np.uint8)
+    # The estimated timer expired, but the real collider is still tiny and far
+    # from contact. Do not invent a landing/cancel the native rollToGround.
+    estimate=actor._finish(rgba,1.4,Box(176,160,8,8),[],support_observation=support)
+    assert estimate['phase']=='flip_down'
+    assert estimate['motion']['contact_pending']
+    assert advance_player(estimate,.03)['phase']=='flip_down'
+    assert advance_player(estimate,.03)['player'].center[1]>estimate['player'].center[1]+30
+    # A missing detection extrapolated to standing contact is no acknowledgement.
+    standing=Box(172,211.28,16,37.44)
+    extrapolated=actor._finish(rgba,1.425,standing,[],support_observation=support,player_observed=False)
+    assert extrapolated['motion']is not None
+    landed=actor._finish(rgba,1.45,standing,[],support_observation=support)
+    assert landed['phase']=='ground'and landed['motion']is None
+
+
+def test_input_delay_projection_cannot_acknowledge_future_ground_contact():
+    actor=Perception();actor.visual_role=True;obs=airborne();actor.action('down',1.,obs)
+    active=dict(obs,motion=actor.active_motion,phase='flip_down')
+    projected=advance_player(active,.4)
+    assert projected['phase']=='flip_down'and projected['motion']['contact_pending']

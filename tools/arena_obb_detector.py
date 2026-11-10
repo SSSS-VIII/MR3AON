@@ -111,7 +111,7 @@ class ObbPerception(Perception):
         elif self.last_seen_player is not None and stamp-self.last_seen_player<.22 and self.last_observation:
             player=player_future(self.last_observation,stamp-self.last_observation['time']);predicted=True
         support=self.supports.observe(segments,player,stamp)
-        result=self._finish(rgb,stamp,player,detections,support_observation=support)
+        result=self._finish(rgb,stamp,player,detections,support_observation=support,player_observed=not predicted)
         observed_vx=result['vx']
         # With a reliable static-scene flow the forward-running root cannot
         # retreat faster than that scene. Crop jitter or a newly blocked runner
