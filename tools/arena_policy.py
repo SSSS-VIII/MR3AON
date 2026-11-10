@@ -55,7 +55,8 @@ class Avoider:
 
     def _objects(self,obs):
         p=obs['player']
-        objects=[t for t in obs['tracks'] if t.kind!='slice_target'and track_confidence(t,obs['time'])>=.7
+        threshold=obs.get('hazard_confidence',.7)
+        objects=[t for t in obs['tracks'] if t.kind!='slice_target'and track_confidence(t,obs['time'])>=threshold
                 and (t.observations>=3 or t.arming or t.active)
                 and t.box.x+t.box.w>p.x-100]
         for face in leading_ground_faces(obs.get('visible_supports',[]),obs['time']):

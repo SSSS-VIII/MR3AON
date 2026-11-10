@@ -70,7 +70,7 @@ def decode(quads,ids,scores,profile,player_x=180.):
 
 class ObbDetector:
     def __init__(self,weights,confidence=.25):
-        weights=Path(weights);self.profile=json.loads(profile_path(weights).read_text())
+        weights=Path(weights);self.profile=json.loads(profile_path(weights).read_text());self.confidence=confidence
         if self.profile.get('task')!='obb'or self.profile.get('geometry')!='gameplay_plane':
             raise ValueError('Expected a native gameplay-plane OBB profile')
         import torch
@@ -131,6 +131,7 @@ class ObbPerception(Perception):
                       stand_h=motion.DATA['stand_height']*SCALE,geometry='gameplay_plane',
                       detector='standard_yolo26n_obb',detector_ms=self.detector.last_ms,cues=cues,
                       observed_rush_velocity=self.rush_prior,
+                      hazard_confidence=getattr(self.detector,'confidence',.25),
                       visible_supports=support['segments'],player_predicted=predicted,
                       camera_reference_y=support['tracking_reference'][1],camera_velocity_y=support['camera_vy'],
                       scene_velocity_x=support['scene_vx'],observed_player_velocity_x=observed_vx,

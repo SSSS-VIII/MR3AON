@@ -1056,7 +1056,7 @@ def overlay(rgb, observation, action=None, reason=''):
             x,y=int(round(face['x'])),int(round(face['y']))
             cv2.line(image,(x,y),(x,359),(0,165,255),1)
     for t in observation['tracks']:
-        color = (0, 0, 255) if track_confidence(t,observation['time']) >= .7 else (140, 140, 140)
+        color = (0, 0, 255) if track_confidence(t,observation['time']) >= observation.get('hazard_confidence',.7) else (140, 140, 140)
         if t.kind=='slice_target':color=(255,180,0)
         if getattr(t,'quad',None)is not None:cv2.polylines(image,[np.asarray(t.quad,np.int32)],True,color,1)
         else:rect(t.box, color)
