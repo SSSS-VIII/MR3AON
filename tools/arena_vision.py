@@ -967,6 +967,9 @@ def overlay(rgb, observation, action=None, reason=''):
         cv2.polylines(image,[path],False,(255,255,255),1)
     terrain=observation.get('terrain')
     if terrain:
+        if terrain.get('source')=='neural_segments':
+            for segment in terrain['segments']:
+                cv2.line(image,tuple(int(v)for v in segment['a']),tuple(int(v)for v in segment['b']),(0,255,255),1)
         for x,y,solid in terrain['samples']:
             if solid:
                 cv2.circle(image,(int(round(x)),int(round(y))),1,(0,255,255),-1)

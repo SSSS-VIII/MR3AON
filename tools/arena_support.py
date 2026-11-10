@@ -27,10 +27,10 @@ def leading_ground_faces(segments,stamp):
 
 
 def height(segment,x,seconds=0):
-    a=np.asarray(segment['a'],float)+np.array([segment.get('vx',0),segment.get('vy',0)])*seconds
-    b=np.asarray(segment['b'],float)+np.array([segment.get('vx',0),segment.get('vy',0)])*seconds
-    if not a[0]<=x<=b[0]or b[0]-a[0]<4:return None
-    return float(a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0]))
+    dx=segment.get('vx',0)*seconds;dy=segment.get('vy',0)*seconds
+    a,b=segment['a'],segment['b'];ax=a[0]+dx;bx=b[0]+dx
+    if not ax<=x<=bx or bx-ax<4:return None
+    return float(a[1]+dy+(b[1]-a[1])*(x-ax)/(bx-ax))
 
 
 def landing_height(terrain,x,seconds,from_y):
@@ -40,10 +40,10 @@ def landing_height(terrain,x,seconds,from_y):
     return min(values)if values else None
 
 
-def describe_terrain(ground,selected,px):
+def describe_terrain(ground,selected,px,*,include_samples=True):
     y=height(selected,min(max(px,selected['a'][0]),selected['b'][0]))
     samples=[]
-    for x in range(0,640,4):
+    for x in range(0,640,4)if include_samples else ():
         ys=[v for s in ground for v in[height(s,x)]if v is not None]
         value=min(ys,key=lambda v:abs(v-y))if ys else y
         samples.append((x,value-7,bool(ys)))
@@ -66,7 +66,7 @@ def advance_terrain(terrain,seconds,px):
     if future_y is not None:
         selected=min((s for s in segments if height(s,px)is not None),
                      key=lambda s:abs(height(s,px)-future_y))
-    return describe_terrain(segments,selected,px)
+    return describe_terrain(segments,selected,px,include_samples=False)
 
 
 def connected_height(segments,selected_id,x,seconds=0):

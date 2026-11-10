@@ -110,13 +110,16 @@ class MpcAvoider(VisualAvoider):
     BEAM=24
 
     def uses_search(self,obs):
-        return bool(obs.get('player')and obs.get('rope')is not None and not obs.get('terrain')
+        airborne_ground=bool(obs.get('terrain')and obs['terrain'].get('source')=='neural_segments'
+                             and obs.get('phase','').startswith(('jump','air_')))
+        return bool(obs.get('player')and (obs.get('rope')is not None and not obs.get('terrain')or airborne_ground)
                     and (self._targets(obs)or any(t.kind in ('pinball','trap','terrain_wall')or t.attack_phase is not None for t in self._objects(obs))))
 
     def _options(self,state,stamp):
         names=[None]
         phase=state['phase']
         if phase=='rope_above':names+=['rope_down','jump1']
+        elif phase=='ground'or phase.startswith('air_')and not state['jumps']:names+=['jump1']
         elif phase=='rope_below':names+=['rope_up']
         elif state['jumps']==1 and phase.startswith('jump1'):
             active=state.get('motion')
@@ -126,7 +129,7 @@ class MpcAvoider(VisualAvoider):
 
     def choose(self,obs):
         if obs['player']is None:return None,'unknown_player'
-        if obs.get('rope')is None or obs.get('terrain'):
+        if not self.uses_search(obs):
             return super().choose(obs)
         tracks=self._objects(obs);targets=self._targets(obs)
         if not tracks and not targets:return super().choose(obs)
@@ -188,6 +191,10 @@ class MpcAvoider(VisualAvoider):
                 # The total bonus stays below even one ordinary collision cost.
                 cost-=.1*(min(10,len(target_hits))-min(10,len(node.target_hits)))
                 count=node.actions+bool(name)
+                terrain=end.get('terrain')
+                if (terrain and not terrain['at_player']and end['player'].center[1]>terrain['y']+35
+                        and 'unsupported'not in hits):
+                    cost+=10000;hits.add('unsupported')
                 if name:cost+=.05 if name.startswith('jump')else .03
                 first=name if step==0 else node.first
                 active=end.get('motion');age=0 if not active else round(end['time']-active['started'],3)
