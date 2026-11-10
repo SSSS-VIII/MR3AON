@@ -848,7 +848,9 @@ def serializable(observation):
             return list(v)
         if hasattr(v, '__dataclass_fields__'):
             return {k: pack(x) for k, x in vars(v).items()}
-        if isinstance(v, list):
+        if isinstance(v, dict):
+            return {k: pack(x) for k,x in v.items()}
+        if isinstance(v, (list,tuple)):
             return [pack(x) for x in v]
         return v
     return {k: pack(v) for k, v in observation.items()}
