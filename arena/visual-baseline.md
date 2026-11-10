@@ -1,6 +1,16 @@
 # 竞技场实时视觉基线
 
-## 当前默认：官方YOLO26n-OBB十六类
+## 当前默认：官方YOLO26n-OBB v12（16类）
+
+`./tools/run-arena-vision --seed 31110 --level 5 --map 42 --boards 3 --seconds 120`。
+
+12958原训练帧/7335验证帧，标准Trainer在v11上继续6epoch/freeze0/batch16；新增实景只来自第5/6关级的上下坡。新验证665帧地面中心线召回56.7%→83.9%、危险物87.9%→90.6%；另留新测试363帧地面83.9%、危险物82.6%。旧30回合全部6583帧危险物87.1%/96.1%，不是全类型/全状态验收。
+
+危险物控制与模型验证同用0.25工作点及连续帧确认，水果目标仍0.8。自身原生空中下翻、坡面/镜头分离、脚点与0.8攀爬距离、截断边界和地形阻挡预测已接入，原游戏物理/AI仍不改。部署只读像素及自己的输入；原生标签/HP/板号仅标注与验收。
+
+第5关53041整板1693.75伤害，第6关6101整板最新2444.96伤害，god=false/5000上限、按键链P95约54–56ms；**仍未稳定无伤**。飞竹等预警阶段、低置信/漏检、未知运动仍需完善。当前权重`debug/arena-client/yolo/finetune/fit-slope-v12/weights/best.pt`，SHA `eb0c0b0c511c905dd3785a0a6a29287984fea7f9c7870f866cddb332cab8ddfd`；profile SHA与v11相同。数据、选择依据及独立验证见[坡段微调](../.mr3a-records/archived/2026-11-10-arena-slope-finetune-v12.md)。
+
+## 此前v11验收（历史）
 
 运行`./tools/run-arena-vision --seed 28011 --boards 4 --seconds 110`。官方NN及官方Trainer，12534原训练帧/6972验证帧，71原资源目录、69族有物理正目标；香蕉Box、番茄/西瓜Capsule从危险物中分出，木偶炸弹保留原Sphere/蜘蛛运动类别。未凭零伤害推广到其它资源，没有自写网络。
 
@@ -15,7 +25,7 @@
 
 检测：旧val2332帧物理召回88.6%/精确率96.4%；旧保留集2201帧跨资源回归87.1%/96.1%。全新test30002的361帧仅含三水果、弹球/木偶炸弹，物理1463/1568=93.3%，高置信目标1196/1201=99.6%，0危险物误作目标；不能把小场景结果当全陷阱通过。cue仍未匹配、岩虎缺实景、荆棘独立验收不足；木偶炸弹在部分变体仍常被细分成弹球，具体运动分类未通过，轨迹/状态和密集陷阱伤害仍需改善。
 
-默认权重和几何profile的SHA固定于vision-detector.json；当前权重`debug/arena-client/yolo/finetune/fit-interaction-v11/weights/best.pt`，SHA `b3d85145b3dd01e530d3137a10e7abaec6fb3616a2bf45d00b47e553175e31d2`。原帧、叠加图、逐帧动作/独立原生验收、两种SHA与源摘要留在对应忽略目录，回放为interaction-v11-fresh-fruit28010/replay.mp4及default-interaction-v11-random28011/replay.mp4。旧v10/v4保留，可显式选权重回退。
+当时权重和几何profile的SHA已归档；v11权重`debug/arena-client/yolo/finetune/fit-interaction-v11/weights/best.pt`，SHA `b3d85145b3dd01e530d3137a10e7abaec6fb3616a2bf45d00b47e553175e31d2`。原帧、叠加图、逐帧动作/独立原生验收、两种SHA与源摘要留在对应忽略目录，回放为interaction-v11-fresh-fruit28010/replay.mp4及default-interaction-v11-random28011/replay.mp4。旧v10/v4保留，可显式选权重回退。
 
 第三关级水果场景：
 

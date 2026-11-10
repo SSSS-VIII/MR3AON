@@ -1,7 +1,7 @@
 {
   "model": "Ultralytics YOLO26n-OBB",
-  "weights": "debug/arena-client/yolo/finetune/fit-interaction-v11/weights/best.pt",
-  "sha256": "b3d85145b3dd01e530d3137a10e7abaec6fb3616a2bf45d00b47e553175e31d2",
+  "weights": "debug/arena-client/yolo/finetune/fit-slope-v12/weights/best.pt",
+  "sha256": "eb0c0b0c511c905dd3785a0a6a29287984fea7f9c7870f866cddb332cab8ddfd",
   "profile_sha256": "68aedf4d53631fe265944423fc2104f55bf24b64ebd54def70031926a8796f2a",
   "classes": [
     "player",
@@ -21,5 +21,5 @@
     "fruit_capsule",
     "muppet_bomb"
   ],
-  "evaluation": "Experimental 16-class interaction-aware physics: native fruit target completion and partial board control. Significant damage remains; Muppet bomb motion subtype, cue, RockTiger and full Gale control are unaccepted."
+  "evaluation": "Experimental v12, 12958 native training frames incl. level5/6 slopes. Held-out ground centerline recall83.9%; full legacy hazard R87.1/P96.1. Control uses validated OBB confidence0.25. Damage remains; no-hit and full Gale control unaccepted."
 }
