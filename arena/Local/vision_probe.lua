@@ -19,7 +19,8 @@ function E.probe_action(action,ticks,hold)
    local function sample()
     local state=E.state()
     for _,v in ipairs(state.colliders)do if v.name=='Role' and v.enabled then
-     E.visionProbe.samples[#E.visionProbe.samples+1]={tick=game._totalFrameCount-start,t=U.Time.time-engineStart,physics=state.physics,x=n.transform.position.x,y=n.transform.position.y,cx=v.center.x,cy=v.center.y,w=v.extents.x*2,h=v.extents.y*2}
+     local slope=n.SlopeOffset
+     E.visionProbe.samples[#E.visionProbe.samples+1]={tick=game._totalFrameCount-start,t=U.Time.time-engineStart,physics=state.physics,x=n.transform.position.x,y=n.transform.position.y,cx=v.center.x,cy=v.center.y,w=v.extents.x*2,h=v.extents.y*2,speed=state.speed,local_center=v.localCenter,slope_offset={x=slope.x,y=slope.y,z=slope.z}}
     end end
    end
    sample();U.Time.captureFramerate=60;U.Time.timeScale=1

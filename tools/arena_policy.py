@@ -47,10 +47,7 @@ class Avoider:
                 return self._jump(dict(obs,jumps=0,motion=None),target,t-motion.duration(name))
             return target
         if action=='slide':
-            f=min(1,t/.10) if t<.5 else max(0,1-(t-.5)/.1)
-            y=obs['terrain']['y']-8
-            return Box(p.x+obs.get('scale_px',41.)*1.8*f,
-                       p.y+(y-p.y)*f,p.w,p.h+(10-p.h)*f)
+            return native_motion_box(obs,'slide',t)
         raise ValueError(action)
 
     def _objects(self,obs):
@@ -120,7 +117,7 @@ class Avoider:
             active=create_motion(obs,name)
             if action=='escape'and t>motion.duration(name):
                 active=dict(name='jump1',started=obs['time']+motion.duration(name))
-        elif action=='slide':active=None
+        elif action=='slide':active=create_motion(obs,'slide')
         phase=motion.phase(active['name'],obs['time']+t-active['started'],active)if active else obs['phase']
         return dict(obs,player=player,time=obs['time']+t,motion=active,phase=phase)
 
@@ -133,7 +130,7 @@ class Avoider:
         if ground and ground['y']is not None:
             edge=ground['edge']
             if (edge is not None and obs['phase'] in ('ground','slide')
-                    and -20<edge-p.center[0]<max(48,(ground['speed']or 0)*.14)
+                    and -20<edge-root_foot_box(obs).center[0]<max(48,(ground['speed']or 0)*.14)
                     and(stamp-self.last_action>.3 or landing_ready)):
                 self.last_action=stamp
                 return 'jump','ground_edge'

@@ -358,7 +358,6 @@ class Perception:
         self.head_vy = 0.
         self.previous_vertical = None
         self.ground=GroundEdges()
-        self.sliding_until=-10
         self.support_mode=None
         self.last_rope_hint=-10
         self.last_observation=None
@@ -391,7 +390,7 @@ class Perception:
             elif current and can_air_down(current):
                 name='air_down';self.jump_count=0
         elif action=='slide':
-            self.sliding_until=stamp+.55
+            name='slide'
         if name and current and current['player']:
             self.active_motion=create_motion(current,name,stamp)
             if name=='air_down'and self.visual_role:
@@ -697,14 +696,13 @@ class Perception:
             else:
                 phase = ('jump2' if self.jump_count >= 2 else 'jump1' if self.jump_count else 'air')
                 phase += '_rising' if self.player_velocity < -30 else '_falling'
-            if terrain and terrain['y']is not None and stamp<self.sliding_until:
-                if py>terrain['y']-25:
-                    player=Box(player.x,terrain['y']-8,player.w,10.)
-                    phase='slide'
             if self.active_motion:
                 name=self.active_motion['name'];elapsed=max(0,stamp-self.active_motion['started'])
                 phase=motion.phase(name,elapsed,self.active_motion)
-                if motion.is_rope_transition(name)and elapsed>=motion.duration(name,self.active_motion):
+                if motion.is_ground_transition(name):
+                    if elapsed>=motion.duration(name,self.active_motion)and abs(motion.point(name,elapsed,self.active_motion)[0]-motion.DATA['stand_offset_x'])<.005:
+                        self.active_motion=None
+                elif motion.is_rope_transition(name)and elapsed>=motion.duration(name,self.active_motion):
                     requires=self.active_motion.get('requires_contact',False)
                     arrived=not requires or player_observed and down_contact(dict(
                         player=player,rope=self.rope,rope_segment=(support_observation or{}).get('rope_segment'),
@@ -726,7 +724,7 @@ class Perception:
                             player=Box(player.x,landing-self.motion_origin['stand_h']/2,
                                        self.motion_origin['stand_w'],self.motion_origin['stand_h'])
                         phase='rope_above'if on_rope else 'ground'
-                        self.active_motion=None;self.jump_count=0
+                        self.active_motion=landing_recovery(self.active_motion,stamp)if not on_rope else None;self.jump_count=0
             if not self.visual_role and not self.active_motion and phase in ('rope_above','rope_below')and support is not None:
                 center=support+30 if phase=='rope_below'else support-29
                 player=Box(player.x,center-player.h/2,player.w,player.h)
@@ -749,7 +747,7 @@ class Perception:
                     scale_px=self.body_height*.73/.936,stand_w=self.body_height*.36,
                     stand_h=self.body_height*.73,motion=self.active_motion,vx=self.player_horizontal_velocity)
         result['ground_contact_observed']=bool(self.visual_role and player_observed and player
-            and phase=='ground'and not self.active_motion and support_available
+            and phase=='ground'and (not self.active_motion or motion.is_ground_transition(self.active_motion['name']))and support_available
             and player.h>=.65*(self.motion_origin['stand_h']if self.motion_origin else self.body_height*.73))
         self.last_observation=result
         if support_observation is not None:
@@ -884,6 +882,22 @@ def ground_down_target(observation):
 
 def create_motion(observation,name,stamp=None):
     active=dict(name=name,started=observation['time']if stamp is None else stamp)
+    previous=observation.get('motion')
+    if previous and (motion.is_ground_transition(previous['name'])or previous.get('offset_carry_x')):
+        elapsed=max(0,observation['time']-previous['started'])
+        if previous['name']=='slide'and motion.phase('slide',elapsed)=='slide':
+            # Two original fixed updates can finish before EnterJump switches
+            # physics; the parent then freezes throughout the airborne phase.
+            ox=motion.point('slide',elapsed,previous)[0]-.026
+            prior=motion.DATA['profiles']['slide'];target=prior['offset_target_x']
+            carry=target-(target-ox)*prior['slide_multiplier']**2 if name.startswith('jump')else ox
+        else:
+            carry=motion.point(previous['name'],elapsed,previous)[0]-motion.DATA['stand_offset_x']
+        active['offset_carry_x']=carry
+    if name=='slide':
+        scale=observation.get('scale_px',41.)
+        active['base_speed']=(max(0,(observation.get('vx',0.)-observation['scene_velocity_x'])/scale)
+                              if observation.get('scene_motion_observed')else motion.DATA['profiles']['slide']['reference_speed'])
     if name=='air_down':
         scale=observation.get('scale_px',41.);p=observation['player'];ox,oy=current_offsets(observation)
         if (observation.get('rope')is None and(observation.get('terrain')or{}).get('source')=='neural_segments'):
@@ -898,10 +912,17 @@ def create_motion(observation,name,stamp=None):
     return active
 
 
+def landing_recovery(active,stamp):
+    carry=active.get('offset_carry_x',0.)
+    return dict(name='ground_recovery',started=stamp,offset_carry_x=carry)if abs(carry)>.005 else None
+
+
 def native_motion_box(observation,name,seconds):
     p=observation['player'];scale=observation.get('scale_px',41.)
     ox,oy=current_offsets(observation)
-    parameters=create_motion(observation,name)if name=='air_down'else None
+    parameters=create_motion(observation,name)
+    if name=='slide':
+        return ground_primitive_future(dict(observation,motion=parameters),seconds)
     x,y,offset_y,w,h=motion.point(name,seconds,parameters)
     cx=p.center[0]+(x-ox)*scale+observation.get('vx',0.)*seconds
     cy=p.center[1]-(y+offset_y-oy)*scale
@@ -911,6 +932,40 @@ def native_motion_box(observation,name,seconds):
     if name.startswith('jump'):
         result=cap_landing(observation,result,seconds,name)
     return result
+
+
+def ground_primitive_future(observation,seconds):
+    """Original slide/recovery shape; follow terrain at root X, not body X."""
+    from arena_support import height,connected_height
+    active=observation['motion'];name=active['name'];elapsed=max(0,observation['time']-active['started'])
+    a=motion.point(name,elapsed,active);b=motion.point(name,elapsed+seconds,active)
+    scale=observation.get('scale_px',41.);p=observation['player']
+    base_vx=observation.get('vx',0.)-motion.root_extra_velocity(name,elapsed,active)*scale
+    def root_dx(t):
+        return base_vx*t+(motion.root_extra(name,elapsed+t,active)-motion.root_extra(name,elapsed,active))*scale
+    root_x=p.center[0]-a[0]*scale;dx=root_dx(seconds)
+    cy=p.center[1]-((b[1]+b[2])-(a[1]+a[2]))*scale
+    w=observation.get('stand_w',p.w)*b[3]/motion.DATA['stand_width']
+    h=observation.get('stand_h',p.h)*b[4]/motion.DATA['stand_height']
+    terrain=observation.get('terrain')
+    if terrain and terrain.get('source')=='neural_segments'and terrain['at_player']:
+        segments=terrain['segments'];selected=next(s for s in segments if s['id']==terrain['selected_id'])
+        y0=height(selected,root_x)
+        y1=connected_height(segments,selected['id'],root_x+dx,seconds)
+        if y0 is not None and y1 is not None:cy+=y1-y0
+        elif y0 is not None:
+            # Find the visible end in time. Do not extend the slide along an
+            # infinite slope or keep the small body after stepping into air.
+            lo,hi=0.,seconds
+            for _ in range(12):
+                mid=(lo+hi)/2
+                if connected_height(segments,selected['id'],root_x+root_dx(mid),mid)is None:hi=mid
+                else:lo=mid
+            end=connected_height(segments,selected['id'],root_x+root_dx(lo),lo)
+            cy+=(end-y0 if end is not None else 0)+.5*19.8*3.5*scale*(seconds-lo)**2
+            h=max(h,observation.get('stand_h',p.h))
+    cx=p.center[0]+dx+(b[0]-a[0])*scale
+    return Box(cx-w/2,cy-h/2,w,h)
 
 
 def cap_landing(observation,box,seconds,name,forecast_seconds=None):
@@ -974,6 +1029,7 @@ def player_future(observation,seconds):
     p=observation['player']
     active=observation.get('motion')
     if active:
+        if motion.is_ground_transition(active['name']):return ground_primitive_future(observation,seconds)
         if active.get('contact_pending'):
             scale=observation.get('scale_px',41.)
             cx=p.center[0]+observation.get('vx',0.)*seconds
@@ -1055,7 +1111,7 @@ def advance_player(observation,seconds):
     terrain=current.get('terrain')
     if terrain and terrain.get('source')=='neural_segments':
         from arena_support import advance_terrain
-        current['terrain']=advance_terrain(terrain,seconds,current['player'].center[0])
+        current['terrain']=advance_terrain(terrain,seconds,root_foot_box(current).center[0])
     active=observation.get('motion')
     if not active:
         phase=observation['phase'];scale=observation.get('scale_px',41.)
@@ -1078,7 +1134,12 @@ def advance_player(observation,seconds):
     if active:
         elapsed=current['time']-active['started'];name=active['name']
         current['phase']=motion.phase(name,elapsed,active)
-        if motion.is_rope_transition(name)and elapsed>=motion.duration(name,active):
+        if motion.is_ground_transition(name):
+            previous_elapsed=max(0,observation['time']-active['started']);scale=observation.get('scale_px',41.)
+            current['vx']=observation.get('vx',0.)+scale*(motion.root_extra_velocity(name,elapsed,active)-motion.root_extra_velocity(name,previous_elapsed,active))
+            if current.get('terrain')and not current['terrain']['at_player']:
+                current.update(motion=None,phase='air_falling',jumps=0)
+        elif motion.is_rope_transition(name)and elapsed>=motion.duration(name,active):
             if active.get('requires_contact'):
                 current.update(motion=dict(active,contact_pending=True),phase='flip_down',jumps=0)
             else:current.update(motion=None,jumps=0)
@@ -1091,7 +1152,7 @@ def advance_player(observation,seconds):
             if support is not None:
                 landing=support-.75*observation.get('scale_px',41.)
                 if abs(current['player'].center[1]-landing)<.15:
-                    current.update(motion=None,jumps=0,phase='ground'if terrain else'rope_above')
+                    current.update(motion=landing_recovery(active,current['time'])if terrain else None,jumps=0,phase='ground'if terrain else'rope_above')
     return constrain_ground_motion(observation,current)
 
 

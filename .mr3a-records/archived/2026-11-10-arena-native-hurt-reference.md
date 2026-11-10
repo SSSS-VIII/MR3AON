@@ -19,3 +19,5 @@
 ## 后续调查
 
 原EnemyArrow存在none/active/stay/fly/onGround阶段及_velocityX/Y、_gravity、_velocityAccX；原EnemyArrowWarning为none/active/show/end，预制体无物理碰撞。不能全部按当前速度外推。多次受伤在原slideOnGround阶段，正在原UI重测滑行身体/位移（session59523独占arena）；尚未改滑行预测或箭的部署模型，当前默认仍v13。
+
+后续：59523已结束，起点在绳上而拒绝；随后干净平地与中断试验及六组新回归已完成，见[原滑行](2026-11-10-arena-ground-slide-prior.md)，不再有该独占作业。

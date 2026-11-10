@@ -137,7 +137,14 @@ class ObbPerception(Perception):
         elif self.last_seen_player is not None:
             player,prediction_reason=missing_role_prediction(self.last_observation,stamp,stamp-self.last_seen_player)
             predicted=player is not None
-        support=self.supports.observe(segments,player,stamp)
+        support_player=player
+        if player is not None and self.active_motion:
+            active=self.active_motion;elapsed=max(0,stamp-active['started'])
+            offset=motion.point(active['name'],elapsed,active)
+            # A slide moves the hurt capsule far ahead of the root. Support
+            # selection still probes the original movement root at the edge.
+            support_player=Box(player.x-offset[0]*SCALE,player.y,player.w,player.h)
+        support=self.supports.observe(segments,support_player,stamp)
         if predicted:
             dy=support['tracking_reference'][1]-self.last_observation.get('camera_reference_y',0.)
             player=Box(player.x,player.y+dy,player.w,player.h)
