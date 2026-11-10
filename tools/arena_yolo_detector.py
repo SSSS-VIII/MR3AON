@@ -20,7 +20,8 @@ DEFAULT_WEIGHTS=ROOT/PROFILE['weights']
 def make_perception(weights):
     from arena_obb_detector import profile_path
     path=profile_path(weights)
-    if Path(weights).resolve()==DEFAULT_WEIGHTS.resolve():
+    reviewed=Path(weights).resolve()==DEFAULT_WEIGHTS.resolve()
+    if reviewed:
         if hashlib.sha256(Path(weights).read_bytes()).hexdigest()!=PROFILE['sha256']:
             raise ValueError('Arena checkpoint differs from the reviewed profile')
         if PROFILE.get('profile_sha256'):
@@ -28,7 +29,16 @@ def make_perception(weights):
                 raise ValueError('Arena geometry metadata differs from the reviewed profile')
     if path.is_file()and json.loads(path.read_text()).get('task')=='obb':
         from arena_obb_detector import ObbDetector,ObbPerception
-        return ObbPerception(ObbDetector(weights))
+        refiner=None
+        config=PROFILE.get('bamboo_phase')if reviewed else None
+        if config:
+            checkpoint=ROOT/config['weights'];metadata=profile_path(checkpoint)
+            if (hashlib.sha256(checkpoint.read_bytes()).hexdigest()!=config['sha256']or
+                    hashlib.sha256(metadata.read_bytes()).hexdigest()!=config['profile_sha256']):
+                raise ValueError('Bamboo phase checkpoint or metadata differs from the reviewed profile')
+            from arena_bamboo_phase import BambooPhaseRefiner
+            refiner=BambooPhaseRefiner(checkpoint,config['threshold'])
+        return ObbPerception(ObbDetector(weights,phase_refiner=refiner))
     return YoloPerception(YoloDetector(weights))
 
 

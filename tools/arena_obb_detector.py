@@ -106,7 +106,7 @@ def decode(quads,ids,scores,profile,player_x=180.):
 
 
 class ObbDetector:
-    def __init__(self,weights,confidence=.25):
+    def __init__(self,weights,confidence=.25,phase_refiner=None):
         weights=Path(weights);self.profile=json.loads(profile_path(weights).read_text());self.confidence=confidence
         if self.profile.get('task')!='obb'or self.profile.get('geometry')!='gameplay_plane':
             raise ValueError('Expected a native gameplay-plane OBB profile')
@@ -118,16 +118,20 @@ class ObbDetector:
         self.sha256=hashlib.sha256(weights.read_bytes()).hexdigest()
         self.options=dict(device=0,imgsz=640,conf=confidence,verbose=False,quantize=16,max_det=150)
         for _ in range(6):self.model.predict(np.zeros((360,640,3),np.uint8),**self.options)
-        self.player_x=180.;self.last_ms=0.
+        self.player_x=180.;self.last_ms=0.;self.phase_refiner=phase_refiner
 
     def reset_tracking(self):
         self.player_x=180.
 
     def detect(self,rgb):
         begin=time.perf_counter()
-        result=self.model.predict(cv2.cvtColor(rgb[:,:,:3],cv2.COLOR_RGB2BGR),**self.options)[0]
+        bgr=cv2.cvtColor(rgb[:,:,:3],cv2.COLOR_RGB2BGR)
+        result=self.model.predict(bgr,**self.options)[0]
         obb=result.obb
         decoded=decode(obb.xyxyxyxy.cpu().numpy(),obb.cls.cpu().numpy(),obb.conf.cpu().numpy(),self.profile,self.player_x)
+        if self.phase_refiner is not None:
+            player,hazards,supports,cues=decoded
+            decoded=player,hazards,supports,self.phase_refiner.refine(bgr,cues)
         if decoded[0]is not None:self.player_x=decoded[0].center[0]
         self.last_ms=(time.perf_counter()-begin)*1000
         return decoded
@@ -211,4 +215,6 @@ class ObbPerception(Perception):
                       scene_motion_source=support['scene_motion_source'],scene_texture=texture,scene_motion_ms=scene_ms,
                       observed_player_velocity_x=observed_vx,
                       player_seen_age=None if self.last_seen_player is None else stamp-self.last_seen_player)
+        refiner=getattr(self.detector,'phase_refiner',None)
+        if refiner is not None:result['bamboo_phase_ms']=refiner.last_ms
         return result

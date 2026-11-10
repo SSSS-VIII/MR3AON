@@ -29,9 +29,14 @@ def review(predictions_path,profile_path):
             player,_,segments,_=decode([q for c,q,s in objects],[c for c,q,s in objects],
                                        [s for c,q,s in objects],profile)
             support=supports.observe(segments,player,stamp);camera_y=support['tracking_reference'][1]
-            cues=[dict(box=Box(*bounds(q)),phase=profile['classes'][c]['phase'],confidence=s)
-                  for c,q,s in objects if profile['classes'][c].get('motion_kind')=='bamboo'
-                  and profile['classes'][c]['kind']=='cue']
+            if 'bamboo_cues'in row:
+                # Saved pixel-classifier output retains uncertain exposures,
+                # exactly as the live estimator does; no native phase enters.
+                cues=[dict(c,box=Box(**c['box']))for c in row['bamboo_cues']]
+            else:
+                cues=[dict(box=Box(*bounds(q)),phase=profile['classes'][c]['phase'],confidence=s)
+                      for c,q,s in objects if profile['classes'][c].get('motion_kind')=='bamboo'
+                      and profile['classes'][c]['kind']=='cue']
             clocks.observe(cues,stamp,camera_y)
             forecasts=clocks.forecasts(stamp,support['scene_vx']if support['scene_motion_observed']else None,camera_y)
             for f in forecasts:

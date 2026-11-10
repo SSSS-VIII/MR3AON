@@ -44,8 +44,8 @@ class BambooClocks:
         # Two phase logits can survive class-wise NMS at the same reticle.
         # Retain the strongest spatial prediction before temporal association.
         selected=[]
-        for cue in sorted(cues,key=lambda c:c['confidence'],reverse=True):
-            if cue['phase']not in('aim','locked')or cue['confidence']<.25:continue
+        for cue in sorted(cues,key=lambda c:(c['phase']in('aim','locked'),c['confidence']),reverse=True):
+            if cue['phase']not in('aim','locked','uncertain')or cue['confidence']<.25:continue
             if any(abs(cue['box'].center[0]-s['box'].center[0])<8 and
                    abs(cue['box'].center[1]-s['box'].center[1])<8 for s in selected):continue
             selected.append(cue)
@@ -66,7 +66,7 @@ class BambooClocks:
             if cue['phase']=='aim':
                 clock.update(last_aim=stamp,first_lock=None,lock_count=0,
                              target_y=track.box.center[1]-camera_y)
-            else:
+            elif cue['phase']=='locked':
                 if clock['first_lock']is None:clock['first_lock']=stamp
                 clock['lock_count']+=1
                 if clock['lock_count']>=2 and track.observations>=3:
@@ -77,8 +77,12 @@ class BambooClocks:
                     # one exposure at a transition. Preserve that observation
                     # interval as timing uncertainty rather than claiming that
                     # the last 'aim' image proves locking had not started.
-                    start=(aim-min(.06,max(.02,first-aim))
-                           if aim is not None and first-aim<.15 else first-1.04)
+                    # Uncertain animation exposures can separate the last
+                    # definite aim from the first definite lock by >150ms.
+                    # Intersect that visual onset bound with the full unknown
+                    # age interval; a gap is not a reason to discard the aim.
+                    start=(max(first-1.04,aim-min(.06,max(.02,first-aim)))
+                           if aim is not None else first-1.04)
                     clock.update(fire=(start+1.,first+1.04))
         self.clocks={k:v for k,v in self.clocks.items()if
                      (stamp<=v['fire'][1]+.35 if v['fire']else stamp-v['last_seen']<.25)}

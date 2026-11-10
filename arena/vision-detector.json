@@ -25,5 +25,12 @@
     "bamboo_attack",
     "mace"
   ],
-  "evaluation": "Experimental v15 standard20-class YOLO26n-OBB, visual bamboo clocks and source-bound eccentric Mace pivots; same13827 native training frames. Three fresh level6 60011 candidate boards completed with300..1649.96damage; two nominal same-seed old/new comparisons include an old death. Sealed404 frames Mace spatialR90.75%; geometry coverage/area reported separately. Legacy6304 hazardR92.76/P96.52. Level5 bamboo remains variable (same-seed old/new both0 or400damage), slope/arrow boards still hurt; full Gale no-hit unaccepted."
+  "evaluation": "Experimental v15 standard20-class YOLO26n-OBB, visual bamboo clocks and source-bound eccentric Mace pivots; same13827 native training frames. Three fresh level6 60011 candidate boards completed with300..1649.96damage; two nominal same-seed old/new comparisons include an old death. Sealed404 frames Mace spatialR90.75%; geometry coverage/area reported separately. Legacy6304 hazardR92.76/P96.52. Level5 bamboo remains variable (same-seed old/new both0 or400damage), slope/arrow boards still hurt; full Gale no-hit unaccepted. v16 adds standard64px reticle classification with phase agreement/uncertainty; sealed722 frames retained stage errors21->6 (57 fewer spatial matches), 0.4s forecast coverage204/223->211/223. Native5101 no-hit,50013 still400,60011 still600 damage; not full no-hit.",
+  "bamboo_phase": {
+    "model": "Ultralytics YOLO26n-cls",
+    "weights": "debug/arena-client/yolo/finetune/fit-bamboo-proposal-roi-v16/weights/best.pt",
+    "sha256": "fb004fc87157be7a0851e02eb0c85ab29680687017cb5ff7c7caba4359acd538",
+    "profile_sha256": "1a1559194705c99e6286ae58815f6a2caa414fc714da98850648752ddca3cbd4",
+    "threshold": 0.8
+  }
 }
