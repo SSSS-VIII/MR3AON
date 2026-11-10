@@ -162,11 +162,21 @@ def lua(value):
     return json.dumps(value)
 
 
+def evaluation_goal_reached(initial,current,goal):
+    if current.get('map')==initial.get('map'):
+        return current['stageIndex']>=goal
+    # The last normal board enters the native boss map. The new map's stage
+    # index restarts, so the original index can never reach its old goal.
+    count=initial.get('stageCount')
+    return bool(count is not None and goal<=count and initial.get('map')is not None
+                and current.get('map')is not None)
+
+
 def evaluation_status(initial,current,goal):
     if (current['health']<initial['health'] or current.get('damage',0)>0
             or current.get('minHealth',current['health'])<initial['health']):
         return 'damage'
-    return 'passed' if current['stageIndex']>=goal else 'duration'
+    return 'passed' if evaluation_goal_reached(initial,current,goal)else 'duration'
 
 
 def run(args):
@@ -321,7 +331,7 @@ def run(args):
                                     elapsed=time.monotonic()-begin,damage=current.get('damage',0),health=current['health']))
                             if current['health']<=0:
                                 status='dead'
-                            elif max_stage>=goal:
+                            elif evaluation_goal_reached(initial,current,goal):
                                 status='passed_with_damage'if had_damage else'passed'
                     if status != 'duration':
                         break
