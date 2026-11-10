@@ -8,6 +8,7 @@ from __future__ import annotations
 from collections import deque
 from dataclasses import dataclass, field, replace
 import math
+from statistics import median
 import cv2
 import numpy as np
 from arena_terrain import GroundEdges,arrow_score
@@ -87,6 +88,7 @@ class Track:
     rush_history: deque = field(default_factory=lambda: deque(maxlen=6))
     rush_fit_velocity: float | None = None
     rush_velocity: float | None = None
+    confidence_history: deque = field(default_factory=lambda:deque(maxlen=8))
 
     def update(self, detection, stamp, player, support_y=None):
         if self.quad is not None or detection.quad is not None:
@@ -98,6 +100,7 @@ class Track:
         self.active = detection.active
         self.arming = detection.arming
         self.reference = player
+        self.confidence_history.append(detection.confidence)
         self.floor_y=(player[1]if support_y is None else support_y)-self.box.h/2
         x, y = self.box.center
         self.history.append((stamp, x - player[0], y - player[1]))
@@ -240,6 +243,13 @@ class Track:
             result.vx+=self.ax*min(seconds,.25)
             result.vy+=self.ay*min(seconds,.25)
         return result
+
+
+def track_confidence(track,stamp):
+    """A brief weak/occluded frame cannot erase a repeatedly confirmed hazard."""
+    if not track.confidence_history:return track.confidence
+    confirmed=median(track.confidence_history)-.6*max(0,stamp-track.seen)
+    return max(track.confidence,confirmed)
 
 
 class Tracker:
@@ -969,7 +979,7 @@ def overlay(rgb, observation, action=None, reason=''):
             x,y=int(round(face['x'])),int(round(face['y']))
             cv2.line(image,(x,y),(x,359),(0,165,255),1)
     for t in observation['tracks']:
-        color = (0, 0, 255) if t.confidence >= .7 else (140, 140, 140)
+        color = (0, 0, 255) if track_confidence(t,observation['time']) >= .7 else (140, 140, 140)
         if t.kind=='slice_target':color=(255,180,0)
         if getattr(t,'quad',None)is not None:cv2.polylines(image,[np.asarray(t.quad,np.int32)],True,color,1)
         else:rect(t.box, color)

@@ -1,5 +1,5 @@
 """Short-horizon avoidance over visual objects, support and native action priors."""
-from arena_vision import Box,Track,player_future,native_motion_box,can_air_down
+from arena_vision import Box,Track,player_future,native_motion_box,can_air_down,track_confidence
 from arena_oriented import is_box,transform,touching_capsule
 from arena_support import leading_ground_faces
 import arena_motion as motion
@@ -55,7 +55,7 @@ class Avoider:
 
     def _objects(self,obs):
         p=obs['player']
-        objects=[t for t in obs['tracks'] if t.kind!='slice_target'and t.confidence>=.7
+        objects=[t for t in obs['tracks'] if t.kind!='slice_target'and track_confidence(t,obs['time'])>=.7
                 and (t.observations>=3 or t.arming or t.active)
                 and t.box.x+t.box.w>p.x-100]
         for face in leading_ground_faces(obs.get('visible_supports',[]),obs['time']):
