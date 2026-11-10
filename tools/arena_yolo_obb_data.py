@@ -25,7 +25,7 @@ class MissingBambooPhase(ValueError):
     """Old paired labels cannot supervise a native state they did not record."""
 
 
-def schema(entities,prefabs,reachable,bamboo_phases=False,arrow_family=False):
+def schema(entities,prefabs,reachable,bamboo_phases=False,arrow_family=False,mace_family=False):
     indexed={e['type_id']:e for e in entities if e['kind']=='enemies'}
     families={};bindings={}
     for type_id in sorted(reachable):
@@ -62,6 +62,20 @@ def schema(entities,prefabs,reachable,bamboo_phases=False,arrow_family=False):
             if 'EnemyArrow'not in family['script_types']or family['shapes']!={'BoxCollider'}:
                 raise ValueError('Original EnemyArrow script/collider differs from the reviewed family')
             family['arrow_family']=True
+        if mace_family and resource in('EnemyMace','EnemyGoldMace'):
+            if 'EnemyMace'not in family['script_types']or family['shapes']!={'BoxCollider'}:
+                raise ValueError('Original EnemyMace script/collider differs from the reviewed family')
+            geometries=[]
+            for key in family['prefabs']:
+                boxes=[c for c in prefabs[key]['colliders']if c['component']=='BoxCollider']
+                if len(boxes)!=1 or not np.allclose(boxes[0]['local_to_prefab'],np.eye(4),atol=1e-7):
+                    raise ValueError('Original EnemyMace root collider transform differs')
+                shape=boxes[0]['geometry'];size=shape['m_Size'];center=shape['m_Center']
+                if not np.allclose([size['x'],size['y'],center['x'],center['y']],[.45,1.9,0.,1.4],atol=1e-6):
+                    raise ValueError('Original EnemyMace eccentric geometry differs')
+                geometries.append(dict(short_side=size['x'],long_side=size['y'],center_long=center['y']))
+            if not geometries:raise ValueError('Original EnemyMace root geometry is missing')
+            family['mace_geometry']=geometries[0]
         for shape in sorted(family['shapes']|{'cue'}):
             phases=(('normal','attack')if family.get('bamboo_phases')else
                     ('normal','ready','rush')if family['straight_bat']else('normal',))if shape!='cue'else('normal',)
@@ -117,8 +131,17 @@ def physics_profile(native,interactions=False):
         definitions.append(('bamboo_attack','hazard','BoxCollider','bamboo','attack'))
     if native['families'].get('EnemyArrow',{}).get('arrow_family'):
         definitions.append(('arrow','hazard','BoxCollider','arrow',None))
+    maces=[f['mace_geometry']for f in native['families'].values()if f.get('mace_geometry')]
+    if maces:
+        if any(not np.allclose(list(m.values()),list(maces[0].values()),atol=1e-7)for m in maces[1:]):
+            raise ValueError('Mace families do not share reviewed physical geometry')
+        definitions.append(('mace','hazard','BoxCollider','mace',None))
     classes=[dict(name=n,kind=k,shape=s,motion_kind=m,phase=p,members=[])
              for n,k,s,m,p in definitions]
+    if maces:
+        entry=next(c for c in classes if c['name']=='mace');geometry=maces[0]
+        entry['pivot_offset_ratio']=geometry['center_long']/geometry['long_side']
+        entry['short_long_ratio']=geometry['short_side']/geometry['long_side']
     mapping=[]
     for c in native['classes']:
         if c['kind']=='player':index=0
@@ -128,6 +151,8 @@ def physics_profile(native,interactions=False):
             index=next(i for i,entry in enumerate(classes)if entry['name']=='bamboo_'+c['phase'])
         elif c.get('resource')=='EnemyArrow'and native['families']['EnemyArrow'].get('arrow_family')and c['shape']=='BoxCollider':
             index=next(i for i,entry in enumerate(classes)if entry['name']=='arrow')
+        elif native['families'].get(c.get('resource'),{}).get('mace_geometry')and c['shape']=='BoxCollider':
+            index=next(i for i,entry in enumerate(classes)if entry['name']=='mace')
         elif c['shape']=='cue':index=9
         elif interactions and c.get('resource')in rules['resources']:
             rule=rules['resources'][c['resource']]
@@ -319,8 +344,9 @@ def supervision_quad(cls,quad):
     return clipped if clipped is not None else quad
 
 
-def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=False,support_band_px=4,interactions=False,bamboo_phases=False,arrow_family=False,arrow_band_px=None):
+def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=False,support_band_px=4,interactions=False,bamboo_phases=False,arrow_family=False,arrow_band_px=None,mace_family=False):
     if interactions and not physics:raise ValueError('Interaction taxonomy requires the standard physics profile')
+    if mace_family and not physics:raise ValueError('Mace motion family requires the standard physics profile')
     if arrow_band_px is not None and(not physics or not arrow_family or not 4<=arrow_band_px<=16):
         raise ValueError('Arrow supervision band requires its original physics family and 4..16 pixels')
     if not 4<=support_band_px<=32:raise ValueError('Support supervision band must be 4..32 px')
@@ -333,7 +359,7 @@ def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=F
         raise ValueError('A native map seed cannot cross dataset splits')
     plan=json.loads(plan_path.read_text())
     if plan.get('mode')!=6:raise ValueError('Only Gale resource pools may enter this dataset')
-    profile=schema(json.loads(entities_path.read_text()),json.loads(prefabs_path.read_text()),plan['reachable_enemy_types'],bamboo_phases,arrow_family)
+    profile=schema(json.loads(entities_path.read_text()),json.loads(prefabs_path.read_text()),plan['reachable_enemy_types'],bamboo_phases,arrow_family,mace_family)
     profile['support_band_px']=support_band_px
     if physics:profile=physics_profile(profile,interactions=interactions)
     if arrow_band_px is not None:
