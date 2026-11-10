@@ -205,6 +205,7 @@ def test_reset_recycles_native_objects_before_scene_and_game_info_teardown(tmp_p
 MR3A={seedHook=true}
 local old={OfflineGame=true}
 local attract,blocks,items,enemies,effects,platforms,pools,scene=false,false,false,false,false,false,false,false
+local frameworkPool=false
 local gm={_isOnlyGame=true,GameInfo=old}
 function gm:PauseGameContent()assert(self.GameInfo==old)end
 function gm:ClearAllObjectsInScene()assert(blocks and items and enemies and effects and platforms and pools);scene=true end
@@ -218,8 +219,10 @@ CS={System={Reflection={BindingFlags={__CastFrom=function(v)return v end}}},
  RecycleAllMainAirGround=function()assert(effects and not scene);platforms=true end}},
  ItemManager={Instance={ClearAllActiveItem=function()assert(blocks and gm.GameInfo==old and not scene);items=true end}},
  EnemyManager={Instance={ClearAllActiveEnemy=function()assert(items and gm.GameInfo==old and not scene);enemies=true end}},
+ BaseFramework={PoolManager={N3GameObjPool={Instance={ClearPooledObjects=function(self,immediate)
+ assert(immediate==true and platforms and gm.GameInfo==old and not scene);frameworkPool=true end}}}},
  InGameResourceFactory={Instance={SpawnPool={DespawnAll=function()assert(enemies and not scene);effects=true end},
- DestroyAllPools=function()assert(platforms and gm.GameInfo==old and not scene);pools=true end}}}
+ DestroyAllPools=function()assert(platforms and frameworkPool and gm.GameInfo==old and not scene);pools=true end}}}
 dofile(SOURCE)
 MR3A.clear_mount_training=function()assert(gm.GameInfo==old and not scene);attract=true end
 MR3A.new_info=function()assert(items and enemies and scene);return {OfflineGame=true}end

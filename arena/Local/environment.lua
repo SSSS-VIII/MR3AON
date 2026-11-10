@@ -314,6 +314,9 @@ function E.reset(seed, chapter, level)
     CS.EnemyManager.Instance:ClearAllActiveEnemy()
     CS.InGameResourceFactory.Instance.SpawnPool:DespawnAll()
     CS.LevelPoolManager.Instance:RecycleAllMainAirGround()
+    -- The original framework pool is separate from the gameplay SpawnPool.
+    -- Release its cached enemies/effects before their scene-owned references.
+    CS.BaseFramework.PoolManager.N3GameObjPool.Instance:ClearPooledObjects(true)
     -- ItemAirGround.Awake moves its Main renderer into the scene's ground
     -- pool. Cached prefab clones therefore reference that old scene object.
     -- Release the native object pools before destroying their ownership graph.

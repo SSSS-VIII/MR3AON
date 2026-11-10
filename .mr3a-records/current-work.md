@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-10材质/旧Boss池修复：reset补原N3GameObjPool.ClearPooledObjects(true)，保留原回收顺序；旧Boss残留清零。仅arena重启清除历史坏缓存后，51043两次原定位/随机跳下翻受击采301+284帧、所有帧纯品红像素0，第二次探索死亡不算策略成绩；11项local/全部407通过、2依赖跳过。两轮均完整复位，修后飞竹重测进行中。见[框架池回收](archived/2026-11-10-arena-framework-pool-teardown.md)。
+
 2026-11-10动作时钟：按自己的Android入队ACK+原1/60接收先验重新提交运动状态/起点，原回执仍只事后评分；3项保护、50013与51043两整板0伤。同批键起点误差P95分别15.4→11.5、22.2→10.1ms，非零延迟或全局无伤。见[动作入队时钟](archived/2026-11-10-arena-action-enqueue-clock.md)。
 
 2026-11-10选板取消恢复：38705原通灵兽在目标板前停滞，误停共享runner导致RPC失联，已仅重启arena恢复。新增rush/approach协作取消，真实原选板取消/桥继续响应/完整重开1101及5000血暂停菜单键盘通过；落地停滞根因未修。见[协作取消](archived/2026-11-10-arena-cooperative-selection-cancel.md)。
