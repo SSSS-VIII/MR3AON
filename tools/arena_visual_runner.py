@@ -202,7 +202,7 @@ def run(args):
              'arena/vision-camera.json','tools/arena_mpc.py','tools/arena_object_motion.py',
              'arena/vision-object-priors.json','arena/vision-detector.json','tools/arena_oriented.py',
              'tools/arena_obb_detector.py','tools/arena_support.py','tools/arena_object_support.py',
-             'tools/arena_bamboo_motion.py')
+             'tools/arena_bamboo_motion.py','tools/arena_scene_motion.py')
     source_hashes={name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest()for name in sources}
     (args.output / 'setup.json').write_text(json.dumps(dict(seed=args.seed, level=args.level,
         map=args.map, start=start_board,goal_stage_index=goal,pins=pins, observe=args.observe_only, initial=initial,sources=source_hashes,

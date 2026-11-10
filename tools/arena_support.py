@@ -94,8 +94,9 @@ class VisualSupports:
         self.last_translation=-1e9
         self.scroll_samples=deque(maxlen=7)
         self.scroll_position=0.;self.instant_vx=0.
+        self.translation_source=None
 
-    def associate(self,segments,stamp):
+    def associate(self,segments,stamp,texture=None):
         candidates=[]
         for i,s in enumerate(segments):
             for j,old in enumerate(self.tracks):
@@ -113,8 +114,8 @@ class VisualSupports:
         current=[];translations=[];references=[]
         for i,segment in enumerate(segments):
             s=dict(segment,stamp=stamp,observations=1,vx=0.,vy=0.,
-                   left_clipped=segment.get('left_clipped',segment['a'][0]<=3),
-                   right_clipped=segment.get('right_clipped',segment['b'][0]>=637))
+                   left_clipped=bool(segment.get('left_clipped')or segment['a'][0]<=12),
+                   right_clipped=bool(segment.get('right_clipped')or segment['b'][0]>=628))
             if i in paired:
                 old=self.tracks[paired[i]];dt=stamp-old['stamp'];s['id']=old['id'];history=old['history']
                 s['observations']=old.get('observations',1)+1
@@ -124,7 +125,10 @@ class VisualSupports:
                 for key in('a','b'):
                     a,b=np.asarray(s[key]),np.asarray(old[key])
                     clipped='left_clipped'if key=='a'else'right_clipped'
-                    if not s[clipped]and not old[clipped]and 3<a[0]<637 and 3<b[0]<637:shifts.append((a-b)/dt)
+                    # OBB truncation can retract a full-screen endpoint tens
+                    # of pixels inside the crop. Keep a wider uncertainty band
+                    # for measuring velocity than for rendering finite edges.
+                    if not s[clipped]and not old[clipped]and 32<a[0]<608 and 32<b[0]<608:shifts.append((a-b)/dt)
                 if shifts:
                     history.append(np.median(shifts,axis=0))
                     if s['kind']!='floating_platform'and min(s['confidence'],old['confidence'])>=.7:
@@ -136,8 +140,9 @@ class VisualSupports:
             s['history']=history;current.append(s)
             if i in paired and s['kind']!='floating_platform'and min(s['confidence'],self.tracks[paired[i]]['confidence'])>=.7:
                 references.append((s,self.tracks[paired[i]]))
-        if translations:
-            self.instant_vx=float(np.median(translations,axis=0)[0])
+        if translations or texture is not None:
+            self.instant_vx=float(np.median(translations,axis=0)[0])if translations else texture['vx']
+            self.translation_source='support_endpoint'if translations else'ground_texture'
             previous_stamp=self.tracks[0]['stamp']
             if previous_stamp-self.last_translation>.15:
                 self.scroll_samples.clear();self.scroll_position=0.
@@ -175,8 +180,8 @@ class VisualSupports:
         self.tracks=current
         return [{k:v for k,v in s.items()if k!='history'}for s in current]
 
-    def observe(self,segments,player,stamp):
-        segments=self.associate(segments,stamp)
+    def observe(self,segments,player,stamp,texture=None):
+        segments=self.associate(segments,stamp,texture)
         px,py=player.center if player else(180.,None)
         choices=[]
         for s in segments:
@@ -217,4 +222,5 @@ class VisualSupports:
         return dict(mode=self.mode,rope=rope,rope_segment=rope_segment,rope_segments=[s for s in forecast if s['kind']=='rope'],terrain=terrain,segments=forecast,
                     tracking_reference=(0.,self.camera_y),camera_vy=self.camera_vy,
                     scene_vx=self.scroll_vx,scene_vx_raw=self.instant_vx,
+                    scene_motion_source=self.translation_source,
                     scene_motion_observed=stamp-self.last_translation<.2)

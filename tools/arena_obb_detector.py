@@ -55,7 +55,7 @@ def decode(quads,ids,scores,profile,player_x=180.):
             a,b=support_segment(q)
             if b[0]-a[0]>=4:
                 supports.append(dict(kind=kind,a=a,b=b,confidence=confidence,
-                    left_clipped=bool(q[:,0].min()<=3),right_clipped=bool(q[:,0].max()>=637)))
+                    left_clipped=bool(q[:,0].min()<=12),right_clipped=bool(q[:,0].max()>=628)))
         elif kind=='cue':
             cue=dict(box=box,confidence=confidence,resource=meta.get('resource'))
             if meta.get('motion_kind')=='bamboo':cue.update(motion_kind='bamboo',phase=meta['phase'])
@@ -126,6 +126,8 @@ class ObbPerception(Perception):
         self.tracker=Tracker(adaptive=True,adaptive_rush_speed=True);self.supports=VisualSupports();self.last_seen_player=None
         self.rush_models={};self.rush_prior=None
         self.bamboo_clocks=None
+        from arena_scene_motion import GroundTextureMotion
+        self.ground_texture=GroundTextureMotion()
         if any(c.get('motion_kind')=='bamboo'for c in getattr(detector,'profile',{}).get('classes',[])):
             from arena_bamboo_motion import BambooClocks
             self.bamboo_clocks=BambooClocks()
@@ -144,7 +146,10 @@ class ObbPerception(Perception):
             # A slide moves the hurt capsule far ahead of the root. Support
             # selection still probes the original movement root at the edge.
             support_player=Box(player.x-offset[0]*SCALE,player.y,player.w,player.h)
-        support=self.supports.observe(segments,support_player,stamp)
+        scene_begin=time.perf_counter()
+        texture=self.ground_texture.observe(rgb,segments,stamp,player)
+        support=self.supports.observe(segments,support_player,stamp,texture)
+        scene_ms=(time.perf_counter()-scene_begin)*1000
         if predicted:
             dy=support['tracking_reference'][1]-self.last_observation.get('camera_reference_y',0.)
             player=Box(player.x,player.y+dy,player.w,player.h)
@@ -181,6 +186,7 @@ class ObbPerception(Perception):
                       camera_reference_y=support['tracking_reference'][1],camera_velocity_y=support['camera_vy'],
                       scene_velocity_x=support['scene_vx'],scene_velocity_x_raw=support['scene_vx_raw'],
                       scene_motion_observed=support['scene_motion_observed'],
+                      scene_motion_source=support['scene_motion_source'],scene_texture=texture,scene_motion_ms=scene_ms,
                       observed_player_velocity_x=observed_vx,
                       player_seen_age=None if self.last_seen_player is None else stamp-self.last_seen_player)
         return result
