@@ -36,9 +36,13 @@ def review(folder):
             preceding=[r for r in vision if stamp-.6<=r['time']<=stamp]
             inputs=[dict(t=r['elapsed'],action=r['action'],phase=r['phase'],jumps=r['jumps'],
                          reason=r['reason'])for r in preceding if r.get('action')]
-            hits.append(dict(t=nearest['elapsed'],frame=nearest['frame'],increment=damage-before,
+            hit=dict(t=nearest['elapsed'],frame=nearest['frame'],increment=damage-before,
                 native=actual['physics'],estimated=nearest['phase'],reason=nearest['reason'],
-                inputs=inputs,alignment_ms=round((nearest['time']-stamp)*1000,3)))
+                inputs=inputs,alignment_ms=round((nearest['time']-stamp)*1000,3))
+            drop=actual.get('last_health_drop')
+            if drop and 0<=stamp-drop['monotonic']<=.15:
+                hit['native_health_event']=drop
+            hits.append(hit)
         before=damage
     return dict(run=str(folder),status=report['status'],damage=report['final']['damage'],
                 phases=dict(phases),confusion=dict(confusion.most_common()),hits=hits,

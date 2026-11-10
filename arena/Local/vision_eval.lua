@@ -3,9 +3,26 @@ local E=MR3A
 local U=CS.UnityEngine
 local flags=CS.System.Reflection.BindingFlags.__CastFrom(52)
 local function get(o,k) return o:GetType():GetField(k,flags):GetValue(o) end
+local lastHurtField=typeof(CS.Ninja):GetField('_lastHurtNinjaEnemy',flags)
+local lastHurtIndexField=typeof(CS.Ninja):GetField('lastHurtEnemyIndex',flags)
+local enemyInfoField=typeof(CS.EnemyBase):GetField('_enemyInfo',flags)
 local file=U.Application.persistentDataPath..'/arena-control/vision-eval.json'
 local watch=CS.System.Diagnostics.Stopwatch
 local function monotonic() return watch.GetTimestamp()/watch.Frequency end
+
+local function last_hurt_reference(n)
+    local enemy=lastHurtField:GetValue(n)
+    local out={index=lastHurtIndexField:GetValue(n),present=enemy~=nil,
+        scope='Original retained reference; environmental damage can leave an older enemy here'}
+    if enemy and enemy.gameObject then
+        local info=enemyInfoField:GetValue(enemy)
+        out.id=enemy:GetInstanceID();out.name=enemy.name;out.type=enemy:GetType().Name
+        out.enemy_type=info and CS.System.Convert.ToInt32(info._enemyType)or nil
+        out.active=enemy.gameObject.activeInHierarchy
+        out.x=enemy.transform.position.x;out.y=enemy.transform.position.y
+    end
+    return out
+end
 
 function E.vision_interactions()
     local function task(t)
@@ -57,7 +74,8 @@ function E.vision_evaluation()
         scale=U.Time.timeScale,map=get(level,'_levelBaseInfo')._levelID,
         damage=E.visionEvalDamage or 0,minHealth=E.visionEvalMinHealth or n.CurrentHp,
         keys=E.visionEvalKeys or {},lastKeyTime=E.visionEvalLastKeyTime,
-        keyReceipts=E.visionEvalReceipts or {},monotonic=monotonic()}
+        keyReceipts=E.visionEvalReceipts or {},monotonic=monotonic(),
+        last_health_drop=E.visionEvalLastHealthDrop}
     local ok,value=pcall(E.vision_interactions)
     if ok then result.interactions=value else result.interactions_error=tostring(value) end
     return result
@@ -69,6 +87,14 @@ function E.sample_vision_health()
     E.visionEvalDamage=(E.visionEvalDamage or 0)+math.max(0,before-hp)
     E.visionEvalMinHealth=math.min(E.visionEvalMinHealth or hp,hp)
     E.visionEvalPreviousHealth=hp
+    if hp<before then
+        local n=CS.NinjaController.Instance.NinjaScript
+        local event={monotonic=monotonic(),frame=U.Time.frameCount,before=before,after=hp,
+            physics=tostring(get(n,'__ninjaPhysicsState'))}
+        local ok,value=pcall(last_hurt_reference,n)
+        if ok then event.last_hurt_reference=value else event.reference_error=tostring(value)end
+        E.visionEvalLastHealthDrop=event
+    end
     for _,pair in ipairs({{'jump',U.KeyCode.K},{'down',U.KeyCode.S}}) do
         if U.Input.GetKeyDown(pair[2]) then
             E.visionEvalKeys[pair[1]]=(E.visionEvalKeys[pair[1]] or 0)+1
@@ -84,6 +110,7 @@ function E.start_vision_evaluation()
     E.visionLastSpecialTask=nil
     local hp=CS.NinjaController.Instance.NinjaScript.CurrentHp
     E.visionEvalPreviousHealth=hp;E.visionEvalMinHealth=hp;E.visionEvalDamage=0
+    E.visionEvalLastHealthDrop=nil
     E.visionEvalKeys={jump=0,down=0}
     E.visionEvalReceipts={}
     if E.visionEvalRunner then
