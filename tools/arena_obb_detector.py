@@ -125,5 +125,6 @@ class ObbPerception(Perception):
                       detector='standard_yolo26n_obb',detector_ms=self.detector.last_ms,cues=cues,
                       observed_rush_velocity=self.rush_prior,
                       visible_supports=support['segments'],player_predicted=predicted,
+                      camera_reference_y=support['tracking_reference'][1],camera_velocity_y=support['camera_vy'],
                       player_seen_age=None if self.last_seen_player is None else stamp-self.last_seen_player)
         return result

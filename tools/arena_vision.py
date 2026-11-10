@@ -88,7 +88,7 @@ class Track:
     rush_fit_velocity: float | None = None
     rush_velocity: float | None = None
 
-    def update(self, detection, stamp, player):
+    def update(self, detection, stamp, player, support_y=None):
         if self.quad is not None or detection.quad is not None:
             from arena_oriented import update_rotation
             update_rotation(self,detection,stamp)
@@ -98,6 +98,7 @@ class Track:
         self.active = detection.active
         self.arming = detection.arming
         self.reference = player
+        self.floor_y=(player[1]if support_y is None else support_y)-self.box.h/2
         x, y = self.box.center
         self.history.append((stamp, x - player[0], y - player[1]))
         self.observations += 1
@@ -247,7 +248,7 @@ class Tracker:
         self.tracks = []
         self.next_id = 1
 
-    def update(self, detections, stamp, player):
+    def update(self, detections, stamp, player, support_y=None):
         available = {t.id: t for t in self.tracks if stamp - t.seen < .22}
         predicted={identity:t.future(stamp-t.seen).center for identity,t in available.items()}
         pairs = []
@@ -267,7 +268,7 @@ class Tracker:
         used, matched = set(), set()
         for _, i, identity in sorted(pairs):
             if i not in used and identity not in matched:
-                available[identity].update(detections[i], stamp, player)
+                available[identity].update(detections[i], stamp, player,support_y)
                 used.add(i); matched.add(identity)
         for i, d in enumerate(detections):
             if i not in used:
@@ -276,7 +277,7 @@ class Tracker:
                 if self.adaptive:
                     t.adaptive_velocity=True;t.history=deque(maxlen=64)
                 self.next_id += 1
-                t.update(d, stamp, player)
+                t.update(d, stamp, player,support_y)
                 available[t.id] = t
         self.tracks = list(available.values())
         output=[]
@@ -324,6 +325,8 @@ class Perception:
         self.last_observation=None
         self.active_motion=None
         self.motion_origin=None
+        self.horizontal_history=deque(maxlen=6)
+        self.player_horizontal_velocity=0.
 
     def action(self, action, stamp, observation=None):
         self.last_action = stamp
@@ -623,6 +626,18 @@ class Perception:
                 player=Box(cx-w/2,cy-h/2,w,h)
                 px,py=player.center
             vertical = py-(support or 0)
+            if support_observation and support_observation.get('tracking_reference')is not None:
+                vertical=py-support_observation['tracking_reference'][1]
+                active=self.active_motion
+                offset=motion.point(active['name'],max(0,stamp-active['started']),active)[0]if active else motion.DATA['stand_offset_x']
+                from arena_projection import SCALE
+                self.horizontal_history.append((stamp,px-offset*SCALE))
+                if len(self.horizontal_history)>=3:
+                    samples=np.asarray(self.horizontal_history);times=samples[:,0]-stamp
+                    if times[0]<-.035:
+                        design=np.column_stack((np.ones(len(times)),times))
+                        fit,_,_,_=np.linalg.lstsq(design,samples[:,1],rcond=None)
+                        self.player_horizontal_velocity=float(fit[1])
             if self.previous_player and self.last is not None:
                 dt = stamp - self.last
                 if dt > .005:
@@ -660,21 +675,25 @@ class Perception:
                 player=Box(player.x,center-player.h/2,player.w,player.h)
             # Use the visible rope as vertical camera reference. A player's flip
             # must not become a fictitious upward velocity of every crow.
-            tracks = self.tracker.update(detections, stamp, (px,support if support is not None else py))
+            reference=(support_observation.get('tracking_reference')if support_observation else None)
+            tracks = self.tracker.update(detections, stamp, reference or (px,support if support is not None else py),support)
             self.previous_player, self.last = player, stamp
             self.previous_vertical = vertical
         elif on_rope and self.rope is not None and self.previous_player is not None:
             # A high jump can leave the image while enemies remain visible.
             # Keep their state history using the visible camera reference;
             # missing role pixels still prohibit choosing an input.
-            tracks=self.tracker.update(detections,stamp,(self.previous_player.center[0],self.rope))
+            reference=(support_observation.get('tracking_reference')if support_observation else None)
+            tracks=self.tracker.update(detections,stamp,reference or (self.previous_player.center[0],self.rope),self.rope)
         result=dict(time=stamp, player=player, silhouette=body[1] if body else None,
                     rope=self.rope, phase=phase, vy=self.player_velocity, jumps=self.jump_count,
                     tracks=tracks, detections=detections,terrain=terrain,
                     motion_reference='support' if support is not None else 'player',
                     scale_px=self.body_height*.73/.936,stand_w=self.body_height*.36,
-                    stand_h=self.body_height*.73,motion=self.active_motion)
+                    stand_h=self.body_height*.73,motion=self.active_motion,vx=self.player_horizontal_velocity)
         self.last_observation=result
+        if support_observation is not None:
+            result['rope_segment']=support_observation.get('rope_segment')
         return result
 
 
@@ -687,22 +706,40 @@ def current_offsets(observation):
 
 
 def can_air_down(observation):
-    return (observation.get('player')is not None and observation.get('rope')is not None
-            and observation['phase'].startswith('jump')
-            and observation['player'].center[1]<observation['rope']+.75*observation.get('scale_px',41.))
+    surface,destination=down_surface(observation)
+    allowed=(observation.get('player')is not None and surface is not None
+            and observation['phase'].startswith(('jump','air_'))
+            and observation['player'].center[1]<surface+(.75 if destination=='rope'else -.75)*observation.get('scale_px',41.))
+    if allowed and destination=='ground':
+        active=create_motion(observation,'air_down')
+        future,_=down_surface(observation,motion.duration('air_down',active))
+        return future is not None
+    return allowed
+
+
+def down_surface(observation,seconds=0):
+    if observation.get('rope')is not None:return rope_height(observation,seconds),'rope'
+    terrain=observation.get('terrain')
+    if terrain and terrain.get('source')=='neural_segments'and observation.get('player'):
+        from arena_support import landing_height
+        return landing_height(terrain,observation['player'].center[0]+observation.get('vx',0.)*seconds,seconds,observation['player'].center[1]),'ground'
+    if terrain and terrain.get('at_player')and terrain.get('y')is not None:return terrain['y']+7,'ground'
+    return None,None
 
 
 def create_motion(observation,name,stamp=None):
     active=dict(name=name,started=observation['time']if stamp is None else stamp)
     if name=='air_down':
         scale=observation.get('scale_px',41.);p=observation['player'];ox,oy=current_offsets(observation)
+        surface,destination=down_surface(observation);future,_=down_surface(observation,.04)
         delay=motion.DATA['air_down']['input_delay'];previous=observation.get('motion')
         if previous and previous['name'].startswith('jump'):
             elapsed=max(0,observation['time']-previous['started'])
             lead=motion.point(previous['name'],elapsed+delay)[1]-motion.point(previous['name'],elapsed)[1]
         else:
             lead=-observation.get('vy',0.)*delay/scale
-        active.update(height=max(0,(observation['rope']-p.center[1])/scale+.75-oy),lead=lead,
+        active.update(height=max(0,(surface-p.center[1])/scale+(.75 if destination=='rope'else -.75)-oy),lead=lead,
+                      destination=destination,surface_velocity=(future-surface)/(.04*scale)if future is not None else 0.,
                       offset_x=ox,offset_y=oy,width=p.w/scale,height_box=p.h/scale)
     return active
 
@@ -712,7 +749,7 @@ def native_motion_box(observation,name,seconds):
     ox,oy=current_offsets(observation)
     parameters=create_motion(observation,name)if name=='air_down'else None
     x,y,offset_y,w,h=motion.point(name,seconds,parameters)
-    cx=p.center[0]+(x-ox)*scale
+    cx=p.center[0]+(x-ox)*scale+observation.get('vx',0.)*seconds
     cy=p.center[1]-(y+offset_y-oy)*scale
     w=observation.get('stand_w',p.w)*w/motion.DATA['stand_width']
     h=observation.get('stand_h',p.h)*h/motion.DATA['stand_height']
@@ -738,13 +775,43 @@ def cap_landing(observation,box,seconds,name,forecast_seconds=None):
         if sample and sample[2]and abs(sample[0]-x)<12:
             support=sample[1]+7
     elif observation.get('rope')is not None:
-        support=observation['rope']
+        support=rope_height(observation,seconds if forecast_seconds is None else forecast_seconds)
     if support is not None:
         cy=support-.75*observation.get('scale_px',41.)
         if box.center[1]>=cy:
             h=observation.get('stand_h',box.h);w=observation.get('stand_w',box.w)
             return Box(box.center[0]-w/2,cy-h/2,w,h)
     return box
+
+
+def rope_height(observation,seconds=0):
+    segment=observation.get('rope_segment')
+    if segment:
+        from arena_support import height
+        return height(segment,observation['player'].center[0]+observation.get('vx',0.)*seconds,seconds)
+    return observation.get('rope')
+
+
+def supported_future(observation,seconds):
+    """Follow the visible slope in the fixed current camera plane, then fall."""
+    from arena_support import height,connected_height
+    p=observation['player'];terrain=observation.get('terrain');selected=None;segments=[]
+    if observation['phase'].startswith('rope_')and observation.get('rope_segment'):
+        selected=observation['rope_segment'];segments=[selected]
+    elif terrain and terrain.get('source')=='neural_segments'and terrain['at_player']:
+        segments=terrain['segments'];selected=next(s for s in segments if s['id']==terrain['selected_id'])
+    if selected is None:return p
+    dx=observation.get('vx',0.)*seconds
+    y=height(selected,p.center[0]);future=connected_height(segments,selected['id'],p.center[0]+dx,seconds)
+    if y is None:return p
+    if future is not None:return Box(p.x+dx,p.y+future-y,p.w,p.h)
+    # Walking off the visible end cannot leave a stationary capsule over air.
+    vx=selected.get('vx',0)-observation.get('vx',0.)
+    edge=max(0,(selected['b'][0]-p.center[0])/-vx)if vx<0 else seconds
+    until=min(seconds,edge)
+    end_y=height(selected,p.center[0]+observation.get('vx',0.)*until,until)
+    dy=(end_y-y if end_y is not None else 0)+.5*19.8*3.5*observation.get('scale_px',41.)*max(0,seconds-edge)**2
+    return Box(p.x+dx,p.y+dy,p.w,p.h)
 
 
 def player_future(observation,seconds):
@@ -755,7 +822,7 @@ def player_future(observation,seconds):
         elapsed=max(0,observation['time']-active['started'])
         a=motion.point(active['name'],elapsed,active);b=motion.point(active['name'],elapsed+seconds,active)
         scale=observation.get('scale_px',41.)
-        cx=p.center[0]+(b[0]-a[0])*scale
+        cx=p.center[0]+(b[0]-a[0])*scale+observation.get('vx',0.)*seconds
         cy=p.center[1]-((b[1]+b[2])-(a[1]+a[2]))*scale
         w=observation.get('stand_w',p.w)*b[3]/motion.DATA['stand_width']
         h=observation.get('stand_h',p.h)*b[4]/motion.DATA['stand_height']
@@ -765,14 +832,7 @@ def player_future(observation,seconds):
         return result
     phase=observation['phase']
     if phase in ('ground','slide','rope_above','rope_below','unknown'):
-        terrain=observation.get('terrain')
-        if phase in('ground','slide')and terrain and terrain.get('source')=='neural_segments'and terrain['at_player']:
-            from arena_support import height
-            selected=next(s for s in terrain['segments']if s['id']==terrain['selected_id'])
-            current_y=height(selected,p.center[0]);future_y=height(selected,p.center[0],seconds)
-            if current_y is not None and future_y is not None:
-                return Box(p.x,p.y+future_y-current_y,p.w,p.h)
-        return p
+        return supported_future(observation,seconds)
     scale=observation.get('scale_px',41.)
     vy=observation.get('vy',0.)
     second=observation['jumps']>=2
@@ -790,7 +850,7 @@ def player_future(observation,seconds):
     landing=None
     if terrain and terrain.get('source')=='neural_segments':
         from arena_support import landing_height
-        surface=landing_height(terrain,p.center[0],seconds,p.center[1])
+        surface=landing_height(terrain,p.center[0]+observation.get('vx',0.)*seconds,seconds,p.center[1])
         if surface is not None:landing=surface-.75*scale
     elif terrain and terrain['y']is not None:
         x=p.center[0]+(terrain['speed']or 550)*seconds
@@ -799,10 +859,11 @@ def player_future(observation,seconds):
         if sample and sample[2] and abs(sample[0]-x)<10:
             landing=sample[1]-25
     elif observation.get('rope') is not None:
-        landing=observation['rope']-30
+        surface=rope_height(observation,seconds)
+        if surface is not None:landing=surface-30
     if landing is not None and dy>0:
         dy=min(dy,max(0,landing-p.center[1]))
-    return Box(p.x,p.y+dy,p.w,p.h)
+    return Box(p.x+observation.get('vx',0.)*seconds,p.y+dy,p.w,p.h)
 
 
 def advance_player(observation,seconds):
@@ -811,11 +872,35 @@ def advance_player(observation,seconds):
     if observation['player']is None:
         return current
     current['player']=player_future(observation,seconds)
+    if observation.get('rope_segment'):
+        segment=observation['rope_segment'];moving=dict(segment)
+        for key in('a','b'):
+            moving[key]=(segment[key][0]+segment['vx']*seconds,segment[key][1]+segment['vy']*seconds)
+        current['rope_segment']=moving
+        current['rope']=rope_height(current)
     terrain=current.get('terrain')
     if terrain and terrain.get('source')=='neural_segments':
         from arena_support import advance_terrain
         current['terrain']=advance_terrain(terrain,seconds,current['player'].center[0])
     active=observation.get('motion')
+    if not active:
+        phase=observation['phase'];scale=observation.get('scale_px',41.)
+        if phase.startswith('air_')or phase.startswith('jump'):
+            vy=observation.get('vy',0.);second=observation['jumps']>=2
+            up=(9.8 if second else 25.)*3.5*scale
+            down=(9.8 if second else 9.)*3.5*scale if observation['jumps']else 19.8*3.5*scale
+            apex=max(0,-vy/up)
+            current['vy']=vy+up*min(seconds,apex)+down*max(0,seconds-apex)
+            current['phase']=phase.rsplit('_',1)[0]+('_rising'if current['vy']<0 else'_falling')
+        elif phase in('ground','rope_above','rope_below'):
+            lost=(current.get('rope_segment')is not None and current['rope']is None)if phase.startswith('rope')else bool(current.get('terrain')and not current['terrain']['at_player'])
+            if lost:
+                selected=observation.get('rope_segment')
+                if selected is None and terrain:
+                    selected=next(s for s in terrain['segments']if s['id']==terrain['selected_id'])
+                vx=selected.get('vx',0)-observation.get('vx',0.)if selected else 0
+                edge=max(0,(selected['b'][0]-observation['player'].center[0])/-vx)if vx<0 else seconds
+                current.update(phase='air_falling',jumps=0,vy=19.8*3.5*scale*max(0,seconds-edge))
     if active:
         elapsed=current['time']-active['started'];name=active['name']
         current['phase']=motion.phase(name,elapsed,active)
@@ -861,9 +946,15 @@ def overlay(rgb, observation, action=None, reason=''):
     def rect(b, color):
         cv2.rectangle(image, (int(b.x), int(b.y)), (int(b.x+b.w), int(b.y+b.h)), color, 1)
     if observation['rope'] is not None:
-        y = int(observation['rope']); cv2.line(image, (0, y), (639, y), (255, 255, 0), 1)
+        segment=observation.get('rope_segment')
+        if segment:
+            cv2.line(image,tuple(int(v)for v in segment['a']),tuple(int(v)for v in segment['b']),(255,255,0),1)
+        else:
+            y = int(observation['rope']); cv2.line(image, (0, y), (639, y), (255, 255, 0), 1)
     if observation['player']:
         rect(observation['player'], (0, 255, 0))
+        path=np.array([player_future(observation,float(t)).center for t in np.arange(0,.81,.04)],np.int32)
+        cv2.polylines(image,[path],False,(255,255,255),1)
     terrain=observation.get('terrain')
     if terrain:
         for x,y,solid in terrain['samples']:

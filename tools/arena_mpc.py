@@ -145,7 +145,8 @@ class MpcAvoider(VisualAvoider):
             branches=[]
             for node in beam:
                 options=self._options(node.state,node.state['time'])
-                if step==0 and now-self.last_action<.17:options=[None]
+                if step==0 and now-self.last_action<.17:
+                    options=[name for name in options if name is None or name=='air_down'and now-self.last_action>=.1]
                 for name in options:
                     state=start_action(node.state,name)if name else node.state
                     half=advance(state,self.STEP/2);end=advance(state,self.STEP)

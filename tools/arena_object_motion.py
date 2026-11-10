@@ -81,7 +81,6 @@ def fit_ballistic(track,scale):
     track.vy=float(fit[1]);track.ballistic=True
     track.gravity_up=DATA['accelerated_up']*scale
     track.gravity_down=DATA['accelerated_down']*scale
-    track.floor_y=track.reference[1]-track.box.h/2
     if not track.rebound_speed:
         track.rebound_speed=DATA['rebound_speed']*scale
     if track.vy<-60:

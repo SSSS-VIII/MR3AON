@@ -14,7 +14,8 @@ def is_rope_transition(name):
 def duration(name,parameters=None):
     if name=='air_down':
         prior=DATA['air_down']
-        return prior['input_delay']+max(0,parameters['height']+parameters['lead'])/prior['speed']+prior['settle_seconds']
+        speed=prior['speed']-parameters.get('surface_velocity',0.)
+        return max(0,parameters['height']+parameters['lead']+prior['speed']*prior['input_delay'])/max(.001,speed)+prior['settle_seconds']
     profile=DATA['profiles'][name]
     return profile.get('duration',profile['points'][-1][0])
 
@@ -26,8 +27,9 @@ def point(name,t,parameters=None):
         if t<=0:
             return [parameters['offset_x'],0.,parameters['offset_y'],parameters['width'],parameters['height_box']]
         delta=parameters['lead']*min(1,t/delay)-prior['speed']*max(0,t-delay)
-        arrived=delta<=-parameters['height']
-        return [DATA['stand_offset_x']if arrived else 0.,max(-parameters['height'],delta),0.,
+        target=-parameters['height']-parameters.get('surface_velocity',0.)*t
+        arrived=delta<=target
+        return [DATA['stand_offset_x']if arrived else 0.,max(target,delta),0.,
                 prior['stand_width']if arrived else prior['width'],
                 DATA['stand_height']if arrived else prior['height']]
     profile=DATA['profiles'][name]
@@ -51,5 +53,6 @@ def phase(name,t,parameters=None):
         below=name in ('rope_down','air_down')
         if t<duration(name,parameters):
             return 'flip_down' if below else 'flip_up'
+        if name=='air_down'and parameters.get('destination')=='ground':return 'ground'
         return 'rope_below' if below else 'rope_above'
     return name+('_rising' if t<DATA['profiles'][name]['apex'] else '_falling')

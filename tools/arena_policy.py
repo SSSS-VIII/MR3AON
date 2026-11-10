@@ -122,7 +122,8 @@ class Avoider:
             if jump==0 and stay>0:
                 self.last_action=stamp
                 return 'jump','complete_under_rope_escape'
-        if stamp-self.last_action<.32:
+        early_down=can_air_down(obs)and stamp-self.last_action>=.1
+        if stamp-self.last_action<.32 and not early_down:
             return None,'action_transition'
         if obs['phase']=='rope_below' and obs.get('rope')is not None:
             upper=Box(p.x,2*obs['rope']-p.y-p.h,p.w,p.h)
@@ -155,6 +156,8 @@ class Avoider:
             if first.active or not first.arming:
                 candidates.append(('jump',.05))
         if can_air_down(obs):candidates.append(('air_down',.03))
+        if stamp-self.last_action<.32:
+            candidates=[c for c in candidates if c[0]=='air_down']
         if obs['phase']=='ground' and ground:
             candidates.append(('slide',.02))
         scored=[(self._risk(obs,a)[0]+effort,a)for a,effort in candidates]
