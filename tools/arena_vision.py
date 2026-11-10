@@ -708,7 +708,8 @@ class Perception:
                 elif name.startswith('jump')and 'falling' in phase and support is not None:
                     available=on_rope or bool(terrain and terrain['at_player'])
                     landing=support-.75*self.motion_origin['scale']
-                    if available and py>=landing-(3 if self.visual_role else 0) and (not self.visual_role or abs(py-landing)<15):
+                    if (available and (not self.visual_role or player_observed)
+                            and py>=landing-(3 if self.visual_role else 0)and(not self.visual_role or abs(py-landing)<15)):
                         if not self.visual_role:
                             player=Box(player.x,landing-self.motion_origin['stand_h']/2,
                                        self.motion_origin['stand_w'],self.motion_origin['stand_h'])

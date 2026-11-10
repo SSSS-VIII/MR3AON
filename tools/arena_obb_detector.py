@@ -27,6 +27,19 @@ def support_segment(quad):
     return tuple(map(float,a)),tuple(map(float,b))
 
 
+def missing_role_prediction(observation,stamp,age):
+    if not observation or observation.get('player')is None:return None,None
+    predicted=player_future(observation,stamp-observation['time'])
+    if age<.22:return predicted,'short_gap'
+    active=observation.get('motion')
+    # A submitted native jump can carry the role above the camera for longer
+    # than the ordinary occlusion lease. Retain only that expected excursion;
+    # an unexplained miss inside the playfield must still stop the actor.
+    if (age<.65 and active and active['name'].startswith('jump')
+            and predicted.y+predicted.h<70):return predicted,'expected_above_view'
+    return None,None
+
+
 def decode(quads,ids,scores,profile,player_x=180.):
     hazards=[];supports=[];cues=[];player=None;best=0
     for quad,cls,confidence in zip(quads,ids,scores):
@@ -106,11 +119,15 @@ class ObbPerception(Perception):
 
     def observe(self,rgba,stamp):
         rgb=rgba[:,:,:3];player,detections,segments,cues=self.detector.detect(rgb)
-        predicted=False
+        predicted=False;prediction_reason=None
         if player is not None:self.last_seen_player=stamp
-        elif self.last_seen_player is not None and stamp-self.last_seen_player<.22 and self.last_observation:
-            player=player_future(self.last_observation,stamp-self.last_observation['time']);predicted=True
+        elif self.last_seen_player is not None:
+            player,prediction_reason=missing_role_prediction(self.last_observation,stamp,stamp-self.last_seen_player)
+            predicted=player is not None
         support=self.supports.observe(segments,player,stamp)
+        if predicted:
+            dy=support['tracking_reference'][1]-self.last_observation.get('camera_reference_y',0.)
+            player=Box(player.x,player.y+dy,player.w,player.h)
         result=self._finish(rgb,stamp,player,detections,support_observation=support,player_observed=not predicted)
         observed_vx=result['vx']
         # With a reliable static-scene flow the forward-running root cannot
@@ -133,6 +150,7 @@ class ObbPerception(Perception):
                       observed_rush_velocity=self.rush_prior,
                       hazard_confidence=getattr(self.detector,'confidence',.25),
                       visible_supports=support['segments'],player_predicted=predicted,
+                      player_prediction_reason=prediction_reason,
                       camera_reference_y=support['tracking_reference'][1],camera_velocity_y=support['camera_vy'],
                       scene_velocity_x=support['scene_vx'],scene_velocity_x_raw=support['scene_vx_raw'],
                       observed_player_velocity_x=observed_vx,
