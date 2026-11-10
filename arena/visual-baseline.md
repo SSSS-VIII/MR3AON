@@ -1,6 +1,18 @@
 # 竞技场实时视觉基线
 
-## 当前默认：官方YOLO26n-OBB v12（16类）
+## 当前默认：官方YOLO26n-OBB v13（19类）
+
+`./tools/run-arena-vision --seed 34020 --level 5 --map 41 --pin 1:5101 --boards 1 --seconds 70`。
+
+标准YOLO在v12上继续10epoch，13827原训练/7811验证帧，69族有物理正目标；新增飞竹可见瞄准、锁定标记与原飞行碰撞类。原瞄准薄碰撞框保留。视觉标记时钟、原发射/速度/尺寸先验及逐帧关联预测未来攻击范围，再由现有MPC选择原动作；缺失滚动或阶段起点保持不确定性，部署不读取原敌人状态、ID、HP或世界坐标。
+
+第5关5101/50013各三新种子整板均0伤害、最低5000/god=false，其中一组无输入自然无伤，其余有真实按键；取图请求至Unity按键P95 47.5–86.8ms、最大96.2ms。更广六组第5/6关四组有伤完成、两组死亡，**未实现完整竞技场无伤**。坡面、窄台、角色状态和其他突发陷阱继续优化。
+
+新722测试瞄准/锁定/飞行召回96.2/94.0/84.4%；提前0.4秒完整X框且Y误差≤8px的范围覆盖222/243=91.4%，不是精确轨迹准确率。旧6304可评分测试图危险物R92.8/P96.5，同集合v12为R92.3/P96.4；旧缺阶段279帧显式排除，不将其与原6583全样本混比。
+
+权重`debug/arena-client/yolo/finetune/fit-bamboo-v13/weights/best.pt`，SHA `8e96f75bf8c7dac993ea20ead429f5f1c40b51e1c21cc086db064fe3dda13572`；profile SHA `0e4f939f6cca500cb7d8ee785428da5c47b663945075a7742d3b2c69cb8dccf2`。危险物0.25/连续关联、切果0.8不变。原生5000血、原碰撞/随机/效果、K/S/P及4倍通灵兽/吸镖球保持。完整验证见[默认v13](../.mr3a-records/archived/2026-11-10-arena-default-bamboo-v13.md)及[阶段预测](../.mr3a-records/archived/2026-11-10-arena-bamboo-phase-controller-v13.md)。
+
+## v12（16类，历史）
 
 `./tools/run-arena-vision --seed 31110 --level 5 --map 42 --boards 3 --seconds 120`。
 

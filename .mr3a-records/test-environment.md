@@ -143,7 +143,7 @@ main保存计划已加入工坊挑战，单次入口为 `./run [名字] --once -
 
 原生资产参考图入口`PYTHONPATH=tools:agent .venv/bin/python tools/arena_preview_assets.py`要求arena已经暂停，使用相同控制租约，结束恢复菜单并核对物理帧/位置/血量/敌人数。用户后续已允许微调现成YOLO：独立`debug/arena-client/yolo/.venv`（Python3.12/GPU）已完成标准YOLO26n适配，默认视觉入口复用该环境及`arena/vision-detector.json`的本地权重/SHA，未改基础Agent环境。模型操作见[YOLO实测](../arena/yolo-evaluation.md)。原资源目录、参考图及碰撞状态边界见[对象目录](../arena/entity-catalog.md)。
 
-实时结构化视觉入口为`./tools/run-arena-vision --seed 48 --map 1 --pin 1:1101 --pin 2:11022 --pin 3:11032 --boards 3`，目标40Hz，弹球重规划时实际频率可能下降；复用arena InstanceSession与同一控制租约。结束恢复原暂停菜单，原图/估计和验收分开记录；有伤通过单独标记。当前默认八类v4已补隐藏爪实景、原空中下翻及矩形分轴预测，178项arena回归通过/2依赖跳过。新种子66三板无伤，67/68仍288/约300伤害，尚未稳定完整竞技场，见 [视觉控制](../arena/visual-baseline.md)。暂停原collider标注为`tools/arena_snapshot_labels.py`，原动作校准为`tools/arena_motion_probe.py`，均保留原游戏机制。
+实时结构化视觉入口为`./tools/run-arena-vision --seed 48 --map 1 --pin 1:1101 --pin 2:11022 --pin 3:11032 --boards 3`，目标40Hz，弹球重规划时实际频率可能下降；复用arena InstanceSession与同一控制租约。结束恢复原暂停菜单，原图/估计和验收分开记录；有伤通过单独标记。当前默认19类官方YOLO26n-OBB v13，配合像素阶段时钟、原动作先验和滚动规划；控制期间完整循环垃圾回收延后到原生暂停。第5关两飞竹板有新无伤回合，其他第5/6关仍有伤或死亡，尚未稳定完整竞技场，见 [视觉控制](../arena/visual-baseline.md)。暂停原collider标注为`tools/arena_snapshot_labels.py`，原动作校准为`tools/arena_motion_probe.py`，均保留原游戏机制。
 
 高速捕获独立工具为 `.venv/bin/python tools/arena_capture.py --frames 300`，arena已运行即可，默认1280×720 RGBA；不改游戏APK或训练接口。使用Android13常驻辅助进程与命名设备数据通道，启动完成包含3帧预热；无宿主桌面/合成器截图API依赖，验证见 [高速取图](archived/2026-11-09-arena-native-fast-capture.md)。
 

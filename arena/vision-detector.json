@@ -1,8 +1,8 @@
 {
   "model": "Ultralytics YOLO26n-OBB",
-  "weights": "debug/arena-client/yolo/finetune/fit-slope-v12/weights/best.pt",
-  "sha256": "eb0c0b0c511c905dd3785a0a6a29287984fea7f9c7870f866cddb332cab8ddfd",
-  "profile_sha256": "68aedf4d53631fe265944423fc2104f55bf24b64ebd54def70031926a8796f2a",
+  "weights": "debug/arena-client/yolo/finetune/fit-bamboo-v13/weights/best.pt",
+  "sha256": "8e96f75bf8c7dac993ea20ead429f5f1c40b51e1c21cc086db064fe3dda13572",
+  "profile_sha256": "0e4f939f6cca500cb7d8ee785428da5c47b663945075a7742d3b2c69cb8dccf2",
   "classes": [
     "player",
     "spider",
@@ -19,7 +19,10 @@
     "floating_platform",
     "fruit_box",
     "fruit_capsule",
-    "muppet_bomb"
+    "muppet_bomb",
+    "bamboo_aim",
+    "bamboo_locked",
+    "bamboo_attack"
   ],
-  "evaluation": "Experimental v12, 12958 native training frames incl. level5/6 slopes. Held-out ground centerline recall83.9%; full legacy hazard R87.1/P96.1. Control uses validated OBB confidence0.25. Damage remains; no-hit and full Gale control unaccepted."
+  "evaluation": "Experimental v13, standard19-class YOLO26n-OBB and visual bamboo phase clocks; 13827 native training frames. Six fresh level5 bamboo-board runs had zero damage; broader level5/6 still has damage and deaths. Legacy accepted6304 frames hazard R92.8/P96.5, excluding279 missing-phase frames; full Gale no-hit unaccepted."
 }
