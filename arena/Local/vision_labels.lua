@@ -26,7 +26,8 @@ local function controller_fields(tp)
  local key=tp.FullName
  if controllerTypes[key]then return controllerTypes[key]end
  local fields={}
- for _,name in ipairs({'_currState','_currStateTime','_stayTime','_rushDistance','_currAnim',
+ for _,name in ipairs({'_currState','_enemyState','_currStateTime','_stayTime','_rushDistance','_currAnim',
+  '_aimSpeed','_flySpeed','_lastAttackPos','_lastAimLinePos',
   '_moveSpeed','_currentMoveSpeed','_rushSpeed','_rotateSpeed','_rotationSpeed','_angleSpeed','_shootTime',
   '_shootInterval','_shootTimer','_currTime','_delayTime','_remainTime','_rushDir','_moveDir','_direction'})do
   local parent=tp
