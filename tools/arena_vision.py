@@ -42,6 +42,7 @@ class Detection:
     resource: str | None = None
     collider_shape: str | None = None
     quad: tuple | None = None
+    velocity_prior: tuple | None = None
 
 
 @dataclass
@@ -113,7 +114,11 @@ class Track:
         x, y = self.box.center
         self.history.append((stamp, x - player[0], y - player[1]))
         self.observations += 1
-        if detection.attack_phase is not None or self.attack_phase is not None:
+        if detection.velocity_prior is not None and self.observations<3:
+            self.vx,self.vy=detection.velocity_prior
+        if detection.kind=='bamboo':
+            self.attack_phase='bamboo_attack'
+        elif detection.attack_phase is not None or self.attack_phase is not None:
             from arena_object_motion import configure_crow
             configure_crow(self,detection,stamp)
         all_samples=np.asarray(self.history)
@@ -135,6 +140,13 @@ class Track:
         elif np.ptp(samples[:, 2]) < 12:
             self.vy = 0.
         self.residual = float(np.sqrt(np.mean((design @ fit - samples[:, 1:]) ** 2)))
+        if self.kind=='bamboo':
+            # Original flyToNinja is a straight horizontal translation. Keep
+            # measured horizontal speed; silhouette jitter is not acceleration,
+            # oscillation or a rotation of this native attack.
+            self.vy=0.;self.ax=self.ay=0.;self.curve_count=self.sine_count=0
+            self.angular_velocity=0.
+            return
         old_a=(self.ax,self.ay)
         self.ax = self.ay = 0
         stable=False

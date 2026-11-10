@@ -57,7 +57,9 @@ def decode(quads,ids,scores,profile,player_x=180.):
                 supports.append(dict(kind=kind,a=a,b=b,confidence=confidence,
                     left_clipped=bool(q[:,0].min()<=3),right_clipped=bool(q[:,0].max()>=637)))
         elif kind=='cue':
-            cues.append(dict(box=box,confidence=confidence,resource=meta.get('resource')))
+            cue=dict(box=box,confidence=confidence,resource=meta.get('resource'))
+            if meta.get('motion_kind')=='bamboo':cue.update(motion_kind='bamboo',phase=meta['phase'])
+            cues.append(cue)
         elif kind in('hazard','slice_target'):
             shape=meta['shape'];phase=meta.get('phase')
             motion_kind=meta.get('motion_kind')
@@ -76,7 +78,14 @@ def decode(quads,ids,scores,profile,player_x=180.):
             if shape=='SphereCollider':
                 _,w,h,_=rectangle(q);diameter=(w+h)/2
                 box=Box(float(cx-diameter/2),float(cy-diameter/2),diameter,diameter)
-            hazards.append(Detection(box,motion_kind,confidence,phase=='rush',phase=='ready',phase,
+            if motion_kind=='bamboo'and box.w<2.8*SCALE and(q[:,0].max()>=638 or q[:,0].min()<=2):
+                # Targets supervise the visible clipped quad. The original
+                # straight bamboo/spear collider is three world units long;
+                # recover its hidden end before differencing body centers.
+                x=box.x if q[:,0].max()>=638 else box.x+box.w-3*SCALE
+                box=Box(x,box.y,3*SCALE,box.h)
+                q=np.array([[x,box.y],[x+box.w,box.y],[x+box.w,box.y+box.h],[x,box.y+box.h]])
+            hazards.append(Detection(box,motion_kind,confidence,phase=='rush'or motion_kind=='bamboo',phase=='ready',phase,
                                      resource,shape,tuple(tuple(map(float,p))for p in q)))
     return player,hazards,supports,cues
 
@@ -116,6 +125,10 @@ class ObbPerception(Perception):
         if hasattr(detector,'reset_tracking'):detector.reset_tracking()
         self.tracker=Tracker(adaptive=True,adaptive_rush_speed=True);self.supports=VisualSupports();self.last_seen_player=None
         self.rush_models={};self.rush_prior=None
+        self.bamboo_clocks=None
+        if any(c.get('motion_kind')=='bamboo'for c in getattr(detector,'profile',{}).get('classes',[])):
+            from arena_bamboo_motion import BambooClocks
+            self.bamboo_clocks=BambooClocks()
 
     def observe(self,rgba,stamp):
         rgb=rgba[:,:,:3];player,detections,segments,cues=self.detector.detect(rgb)
@@ -128,6 +141,9 @@ class ObbPerception(Perception):
         if predicted:
             dy=support['tracking_reference'][1]-self.last_observation.get('camera_reference_y',0.)
             player=Box(player.x,player.y+dy,player.w,player.h)
+        for detection in detections:
+            if detection.kind=='bamboo':
+                detection.velocity_prior=(-60*SCALE+(support['scene_vx']if support['scene_motion_observed']else -10*SCALE),0.)
         result=self._finish(rgb,stamp,player,detections,support_observation=support,player_observed=not predicted)
         observed_vx=result['vx']
         # With a reliable static-scene flow the forward-running root cannot
@@ -144,6 +160,10 @@ class ObbPerception(Perception):
         for track in result['tracks']:
             if track.attack_phase in('ready','rush')and track.rush_fit_velocity is None:
                 track.rush_velocity=self.rush_prior
+        if self.bamboo_clocks is not None:
+            self.bamboo_clocks.observe([c for c in cues if c.get('motion_kind')=='bamboo'],stamp,support['tracking_reference'][1])
+            result['tracks'].extend(self.bamboo_clocks.forecasts(stamp,
+                support['scene_vx']if support['scene_motion_observed']else None,support['tracking_reference'][1]))
         result.update(scale_px=SCALE,stand_w=motion.DATA['stand_width']*SCALE,
                       stand_h=motion.DATA['stand_height']*SCALE,geometry='gameplay_plane',
                       detector='standard_yolo26n_obb',detector_ms=self.detector.last_ms,cues=cues,
@@ -153,6 +173,7 @@ class ObbPerception(Perception):
                       player_prediction_reason=prediction_reason,
                       camera_reference_y=support['tracking_reference'][1],camera_velocity_y=support['camera_vy'],
                       scene_velocity_x=support['scene_vx'],scene_velocity_x_raw=support['scene_vx_raw'],
+                      scene_motion_observed=support['scene_motion_observed'],
                       observed_player_velocity_x=observed_vx,
                       player_seen_age=None if self.last_seen_player is None else stamp-self.last_seen_player)
         return result
