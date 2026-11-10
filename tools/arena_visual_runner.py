@@ -174,7 +174,9 @@ def run(args):
     policy=MpcAvoider() if detector_weights else Avoider()
     policy_samples={False:deque(maxlen=32),True:deque(maxlen=32)}
     policy_times,compute_priors=[],[]
-    initial = prepare(client, args.seed, args.level, args.map, pins)
+    start_board=getattr(args,'start',1)
+    goal=start_board-1+args.boards
+    initial = prepare(client, args.seed, args.level, args.map, pins,start=start_board)
     sources=('tools/arena_vision.py','tools/arena_policy.py','tools/arena_terrain.py',
              'tools/arena_motion.py','arena/vision-motion-priors.json','arena/Local/vision_eval.lua',
              'tools/arena_capture.py','arena/Capture/FrameServer.java','tools/arena_yolo_detector.py',
@@ -184,7 +186,7 @@ def run(args):
              'tools/arena_obb_detector.py','tools/arena_support.py')
     source_hashes={name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest()for name in sources}
     (args.output / 'setup.json').write_text(json.dumps(dict(seed=args.seed, level=args.level,
-        map=args.map, pins=pins, observe=args.observe_only, initial=initial,sources=source_hashes,
+        map=args.map, start=start_board,goal_stage_index=goal,pins=pins, observe=args.observe_only, initial=initial,sources=source_hashes,
         detector=detector_info), indent=2))
     capture_times, vision_times, action_times, intervals, fresh_intervals,ages = [], [], [], [], [], []
     fresh_vision_times=[]
@@ -290,14 +292,14 @@ def run(args):
                                         consume_times.append(delay);chain_times.append(event['capture_to_unity_ms'])
                                         receipts.add(identity)
                             max_stage = max(max_stage, current['stageIndex'])
-                            candidate=evaluation_status(initial,current,args.boards)
+                            candidate=evaluation_status(initial,current,goal)
                             had_damage=had_damage or candidate=='damage'
                             if not board_entries or current['stageIndex']>board_entries[-1]['stageIndex']:
                                 board_entries.append(dict(stageIndex=current['stageIndex'],stageID=current['stageID'],
                                     elapsed=time.monotonic()-begin,damage=current.get('damage',0),health=current['health']))
                             if current['health']<=0:
                                 status='dead'
-                            elif max_stage>=args.boards:
+                            elif max_stage>=goal:
                                 status='passed_with_damage'if had_damage else'passed'
                     if status != 'duration':
                         break
@@ -318,7 +320,7 @@ def run(args):
     def timing(samples):
         return dict(median=percentile(samples, 50), p95=percentile(samples, 95), max=max(samples)) if samples else None
     report = dict(status=status, seconds=time.monotonic()-begin, frames=count,
-                  max_stage=max_stage, final=final, actions=actions,
+                  max_stage=max_stage,goal_stage_index=goal,boards_requested=args.boards,start=start_board, final=final, actions=actions,
                   capture_ms=timing(capture_times), perception_policy_ms=timing(vision_times),
                   key_enqueue_ms=timing(action_times),loop_interval_ms=timing(intervals),
                   dropped_recording_frames=recorder.dropped,fresh_frames=fresh,
@@ -348,14 +350,15 @@ def main():
     p.add_argument('--map', type=int, default=1)
     p.add_argument('--pin', action='append', default=[], help='Native board pool choice position:variant')
     p.add_argument('--seconds', type=float, default=70)
-    p.add_argument('--boards', type=int, default=3, help='Stop once grounded on this zero-based stage index')
+    p.add_argument('--start',type=int,default=1,help='Native board position at which this evaluation begins')
+    p.add_argument('--boards', type=int, default=3, help='Number of complete boards to evaluate from --start')
     p.add_argument('--fps', type=int, default=40)
     p.add_argument('--observe-only', action='store_true')
     p.add_argument('--detector-weights',type=Path,default=DEFAULT_WEIGHTS,
                    help='Fine-tuned standard YOLO checkpoint; defaults to reviewed profile')
     p.add_argument('--output', type=Path,default=ROOT/'debug/arena-client/visual-runs'/str(time.time_ns()))
     args = p.parse_args()
-    if not 1 <= args.fps <= 60 or not 0 < args.seconds <= 180 or args.boards < 1:
+    if not 1 <= args.fps <= 60 or not 0 < args.seconds <= 180 or min(args.boards,args.start) < 1:
         p.error('Invalid experiment limits')
     report=run(args)
     if report['status']=='interrupted':

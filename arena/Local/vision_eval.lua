@@ -17,6 +17,14 @@ function E.vision_interactions()
     -- Raw original flags; StuckByBlock is also true during ordinary running,
     -- so it is not evidence of a collision without the position/terrain trace.
     local out={stuck_by_block_flag=n.StuckByBlock,dragged_underground=n.BeDragToUnderground}
+    local ground=n._GroundCollider
+    if ground then
+        local a,b=ground.PointStart,ground.PointEnd
+        local offset=n.SlopeOffset
+        out.support={id=ground:GetInstanceID(),is_line=ground.IsLine,is_ground=ground.IsGround,
+            start={x=a.x,y=a.y},finish={x=b.x,y=b.y},slope_state=tostring(n.SlopeState),
+            slope_speed_ratio=n.SlopeSpeedRatio,slope_offset={x=offset.x,y=offset.y,z=offset.z}}
+    end
     local enemy=CS.EnemyManager.Instance.KillNinjaEnemy
     if enemy and enemy.gameObject then
         out.kill_enemy={id=enemy:GetInstanceID(),name=enemy.name,type=enemy:GetType().Name,
