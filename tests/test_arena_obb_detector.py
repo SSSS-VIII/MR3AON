@@ -10,6 +10,20 @@ from arena_support import VisualSupports,height,landing_height
 from arena_vision import Box,cap_landing
 
 
+def test_wholly_offscreen_role_cannot_replace_an_actually_visible_role():
+    profile=dict(classes=[dict(kind='player')])
+    visible=((172,310),(188,310),(188,350),(172,350))
+    outside=((172,369),(188,369),(188,408),(172,408))
+    assert decode([outside],[0],[.99],profile)[0]is None
+    assert decode([visible,outside],[0,0],[.7,.99],profile)[0]==Box(172,310,16,40)
+
+
+def test_partially_visible_role_keeps_its_detected_geometry():
+    profile=dict(classes=[dict(kind='player')])
+    partial=((172,345),(188,345),(188,375),(172,375))
+    assert decode([partial],[0],[.9],profile)[0]==Box(172,345,16,30)
+
+
 def test_obb_decode_keeps_compound_parts_separate_and_does_not_use_cues_as_damage():
     profile=dict(classes=[dict(kind='player'),dict(kind='hazard',shape='BoxCollider',motion_kind='trap'),
                           dict(kind='hazard',shape='SphereCollider',motion_kind='trap'),dict(kind='cue')])

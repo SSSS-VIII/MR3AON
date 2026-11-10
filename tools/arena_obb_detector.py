@@ -49,6 +49,7 @@ def decode(quads,ids,scores,profile,player_x=180.):
         if cy<55 or(cy>275 and(cx<135 or cx>515)):continue
         kind=meta['kind'];box=Box(*bounds(q));confidence=float(confidence)
         if kind=='player':
+            if box.x>=640 or box.x+box.w<=0 or box.y>=360 or box.y+box.h<=0:continue
             dx=abs(cx-player_x);score=confidence*float(np.exp(-dx/80))
             if dx<80 and score>best:player=box;best=score
         elif kind in('rope','platform','floating_platform'):
