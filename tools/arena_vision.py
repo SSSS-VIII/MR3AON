@@ -45,6 +45,7 @@ class Detection:
     velocity_prior: tuple | None = None
     scene_velocity_x: float | None = None
     geometry_restored: bool = False
+    pivot_offset_ratio: float | None = None
 
 
 @dataclass
@@ -312,6 +313,9 @@ class Tracker:
                 if d.kind=='arrow':
                     from arena_arrow_motion import ArrowTrack
                     track_type=ArrowTrack
+                elif d.kind=='mace':
+                    from arena_mace_motion import MaceTrack
+                    track_type=MaceTrack
                 t = track_type(self.next_id, d.box, d.kind, d.confidence, stamp)
                 t.adaptive_rush_speed=self.adaptive_rush_speed
                 if self.adaptive:

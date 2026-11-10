@@ -40,6 +40,8 @@ def foot_array(states):
 def forecast_geometry(tracks,times,predict,step):
     boxes=np.array([[[b.center[0],b.center[1],b.w/2,b.h/2]
                      for track in tracks for b in[predict(track,t)]]for t in times]).reshape(len(times),len(tracks),4)
+    for index,track in enumerate(tracks):
+        if hasattr(track,'sweep_margin'):boxes[:,index,2:]+=track.sweep_margin(step)
     box_shapes=np.array([is_box(t)for t in tracks],bool)
     oriented=np.array([getattr(t,'quad',None)is not None and t.collider_shape=='BoxCollider'for t in tracks],bool)
     if not np.any(oriented):return boxes,box_shapes,oriented,None,None
@@ -138,7 +140,7 @@ class MpcAvoider(VisualAvoider):
         airborne_ground=bool(obs.get('terrain')and obs['terrain'].get('source')=='neural_segments'
                              and obs.get('phase','').startswith(('jump','air_')))
         return bool(obs.get('player')and (obs.get('rope')is not None and not obs.get('terrain')or airborne_ground)
-                    and (self.rope_exit(obs)or self._targets(obs)or any(t.kind in ('pinball','trap','arrow','terrain_wall')or t.attack_phase is not None for t in self._objects(obs))))
+                    and (self.rope_exit(obs)or self._targets(obs)or any(t.kind in ('pinball','trap','arrow','mace','terrain_wall')or t.attack_phase is not None for t in self._objects(obs))))
 
     def _options(self,state,stamp):
         names=[None]

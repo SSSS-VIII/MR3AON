@@ -1,8 +1,8 @@
 {
   "model": "Ultralytics YOLO26n-OBB",
-  "weights": "debug/arena-client/yolo/finetune/fit-bamboo-v13/weights/best.pt",
-  "sha256": "8e96f75bf8c7dac993ea20ead429f5f1c40b51e1c21cc086db064fe3dda13572",
-  "profile_sha256": "0e4f939f6cca500cb7d8ee785428da5c47b663945075a7742d3b2c69cb8dccf2",
+  "weights": "debug/arena-client/yolo/finetune/fit-mace-v15/weights/best.pt",
+  "sha256": "8745d92c0d2a444ae3dbe58142baa7484a4154b3e12568a106cbc2154b1fbbb5",
+  "profile_sha256": "1c51f27e54cd7f0da5f5cb058e71e13a0450608f95ae710257e0a5f8e6443d4c",
   "classes": [
     "player",
     "spider",
@@ -22,7 +22,8 @@
     "muppet_bomb",
     "bamboo_aim",
     "bamboo_locked",
-    "bamboo_attack"
+    "bamboo_attack",
+    "mace"
   ],
-  "evaluation": "Experimental v13, standard19-class YOLO26n-OBB and visual bamboo phase clocks; 13827 native training frames. Six fresh level5 bamboo-board runs had zero damage; broader level5/6 still has damage and deaths. Legacy accepted6304 frames hazard R92.8/P96.5, excluding279 missing-phase frames; full Gale no-hit unaccepted."
+  "evaluation": "Experimental v15 standard20-class YOLO26n-OBB, visual bamboo clocks and source-bound eccentric Mace pivots; same13827 native training frames. Three fresh level6 60011 candidate boards completed with300..1649.96damage; two nominal same-seed old/new comparisons include an old death. Sealed404 frames Mace spatialR90.75%; geometry coverage/area reported separately. Legacy6304 hazardR92.76/P96.52. Level5 bamboo remains variable (same-seed old/new both0 or400damage), slope/arrow boards still hurt; full Gale no-hit unaccepted."
 }
