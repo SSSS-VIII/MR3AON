@@ -112,3 +112,33 @@ assert(#removed==1 and removed[1]==200) -- Preserve existing role and new scene/
 io.write('ok')
 ''')
     assert subprocess.check_output([lua, str(script)], text=True) == 'ok'
+
+
+def test_preload_wait_keeps_old_ground_creation_alive_until_original_completion(tmp_path):
+    lua=shutil.which('luajit')
+    if not lua:pytest.skip('LuaJIT unavailable')
+    script=tmp_path/'preload.lua'
+    script.write_text('local SOURCE='+json.dumps(str(ROOT/'arena/Local/native_selection.lua'))+r'''
+MR3A={nativePinHooks=true,role_defaults=function()end,reset=function()end}
+local manager={LevelDataLoading=false,isFinishLoad=false}
+CS={System={IO={File={ReadAllText=function()return ''end}},Reflection={BindingFlags={__CastFrom=function(v)return v end}}},
+ UnityEngine={Application={persistentDataPath='/local'},Time={realtimeSinceStartup=0}},LevelManager={Instance=manager}}
+json={parse=function()return {mode=6}end}
+dofile(SOURCE)
+local steps=0
+coroutine.step=function()
+ steps=steps+1;CS.UnityEngine.Time.realtimeSinceStartup=steps
+ if steps==2 then manager.isFinishLoad=true end
+end
+-- Parsed level data is already ready, but its scene-owned ground is not.
+MR3A.await_native_preload(5);assert(steps==2)
+MR3A.await_native_preload(5);assert(steps==2)
+manager.LevelDataLoading=true;manager.isFinishLoad=true
+coroutine.step=function()steps=steps+1;manager.LevelDataLoading=false end
+MR3A.await_native_preload(5);assert(steps==3)
+manager.isFinishLoad=false
+CS.UnityEngine.Time.realtimeSinceStartup=6
+assert(not pcall(MR3A.await_native_preload,5));assert(not manager.isFinishLoad)
+io.write('ok')
+''')
+    assert subprocess.check_output([lua,str(script)],text=True)=='ok'

@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-10原地面预加载等待：native_select先等原LevelDataLoading及isFinishLoad，避免旧主题/地面仍创建时释放场景；不伪造完成标志。真实连续51091/5009/6011三次定位全部5000血，末尾1101暂停恢复，新PID无旧地面空引用；2项专项/全410通过2依赖跳过。修后视觉计分继续。见[原地面等待](archived/2026-11-10-arena-await-ground-preload.md)。
+
 2026-11-10材质/旧Boss池修复：reset补原N3GameObjPool.ClearPooledObjects(true)，保留原回收顺序；旧Boss残留清零。仅arena重启清除历史坏缓存后，51043两次原定位/随机跳下翻受击采301+284帧、所有帧纯品红像素0，第二次探索死亡不算策略成绩；11项local/全部407通过、2依赖跳过。两轮均完整复位，修后飞竹重测进行中。见[框架池回收](archived/2026-11-10-arena-framework-pool-teardown.md)。
 
 2026-11-10动作时钟：按自己的Android入队ACK+原1/60接收先验重新提交运动状态/起点，原回执仍只事后评分；3项保护、50013与51043两整板0伤。同批键起点误差P95分别15.4→11.5、22.2→10.1ms，非零延迟或全局无伤。见[动作入队时钟](archived/2026-11-10-arena-action-enqueue-clock.md)。

@@ -201,6 +201,17 @@ function E.cancel_native_selection()
     return true
 end
 
+function E.await_native_preload(deadline)
+    local manager=CS.LevelManager.Instance
+    -- LevelDataLoading covers level data, not the later ground/theme objects.
+    -- Their original coroutine must finish before releasing its old scene.
+    while manager and (manager.LevelDataLoading or not manager.isFinishLoad) do
+        assert(U.Time.realtimeSinceStartup<deadline,'Previous preload did not finish')
+        coroutine.step()
+        manager=CS.LevelManager.Instance
+    end
+end
+
 function E.native_select(spec,seed)
     assert(not E.busy,'A battle operation is active')
     local s=E.validate_selection(spec)
@@ -215,10 +226,7 @@ function E.native_select(spec,seed)
         local ok,err=pcall(function()
             local deadline=U.Time.realtimeSinceStartup+600
             U.Time.captureFramerate=60;U.Time.timeScale=1
-            while CS.LevelManager.Instance.LevelDataLoading do
-                assert(U.Time.realtimeSinceStartup<deadline,'Previous preload did not finish')
-                coroutine.step()
-            end
+            E.await_native_preload(deadline)
             E.nativeSelection=s
             E.travel.phase='reset'
             E.busy=false
