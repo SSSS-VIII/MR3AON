@@ -21,7 +21,11 @@ SHAPES=('BoxCollider','SphereCollider','CapsuleCollider')
 INTERACTIONS=Path(__file__).resolve().parents[1]/'arena/vision-interactions.json'
 
 
-def schema(entities,prefabs,reachable):
+class MissingBambooPhase(ValueError):
+    """Old paired labels cannot supervise a native state they did not record."""
+
+
+def schema(entities,prefabs,reachable,bamboo_phases=False):
     indexed={e['type_id']:e for e in entities if e['kind']=='enemies'}
     families={};bindings={}
     for type_id in sorted(reachable):
@@ -53,12 +57,18 @@ def schema(entities,prefabs,reachable):
         families[resource]=family
     classes=[dict(name='player',kind='player',shape='CapsuleCollider')]
     for resource,family in sorted(families.items()):
+        if bamboo_phases and resource=='EnemyFlyBamboo':family['bamboo_phases']=True
         for shape in sorted(family['shapes']|{'cue'}):
-            phases=('normal','ready','rush')if family['straight_bat']and shape!='cue'else('normal',)
+            phases=(('normal','attack')if family.get('bamboo_phases')else
+                    ('normal','ready','rush')if family['straight_bat']else('normal',))if shape!='cue'else('normal',)
             for phase in phases:
                 classes.append(dict(name=resource+'__'+shape+'__'+phase,resource=resource,
                                     type_ids=family['type_ids'],shape=shape,phase=phase,
                                     kind='cue'if shape=='cue'else 'hazard'))
+        if family.get('bamboo_phases'):
+            for phase in ('aim','locked'):
+                classes.append(dict(name=resource+'__cue__'+phase,resource=resource,
+                    type_ids=family['type_ids'],shape='cue',phase=phase,kind='cue'))
     for kind in ('rope','platform','floating_platform'):
         classes.append(dict(name=kind,kind=kind,shape='segment'))
     for family in families.values():
@@ -98,6 +108,9 @@ def physics_profile(native,interactions=False):
             if (rule['script']not in family['script_types']or config is None
                     or any(config.get(k)!=rule[k]for k in ('damage','species'))):
                 raise ValueError(f'Original interaction CFG/script differs from reviewed evidence: {resource}')
+    if native['families'].get('EnemyFlyBamboo',{}).get('bamboo_phases'):
+        definitions.extend([('bamboo_'+phase,'cue','cue','bamboo',phase)for phase in ('aim','locked')])
+        definitions.append(('bamboo_attack','hazard','BoxCollider','bamboo','attack'))
     classes=[dict(name=n,kind=k,shape=s,motion_kind=m,phase=p,members=[])
              for n,k,s,m,p in definitions]
     mapping=[]
@@ -105,6 +118,8 @@ def physics_profile(native,interactions=False):
         if c['kind']=='player':index=0
         elif c['kind']in('rope','platform','floating_platform'):
             index={'rope':10,'platform':11,'floating_platform':12}[c['kind']]
+        elif c.get('resource')=='EnemyFlyBamboo'and c.get('phase')in('aim','locked','attack'):
+            index=next(i for i,entry in enumerate(classes)if entry['name']=='bamboo_'+c['phase'])
         elif c['shape']=='cue':index=9
         elif interactions and c.get('resource')in rules['resources']:
             rule=rules['resources'][c['resource']]
@@ -191,6 +206,15 @@ def object_resource(obj,profile):
     return None
 
 
+def bamboo_marker_quad(obj):
+    names={'Sprite','Outline (1)','Outline (2)','Outline (3)','Outline (4)',
+           'Triangle (1)','Triangle (2)','Triangle (3)'}
+    boxes=[r['box']for r in obj.get('renderers',[])if r.get('name')in names]
+    if not boxes:return None
+    a=np.asarray(boxes,float)
+    return axis_quad([*a[:,:2].min(0),*a[:,2:].max(0)])
+
+
 def targets(raw,profile):
     if profile.get('taxonomy')=='physics':
         native,counts=targets(raw,profile['native_targets'])
@@ -230,6 +254,27 @@ def targets(raw,profile):
             if collider.get('tag')=='Enemy':physical.append(collider)
             else:counts['auxiliary_colliders']+=1
         phase='normal'
+        if profile['families'][resource].get('bamboo_phases')and physical:
+            state=obj.get('controller',{}).get('_enemyState')
+            if state is None:
+                marker=bamboo_marker_quad(obj)
+                if (any(visible_quad(collider_quad(c))is not None for c in physical)
+                        or marker is not None and visible_quad(marker)is not None):
+                    raise MissingBambooPhase('Visible FlyBamboo lacks native _enemyState')
+                continue
+            state=state.split(':')[0]
+            phases={'none':'aim','aim':'aim','aimLock':'locked','readyAttack':'locked',
+                    'flyToNinja':'attack','insertEdge':'attack'}
+            if state not in phases:raise ValueError(f'Unreviewed native FlyBamboo phase: {state}')
+            phase=phases[state]
+            if phase!='attack':
+                # The targeting reticle is near the middle of the image, far
+                # from the thin AimLine collider at the right edge. Supervise
+                # the visible reticle's phase at its own bounds, while retaining
+                # that enabled original collider as ordinary physical geometry.
+                marker=bamboo_marker_quad(obj)
+                if marker is not None:add(keys[resource,'cue',phase],marker)
+                phase='normal'
         if profile['families'][resource]['straight_bat']and physical:
             state=obj.get('controller',{}).get('_currState')
             if state is None:raise ValueError('Native straight-bat phase is required')
@@ -254,7 +299,7 @@ def targets(raw,profile):
     return result,counts
 
 
-def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=False,support_band_px=4,interactions=False):
+def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=False,support_band_px=4,interactions=False,bamboo_phases=False):
     if interactions and not physics:raise ValueError('Interaction taxonomy requires the standard physics profile')
     if not 4<=support_band_px<=32:raise ValueError('Support supervision band must be 4..32 px')
     if {p.resolve()for p in train}&{p.resolve()for p in validation}:
@@ -266,7 +311,7 @@ def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=F
         raise ValueError('A native map seed cannot cross dataset splits')
     plan=json.loads(plan_path.read_text())
     if plan.get('mode')!=6:raise ValueError('Only Gale resource pools may enter this dataset')
-    profile=schema(json.loads(entities_path.read_text()),json.loads(prefabs_path.read_text()),plan['reachable_enemy_types'])
+    profile=schema(json.loads(entities_path.read_text()),json.loads(prefabs_path.read_text()),plan['reachable_enemy_types'],bamboo_phases)
     profile['support_band_px']=support_band_px
     if physics:profile=physics_profile(profile,interactions=interactions)
     output.mkdir(parents=True,exist_ok=False)
@@ -285,7 +330,13 @@ def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=F
             labels_file=folder/'labels.jsonl'
             manifest['sources'][str(folder)]=dict(split=split,sha256=hashlib.sha256(labels_file.read_bytes()).hexdigest())
             for line in labels_file.open():
-                row=normalize_arrays(json.loads(line));labels,stats=targets(row,profile);counts.update(stats);counts['frames']+=1
+                row=normalize_arrays(json.loads(line))
+                try:labels,stats=targets(row,profile)
+                except MissingBambooPhase:
+                    # Omit the entire old image, not just its unlabeled bamboo:
+                    # retaining it would teach a visible warning as background.
+                    counts['excluded_missing_bamboo_phase_frames']+=1;continue
+                counts.update(stats);counts['frames']+=1
                 if stats['unbound_visible_targets']or stats['unconfigured_visible_targets']:
                     raise ValueError(f'Visible native collider has no ontology target: {folder}/{row["image"]}: {dict(stats)}')
                 if split=='train':
