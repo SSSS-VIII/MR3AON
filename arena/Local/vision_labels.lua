@@ -28,6 +28,9 @@ local function controller_fields(tp)
  local fields={}
  for _,name in ipairs({'_currState','_enemyState','_currStateTime','_stayTime','_rushDistance','_currAnim',
   '_aimSpeed','_flySpeed','_lastAttackPos','_lastAimLinePos',
+  '_arrowType','_velocityX','_velocityY','_gravity','_velocityAccX','_activeDistance',
+  '_rotateZ','_deepInGround','_currGroundY','_aimPos','_isAimNinjaX','_ninjaPos','_offsetPos','cameraVx',
+  '_startShowDistance','_showTime',
   '_moveSpeed','_currentMoveSpeed','_rushSpeed','_rotateSpeed','_rotationSpeed','_angleSpeed','_shootTime',
   '_shootInterval','_shootTimer','_currTime','_delayTime','_remainTime','_rushDir','_moveDir','_direction'})do
   local parent=tp

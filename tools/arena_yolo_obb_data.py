@@ -25,7 +25,7 @@ class MissingBambooPhase(ValueError):
     """Old paired labels cannot supervise a native state they did not record."""
 
 
-def schema(entities,prefabs,reachable,bamboo_phases=False):
+def schema(entities,prefabs,reachable,bamboo_phases=False,arrow_family=False):
     indexed={e['type_id']:e for e in entities if e['kind']=='enemies'}
     families={};bindings={}
     for type_id in sorted(reachable):
@@ -58,6 +58,10 @@ def schema(entities,prefabs,reachable,bamboo_phases=False):
     classes=[dict(name='player',kind='player',shape='CapsuleCollider')]
     for resource,family in sorted(families.items()):
         if bamboo_phases and resource=='EnemyFlyBamboo':family['bamboo_phases']=True
+        if arrow_family and resource=='EnemyArrow':
+            if 'EnemyArrow'not in family['script_types']or family['shapes']!={'BoxCollider'}:
+                raise ValueError('Original EnemyArrow script/collider differs from the reviewed family')
+            family['arrow_family']=True
         for shape in sorted(family['shapes']|{'cue'}):
             phases=(('normal','attack')if family.get('bamboo_phases')else
                     ('normal','ready','rush')if family['straight_bat']else('normal',))if shape!='cue'else('normal',)
@@ -111,6 +115,8 @@ def physics_profile(native,interactions=False):
     if native['families'].get('EnemyFlyBamboo',{}).get('bamboo_phases'):
         definitions.extend([('bamboo_'+phase,'cue','cue','bamboo',phase)for phase in ('aim','locked')])
         definitions.append(('bamboo_attack','hazard','BoxCollider','bamboo','attack'))
+    if native['families'].get('EnemyArrow',{}).get('arrow_family'):
+        definitions.append(('arrow','hazard','BoxCollider','arrow',None))
     classes=[dict(name=n,kind=k,shape=s,motion_kind=m,phase=p,members=[])
              for n,k,s,m,p in definitions]
     mapping=[]
@@ -120,6 +126,8 @@ def physics_profile(native,interactions=False):
             index={'rope':10,'platform':11,'floating_platform':12}[c['kind']]
         elif c.get('resource')=='EnemyFlyBamboo'and c.get('phase')in('aim','locked','attack'):
             index=next(i for i,entry in enumerate(classes)if entry['name']=='bamboo_'+c['phase'])
+        elif c.get('resource')=='EnemyArrow'and native['families']['EnemyArrow'].get('arrow_family')and c['shape']=='BoxCollider':
+            index=next(i for i,entry in enumerate(classes)if entry['name']=='arrow')
         elif c['shape']=='cue':index=9
         elif interactions and c.get('resource')in rules['resources']:
             rule=rules['resources'][c['resource']]
@@ -299,7 +307,7 @@ def targets(raw,profile):
     return result,counts
 
 
-def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=False,support_band_px=4,interactions=False,bamboo_phases=False):
+def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=False,support_band_px=4,interactions=False,bamboo_phases=False,arrow_family=False):
     if interactions and not physics:raise ValueError('Interaction taxonomy requires the standard physics profile')
     if not 4<=support_band_px<=32:raise ValueError('Support supervision band must be 4..32 px')
     if {p.resolve()for p in train}&{p.resolve()for p in validation}:
@@ -311,7 +319,7 @@ def build(output,train,validation,entities_path,prefabs_path,plan_path,physics=F
         raise ValueError('A native map seed cannot cross dataset splits')
     plan=json.loads(plan_path.read_text())
     if plan.get('mode')!=6:raise ValueError('Only Gale resource pools may enter this dataset')
-    profile=schema(json.loads(entities_path.read_text()),json.loads(prefabs_path.read_text()),plan['reachable_enemy_types'],bamboo_phases)
+    profile=schema(json.loads(entities_path.read_text()),json.loads(prefabs_path.read_text()),plan['reachable_enemy_types'],bamboo_phases,arrow_family)
     profile['support_band_px']=support_band_px
     if physics:profile=physics_profile(profile,interactions=interactions)
     output.mkdir(parents=True,exist_ok=False)
