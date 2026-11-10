@@ -694,7 +694,7 @@ class PipelineGuardTest(unittest.TestCase):
 
         self.assertEqual(
             pipeline["通灵巡逻任务"]["next"],
-            ["忍阶任务有才巡逻", "直接去巡逻"],
+            ["通灵巡逻总超时", "处理游戏闪退", "忍阶任务有才巡逻", "直接去巡逻"],
         )
         patrol_switch = tasks["option"]["有忍阶任务才巡逻"]
         switch_overrides = {
@@ -732,6 +732,8 @@ class PipelineGuardTest(unittest.TestCase):
         self.assertEqual(
             pipeline["直接去巡逻"]["on_error"],
             [
+                "通灵巡逻总超时",
+                "处理游戏闪退",
                 "没有通灵兽说明还在巡逻",
                 "无法识别通灵巡逻主页面倒计时",
             ],
@@ -744,7 +746,7 @@ class PipelineGuardTest(unittest.TestCase):
             pipeline["巡逻奖励确定"]["next"], ["退出巡逻页面再次运行"]
         )
         self.assertEqual(
-            pipeline["退出巡逻页面再次运行"]["next"], ["通灵巡逻任务"]
+            pipeline["退出巡逻页面再次运行"]["next"], ["通灵巡逻总超时", "处理游戏闪退", "通灵巡逻任务"]
         )
         self.assertEqual(
             pipeline[return_and_finish]["next"], [finish_at_home]

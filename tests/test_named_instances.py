@@ -143,3 +143,22 @@ def test_existing_environment_rejects_a_valid_but_changed_slot(registry):
     (registry.root / "registry.json").write_text('{"one":2}')
     with pytest.raises(RuntimeError, match="身份"):
         registry.get("one")
+
+
+def test_cli_binding_uses_bounded_transport_for_own_instance(registry):
+    spec = registry.get("xiaoli")
+    registry.prepare(spec)
+    session = InstanceSession("xiaoli", registry=registry)
+    session._serial = "192.168.242.112:5555"
+    before = json.loads(spec.config_path.read_text())
+    session.bind_config()
+    after = json.loads(spec.config_path.read_text())
+    assert after.pop("adb") == {
+        "adb_path": str(registry.project_root / "tools/maa-adb"),
+        "address": session._serial,
+        "name": session._serial + "-" + str(registry.project_root / "tools/maa-adb"),
+    }
+    before.pop("adb")
+    assert after == before
+    assert session.environment()["MR3A_ADB_SERIAL"] == session._serial
+    assert session.environment()["MR3A_REAL_ADB"].endswith("/adb")

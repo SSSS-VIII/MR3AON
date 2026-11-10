@@ -72,6 +72,7 @@ class InstanceSpec:
             MR3A_WORK_ROOT=str(self.work_root),
             MR3A_WAYDROID_SLOT=str(self.slot),
             ADB_SERVER_SOCKET=f"tcp:{self.adb_port}",
+            MR3A_REAL_ADB=shutil.which("adb") or "/usr/bin/adb",
         )
         if serial:
             env.update(MR3A_ADB_SERIAL=serial, ANDROID_SERIAL=serial)
@@ -385,9 +386,11 @@ class InstanceSession:
     def bind_config(self) -> None:
         config = json.loads(self.spec.config_path.read_text())
         serial = self._serial or self._address()
+        # Bound the CLI's native ADB subprocess too: its pipe read may block
+        # past the framework timeout, preventing any pipeline recovery callback.
+        adb = str(self.spec.project_root / "tools/maa-adb")
         config["adb"] = {
-            "adb_path": shutil.which("adb") or "/usr/bin/adb", "address": serial,
-            "name": serial + "-" + (shutil.which("adb") or "/usr/bin/adb"),
+            "adb_path": adb, "address": serial, "name": serial + "-" + adb,
         }
         write_json(self.spec.config_path, config)
 

@@ -27,6 +27,10 @@
 
 `--no-window` 仍准备 Android、DHCP、ADB 和截图尺寸，只跳过 `show-full-ui`；本次启动的 Agent 恢复也保持后台模式。不带此参数仍按原样打开窗口。小鲤的 `~/xiaoli/run xiaoli` 已自动附加该参数，停止入口不变；已存在的窗口不因此被关闭。
 
+## CLI ADB调用期限
+
+命名入口给MaaPiCli绑定共享`tools/maa-adb`，由GNU timeout限制每条ADB子命令20秒、终止后2秒仍未退出再强制回收，避免同步截图管道卡住而无法进入流水线恢复。真实ADB路径由`MR3A_REAL_ADB`传入；同名serial、ADB_SERVER_SOCKET和服务器生命周期仍由InstanceSession管理。不会kill-server或关闭其它实例；InstanceSession自身API的显式超时不变。框架可能重试多种截图方式，因此不是整次连接/恢复20秒的承诺。旧运行会话需要正常重启run加载绑定，不能热替换。
+
 ## 文件归属
 
 - 项目与源码：`/home/linn/MR3A`。
