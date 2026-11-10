@@ -92,6 +92,8 @@ class VisualSupports:
         self.tracks=[];self.next_id=1;self.mode=None;self.reference_y=None
         self.camera_y=0.;self.camera_vy=0.;self.scroll_vx=0.
         self.last_translation=-1e9
+        self.scroll_samples=deque(maxlen=7)
+        self.scroll_position=0.;self.instant_vx=0.
 
     def associate(self,segments,stamp):
         candidates=[]
@@ -135,7 +137,24 @@ class VisualSupports:
             if i in paired and s['kind']!='floating_platform'and min(s['confidence'],self.tracks[paired[i]]['confidence'])>=.7:
                 references.append((s,self.tracks[paired[i]]))
         if translations:
-            self.scroll_vx=float(np.median(translations,axis=0)[0]);self.last_translation=stamp
+            self.instant_vx=float(np.median(translations,axis=0)[0])
+            previous_stamp=self.tracks[0]['stamp']
+            if previous_stamp-self.last_translation>.15:
+                self.scroll_samples.clear();self.scroll_position=0.
+            if not self.scroll_samples:self.scroll_samples.append((previous_stamp,self.scroll_position))
+            self.scroll_position+=self.instant_vx*(stamp-previous_stamp)
+            self.scroll_samples.append((stamp,self.scroll_position))
+            self.scroll_vx=self.instant_vx
+            # Capture requests sample a 60Hz presented image at another rate.
+            # One-frame differences alternate between one and two render steps;
+            # fit displacement over several exposures instead of declaring that
+            # a constant-speed platform repeatedly halves/doubles its speed.
+            if len(self.scroll_samples)>=4:
+                samples=np.asarray(self.scroll_samples);times=samples[:,0]-stamp
+                if -times[0]>=.06:
+                    centered=times-times.mean()
+                    self.scroll_vx=float(centered@(samples[:,1]-samples[:,1].mean())/(centered@centered))
+            self.last_translation=stamp
         # Endpoint Y translation measures the camera; the height at the runner
         # also changes as a slope scrolls past. Subtracting that local height
         # from enemy tracks would count the runner's climb/descent twice.
@@ -146,7 +165,9 @@ class VisualSupports:
                 a,b=segment['a'],segment['b']
                 return a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0])
             slope=(old['b'][1]-old['a'][1])/(old['b'][0]-old['a'][0])
-            shift=line_y(s,px)-line_y(old,px)+slope*self.scroll_vx*dt
+            # Camera displacement is an exposure-to-exposure quantity. Use
+            # that interval's translation here, not the smoothed forecast speed.
+            shift=line_y(s,px)-line_y(old,px)+slope*self.instant_vx*dt
             shifts.append(shift);velocities.append(shift/dt)
             if not s['history']:s['vx']=self.scroll_vx
         self.camera_vy=float(np.median(velocities))if velocities else 0.
@@ -195,4 +216,5 @@ class VisualSupports:
         rope_segment=next((s for s in forecast if rope is not None and s['id']==selected['id']),None)
         return dict(mode=self.mode,rope=rope,rope_segment=rope_segment,rope_segments=[s for s in forecast if s['kind']=='rope'],terrain=terrain,segments=forecast,
                     tracking_reference=(0.,self.camera_y),camera_vy=self.camera_vy,
-                    scene_vx=self.scroll_vx,scene_motion_observed=stamp-self.last_translation<.2)
+                    scene_vx=self.scroll_vx,scene_vx_raw=self.instant_vx,
+                    scene_motion_observed=stamp-self.last_translation<.2)

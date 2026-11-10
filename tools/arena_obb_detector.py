@@ -134,6 +134,7 @@ class ObbPerception(Perception):
                       hazard_confidence=getattr(self.detector,'confidence',.25),
                       visible_supports=support['segments'],player_predicted=predicted,
                       camera_reference_y=support['tracking_reference'][1],camera_velocity_y=support['camera_vy'],
-                      scene_velocity_x=support['scene_vx'],observed_player_velocity_x=observed_vx,
+                      scene_velocity_x=support['scene_vx'],scene_velocity_x_raw=support['scene_vx_raw'],
+                      observed_player_velocity_x=observed_vx,
                       player_seen_age=None if self.last_seen_player is None else stamp-self.last_seen_player)
         return result
