@@ -24,7 +24,14 @@ function E.vision_interactions()
             killed_ninja=typeof(CS.EnemyBase):GetField('_killedNinja',flags):GetValue(enemy)}
     end
     local manager=E.visionTaskManager
-    if manager then out.special=task(manager.CurrSpecialTask);out.timely=task(manager.CurrTimelyTask) end
+    if manager then
+        local special=manager.CurrSpecialTask
+        if special then E.visionLastSpecialTask=special end
+        out.special=task(special);out.timely=task(manager.CurrTimelyTask)
+        -- Retain only a read-only reference: an immediately hidden completed
+        -- task can otherwise be sampled at 79/80, then disappear before 80.
+        if not special then out.last_special=task(E.visionLastSpecialTask) end
+    end
     return out
 end
 
@@ -66,6 +73,7 @@ end
 function E.start_vision_evaluation()
     E.visionEvalEnabled=true
     E.visionTaskManager=U.Object.FindObjectOfType(typeof(CS.GameTaskManager))
+    E.visionLastSpecialTask=nil
     local hp=CS.NinjaController.Instance.NinjaScript.CurrentHp
     E.visionEvalPreviousHealth=hp;E.visionEvalMinHealth=hp;E.visionEvalDamage=0
     E.visionEvalKeys={jump=0,down=0}

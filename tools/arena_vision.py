@@ -869,8 +869,15 @@ def overlay(rgb, observation, action=None, reason=''):
                 cv2.circle(image,(int(round(x)),int(round(y))),1,(0,255,255),-1)
         if terrain['edge']is not None:
             x=int(terrain['edge']);cv2.line(image,(x,180),(x,310),(255,0,255),2)
+    if observation.get('visible_supports')and observation.get('player'):
+        from arena_support import leading_ground_faces
+        for face in leading_ground_faces(observation['visible_supports'],observation['time']):
+            if face['x']<observation['player'].x-100:continue
+            x,y=int(round(face['x'])),int(round(face['y']))
+            cv2.line(image,(x,y),(x,359),(0,165,255),1)
     for t in observation['tracks']:
         color = (0, 0, 255) if t.confidence >= .7 else (140, 140, 140)
+        if t.kind=='slice_target':color=(255,180,0)
         if getattr(t,'quad',None)is not None:cv2.polylines(image,[np.asarray(t.quad,np.int32)],True,color,1)
         else:rect(t.box, color)
         x, y = t.box.center
@@ -878,6 +885,7 @@ def overlay(rgb, observation, action=None, reason=''):
         path=np.array([[int(t.future(dt).center[0]),int(t.future(dt).center[1])]
                        for dt in np.arange(0,.51,.05)],np.int32)
         cv2.polylines(image,[path],False,color,1)
-        cv2.putText(image, f'{t.id}:{t.vx:.0f},{t.vy:.0f}', (int(t.box.x), int(t.box.y-3)), 0, .3, color, 1)
+        label=('target 'if t.kind=='slice_target'else'')+f'{t.id}:{t.vx:.0f},{t.vy:.0f}'
+        cv2.putText(image, label, (int(t.box.x), int(t.box.y-3)), 0, .3, color, 1)
     cv2.putText(image, f"{observation['phase']} {action or '-'} {reason}", (100, 25), 0, .45, (0, 255, 0), 1)
     return image

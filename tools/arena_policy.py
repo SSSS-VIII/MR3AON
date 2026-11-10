@@ -55,7 +55,7 @@ class Avoider:
 
     def _objects(self,obs):
         p=obs['player']
-        objects=[t for t in obs['tracks'] if t.confidence>=.7
+        objects=[t for t in obs['tracks'] if t.kind!='slice_target'and t.confidence>=.7
                 and (t.observations>=3 or t.arming or t.active)
                 and t.box.x+t.box.w>p.x-100]
         for face in leading_ground_faces(obs.get('visible_supports',[]),obs['time']):
@@ -64,6 +64,10 @@ class Avoider:
                 'terrain_wall',face['confidence'],obs['time'],observations=3,
                 vx=face['vx'],vy=face['vy'],resource='derived_ground_entrance',collider_shape='BoxCollider'))
         return objects
+
+    def _targets(self,obs):
+        return [t for t in obs['tracks']if t.kind=='slice_target'and t.confidence>=.8
+                and t.observations>=3 and t.box.x+t.box.w>obs['player'].x]
 
     def _hazard(self,track,t):
         box=track.future(t)

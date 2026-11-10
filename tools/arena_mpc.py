@@ -15,6 +15,7 @@ class Node:
     first: str|None=None
     hits: frozenset=frozenset()
     actions: int=0
+    target_hits: frozenset=frozenset()
 
 
 def advance(state,seconds):
@@ -30,6 +31,25 @@ def start_action(state,name):
 
 def player_array(states):
     return np.array([[*s['player'].center,s['player'].w,s['player'].h]for s in states])
+
+
+def forecast_geometry(tracks,times,predict,step):
+    boxes=np.array([[[b.center[0],b.center[1],b.w/2,b.h/2]
+                     for track in tracks for b in[predict(track,t)]]for t in times]).reshape(len(times),len(tracks),4)
+    box_shapes=np.array([is_box(t)for t in tracks],bool)
+    oriented=np.array([getattr(t,'quad',None)is not None and t.collider_shape=='BoxCollider'for t in tracks],bool)
+    if not np.any(oriented):return boxes,box_shapes,oriented,None,None
+    indices=np.flatnonzero(oriented)
+    base=np.array([tracks[j].quad for j in indices]);offsets=base-base.mean(axis=1,keepdims=True)
+    angles=times[:,None]*np.array([tracks[j].angular_velocity for j in indices])[None,:]
+    cos=np.cos(angles)[:,:,None];sin=np.sin(angles)[:,:,None]
+    quads=np.stack((offsets[None,:,:,0]*cos-offsets[None,:,:,1]*sin,
+                    offsets[None,:,:,0]*sin+offsets[None,:,:,1]*cos),axis=-1)
+    quads+=boxes[:,indices,None,:2]
+    radius=np.linalg.norm(quads[0]-quads[0].mean(axis=1,keepdims=True),axis=2).max(axis=1)
+    step_angle=np.array([abs(tracks[j].angular_velocity)*step for j in indices])
+    sagitta=radius*(1-np.cos(np.minimum(np.pi,step_angle)/2))
+    return boxes,box_shapes,oriented,quads,sagitta
 
 
 def swept_distances(before,after,old,new,margin,box_hazards=None,box_vertical_margin=None):
@@ -91,7 +111,7 @@ class MpcAvoider(VisualAvoider):
 
     def uses_search(self,obs):
         return bool(obs.get('player')and obs.get('rope')is not None and not obs.get('terrain')
-                    and any(t.kind in ('pinball','trap','terrain_wall')or t.attack_phase is not None for t in self._objects(obs)))
+                    and (self._targets(obs)or any(t.kind in ('pinball','trap','terrain_wall')or t.attack_phase is not None for t in self._objects(obs))))
 
     def _options(self,state,stamp):
         names=[None]
@@ -108,8 +128,8 @@ class MpcAvoider(VisualAvoider):
         if obs['player']is None:return None,'unknown_player'
         if obs.get('rope')is None or obs.get('terrain'):
             return super().choose(obs)
-        tracks=self._objects(obs)
-        if not tracks:return super().choose(obs)
+        tracks=self._objects(obs);targets=self._targets(obs)
+        if not tracks and not targets:return super().choose(obs)
         # The reactive native-action controller is cheaper and currently better
         # on unmodelled entry/dash hazards. Search uses bouncing crossings and
         # learned native attack phases, never stage or elapsed board time.
@@ -117,22 +137,9 @@ class MpcAvoider(VisualAvoider):
             return super().choose(obs)
         # Precompute all object forecasts once, outside the search branches.
         times=np.arange(self.STEPS*2+1)*self.STEP/2
-        boxes=np.array([[[b.center[0],b.center[1],b.w/2,b.h/2]
-                         for track in tracks for b in[self._hazard(track,t)]]for t in times])
-        box_hazards=np.array([is_box(t)for t in tracks])
-        oriented=np.array([getattr(t,'quad',None)is not None and t.collider_shape=='BoxCollider'for t in tracks])
+        boxes,box_hazards,oriented,quads,sagitta=forecast_geometry(tracks,times,self._hazard,self.STEP/2)
+        target_boxes,target_shapes,target_oriented,target_quads,target_sagitta=forecast_geometry(targets,times,self._hazard,self.STEP/2)
         has_oriented=bool(np.any(oriented))
-        if has_oriented:
-            indices=np.flatnonzero(oriented)
-            base=np.array([tracks[j].quad for j in indices]);offsets=base-base.mean(axis=1,keepdims=True)
-            angles=times[:,None]*np.array([tracks[j].angular_velocity for j in indices])[None,:]
-            cos=np.cos(angles)[:,:,None];sin=np.sin(angles)[:,:,None]
-            quads=np.stack((offsets[None,:,:,0]*cos-offsets[None,:,:,1]*sin,
-                            offsets[None,:,:,0]*sin+offsets[None,:,:,1]*cos),axis=-1)
-            quads+=boxes[:,indices,None,:2]
-            radius=np.linalg.norm(quads[0]-quads[0].mean(axis=1,keepdims=True),axis=2).max(axis=1)
-            step_angle=np.array([abs(tracks[j].angular_velocity)*self.STEP/2 for j in indices])
-            sagitta=radius*(1-np.cos(np.minimum(np.pi,step_angle)/2))
         beam=[Node(obs)];now=obs['time']
         for step in range(self.STEPS):
             branches=[]
@@ -144,7 +151,7 @@ class MpcAvoider(VisualAvoider):
                     half=advance(state,self.STEP/2);end=advance(state,self.STEP)
                     branches.append((node,state,half,end,name))
             positions=[player_array([b[index]for b in branches])for index in(1,2,3)]
-            distances=[];near=[]
+            distances=[];near=[];target_contacts=[]
             for sample in(0,1):
                 index=step*2+sample
                 d=swept_distances(positions[sample],positions[sample+1],
@@ -159,21 +166,32 @@ class MpcAvoider(VisualAvoider):
                                  times[index+1]*PRIORS['trap_prediction']['vertical_growth_px_per_second'],sagitta=sagitta)
                     d[:,oriented]=np.where(collision,0,np.maximum(1.,d[:,oriented]))
                 distances.append(d);near.append(np.maximum(0,1.4-d).sum(axis=1)*.002)
+                if targets:
+                    contact=swept_distances(positions[sample],positions[sample+1],
+                        target_boxes[index],target_boxes[index+1],0,box_hazards=target_shapes)<1
+                    if np.any(target_oriented):
+                        contact[:,target_oriented]=swept_capsules(positions[sample],positions[sample+1],
+                            target_quads[index],target_quads[index+1],sagitta=target_sagitta)
+                    target_contacts.append(contact)
             pool={}
             for i,(node,state,half,end,name)in enumerate(branches):
-                hits=set(node.hits);cost=node.cost
+                hits=set(node.hits);target_hits=set(node.target_hits);cost=node.cost
                 for sample in(0,1):
                     for index in np.flatnonzero(distances[sample][i]<1):
                         identity=tracks[index].id
                         if identity not in hits:
                             cost+=1000*collision_weight(tracks[index])*(1-.2*(step+1)/self.STEPS);hits.add(identity)
                     cost+=float(near[sample][i])
+                    if targets:target_hits.update(targets[j].id for j in np.flatnonzero(target_contacts[sample][i]))
+                # Predicted contacts count once per target within this horizon.
+                # The total bonus stays below even one ordinary collision cost.
+                cost-=.1*(min(10,len(target_hits))-min(10,len(node.target_hits)))
                 count=node.actions+bool(name)
                 if name:cost+=.05 if name.startswith('jump')else .03
                 first=name if step==0 else node.first
                 active=end.get('motion');age=0 if not active else round(end['time']-active['started'],3)
                 key=(end['phase'],age,round(end['player'].center[1]/3),end['jumps'])
-                candidate=Node(end,cost,first,frozenset(hits),count)
+                candidate=Node(end,cost,first,frozenset(hits),count,frozenset(target_hits))
                 if key not in pool or candidate.cost<pool[key].cost:
                     pool[key]=candidate
             beam=sorted(pool.values(),key=lambda n:(n.cost,n.actions))[:self.BEAM]

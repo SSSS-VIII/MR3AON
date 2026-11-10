@@ -94,12 +94,18 @@ def interaction_confusions(truth,prediction,classes,policy_confidence=.8):
     truth=[r for r in truth if classes[r[0]]['kind']in PHYSICAL_KINDS]
     prediction=[r for r in prediction if classes[r[0]]['kind']in PHYSICAL_KINDS]
     result=Counter(hazard_targets=sum(classes[c]['kind']=='hazard'for c,q in truth),
-                   slice_targets=sum(classes[c]['kind']=='slice_target'for c,q in truth))
+                   slice_targets=sum(classes[c]['kind']=='slice_target'for c,q in truth),
+                   policy_target_predictions=sum(classes[c]['kind']=='slice_target'and s>=policy_confidence for c,q,s in prediction))
+    matched_policy=set()
     for i,j in match(truth,prediction,classes,'physical'):
         a=classes[truth[i][0]]['kind'];b=classes[prediction[j][0]]['kind']
         result[a+'->'+b]+=1
         if a=='hazard'and b=='slice_target'and prediction[j][2]>=policy_confidence:
             result['policy_hazard_as_target']+=1
+        if b=='slice_target'and prediction[j][2]>=policy_confidence:
+            matched_policy.add(j)
+            if a=='slice_target':result['policy_slice_as_target']+=1
+    result['policy_unmatched_targets']=result['policy_target_predictions']-len(matched_policy)
     return result
 
 

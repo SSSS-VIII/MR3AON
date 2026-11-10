@@ -165,6 +165,10 @@ def run(args):
         from arena_yolo_detector import make_perception
         perception=make_perception(detector_weights)
         detector_info=dict(weights=str(detector_weights),sha256=hashlib.sha256(detector_weights.read_bytes()).hexdigest())
+        from arena_obb_detector import profile_path
+        metadata=profile_path(detector_weights)
+        if metadata.is_file():
+            detector_info.update(profile=str(metadata),profile_sha256=hashlib.sha256(metadata.read_bytes()).hexdigest())
     else:
         perception=Perception();detector_info=None
     policy=MpcAvoider() if detector_weights else Avoider()

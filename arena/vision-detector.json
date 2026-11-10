@@ -1,8 +1,8 @@
 {
   "model": "Ultralytics YOLO26n-OBB",
-  "weights": "debug/arena-client/yolo/finetune/fit-physics-merged-v10/weights/best.pt",
-  "sha256": "cac24e9ffa1ea3e5a9ba3eb69b05d323a6158ea75d45e017f7ed77e2f59299f5",
-  "profile_sha256": "8e2c81e5e1dc5ada8e1fd272c6cdca73e868b508ac0093a6937436374fdcd785",
+  "weights": "debug/arena-client/yolo/finetune/fit-interaction-v11/weights/best.pt",
+  "sha256": "b3d85145b3dd01e530d3137a10e7abaec6fb3616a2bf45d00b47e553175e31d2",
+  "profile_sha256": "68aedf4d53631fe265944423fc2104f55bf24b64ebd54def70031926a8796f2a",
   "classes": [
     "player",
     "spider",
@@ -16,7 +16,10 @@
     "cue",
     "rope",
     "platform",
-    "floating_platform"
+    "floating_platform",
+    "fruit_box",
+    "fruit_capsule",
+    "muppet_bomb"
   ],
-  "evaluation": "Experimental physical-object OBB including interactive fruit; partial early-board pixel-only control only. Fruit tasks, cue, RockTiger and full Gale control are unaccepted."
+  "evaluation": "Experimental 16-class interaction-aware physics: native fruit target completion and partial board control. Significant damage remains; Muppet bomb motion subtype, cue, RockTiger and full Gale control are unaccepted."
 }

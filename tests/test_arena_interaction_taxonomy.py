@@ -60,6 +60,10 @@ def test_localization_does_not_hide_a_high_confidence_danger_misclassified_as_a_
     assert match(truth,[(1,q,.95)],classes,'geometry')==[]
     assert interaction_confusions(truth,[(1,q,.95)],classes)['policy_hazard_as_target']==1
     assert interaction_confusions(truth,[(1,q,.79)],classes)['policy_hazard_as_target']==0
+    counts=interaction_confusions([(1,q)],[(1,q,.95)],classes)
+    assert counts['policy_slice_as_target']==counts['policy_target_predictions']==1
+    assert counts['policy_unmatched_targets']==0
+    assert interaction_confusions([],[(1,q,.95)],classes)['policy_unmatched_targets']==1
 
 
 def test_uncertain_fruit_prediction_is_still_an_obstacle_to_the_actor():
