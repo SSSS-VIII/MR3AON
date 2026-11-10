@@ -42,7 +42,9 @@ def test_search_returns_above_rope_before_ground_entry_but_walks_normally_on_top
     segments=[surface(1,275,640)]
     below=observation(segments)
     assert VisualAvoider()._risk(below,'none')[0]>0
-    assert VisualAvoider()._risk(below,'flip')[0]==0
+    # Original climbDistance probes ahead of the hurt capsule. A short block
+    # during the flip is recoverable and cheaper than remaining underneath.
+    assert VisualAvoider()._risk(below,'flip')[0]<VisualAvoider()._risk(below,'none')[0]
     assert MpcAvoider().choose(below)==('jump','mpc_rope_up')
     above=observation(segments,False)
     assert VisualAvoider()._risk(above,'none')[0]==0
@@ -54,3 +56,12 @@ def test_ground_geometry_does_not_pollute_detector_tracks_or_require_enemy_detec
     assert MpcAvoider().uses_search(obs)
     assert all(t.kind=='terrain_wall'and t.id<0 for t in VisualAvoider()._objects(obs))
     assert obs['tracks']==[] and obs['visible_supports'][0]['a']==(275,260)
+
+
+def test_repeated_weak_platform_is_a_possible_wall_without_turning_one_weak_frame_solid():
+    weak=surface(1,300,640,confidence=.4)
+    assert leading_ground_faces([weak],0)==[]
+    weak['observations']=3
+    walls=VisualAvoider()._objects(observation([weak]))
+    assert len(walls)==1 and walls[0].kind=='terrain_wall'
+    assert walls[0].confidence==.4

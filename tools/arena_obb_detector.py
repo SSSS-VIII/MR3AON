@@ -41,7 +41,8 @@ def decode(quads,ids,scores,profile,player_x=180.):
         elif kind in('rope','platform','floating_platform'):
             a,b=support_segment(q)
             if b[0]-a[0]>=4:
-                supports.append(dict(kind=kind,a=a,b=b,confidence=confidence))
+                supports.append(dict(kind=kind,a=a,b=b,confidence=confidence,
+                    left_clipped=bool(q[:,0].min()<=3),right_clipped=bool(q[:,0].max()>=637)))
         elif kind=='cue':
             cues.append(dict(box=box,confidence=confidence,resource=meta.get('resource')))
         elif kind in('hazard','slice_target'):
@@ -111,6 +112,12 @@ class ObbPerception(Perception):
             player=player_future(self.last_observation,stamp-self.last_observation['time']);predicted=True
         support=self.supports.observe(segments,player,stamp)
         result=self._finish(rgb,stamp,player,detections,support_observation=support)
+        observed_vx=result['vx']
+        # With a reliable static-scene flow the forward-running root cannot
+        # retreat faster than that scene. Crop jitter or a newly blocked runner
+        # must not become an escape trajectory through the left of a wall.
+        if support['scene_motion_observed']and support['scene_vx']<0:
+            result['vx']=max(observed_vx,support['scene_vx'])
         for track in result['tracks']:
             if (track.rush_fit_velocity is not None and track.confidence>=.8
                     and track.box.x>5 and track.box.x+track.box.w<635):
@@ -126,5 +133,6 @@ class ObbPerception(Perception):
                       observed_rush_velocity=self.rush_prior,
                       visible_supports=support['segments'],player_predicted=predicted,
                       camera_reference_y=support['tracking_reference'][1],camera_velocity_y=support['camera_vy'],
+                      scene_velocity_x=support['scene_vx'],observed_player_velocity_x=observed_vx,
                       player_seen_age=None if self.last_seen_player is None else stamp-self.last_seen_player)
         return result

@@ -1156,5 +1156,11 @@
     "source": "Original UI down at four airborne starting poses; additionally confirmed during fall2",
     "source_sha256": "c630061899c7b4dc0c8e4804e1b9ca81a01ab985fde890f672c2e0a1e03d580b",
     "validation_sha256": "ea1caa15d8396b9b8cdeb1c85f2b5e33417e160d37a180b10d3fb3a2265d07b5"
+  },
+  "blocking": {
+    "climb_distance": 0.800000011920929,
+    "foot_point": 0.75,
+    "source": "Original NinjaData; ProcessMovementOnLine/Ground stop at next.PointStart.x - climbDistance; root-foot checks, independent of Role hurt capsule",
+    "source_sha256": "9f6d4ea6fc98fa35124cdd395ad4c2187e5456f0e8bf662850846f3432194f49"
   }
 }

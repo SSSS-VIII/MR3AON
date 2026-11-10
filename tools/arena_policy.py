@@ -1,5 +1,5 @@
 """Short-horizon avoidance over visual objects, support and native action priors."""
-from arena_vision import Box,Track,player_future,native_motion_box,can_air_down,track_confidence
+from arena_vision import Box,Track,player_future,native_motion_box,can_air_down,track_confidence,create_motion,root_foot_box,constrain_ground_motion
 from arena_oriented import is_box,transform,touching_capsule
 from arena_support import leading_ground_faces
 import arena_motion as motion
@@ -79,22 +79,49 @@ class Avoider:
 
     def _risk(self,obs,action):
         objects=self._objects(obs)
-        hits={}
+        obs=dict(obs,blocking_faces=[dict(x=t.box.x,y=t.box.y,vx=t.vx,vy=t.vy,stamp=obs['time'])
+                                    for t in objects if t.kind=='terrain_wall'])
+        hits={};wall_frames={}
+        previous=obs;lost_x=0.
         for step in range(1,20):
             t=step*.04
             p=self._path(obs,action,t)
+            base_x=p.x;p=Box(p.x+lost_x,p.y,p.w,p.h)
+            state=self._path_state(obs,action,t,p)
+            state=constrain_ground_motion(previous,state);p=state['player'];lost_x=p.x-base_x;previous=state
+            foot=None
             for track in objects:
-                if track.id in hits:continue
+                if track.id in hits and track.kind!='terrain_wall':continue
                 hazard=self._hazard(track,t)
-                if getattr(track,'quad',None)is not None and track.collider_shape=='BoxCollider':
+                if track.kind=='terrain_wall':
+                    if foot is None:foot=root_foot_box(state)
+                    collision=(abs(foot.center[0]-hazard.center[0])<hazard.w/2+
+                               motion.DATA['blocking']['climb_distance']*obs.get('scale_px',41.)+4
+                               and hazard.y-2<foot.center[1]<hazard.y+hazard.h+2)
+                    if collision:wall_frames[track.id]=wall_frames.get(track.id,0)+1
+                elif getattr(track,'quad',None)is not None and track.collider_shape=='BoxCollider':
                     quad=transform(track.quad,track.angular_velocity*t,hazard.center)
                     collision=touching_capsule(p,quad,margin=4)
                 else:
                     collision=touching(p,hazard,shape='box'if is_box(track)else'ellipse')
                 if collision:
-                    hits[track.id]=(t,track)
-        cost=sum(100*collision_weight(track)*(1+(.8-t)*2) for t,track in hits.values())
+                    hits.setdefault(track.id,(t,track))
+        cost=sum(100*collision_weight(track)*(1+(.8-t)*2) for t,track in hits.values()if track.kind!='terrain_wall')
+        cost+=sum(100*10*n*.04 for n in wall_frames.values())
         return cost,min((t for t,_ in hits.values()),default=10),hits
+
+    def _path_state(self,obs,action,t,player):
+        active=obs.get('motion')
+        if action=='jump':active=create_motion(obs,'jump2'if obs['jumps']>=1 else'jump1')
+        elif action=='air_down':active=create_motion(obs,'air_down')
+        elif action in ('flip','escape'):
+            name='rope_up'if obs['phase']=='rope_below'else'rope_down'
+            active=create_motion(obs,name)
+            if action=='escape'and t>motion.duration(name):
+                active=dict(name='jump1',started=obs['time']+motion.duration(name))
+        elif action=='slide':active=None
+        phase=motion.phase(active['name'],obs['time']+t-active['started'],active)if active else obs['phase']
+        return dict(obs,player=player,time=obs['time']+t,motion=active,phase=phase)
 
     def choose(self,obs):
         p,stamp=obs['player'],obs['time']

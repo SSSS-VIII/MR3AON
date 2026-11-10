@@ -9,7 +9,8 @@ def leading_ground_faces(segments,stamp):
     These faces are derived geometry, never extra detector/native enemy labels.
     A six-pixel top tolerance avoids penalising normal surface contact.
     """
-    ground=[s for s in segments if s['kind']=='platform'and s.get('confidence',0)>=.7]
+    ground=[s for s in segments if s['kind']=='platform'and not s.get('left_clipped',False)and s.get('confidence',0)>=.25
+            and (s['confidence']>=.7 or s.get('observations',0)>=3)]
     faces=[]
     for s in ground:
         x,y=s['a']
@@ -29,7 +30,11 @@ def leading_ground_faces(segments,stamp):
 def height(segment,x,seconds=0):
     dx=segment.get('vx',0)*seconds;dy=segment.get('vy',0)*seconds
     a,b=segment['a'],segment['b'];ax=a[0]+dx;bx=b[0]+dx
-    if not ax<=x<=bx or bx-ax<4:return None
+    if bx-ax<4:return None
+    # A viewport cut is not a physical endpoint. Continue its observed tangent
+    # for forecasts; interior gaps still have two explicit uncropped endpoints.
+    if x<ax and not segment.get('left_clipped',False):return None
+    if x>bx and not segment.get('right_clipped',False):return None
     return float(a[1]+dy+(b[1]-a[1])*(x-ax)/(bx-ax))
 
 
@@ -47,7 +52,7 @@ def describe_terrain(ground,selected,px,*,include_samples=True):
         ys=[v for s in ground for v in[height(s,x)]if v is not None]
         value=min(ys,key=lambda v:abs(v-y))if ys else y
         samples.append((x,value-7,bool(ys)))
-    edge=selected['b'][0]if selected['b'][0]<637 else None
+    edge=selected['b'][0]if not selected.get('right_clipped',selected['b'][0]>=637)else None
     ahead=[s['a'][0]for s in ground if edge is not None and s['a'][0]>edge+4]
     return dict(y=y-7,at_player=height(selected,px)is not None,edge=edge,
                 landing=min(ahead)if ahead else None,speed=max(0,-selected['vx'])or None,
@@ -86,6 +91,7 @@ class VisualSupports:
     def __init__(self):
         self.tracks=[];self.next_id=1;self.mode=None;self.reference_y=None
         self.camera_y=0.;self.camera_vy=0.;self.scroll_vx=0.
+        self.last_translation=-1e9
 
     def associate(self,segments,stamp):
         candidates=[]
@@ -104,19 +110,23 @@ class VisualSupports:
             if i not in paired and j not in used:paired[i]=j;used.add(j)
         current=[];translations=[];references=[]
         for i,segment in enumerate(segments):
-            s=dict(segment,stamp=stamp,vx=0.,vy=0.)
+            s=dict(segment,stamp=stamp,observations=1,vx=0.,vy=0.,
+                   left_clipped=segment.get('left_clipped',segment['a'][0]<=3),
+                   right_clipped=segment.get('right_clipped',segment['b'][0]>=637))
             if i in paired:
                 old=self.tracks[paired[i]];dt=stamp-old['stamp'];s['id']=old['id'];history=old['history']
+                s['observations']=old.get('observations',1)+1
                 # Cropped endpoints move when the other end leaves the image.
                 # Estimate translation only from endpoints clear of the crop.
                 shifts=[]
                 for key in('a','b'):
                     a,b=np.asarray(s[key]),np.asarray(old[key])
-                    if 3<a[0]<637 and 3<b[0]<637:shifts.append((a-b)/dt)
+                    clipped='left_clipped'if key=='a'else'right_clipped'
+                    if not s[clipped]and not old[clipped]and 3<a[0]<637 and 3<b[0]<637:shifts.append((a-b)/dt)
                 if shifts:
                     history.append(np.median(shifts,axis=0))
                     if s['kind']!='floating_platform'and min(s['confidence'],old['confidence'])>=.7:
-                        translations.append(np.median(shifts,axis=0))
+                        translations.extend(shifts)
                 if history:s['vx'],s['vy']=map(float,np.median(np.asarray(history),axis=0))
                 else:s['vx'],s['vy']=old['vx'],old['vy']
             else:
@@ -124,7 +134,8 @@ class VisualSupports:
             s['history']=history;current.append(s)
             if i in paired and s['kind']!='floating_platform'and min(s['confidence'],self.tracks[paired[i]]['confidence'])>=.7:
                 references.append((s,self.tracks[paired[i]]))
-        if translations:self.scroll_vx=float(np.median(translations,axis=0)[0])
+        if translations:
+            self.scroll_vx=float(np.median(translations,axis=0)[0]);self.last_translation=stamp
         # Endpoint Y translation measures the camera; the height at the runner
         # also changes as a slope scrolls past. Subtracting that local height
         # from enemy tracks would count the runner's climb/descent twice.
@@ -177,9 +188,11 @@ class VisualSupports:
         # own vertical motion after the common camera translation is removed.
         static=[s['vy']for s in segments if s['kind']!='floating_platform']
         camera_velocity=float(np.median(static))if static else self.camera_vy
-        forecast=[dict(s,vy=s['vy']-camera_velocity if s['kind']=='floating_platform'else 0.)for s in segments]
+        forecast=[dict(s,vy=s['vy']-camera_velocity if s['kind']=='floating_platform'else 0.,
+                       vx=s['vx']if s['kind']=='floating_platform'else self.scroll_vx)for s in segments]
         if terrain:
             terrain=dict(terrain,segments=[s for s in forecast if s['kind']!='rope'])
         rope_segment=next((s for s in forecast if rope is not None and s['id']==selected['id']),None)
-        return dict(mode=self.mode,rope=rope,rope_segment=rope_segment,terrain=terrain,segments=forecast,
-                    tracking_reference=(0.,self.camera_y),camera_vy=self.camera_vy)
+        return dict(mode=self.mode,rope=rope,rope_segment=rope_segment,rope_segments=[s for s in forecast if s['kind']=='rope'],terrain=terrain,segments=forecast,
+                    tracking_reference=(0.,self.camera_y),camera_vy=self.camera_vy,
+                    scene_vx=self.scroll_vx,scene_motion_observed=stamp-self.last_translation<.2)

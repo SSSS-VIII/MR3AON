@@ -1,7 +1,7 @@
 """Receding-horizon search over original actions and visual hazard trajectories."""
 from dataclasses import dataclass
 import numpy as np
-from arena_vision import advance_player,native_motion_box,create_motion,can_air_down
+from arena_vision import advance_player,native_motion_box,create_motion,can_air_down,root_foot_box
 from arena_policy import VisualAvoider,collision_weight
 import arena_motion as motion
 from arena_object_motion import PRIORS
@@ -31,6 +31,10 @@ def start_action(state,name):
 
 def player_array(states):
     return np.array([[*s['player'].center,s['player'].w,s['player'].h]for s in states])
+
+
+def foot_array(states):
+    return np.array([[*root_foot_box(s).center,0.,0.]for s in states])
 
 
 def forecast_geometry(tracks,times,predict,step):
@@ -103,17 +107,38 @@ def swept_distance(before,after,old,new,margin):
     return swept_distances(a,b,old,new,margin)[0]
 
 
+def crosses_rope_end_below(before,after):
+    segment=before.get('rope_segment')
+    if (segment is None or before.get('rope')is None or after.get('rope')is not None
+            or segment.get('right_clipped',False)):
+        return False
+    next_segment=after['rope_segment'];a,b=segment['a'],segment['b']
+    px,py=before['player'].center;nx,ny=after['player'].center
+    r0=px-b[0];r1=nx-next_segment['b'][0]
+    if not r0<=0<r1:return False
+    fraction=-r0/(r1-r0)
+    line_y=b[1]+fraction*(next_segment['b'][1]-b[1])
+    return py+fraction*(ny-py)>line_y+5
+
+
 class MpcAvoider(VisualAvoider):
     """Beam search, replanned from each frame; only its first input is executed."""
     STEP=.08
     STEPS=12
     BEAM=24
 
+    def rope_exit(self,obs):
+        segment=obs.get('rope_segment')
+        if segment is None:return False
+        relative=segment['vx']-obs.get('vx',0.)
+        return (relative<0 and not segment.get('right_clipped',segment['b'][0]>=637)
+                and 0<=segment['b'][0]-obs['player'].center[0]<=-relative*self.STEP*self.STEPS)
+
     def uses_search(self,obs):
         airborne_ground=bool(obs.get('terrain')and obs['terrain'].get('source')=='neural_segments'
                              and obs.get('phase','').startswith(('jump','air_')))
         return bool(obs.get('player')and (obs.get('rope')is not None and not obs.get('terrain')or airborne_ground)
-                    and (self._targets(obs)or any(t.kind in ('pinball','trap','terrain_wall')or t.attack_phase is not None for t in self._objects(obs))))
+                    and (self.rope_exit(obs)or self._targets(obs)or any(t.kind in ('pinball','trap','terrain_wall')or t.attack_phase is not None for t in self._objects(obs))))
 
     def _options(self,state,stamp):
         names=[None]
@@ -132,7 +157,9 @@ class MpcAvoider(VisualAvoider):
         if not self.uses_search(obs):
             return super().choose(obs)
         tracks=self._objects(obs);targets=self._targets(obs)
-        if not tracks and not targets:return super().choose(obs)
+        obs=dict(obs,blocking_faces=[dict(x=t.box.x,y=t.box.y,vx=t.vx,vy=t.vy,stamp=obs['time'])
+                                    for t in tracks if t.kind=='terrain_wall'])
+        if not tracks and not targets and not self.rope_exit(obs):return super().choose(obs)
         # The reactive native-action controller is cheaper and currently better
         # on unmodelled entry/dash hazards. Search uses bouncing crossings and
         # learned native attack phases, never stage or elapsed board time.
@@ -143,6 +170,7 @@ class MpcAvoider(VisualAvoider):
         boxes,box_hazards,oriented,quads,sagitta=forecast_geometry(tracks,times,self._hazard,self.STEP/2)
         target_boxes,target_shapes,target_oriented,target_quads,target_sagitta=forecast_geometry(targets,times,self._hazard,self.STEP/2)
         has_oriented=bool(np.any(oriented))
+        walls=np.array([t.kind=='terrain_wall'for t in tracks],bool)
         beam=[Node(obs)];now=obs['time']
         for step in range(self.STEPS):
             branches=[]
@@ -155,6 +183,7 @@ class MpcAvoider(VisualAvoider):
                     half=advance(state,self.STEP/2);end=advance(state,self.STEP)
                     branches.append((node,state,half,end,name))
             positions=[player_array([b[index]for b in branches])for index in(1,2,3)]
+            feet=[foot_array([b[index]for b in branches])for index in(1,2,3)]if np.any(walls)else None
             distances=[];near=[];target_contacts=[]
             for sample in(0,1):
                 index=step*2+sample
@@ -169,6 +198,10 @@ class MpcAvoider(VisualAvoider):
                         margin_y=PRIORS['trap_prediction']['vertical_margin_px']+
                                  times[index+1]*PRIORS['trap_prediction']['vertical_growth_px_per_second'],sagitta=sagitta)
                     d[:,oriented]=np.where(collision,0,np.maximum(1.,d[:,oriented]))
+                if feet is not None:
+                    d[:,walls]=swept_distances(feet[sample],feet[sample+1],boxes[index,walls],boxes[index+1,walls],
+                        motion.DATA['blocking']['climb_distance']*obs.get('scale_px',41.)+8,
+                        box_hazards=np.ones(int(walls.sum()),bool),box_vertical_margin=2.)
                 distances.append(d);near.append(np.maximum(0,1.4-d).sum(axis=1)*.002)
                 if targets:
                     contact=swept_distances(positions[sample],positions[sample+1],
@@ -183,7 +216,9 @@ class MpcAvoider(VisualAvoider):
                 for sample in(0,1):
                     for index in np.flatnonzero(distances[sample][i]<1):
                         identity=tracks[index].id
-                        if identity not in hits:
+                        if walls[index]:
+                            cost+=1000*collision_weight(tracks[index])*self.STEP/2;hits.add(identity)
+                        elif identity not in hits:
                             cost+=1000*collision_weight(tracks[index])*(1-.2*(step+1)/self.STEPS);hits.add(identity)
                     cost+=float(near[sample][i])
                     if targets:target_hits.update(targets[j].id for j in np.flatnonzero(target_contacts[sample][i]))
@@ -195,6 +230,9 @@ class MpcAvoider(VisualAvoider):
                 if (terrain and not terrain['at_player']and end['player'].center[1]>terrain['y']+35
                         and 'unsupported'not in hits):
                     cost+=10000;hits.add('unsupported')
+                if ('below_rope_exit'not in hits and
+                        (crosses_rope_end_below(state,half)or crosses_rope_end_below(half,end))):
+                    cost+=10000;hits.add('below_rope_exit')
                 if name:cost+=.05 if name.startswith('jump')else .03
                 first=name if step==0 else node.first
                 active=end.get('motion');age=0 if not active else round(end['time']-active['started'],3)
