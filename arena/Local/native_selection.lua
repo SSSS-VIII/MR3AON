@@ -191,6 +191,16 @@ local function ground_stage(n)
 end
 if E.nativeResetWrapper~=E.reset then E.nativeBaseReset=E.reset end
 
+-- Cooperatively stop only our travel operation. The shared runner also owns
+-- the RPC bridge, so stopping all its coroutines would disconnect control.
+function E.cancel_native_selection()
+    local job=E.travel
+    if not E.busy or not job or job.done or
+            (job.phase~='rush' and job.phase~='approach') then return false end
+    job.cancelRequested=true
+    return true
+end
+
 function E.native_select(spec,seed)
     assert(not E.busy,'A battle operation is active')
     local s=E.validate_selection(spec)
@@ -235,6 +245,7 @@ function E.native_select(spec,seed)
                 local target
                 local targetStage
                 while true do
+                    assert(not E.travel.cancelRequested,'Native selection cancelled')
                     assert(U.Time.realtimeSinceStartup<deadline,'Dragon rush timed out')
                     assert(ninja.CurrentHp>0,'Died before the native carrier reached the sample')
                     assert(CS.LevelManager.Instance.GameLevelInfo==level,'Left the selected map before arrival')
@@ -262,6 +273,7 @@ function E.native_select(spec,seed)
                 E.travel.landedAt=ninja.transform.position.x
                 E.travel.phase='approach'
                 while ninja.transform.position.x<target or not native_grounded(ninja) or ground_stage(ninja)~=s.start-1 do
+                    assert(not E.travel.cancelRequested,'Native selection cancelled')
                     assert(U.Time.realtimeSinceStartup<deadline,'Target board not reached')
                     assert(ninja.CurrentHp>0,'Died approaching selected board')
                     assert(ground_stage(ninja)<s.start,'No grounded entry within the selected board')
