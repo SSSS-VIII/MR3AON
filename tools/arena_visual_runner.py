@@ -29,6 +29,7 @@ from arena_capture import FastCapture, percentile
 from arena_vision import Perception, serializable, overlay,extrapolate
 from arena_policy import Avoider
 from arena_mpc import MpcAvoider
+from arena_action_timing import commit_action
 from runtime import InstanceSession
 import cv2
 import numpy as np
@@ -215,7 +216,7 @@ def run(args):
              'arena/vision-object-priors.json','arena/vision-detector.json','tools/arena_oriented.py',
              'tools/arena_obb_detector.py','tools/arena_support.py','tools/arena_object_support.py',
              'tools/arena_bamboo_motion.py','tools/arena_scene_motion.py','tools/arena_arrow_motion.py','tools/arena_mace_motion.py',
-             'tools/arena_bamboo_phase.py')
+             'tools/arena_bamboo_phase.py','tools/arena_action_timing.py')
     source_hashes={name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest()for name in sources}
     (args.output / 'setup.json').write_text(json.dumps(dict(seed=args.seed, level=args.level,
         map=args.map, start=start_board,goal_stage_index=goal,pins=pins, observe=args.observe_only, initial=initial,sources=source_hashes,
@@ -283,20 +284,23 @@ def run(args):
                     if is_fresh:
                         fresh_vision_times.append(vision_times[-1])
                     capture_times.append(frame.request_ms)
+                    committed=None
                     if action and not args.observe_only:
                         ack = cap.tap(action)
-                        perception.action(action, obs['time'],obs)
+                        committed=commit_action(perception,latest,action,ack)
+                        policy.last_action=committed['committed_time']
                         action_times.append(ack.request_ms)
                         key='down'if action in ('slide','down')else'jump'
                         sent_keys[key]+=1
                         actions.append(dict(t=time.monotonic()-begin,action=action,reason=reason,
                             key=key,key_count=sent_keys[key],request_ns=ack.request_ns,
-                            capture_request_ns=capture_request))
+                            capture_request_ns=capture_request,planned_time=obs['time'],**committed))
                     row = serializable(obs)
                     executed=action if not args.observe_only else None
                     row.update(frame=count, elapsed=time.monotonic()-begin, action=executed,proposed_action=action,
                                reason=reason, capture_ms=frame.request_ms, vision_ms=vision_times[-1],
-                               policy_compute_ms=compute_ms,policy_compute_prior_ms=compute_prior*1000)
+                               policy_compute_ms=compute_ms,policy_compute_prior_ms=compute_prior*1000,
+                               action_commit=committed)
                     estimates.write(json.dumps(row) + '\n')
                     if loop >= next_image:
                         recorder.submit(count,cv2.cvtColor(frame.array(),cv2.COLOR_RGBA2BGR),
@@ -321,6 +325,8 @@ def run(args):
                                     if -1<delay<1000:
                                         event['unity_keydown_ms']=delay
                                         event['capture_to_unity_ms']=(native_host_ns-event['capture_request_ns'])/1e6
+                                        event['planned_anchor_error_ms']=(event['planned_time']-receipt['time'])*1000
+                                        event['committed_anchor_error_ms']=(event['committed_time']-receipt['time'])*1000
                                         consume_times.append(delay);chain_times.append(event['capture_to_unity_ms'])
                                         receipts.add(identity)
                             max_stage = max(max_stage, current['stageIndex'])
@@ -358,6 +364,7 @@ def run(args):
                   dropped_recording_frames=recorder.dropped,fresh_frames=fresh,
                   fresh_frame_interval_ms=timing(fresh_intervals),observation_age_ms=timing(ages),
                   input_delay_prior_ms=1000/60)
+    report['action_anchor_error_ms']={name:timing([abs(a[name+'_anchor_error_ms'])for a in actions if name+'_anchor_error_ms'in a])for name in('planned','committed')}
     report.update(initial_black_frames=initial_pixels.black_frames,
                   first_visible_elapsed=initial_pixels.first_visible_elapsed)
     report.update(sent_keys=sent_keys,observed_keys=final.get('keys',{}),
