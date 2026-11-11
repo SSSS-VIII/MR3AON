@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-12：每日悬赏今日已启动xiaoli，但重试登录后在设置阶段读到过期物品文字、盲滑10次失败，main05:13回退普通组队。小号补设置页校验、带页面条件的滑动与回主页最多两次重开；86项协同+3项设置回归通过，改后xiaoli一次ready及回收/租约释放实机通过，main未接管，旧异常页面与双号战斗未重验，见[准备设置失败](archived/2026-11-12-bounty-companion-settings-popup.md)。
+
 2026-11-10原地面预加载等待：native_select先等原LevelDataLoading及isFinishLoad，避免旧主题/地面仍创建时释放场景；不伪造完成标志。真实连续51091/5009/6011三次定位全部5000血，末尾1101暂停恢复，新PID无旧地面空引用；2项专项/全410通过2依赖跳过。修后视觉计分继续。见[原地面等待](archived/2026-11-10-arena-await-ground-preload.md)。
 
 2026-11-10材质/旧Boss池修复：reset补原N3GameObjPool.ClearPooledObjects(true)，保留原回收顺序；旧Boss残留清零。仅arena重启清除历史坏缓存后，51043两次原定位/随机跳下翻受击采301+284帧、所有帧纯品红像素0，第二次探索死亡不算策略成绩；11项local/全部407通过、2依赖跳过。两轮均完整复位，修后再扫描5/6级18个实际回合3613原截图、纯品红像素仍全0。见[框架池回收](archived/2026-11-10-arena-framework-pool-teardown.md)。

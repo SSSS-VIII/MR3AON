@@ -89,19 +89,20 @@
             "type": "Click"
         },
         "next": [
-            "悬赏小号查找邀请设置"
+            "悬赏小号确认设置页"
         ],
         "post_delay": 700,
         "on_error": [
-            "每日悬赏小号失败"
-        ]
+            "悬赏小号恢复设置入口"
+        ],
+        "timeout": 5000
     },
     "悬赏小号查找邀请设置": {
         "next": [
             "悬赏小号取消屏蔽",
             "悬赏小号邀请设置可见",
             "悬赏小号设置上滑",
-            "每日悬赏小号失败"
+            "悬赏小号恢复设置入口"
         ],
         "on_error": [
             "每日悬赏小号失败"
@@ -148,12 +149,22 @@
     },
     "悬赏小号设置上滑": {
         "recognition": {
-            "type": "Custom",
+            "type": "And",
             "param": {
-                "custom_recognition": "Count",
-                "custom_recognition_param": {
-                    "target": 10
-                }
+                "all_of": [
+                    "悬赏小号设置页标题",
+                    {
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "custom_recognition": "Count",
+                                "custom_recognition_param": {
+                                    "target": 10
+                                }
+                            }
+                        }
+                    }
+                ]
             }
         },
         "action": {
@@ -1136,6 +1147,73 @@
                 }
             }
         },
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号确认设置页": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "悬赏小号设置页标题"
+                ]
+            }
+        },
+        "next": [
+            "悬赏小号查找邀请设置"
+        ],
+        "on_error": [
+            "悬赏小号恢复设置入口"
+        ]
+    },
+    "悬赏小号设置页标题": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    563,
+                    25,
+                    155,
+                    114
+                ],
+                "expected": [
+                    "^设置$"
+                ]
+            }
+        }
+    },
+    "悬赏小号恢复设置入口": {
+        "max_hit": 2,
+        "next": [
+            "悬赏小号从主页重开设置",
+            "[JumpBack]back"
+        ],
+        "on_error": [
+            "每日悬赏小号失败"
+        ]
+    },
+    "悬赏小号从主页重开设置": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "每日悬赏确认在主页面"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "悬赏小号设置上滑"
+                }
+            }
+        },
+        "next": [
+            "悬赏小号打开设置"
+        ],
         "on_error": [
             "每日悬赏小号失败"
         ]
