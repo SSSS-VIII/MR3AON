@@ -54,7 +54,7 @@ def test_two_hands_round_identity_and_fail_closed_completion():
         if param.get('custom_action')=='ResetCount':
             assert param['custom_action_param']['node_name'] in PIPELINE
     final=PIPELINE[P+'每日全部已领取']['recognition']['param']['all_of']
-    assert final==[P+'每日任务标题',P+'每日状态已领取']
+    assert final==[P+'每日任务标题',P+'每日任务1已领取',P+'每日任务2已领取']
     assert PIPELINE[P+'每日全部已领取']['next']==[P+'未知每日状态拒绝完成',P+'确认每日全领取']
     assert PIPELINE[P+'未知每日状态拒绝完成']['next']==['Default_on_error']
     persist=PIPELINE[P+'主页登记完成']['action']['param']['custom_action_param']
@@ -68,6 +68,8 @@ def test_native_round_ocr_card_selection_drag_and_budget_reset():
     result=subprocess.run([sys.executable,__file__,'native'],cwd=ROOT,capture_output=True,text=True,timeout=60)
     assert result.returncode==0,result.stdout[-3000:]+result.stderr[-3000:]
     report=json.loads(result.stdout.strip().splitlines()[-1])
+    assert report['daily_claimed'] is True
+    assert report['daily_missing_first'] is False and report['daily_missing_second'] is False
     assert report['slots']==[True,False,False,False,True]
     assert report['repeat'] is False and report['reset'] is True
     assert report['round_drags']==4,report
@@ -183,6 +185,14 @@ def _native():
         assert t.post_task(P+'等待对局').wait().succeeded
         report.update(round_points=c.drags,round_drags=len(c.drags),refresh_clicks=sum(y<610 for _,y in c.clicks),
                       ready_clicks=sum(y>610 for _,y in c.clicks))
+        daily=np.array(Image.open(ROOT/'tests/fixtures/intelligence_simulation/daily_claimed.png').convert('RGB'))[:,:,::-1].copy()
+        rule=PIPELINE[P+'每日全部已领取']['recognition']['param']
+        def daily_hit(image):
+            return t.post_recognition('And',JAnd(**rule),image).wait().get().nodes[0].recognition.hit
+        report['daily_claimed']=daily_hit(daily)
+        for label,roi in [('first',[900,176,170,66]),('second',[900,277,170,66])]:
+            missing=daily.copy();x,y,w,h=roi;missing[y:y+h,x:x+w]=0
+            report['daily_missing_'+label]=daily_hit(missing)
         del t,c,r
     print(json.dumps(report))
 
