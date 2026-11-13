@@ -1,0 +1,2556 @@
+{
+    "情报模拟战十点后": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "TimeAfter",
+                "custom_recognition_param": {
+                    "time": "10:00"
+                }
+            }
+        }
+    },
+    "情报模拟战十四点前": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "TimeBefore",
+                "custom_recognition_param": {
+                    "time": "14:00"
+                }
+            }
+        }
+    },
+    "情报模拟战十八点后": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "TimeAfter",
+                "custom_recognition_param": {
+                    "time": "18:00"
+                }
+            }
+        }
+    },
+    "情报模拟战二十二点前": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "TimeBefore",
+                "custom_recognition_param": {
+                    "time": "22:00"
+                }
+            }
+        }
+    },
+    "情报模拟战开放时间": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    {
+                        "recognition": {
+                            "type": "And",
+                            "param": {
+                                "all_of": [
+                                    "情报模拟战十点后",
+                                    "情报模拟战十四点前"
+                                ],
+                                "box_index": 0
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "And",
+                            "param": {
+                                "all_of": [
+                                    "情报模拟战十八点后",
+                                    "情报模拟战二十二点前"
+                                ],
+                                "box_index": 0
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "情报模拟战未开放": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战开放时间"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ScheduleDeferredTask",
+                "custom_action_param": {
+                    "key": "情报模拟战开放时间",
+                    "entry": "情报模拟战entry",
+                    "daily_times": [
+                        "10:00",
+                        "18:00"
+                    ],
+                    "reuse_current_override": true
+                }
+            }
+        },
+        "next": [
+            "情报模拟战挂起回主页"
+        ],
+        "inverse": true,
+        "focus": "情报模拟战未开放，挂起至下一10:00或18:00"
+    },
+    "情报模拟战entry": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "next": [
+            "情报模拟战未开放",
+            "情报模拟战初始化"
+        ]
+    },
+    "情报模拟战初始化": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "情报模拟战",
+                    "duration_ms": 3600000
+                }
+            }
+        },
+        "next": [
+            "情报模拟战导航"
+        ]
+    },
+    "情报模拟战总超时": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "LoopDeadlineExpired",
+                "custom_recognition_param": {
+                    "scope": "情报模拟战"
+                }
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "AbortTasker",
+                "custom_action_param": {}
+            }
+        },
+        "next": [
+            "情报模拟战停止"
+        ],
+        "focus": "情报模拟战超时，未登记完成"
+    },
+    "情报模拟战停止": {
+        "on_error": [],
+        "action": {
+            "type": "StopTask"
+        }
+    },
+    "情报模拟战游戏主页": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "每日悬赏确认在主页面"
+                ],
+                "box_index": 0
+            }
+        }
+    },
+    "情报模拟战挂起回主页": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "next": [
+            "情报模拟战挂起主页停止",
+            "[JumpBack]back"
+        ]
+    },
+    "情报模拟战挂起主页停止": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战游戏主页"
+                ],
+                "box_index": 0
+            }
+        },
+        "next": [
+            "情报模拟战停止"
+        ]
+    },
+    "情报模拟战导航": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "next": [
+            "情报模拟战总超时",
+            "情报模拟战教程下一页",
+            "情报模拟战教程关闭",
+            "情报模拟战大厅",
+            "情报模拟战活动任务面板",
+            "情报模拟战集会所卡片",
+            "情报模拟战主页进入集会所",
+            "情报模拟战集会所翻页",
+            "情报模拟战导航返回"
+        ],
+        "timeout": 30000
+    },
+    "情报模拟战教程下一页": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    800,
+                    480,
+                    460,
+                    230
+                ],
+                "expected": [
+                    "^下一页$|^我知道了$|^知道了$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "情报模拟战导航"
+        ],
+        "post_delay": 700
+    },
+    "情报模拟战教程关闭": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    300,
+                    560,
+                    700,
+                    150
+                ],
+                "expected": [
+                    "点击.*空白.*(关闭|继续)|点击.*继续"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "情报模拟战导航"
+        ],
+        "post_delay": 700
+    },
+    "情报模拟战大厅": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    800,
+                    0,
+                    470,
+                    130
+                ],
+                "expected": [
+                    "活动任务"
+                ]
+            }
+        },
+        "next": [
+            "情报模拟战打开活动任务"
+        ]
+    },
+    "情报模拟战打开活动任务": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    800,
+                    0,
+                    470,
+                    130
+                ],
+                "expected": [
+                    "活动任务"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "情报模拟战选择每日任务"
+        ],
+        "post_delay": 700
+    },
+    "情报模拟战活动任务面板": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    350,
+                    20,
+                    580,
+                    150
+                ],
+                "expected": [
+                    "^活动任务$"
+                ]
+            }
+        },
+        "next": [
+            "情报模拟战选择每日任务"
+        ]
+    },
+    "情报模拟战选择每日任务": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    50,
+                    100,
+                    650,
+                    160
+                ],
+                "expected": [
+                    "^每日任务$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "情报模拟战检查每日任务"
+        ],
+        "post_delay": 700
+    },
+    "情报模拟战每日任务标题": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    50,
+                    100,
+                    650,
+                    160
+                ],
+                "expected": [
+                    "^每日任务$"
+                ]
+            }
+        }
+    },
+    "情报模拟战每日状态已领取": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    820,
+                    160,
+                    370,
+                    465
+                ],
+                "expected": [
+                    "^\\s*已领取\\s*$"
+                ]
+            }
+        }
+    },
+    "情报模拟战每日状态存在其它文字": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    820,
+                    160,
+                    370,
+                    465
+                ],
+                "expected": [
+                    "^(?!\\s*已领取\\s*$).+"
+                ]
+            }
+        }
+    },
+    "情报模拟战检查每日任务": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "next": [
+            "情报模拟战总超时",
+            "情报模拟战每日领取",
+            "情报模拟战每日领奖确定",
+            "情报模拟战每日奖励空白",
+            "情报模拟战每日仍未完成",
+            "情报模拟战每日全部已领取"
+        ]
+    },
+    "情报模拟战每日领取": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战每日任务标题",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    820,
+                                    160,
+                                    370,
+                                    465
+                                ],
+                                "expected": [
+                                    "^领取$|^领取奖励$"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "情报模拟战检查每日任务"
+        ],
+        "post_delay": 600
+    },
+    "情报模拟战每日领奖确定": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    440,
+                    500,
+                    410,
+                    200
+                ],
+                "expected": [
+                    "^确定$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "情报模拟战检查每日任务"
+        ],
+        "post_delay": 600
+    },
+    "情报模拟战每日奖励空白": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    340,
+                    560,
+                    650,
+                    140
+                ],
+                "expected": [
+                    "点击空白处关闭"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "情报模拟战检查每日任务"
+        ],
+        "post_delay": 600
+    },
+    "情报模拟战每日全部已领取": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战每日任务标题",
+                    "情报模拟战每日状态已领取"
+                ],
+                "box_index": 0
+            }
+        },
+        "next": [
+            "情报模拟战未知每日状态拒绝完成",
+            "情报模拟战确认每日全领取"
+        ]
+    },
+    "情报模拟战每日仍未完成": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战每日任务标题",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    820,
+                                    160,
+                                    370,
+                                    465
+                                ],
+                                "expected": [
+                                    "未完成|前往|去完成|\\d+\\s*[/／1]\\s*\\d+"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 0
+            }
+        },
+        "next": [
+            "情报模拟战未完成关闭任务"
+        ]
+    },
+    "情报模拟战未完成关闭任务": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "情报模拟战匹配前检查"
+        ],
+        "post_delay": 700,
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    1280,
+                    200
+                ],
+                "template": [
+                    "叉叉1.png",
+                    "叉叉5.png"
+                ],
+                "green_mask": true
+            }
+        }
+    },
+    "情报模拟战完成回主页": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "next": [
+            "情报模拟战主页登记完成",
+            "[JumpBack]back"
+        ]
+    },
+    "情报模拟战主页登记完成": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战游戏主页"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "情报模拟战entry",
+                    "enabled": false,
+                    "valid_until": "next_daily_reset"
+                }
+            }
+        },
+        "next": [
+            "情报模拟战停止"
+        ],
+        "focus": "情报模拟战每日任务已全部领取"
+    },
+    "情报模拟战集会所卡片": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    100,
+                    1280,
+                    590
+                ],
+                "expected": [
+                    "情报模拟战"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "情报模拟战导航"
+        ],
+        "post_delay": 1200
+    },
+    "情报模拟战主页进入集会所": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战游戏主页",
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "roi": [
+                                    646,
+                                    362,
+                                    631,
+                                    355
+                                ],
+                                "template": [
+                                    "集会所.png"
+                                ],
+                                "green_mask": true
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "next": [
+            "情报模拟战导航"
+        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    67,
+                    -20,
+                    -17,
+                    -2
+                ]
+            }
+        },
+        "post_delay": 1000
+    },
+    "情报模拟战导航返回": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "next": [
+            "[JumpBack]back",
+            "情报模拟战导航"
+        ],
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    125,
+                    100
+                ],
+                "template": [
+                    "返回按钮.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "情报模拟战匹配前检查": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "next": [
+            "情报模拟战总超时",
+            "情报模拟战未开放",
+            "情报模拟战开始匹配"
+        ]
+    },
+    "情报模拟战重置对局回合1": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "情报模拟战第1回合额度"
+                }
+            }
+        },
+        "next": [
+            "情报模拟战重置对局回合2"
+        ]
+    },
+    "情报模拟战重置对局回合2": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "情报模拟战第2回合额度"
+                }
+            }
+        },
+        "next": [
+            "情报模拟战重置对局回合3"
+        ]
+    },
+    "情报模拟战重置对局回合3": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "情报模拟战第3回合额度"
+                }
+            }
+        },
+        "next": [
+            "情报模拟战重置对局回合4"
+        ]
+    },
+    "情报模拟战重置对局回合4": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "情报模拟战第4回合额度"
+                }
+            }
+        },
+        "next": [
+            "情报模拟战重置对局回合5"
+        ]
+    },
+    "情报模拟战重置对局回合5": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "情报模拟战第5回合额度"
+                }
+            }
+        },
+        "next": [
+            "情报模拟战等待对局"
+        ]
+    },
+    "情报模拟战开始匹配": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    300,
+                    200,
+                    700,
+                    460
+                ],
+                "expected": [
+                    "开始匹配"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "情报模拟战初始化对局时限"
+        ],
+        "post_delay": 1000
+    },
+    "情报模拟战倒计时": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    530,
+                    66,
+                    260,
+                    49
+                ],
+                "expected": [
+                    "倒计时\\s*[:：]?\\s*\\d+\\s*[sS秒]?"
+                ]
+            }
+        }
+    },
+    "情报模拟战空位": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    45,
+                    135,
+                    520,
+                    550
+                ],
+                "template": [
+                    "情报模拟战空位.png"
+                ],
+                "threshold": 0.88,
+                "order_by": "Vertical"
+            }
+        }
+    },
+    "情报模拟战等待对局": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "next": [
+            "情报模拟战总超时",
+            "情报模拟战对局超时",
+            "情报模拟战结算确定",
+            "情报模拟战第1回合",
+            "情报模拟战第2回合",
+            "情报模拟战第3回合",
+            "情报模拟战第4回合",
+            "情报模拟战第5回合",
+            "情报模拟战等待轮询"
+        ],
+        "timeout": 10000
+    },
+    "情报模拟战等待轮询": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "next": [
+            "情报模拟战等待对局"
+        ],
+        "post_delay": 600
+    },
+    "情报模拟战重置手牌1": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "情报模拟战第一轮选牌1额度"
+                }
+            }
+        },
+        "next": [
+            "情报模拟战重置手牌2"
+        ]
+    },
+    "情报模拟战重置手牌2": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "情报模拟战第一轮选牌2额度"
+                }
+            }
+        },
+        "next": [
+            "情报模拟战重置手牌3"
+        ]
+    },
+    "情报模拟战重置手牌3": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "情报模拟战第一轮选牌3额度"
+                }
+            }
+        },
+        "next": [
+            "情报模拟战重置手牌4"
+        ]
+    },
+    "情报模拟战重置手牌4": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "情报模拟战第一轮选牌4额度"
+                }
+            }
+        },
+        "next": [
+            "情报模拟战重置手牌5"
+        ]
+    },
+    "情报模拟战重置手牌5": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "情报模拟战第一轮选牌5额度"
+                }
+            }
+        },
+        "next": [
+            "情报模拟战重置手牌6"
+        ]
+    },
+    "情报模拟战重置手牌6": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "情报模拟战第二轮选牌1额度"
+                }
+            }
+        },
+        "next": [
+            "情报模拟战重置手牌7"
+        ]
+    },
+    "情报模拟战重置手牌7": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "情报模拟战第二轮选牌2额度"
+                }
+            }
+        },
+        "next": [
+            "情报模拟战重置手牌8"
+        ]
+    },
+    "情报模拟战重置手牌8": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "情报模拟战第二轮选牌3额度"
+                }
+            }
+        },
+        "next": [
+            "情报模拟战重置手牌9"
+        ]
+    },
+    "情报模拟战重置手牌9": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "情报模拟战第二轮选牌4额度"
+                }
+            }
+        },
+        "next": [
+            "情报模拟战重置手牌10"
+        ]
+    },
+    "情报模拟战重置手牌10": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "node_name": "情报模拟战第二轮选牌5额度"
+                }
+            }
+        },
+        "next": [
+            "情报模拟战第一轮选牌"
+        ]
+    },
+    "情报模拟战第1回合": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    500,
+                                    0,
+                                    320,
+                                    65
+                                ],
+                                "expected": [
+                                    "第\\s*1\\s*[/／1]\\s*5\\s*回合"
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战第1回合额度"
+                ],
+                "box_index": 0
+            }
+        },
+        "next": [
+            "情报模拟战重置手牌1"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "情报模拟战当前回合": {
+                        "recognition": {
+                            "param": {
+                                "expected": [
+                                    "第\\s*1\\s*[/／1]\\s*5\\s*回合"
+                                ],
+                                "roi": [
+                                    500,
+                                    0,
+                                    320,
+                                    65
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战其它回合": {
+                        "recognition": {
+                            "param": {
+                                "expected": [
+                                    "第\\s*[2345]\\s*[/／1]\\s*5\\s*回合"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "情报模拟战第2回合": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    500,
+                                    0,
+                                    320,
+                                    65
+                                ],
+                                "expected": [
+                                    "第\\s*2\\s*[/／1]\\s*5\\s*回合"
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战第2回合额度"
+                ],
+                "box_index": 0
+            }
+        },
+        "next": [
+            "情报模拟战重置手牌1"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "情报模拟战当前回合": {
+                        "recognition": {
+                            "param": {
+                                "expected": [
+                                    "第\\s*2\\s*[/／1]\\s*5\\s*回合"
+                                ],
+                                "roi": [
+                                    500,
+                                    0,
+                                    320,
+                                    65
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战其它回合": {
+                        "recognition": {
+                            "param": {
+                                "expected": [
+                                    "第\\s*[1345]\\s*[/／1]\\s*5\\s*回合"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "情报模拟战第3回合": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    500,
+                                    0,
+                                    320,
+                                    65
+                                ],
+                                "expected": [
+                                    "第\\s*3\\s*[/／1]\\s*5\\s*回合"
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战第3回合额度"
+                ],
+                "box_index": 0
+            }
+        },
+        "next": [
+            "情报模拟战重置手牌1"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "情报模拟战当前回合": {
+                        "recognition": {
+                            "param": {
+                                "expected": [
+                                    "第\\s*3\\s*[/／1]\\s*5\\s*回合"
+                                ],
+                                "roi": [
+                                    500,
+                                    0,
+                                    320,
+                                    65
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战其它回合": {
+                        "recognition": {
+                            "param": {
+                                "expected": [
+                                    "第\\s*[1245]\\s*[/／1]\\s*5\\s*回合"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "情报模拟战第4回合": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    500,
+                                    0,
+                                    320,
+                                    65
+                                ],
+                                "expected": [
+                                    "第\\s*4\\s*[/／1]\\s*5\\s*回合"
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战第4回合额度"
+                ],
+                "box_index": 0
+            }
+        },
+        "next": [
+            "情报模拟战重置手牌1"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "情报模拟战当前回合": {
+                        "recognition": {
+                            "param": {
+                                "expected": [
+                                    "第\\s*4\\s*[/／1]\\s*5\\s*回合"
+                                ],
+                                "roi": [
+                                    500,
+                                    0,
+                                    320,
+                                    65
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战其它回合": {
+                        "recognition": {
+                            "param": {
+                                "expected": [
+                                    "第\\s*[1235]\\s*[/／1]\\s*5\\s*回合"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "情报模拟战第5回合": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    500,
+                                    0,
+                                    320,
+                                    65
+                                ],
+                                "expected": [
+                                    "第\\s*5\\s*[/／1]\\s*5\\s*回合"
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战第5回合额度"
+                ],
+                "box_index": 0
+            }
+        },
+        "next": [
+            "情报模拟战重置手牌1"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "情报模拟战当前回合": {
+                        "recognition": {
+                            "param": {
+                                "expected": [
+                                    "第\\s*5\\s*[/／1]\\s*5\\s*回合"
+                                ],
+                                "roi": [
+                                    500,
+                                    0,
+                                    320,
+                                    65
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战其它回合": {
+                        "recognition": {
+                            "param": {
+                                "expected": [
+                                    "第\\s*[1234]\\s*[/／1]\\s*5\\s*回合"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "情报模拟战第一轮选牌": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "next": [
+            "情报模拟战总超时",
+            "情报模拟战对局超时",
+            "情报模拟战回合编号已变化",
+            "情报模拟战第一轮计时消失观察",
+            "情报模拟战第一轮选牌1",
+            "情报模拟战第一轮选牌2",
+            "情报模拟战第一轮选牌3",
+            "情报模拟战第一轮选牌4",
+            "情报模拟战第一轮选牌5",
+            "情报模拟战刷新手牌",
+            "情报模拟战第一轮继续等待"
+        ]
+    },
+    "情报模拟战第一轮选牌1": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    "情报模拟战当前回合",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    646,
+                                    356,
+                                    175,
+                                    49
+                                ],
+                                "expected": [
+                                    "(?:小黑|苍牙|仓牙|琳|阿力|小椒)\\s*$"
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战空位",
+                    "情报模拟战第一轮选牌1额度"
+                ],
+                "box_index": 3
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    735,
+                    280
+                ],
+                "end": true,
+                "duration": 450,
+                "end_hold": 100
+            }
+        },
+        "next": [
+            "情报模拟战第一轮选牌"
+        ],
+        "post_delay": 350
+    },
+    "情报模拟战第一轮选牌2": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    "情报模拟战当前回合",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    837,
+                                    356,
+                                    176,
+                                    49
+                                ],
+                                "expected": [
+                                    "(?:小黑|苍牙|仓牙|琳|阿力|小椒)\\s*$"
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战空位",
+                    "情报模拟战第一轮选牌2额度"
+                ],
+                "box_index": 3
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    925,
+                    280
+                ],
+                "end": true,
+                "duration": 450,
+                "end_hold": 100
+            }
+        },
+        "next": [
+            "情报模拟战第一轮选牌"
+        ],
+        "post_delay": 350
+    },
+    "情报模拟战第一轮选牌3": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    "情报模拟战当前回合",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    1029,
+                                    356,
+                                    173,
+                                    49
+                                ],
+                                "expected": [
+                                    "(?:小黑|苍牙|仓牙|琳|阿力|小椒)\\s*$"
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战空位",
+                    "情报模拟战第一轮选牌3额度"
+                ],
+                "box_index": 3
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    1110,
+                    280
+                ],
+                "end": true,
+                "duration": 450,
+                "end_hold": 100
+            }
+        },
+        "next": [
+            "情报模拟战第一轮选牌"
+        ],
+        "post_delay": 350
+    },
+    "情报模拟战第一轮选牌4": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    "情报模拟战当前回合",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    646,
+                                    571,
+                                    175,
+                                    49
+                                ],
+                                "expected": [
+                                    "(?:小黑|苍牙|仓牙|琳|阿力|小椒)\\s*$"
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战空位",
+                    "情报模拟战第一轮选牌4额度"
+                ],
+                "box_index": 3
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    735,
+                    500
+                ],
+                "end": true,
+                "duration": 450,
+                "end_hold": 100
+            }
+        },
+        "next": [
+            "情报模拟战第一轮选牌"
+        ],
+        "post_delay": 350
+    },
+    "情报模拟战第一轮选牌5": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    "情报模拟战当前回合",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    837,
+                                    571,
+                                    176,
+                                    49
+                                ],
+                                "expected": [
+                                    "(?:小黑|苍牙|仓牙|琳|阿力|小椒)\\s*$"
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战空位",
+                    "情报模拟战第一轮选牌5额度"
+                ],
+                "box_index": 3
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    925,
+                    500
+                ],
+                "end": true,
+                "duration": 450,
+                "end_hold": 100
+            }
+        },
+        "next": [
+            "情报模拟战第一轮选牌"
+        ],
+        "post_delay": 350
+    },
+    "情报模拟战第二轮选牌": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "next": [
+            "情报模拟战总超时",
+            "情报模拟战对局超时",
+            "情报模拟战回合编号已变化",
+            "情报模拟战第二轮计时消失观察",
+            "情报模拟战第二轮选牌1",
+            "情报模拟战第二轮选牌2",
+            "情报模拟战第二轮选牌3",
+            "情报模拟战第二轮选牌4",
+            "情报模拟战第二轮选牌5",
+            "情报模拟战准备就绪",
+            "情报模拟战第二轮继续等待"
+        ]
+    },
+    "情报模拟战第二轮选牌1": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    "情报模拟战当前回合",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    646,
+                                    356,
+                                    175,
+                                    49
+                                ],
+                                "expected": [
+                                    "(?:小黑|苍牙|仓牙|琳|阿力|小椒)\\s*$"
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战空位",
+                    "情报模拟战第二轮选牌1额度"
+                ],
+                "box_index": 3
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    735,
+                    280
+                ],
+                "end": true,
+                "duration": 450,
+                "end_hold": 100
+            }
+        },
+        "next": [
+            "情报模拟战第二轮选牌"
+        ],
+        "post_delay": 350
+    },
+    "情报模拟战第二轮选牌2": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    "情报模拟战当前回合",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    837,
+                                    356,
+                                    176,
+                                    49
+                                ],
+                                "expected": [
+                                    "(?:小黑|苍牙|仓牙|琳|阿力|小椒)\\s*$"
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战空位",
+                    "情报模拟战第二轮选牌2额度"
+                ],
+                "box_index": 3
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    925,
+                    280
+                ],
+                "end": true,
+                "duration": 450,
+                "end_hold": 100
+            }
+        },
+        "next": [
+            "情报模拟战第二轮选牌"
+        ],
+        "post_delay": 350
+    },
+    "情报模拟战第二轮选牌3": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    "情报模拟战当前回合",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    1029,
+                                    356,
+                                    173,
+                                    49
+                                ],
+                                "expected": [
+                                    "(?:小黑|苍牙|仓牙|琳|阿力|小椒)\\s*$"
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战空位",
+                    "情报模拟战第二轮选牌3额度"
+                ],
+                "box_index": 3
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    1110,
+                    280
+                ],
+                "end": true,
+                "duration": 450,
+                "end_hold": 100
+            }
+        },
+        "next": [
+            "情报模拟战第二轮选牌"
+        ],
+        "post_delay": 350
+    },
+    "情报模拟战第二轮选牌4": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    "情报模拟战当前回合",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    646,
+                                    571,
+                                    175,
+                                    49
+                                ],
+                                "expected": [
+                                    "(?:小黑|苍牙|仓牙|琳|阿力|小椒)\\s*$"
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战空位",
+                    "情报模拟战第二轮选牌4额度"
+                ],
+                "box_index": 3
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    735,
+                    500
+                ],
+                "end": true,
+                "duration": 450,
+                "end_hold": 100
+            }
+        },
+        "next": [
+            "情报模拟战第二轮选牌"
+        ],
+        "post_delay": 350
+    },
+    "情报模拟战第二轮选牌5": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    "情报模拟战当前回合",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    837,
+                                    571,
+                                    176,
+                                    49
+                                ],
+                                "expected": [
+                                    "(?:小黑|苍牙|仓牙|琳|阿力|小椒)\\s*$"
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战空位",
+                    "情报模拟战第二轮选牌5额度"
+                ],
+                "box_index": 3
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    925,
+                    500
+                ],
+                "end": true,
+                "duration": 450,
+                "end_hold": 100
+            }
+        },
+        "next": [
+            "情报模拟战第二轮选牌"
+        ],
+        "post_delay": 350
+    },
+    "情报模拟战刷新手牌": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    "情报模拟战当前回合",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    1010,
+                                    495,
+                                    260,
+                                    80
+                                ],
+                                "expected": [
+                                    "^刷新手牌$"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 2
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "情报模拟战第二轮选牌"
+        ],
+        "post_delay": 700
+    },
+    "情报模拟战准备就绪": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    "情报模拟战当前回合",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    990,
+                                    625,
+                                    280,
+                                    90
+                                ],
+                                "expected": [
+                                    "^准备就绪$"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 2
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "情报模拟战等待对局"
+        ],
+        "post_delay": 700
+    },
+    "情报模拟战结算标题": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    330,
+                    30,
+                    610,
+                    190
+                ],
+                "expected": [
+                    "结算|胜利|失败|平局|对战结果|战斗结果"
+                ]
+            }
+        }
+    },
+    "情报模拟战结算确定": {
+        "on_error": [
+            "Default_on_error"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战结算标题",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    400,
+                                    500,
+                                    480,
+                                    210
+                                ],
+                                "expected": [
+                                    "^确定$|^确认$"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "情报模拟战导航"
+        ],
+        "post_delay": 1000
+    },
+    "情报模拟战集会所翻页": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "roi": [
+                                    21,
+                                    3,
+                                    379,
+                                    132
+                                ],
+                                "template": [
+                                    "集会所主页.png"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "custom_recognition": "Count",
+                                "custom_recognition_param": {
+                                    "target": 5
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    1050,
+                    380
+                ],
+                "end": [
+                    400,
+                    380
+                ],
+                "duration": 500
+            }
+        },
+        "next": [
+            "情报模拟战导航"
+        ],
+        "post_delay": 700,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "情报模拟战初始化对局时限": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "情报模拟战对局",
+                    "duration_ms": 900000
+                }
+            }
+        },
+        "next": [
+            "情报模拟战重置对局回合1"
+        ],
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "情报模拟战对局超时": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "LoopDeadlineExpired",
+                "custom_recognition_param": {
+                    "scope": "情报模拟战对局"
+                }
+            }
+        },
+        "next": [
+            "Default_on_error"
+        ]
+    },
+    "情报模拟战第一轮选牌1额度": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        }
+    },
+    "情报模拟战第一轮选牌2额度": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        }
+    },
+    "情报模拟战第一轮选牌3额度": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        }
+    },
+    "情报模拟战第一轮选牌4额度": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        }
+    },
+    "情报模拟战第一轮选牌5额度": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        }
+    },
+    "情报模拟战第二轮选牌1额度": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        }
+    },
+    "情报模拟战第二轮选牌2额度": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        }
+    },
+    "情报模拟战第二轮选牌3额度": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        }
+    },
+    "情报模拟战第二轮选牌4额度": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        }
+    },
+    "情报模拟战第二轮选牌5额度": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        }
+    },
+    "情报模拟战第1回合额度": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        }
+    },
+    "情报模拟战第2回合额度": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        }
+    },
+    "情报模拟战第3回合额度": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        }
+    },
+    "情报模拟战第4回合额度": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        }
+    },
+    "情报模拟战第5回合额度": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "Count",
+                "custom_recognition_param": {
+                    "target": 1
+                }
+            }
+        }
+    },
+    "情报模拟战当前回合": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    500,
+                    0,
+                    320,
+                    65
+                ],
+                "expected": [
+                    "^$"
+                ]
+            }
+        }
+    },
+    "情报模拟战第一轮计时消失观察": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    530,
+                    66,
+                    260,
+                    49
+                ],
+                "expected": [
+                    "倒计时\\s*[:：]?\\s*\\d+\\s*[sS秒]?"
+                ]
+            }
+        },
+        "post_delay": 700,
+        "next": [
+            "情报模拟战第一轮计时消失确认",
+            "情报模拟战第一轮继续等待"
+        ],
+        "on_error": [
+            "Default_on_error"
+        ],
+        "inverse": true
+    },
+    "情报模拟战第一轮计时消失确认": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    530,
+                    66,
+                    260,
+                    49
+                ],
+                "expected": [
+                    "倒计时\\s*[:：]?\\s*\\d+\\s*[sS秒]?"
+                ]
+            }
+        },
+        "next": [
+            "情报模拟战等待对局"
+        ],
+        "on_error": [
+            "Default_on_error"
+        ],
+        "inverse": true
+    },
+    "情报模拟战第一轮继续等待": {
+        "post_delay": 400,
+        "next": [
+            "情报模拟战第一轮选牌"
+        ],
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "情报模拟战第二轮计时消失观察": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    530,
+                    66,
+                    260,
+                    49
+                ],
+                "expected": [
+                    "倒计时\\s*[:：]?\\s*\\d+\\s*[sS秒]?"
+                ]
+            }
+        },
+        "post_delay": 700,
+        "next": [
+            "情报模拟战第二轮计时消失确认",
+            "情报模拟战第二轮继续等待"
+        ],
+        "on_error": [
+            "Default_on_error"
+        ],
+        "inverse": true
+    },
+    "情报模拟战第二轮计时消失确认": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    530,
+                    66,
+                    260,
+                    49
+                ],
+                "expected": [
+                    "倒计时\\s*[:：]?\\s*\\d+\\s*[sS秒]?"
+                ]
+            }
+        },
+        "next": [
+            "情报模拟战等待对局"
+        ],
+        "on_error": [
+            "Default_on_error"
+        ],
+        "inverse": true
+    },
+    "情报模拟战第二轮继续等待": {
+        "post_delay": 400,
+        "next": [
+            "情报模拟战第二轮选牌"
+        ],
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "情报模拟战未知每日状态拒绝完成": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    820,
+                    160,
+                    370,
+                    465
+                ],
+                "expected": [
+                    "^(?!\\s*已领取\\s*$).+"
+                ]
+            }
+        },
+        "next": [
+            "Default_on_error"
+        ]
+    },
+    "情报模拟战确认每日全领取": {
+        "next": [
+            "情报模拟战完成回主页"
+        ],
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "情报模拟战其它回合": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    500,
+                    0,
+                    320,
+                    65
+                ],
+                "expected": [
+                    "^$"
+                ]
+            }
+        }
+    },
+    "情报模拟战回合编号已变化": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    "情报模拟战其它回合"
+                ]
+            }
+        },
+        "next": [
+            "情报模拟战等待对局"
+        ],
+        "on_error": [
+            "Default_on_error"
+        ]
+    }
+}

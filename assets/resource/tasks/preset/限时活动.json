@@ -42,6 +42,10 @@
                 {
                     "name": "寻宝大冒险",
                     "enabled": false
+                },
+                {
+                    "name": "情报模拟战",
+                    "enabled": false
                 }
             ]
         }
