@@ -162,5 +162,11 @@ def build_reference_table():
 
 
 def lookup_coin_value(table,turn,empty):
+    if table.get('complete_reference') is False or (table.get('method')=='whole_pool_gain_per_actual_spent_coin' and not table.get('complete_reference')):
+        raise ValueError('全池金币参考尚未算完，不能静默使用截断表')
+    if table.get('profile',PROFILE)!=PROFILE:
+        raise ValueError('金币参考与策略白板规则不一致')
     rows=[row for row in table['rows'] if row['round']==turn]
-    return min(rows,key=lambda row:abs(row['empty']-empty))['median'] if rows and empty else 0
+    if not rows or not empty:return 0
+    row=min(rows,key=lambda row:abs(row['empty']-empty))
+    return row['gold_value'] if 'gold_value' in row else row['median']
