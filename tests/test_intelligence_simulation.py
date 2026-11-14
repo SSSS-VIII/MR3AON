@@ -99,6 +99,14 @@ def test_round_reset_and_flip_retry_do_not_advance_phase():
     assert calls[-1]==(P+'第二轮选牌',[P+'第二轮选牌'])
 
 
+@pytest.mark.parametrize('name',['风林火山战旗','凤林火山战旗','修罗覆面','其他覆面'])
+def test_additional_flag_and_mask_candidates(name):
+    from utils.intelligence_cards import plan_cards
+    result=plan_cards([(name,[680,365,120,25]),('云狐',[880,365,95,25]),
+                       ('修罗覆面',[680,310,120,25])],[[105,186,75,75]])
+    assert len(result)==1 and result[0][2]==name
+
+
 def test_card_plan_deduplicates_and_ignores_description_and_full_board():
     from utils.intelligence_cards import plan_cards
     items=[('神炎·小椒',[1050,365,95,25]),('神炎·小椒',[1050,365,95,25]),
