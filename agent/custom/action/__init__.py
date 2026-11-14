@@ -119,3 +119,5 @@ from .bounty_companion import (
     FailBountyCompanion, ArmBountyInvitation, FinishBountyInvitation,
     BindBountyFriendRow, BeginBountyCompanionJoin, ReportBountyCompanionState,
 )
+
+from .intelligence_simulation import PlanIntelligenceHand, ResetIntelligenceRounds
