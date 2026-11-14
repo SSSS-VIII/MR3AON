@@ -1,0 +1,7453 @@
+{
+  "version": "refresh-v1-first-pass",
+  "first_seed": 0,
+  "games_per_strategy": 100,
+  "elapsed_s": 17.289615061003133,
+  "profile": "refresh_v1",
+  "evaluation": "累计到100即停止，越早越好；未达100时比较第五回合累计伤害。策略本身仍用到第五回合累计增伤＋金币项，不加提前结束偏好。",
+  "reference": {
+    "profile": "refresh_v1",
+    "method": "单张单位增伤中位数作为临时金币参考，非最终标定",
+    "rows": [
+      {
+        "round": 1,
+        "empty": 9,
+        "reference_gold": 6,
+        "pool_cards": 81,
+        "eligible_copies": 81,
+        "mean": 4.351851851851852,
+        "p25": 2.5,
+        "median": 4.0,
+        "p75": 6.0,
+        "elapsed_s": 0.008379644001252018,
+        "engine_s": 0.000274227,
+        "profile": "refresh_v1",
+        "unit": "当前至第五回合的增伤/金币",
+        "method": "单张最优落位单位增伤的剩余份数加权分布；非5槽刷新期望；未含后续购买协同/空位潜力。",
+        "name": "r1-e9"
+      },
+      {
+        "round": 2,
+        "empty": 9,
+        "reference_gold": 6,
+        "pool_cards": 81,
+        "eligible_copies": 81,
+        "mean": 3.619341563786008,
+        "p25": 2.0,
+        "median": 3.5,
+        "p75": 5.0,
+        "elapsed_s": 0.007565920997876674,
+        "engine_s": 0.000204967,
+        "profile": "refresh_v1",
+        "unit": "当前至第五回合的增伤/金币",
+        "method": "单张最优落位单位增伤的剩余份数加权分布；非5槽刷新期望；未含后续购买协同/空位潜力。",
+        "name": "r2-e9"
+      },
+      {
+        "round": 2,
+        "empty": 6,
+        "reference_gold": 6,
+        "pool_cards": 78,
+        "eligible_copies": 78,
+        "mean": 4.888888888888889,
+        "p25": 3.3333333333333335,
+        "median": 4.333333333333333,
+        "p75": 6.0,
+        "elapsed_s": 0.006495433000964113,
+        "engine_s": 0.00020168,
+        "profile": "refresh_v1",
+        "unit": "当前至第五回合的增伤/金币",
+        "method": "单张最优落位单位增伤的剩余份数加权分布；非5槽刷新期望；未含后续购买协同/空位潜力。",
+        "name": "r2-e6"
+      },
+      {
+        "round": 3,
+        "empty": 9,
+        "reference_gold": 6,
+        "pool_cards": 81,
+        "eligible_copies": 81,
+        "mean": 2.8868312757201644,
+        "p25": 1.5,
+        "median": 3.0,
+        "p75": 4.0,
+        "elapsed_s": 0.007934666005894542,
+        "engine_s": 0.000210467,
+        "profile": "refresh_v1",
+        "unit": "当前至第五回合的增伤/金币",
+        "method": "单张最优落位单位增伤的剩余份数加权分布；非5槽刷新期望；未含后续购买协同/空位潜力。",
+        "name": "r3-e9"
+      },
+      {
+        "round": 3,
+        "empty": 6,
+        "reference_gold": 6,
+        "pool_cards": 78,
+        "eligible_copies": 78,
+        "mean": 3.8974358974358974,
+        "p25": 3.0,
+        "median": 3.8333333333333335,
+        "p75": 5.0,
+        "elapsed_s": 0.0084950519958511,
+        "engine_s": 0.000192273,
+        "profile": "refresh_v1",
+        "unit": "当前至第五回合的增伤/金币",
+        "method": "单张最优落位单位增伤的剩余份数加权分布；非5槽刷新期望；未含后续购买协同/空位潜力。",
+        "name": "r3-e6"
+      },
+      {
+        "round": 3,
+        "empty": 4,
+        "reference_gold": 6,
+        "pool_cards": 76,
+        "eligible_copies": 76,
+        "mean": 7.143640350877193,
+        "p25": 5.666666666666667,
+        "median": 6.5,
+        "p75": 8.5,
+        "elapsed_s": 0.006686373002594337,
+        "engine_s": 0.000174419,
+        "profile": "refresh_v1",
+        "unit": "当前至第五回合的增伤/金币",
+        "method": "单张最优落位单位增伤的剩余份数加权分布；非5槽刷新期望；未含后续购买协同/空位潜力。",
+        "name": "r3-e4"
+      },
+      {
+        "round": 3,
+        "empty": 2,
+        "reference_gold": 6,
+        "pool_cards": 74,
+        "eligible_copies": 74,
+        "mean": 7.167792792792793,
+        "p25": 6.0,
+        "median": 6.5,
+        "p75": 9.0,
+        "elapsed_s": 0.005902385004446842,
+        "engine_s": 0.000113424,
+        "profile": "refresh_v1",
+        "unit": "当前至第五回合的增伤/金币",
+        "method": "单张最优落位单位增伤的剩余份数加权分布；非5槽刷新期望；未含后续购买协同/空位潜力。",
+        "name": "r3-e2"
+      },
+      {
+        "round": 4,
+        "empty": 9,
+        "reference_gold": 6,
+        "pool_cards": 81,
+        "eligible_copies": 81,
+        "mean": 2.154320987654321,
+        "p25": 1.0,
+        "median": 2.0,
+        "p75": 3.0,
+        "elapsed_s": 0.0057276759907836094,
+        "engine_s": 0.000134083,
+        "profile": "refresh_v1",
+        "unit": "当前至第五回合的增伤/金币",
+        "method": "单张最优落位单位增伤的剩余份数加权分布；非5槽刷新期望；未含后续购买协同/空位潜力。",
+        "name": "r4-e9"
+      },
+      {
+        "round": 4,
+        "empty": 6,
+        "reference_gold": 6,
+        "pool_cards": 78,
+        "eligible_copies": 78,
+        "mean": 2.905982905982906,
+        "p25": 2.0,
+        "median": 3.0,
+        "p75": 4.0,
+        "elapsed_s": 0.0063550680060870945,
+        "engine_s": 0.000162566,
+        "profile": "refresh_v1",
+        "unit": "当前至第五回合的增伤/金币",
+        "method": "单张最优落位单位增伤的剩余份数加权分布；非5槽刷新期望；未含后续购买协同/空位潜力。",
+        "name": "r4-e6"
+      },
+      {
+        "round": 4,
+        "empty": 4,
+        "reference_gold": 6,
+        "pool_cards": 76,
+        "eligible_copies": 76,
+        "mean": 5.269736842105263,
+        "p25": 4.0,
+        "median": 5.0,
+        "p75": 6.5,
+        "elapsed_s": 0.006319852007436566,
+        "engine_s": 0.000140074,
+        "profile": "refresh_v1",
+        "unit": "当前至第五回合的增伤/金币",
+        "method": "单张最优落位单位增伤的剩余份数加权分布；非5槽刷新期望；未含后续购买协同/空位潜力。",
+        "name": "r4-e4"
+      },
+      {
+        "round": 4,
+        "empty": 2,
+        "reference_gold": 6,
+        "pool_cards": 74,
+        "eligible_copies": 74,
+        "mean": 5.286036036036036,
+        "p25": 4.0,
+        "median": 5.0,
+        "p75": 6.0,
+        "elapsed_s": 0.006452251996961422,
+        "engine_s": 9.2304e-05,
+        "profile": "refresh_v1",
+        "unit": "当前至第五回合的增伤/金币",
+        "method": "单张最优落位单位增伤的剩余份数加权分布；非5槽刷新期望；未含后续购买协同/空位潜力。",
+        "name": "r4-e2"
+      },
+      {
+        "round": 5,
+        "empty": 9,
+        "reference_gold": 6,
+        "pool_cards": 81,
+        "eligible_copies": 81,
+        "mean": 1.3580246913580247,
+        "p25": 0.5,
+        "median": 1.0,
+        "p75": 2.0,
+        "elapsed_s": 0.005673463994753547,
+        "engine_s": 0.000107453,
+        "profile": "refresh_v1",
+        "unit": "当前至第五回合的增伤/金币",
+        "method": "单张最优落位单位增伤的剩余份数加权分布；非5槽刷新期望；未含后续购买协同/空位潜力。",
+        "name": "r5-e9"
+      },
+      {
+        "round": 5,
+        "empty": 6,
+        "reference_gold": 6,
+        "pool_cards": 78,
+        "eligible_copies": 78,
+        "mean": 1.7905982905982907,
+        "p25": 1.0,
+        "median": 1.5,
+        "p75": 2.5,
+        "elapsed_s": 0.007767810995574109,
+        "engine_s": 0.000156836,
+        "profile": "refresh_v1",
+        "unit": "当前至第五回合的增伤/金币",
+        "method": "单张最优落位单位增伤的剩余份数加权分布；非5槽刷新期望；未含后续购买协同/空位潜力。",
+        "name": "r5-e6"
+      },
+      {
+        "round": 5,
+        "empty": 4,
+        "reference_gold": 6,
+        "pool_cards": 76,
+        "eligible_copies": 76,
+        "mean": 3.1151315789473686,
+        "p25": 2.0,
+        "median": 3.0,
+        "p75": 4.0,
+        "elapsed_s": 0.00604609600850381,
+        "engine_s": 8.9148e-05,
+        "profile": "refresh_v1",
+        "unit": "当前至第五回合的增伤/金币",
+        "method": "单张最优落位单位增伤的剩余份数加权分布；非5槽刷新期望；未含后续购买协同/空位潜力。",
+        "name": "r5-e4"
+      },
+      {
+        "round": 5,
+        "empty": 2,
+        "reference_gold": 6,
+        "pool_cards": 74,
+        "eligible_copies": 74,
+        "mean": 3.1295045045045047,
+        "p25": 2.0,
+        "median": 3.0,
+        "p75": 4.0,
+        "elapsed_s": 0.006222779004019685,
+        "engine_s": 6.1306e-05,
+        "profile": "refresh_v1",
+        "unit": "当前至第五回合的增伤/金币",
+        "method": "单张最优落位单位增伤的剩余份数加权分布；非5槽刷新期望；未含后续购买协同/空位潜力。",
+        "name": "r5-e2"
+      }
+    ]
+  },
+  "limitations": [
+    "单边牌库，不扣对手牌；无锁牌/撤回/未知潜力分。",
+    "游戏规则未实测部分沿用模型假设，结果不是实机胜率。",
+    "白名单为原名单/顺序买入/首空格的离线对照，全部策略使用相同白板规则。",
+    "每个策略用相同种子区间；后续发牌随购买/刷新分岔，不能视作逐手完全相同。",
+    "金币系数先由单张余池参考确定，未按本次测试结果二次调参。"
+  ],
+  "platform": "Linux-7.1.12-200.fc44.x86_64-x86_64-with-glibc2.43",
+  "source_sha256": {
+    "tools/intelligence_simulator/engine.cpp": "db7ee8a7314611237bbbe77a79784d84e920573c5bacf51e5799d5d5f1cbda13",
+    "tools/intelligence_simulator/model.py": "9f240a3ca7632ed45aff2da86c24513cbacd150ecaffc28c7e3f58d5b0622841",
+    "tools/intelligence_simulator/refresh.py": "5bc03598cfda761ddba29420258472d0a17a4746350ebca652486317dabeea76",
+    "tools/intelligence_simulator/single_player.py": "04fc3dfc3900849c439ca51dc9ed3fa013310f8259ce52085c59d262cf77fd1f"
+  },
+  "strategies": {
+    "whitelist": {
+      "summary": {
+        "games": 100,
+        "reach_100_rate": 0.4,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 2,
+          "5": 38
+        },
+        "mean_hit_round_among_successes": 4.95,
+        "mean_damage": 94.64,
+        "median_damage": 95.0,
+        "min_damage": 47,
+        "max_damage": 145,
+        "decision_median_ms": 0.012368000170681626,
+        "decision_p95_ms": 0.027542002499103546,
+        "decision_max_ms": 0.5270529945846647,
+        "partial_purchase_refreshes": 321,
+        "zero_purchase_refreshes": 97
+      },
+      "games": [
+        {
+          "seed": 0,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 67,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            3,
+            15,
+            16,
+            30
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.009688497812021524
+        },
+        {
+          "seed": 1,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 143,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            12,
+            27,
+            39,
+            60
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.011070500477217138
+        },
+        {
+          "seed": 2,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 144,
+          "rounds_played": 5,
+          "round_damage": [
+            1,
+            9,
+            27,
+            58,
+            49
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.012077500286977738
+        },
+        {
+          "seed": 3,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 97,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            7,
+            12,
+            32,
+            42
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.010003495845012367
+        },
+        {
+          "seed": 4,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 114,
+          "rounds_played": 5,
+          "round_damage": [
+            9,
+            15,
+            33,
+            26,
+            31
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.012227996194269508
+        },
+        {
+          "seed": 5,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 91,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            9,
+            11,
+            27,
+            38
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.016331003280356526
+        },
+        {
+          "seed": 6,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 88,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            9,
+            12,
+            35,
+            27
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.01296950358664617
+        },
+        {
+          "seed": 7,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 118,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            15,
+            18,
+            30,
+            52
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.010709991329349577
+        },
+        {
+          "seed": 8,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 82,
+          "rounds_played": 5,
+          "round_damage": [
+            1,
+            5,
+            17,
+            23,
+            36
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 3,
+          "decision_median_ms": 0.013299999409355223
+        },
+        {
+          "seed": 9,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 89,
+          "rounds_played": 5,
+          "round_damage": [
+            10,
+            17,
+            16,
+            22,
+            24
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.011226002243347466
+        },
+        {
+          "seed": 10,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 115,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            19,
+            24,
+            28,
+            37
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.010154006304219365
+        },
+        {
+          "seed": 11,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 105,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            6,
+            12,
+            33,
+            50
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.00986349186860025
+        },
+        {
+          "seed": 12,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 84,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            10,
+            16,
+            22,
+            29
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.01279900607187301
+        },
+        {
+          "seed": 13,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 47,
+          "rounds_played": 5,
+          "round_damage": [
+            1,
+            13,
+            6,
+            12,
+            15
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 3,
+          "decision_median_ms": 0.01403650821885094
+        },
+        {
+          "seed": 14,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 59,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            7,
+            9,
+            19,
+            19
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.011561991414055228
+        },
+        {
+          "seed": 15,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 56,
+          "rounds_played": 5,
+          "round_damage": [
+            2,
+            7,
+            11,
+            16,
+            20
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.015204001101665199
+        },
+        {
+          "seed": 16,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 107,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            10,
+            18,
+            22,
+            49
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.012508993677329272
+        },
+        {
+          "seed": 17,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 95,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            14,
+            16,
+            26,
+            31
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.013475495507009327
+        },
+        {
+          "seed": 18,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 76,
+          "rounds_played": 5,
+          "round_damage": [
+            1,
+            4,
+            20,
+            21,
+            30
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.01741250162012875
+        },
+        {
+          "seed": 19,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 82,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            3,
+            19,
+            18,
+            39
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.010739990102592856
+        },
+        {
+          "seed": 20,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 66,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            4,
+            12,
+            14,
+            31
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.01049999991664663
+        },
+        {
+          "seed": 21,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 127,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            19,
+            21,
+            31,
+            50
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.01112549944082275
+        },
+        {
+          "seed": 22,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 91,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            15,
+            18,
+            21,
+            34
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.015303492546081543
+        },
+        {
+          "seed": 23,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 4,
+          "total_damage": 103,
+          "rounds_played": 4,
+          "round_damage": [
+            4,
+            14,
+            28,
+            57
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.01131650060415268
+        },
+        {
+          "seed": 24,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 52,
+          "rounds_played": 5,
+          "round_damage": [
+            0,
+            4,
+            8,
+            12,
+            28
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.01174699718831107
+        },
+        {
+          "seed": 25,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 88,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            6,
+            11,
+            27,
+            36
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.011526499292813241
+        },
+        {
+          "seed": 26,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 106,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            4,
+            21,
+            37,
+            41
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.014803001249674708
+        },
+        {
+          "seed": 27,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 94,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            9,
+            21,
+            27,
+            30
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.012789008906111121
+        },
+        {
+          "seed": 28,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 77,
+          "rounds_played": 5,
+          "round_damage": [
+            1,
+            14,
+            17,
+            19,
+            26
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.010900497727561742
+        },
+        {
+          "seed": 29,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 74,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            9,
+            16,
+            26,
+            20
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.011010990419890732
+        },
+        {
+          "seed": 30,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 92,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            7,
+            24,
+            26,
+            30
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.015398996765725315
+        },
+        {
+          "seed": 31,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 99,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            15,
+            14,
+            24,
+            43
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.011451491445768625
+        },
+        {
+          "seed": 32,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 136,
+          "rounds_played": 5,
+          "round_damage": [
+            2,
+            14,
+            28,
+            49,
+            43
+          ],
+          "partial_purchase_refreshes": 5,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.013986493286211044
+        },
+        {
+          "seed": 33,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 95,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            7,
+            19,
+            25,
+            41
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.02057399251498282
+        },
+        {
+          "seed": 34,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 101,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            7,
+            28,
+            20,
+            40
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.012763994163833559
+        },
+        {
+          "seed": 35,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 76,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            10,
+            19,
+            20,
+            20
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.012514006812125444
+        },
+        {
+          "seed": 36,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 104,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            9,
+            16,
+            35,
+            37
+          ],
+          "partial_purchase_refreshes": 5,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.009693496394902468
+        },
+        {
+          "seed": 37,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 96,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            7,
+            17,
+            37,
+            32
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.011025498679373413
+        },
+        {
+          "seed": 38,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 76,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            10,
+            10,
+            23,
+            27
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.016891492123249918
+        },
+        {
+          "seed": 39,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 81,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            9,
+            16,
+            19,
+            32
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.013530501746572554
+        },
+        {
+          "seed": 40,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 145,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            9,
+            24,
+            36,
+            73
+          ],
+          "partial_purchase_refreshes": 5,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.012483491445891559
+        },
+        {
+          "seed": 41,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 90,
+          "rounds_played": 5,
+          "round_damage": [
+            1,
+            16,
+            15,
+            26,
+            32
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.012538497685454786
+        },
+        {
+          "seed": 42,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 99,
+          "rounds_played": 5,
+          "round_damage": [
+            1,
+            5,
+            16,
+            28,
+            49
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.017277496226597577
+        },
+        {
+          "seed": 43,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 121,
+          "rounds_played": 5,
+          "round_damage": [
+            1,
+            13,
+            23,
+            48,
+            36
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.012588505342137069
+        },
+        {
+          "seed": 44,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 70,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            4,
+            17,
+            19,
+            27
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.012317992513999343
+        },
+        {
+          "seed": 45,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 125,
+          "rounds_played": 5,
+          "round_damage": [
+            10,
+            14,
+            23,
+            44,
+            34
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.008481001714244485
+        },
+        {
+          "seed": 46,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 117,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            20,
+            23,
+            24,
+            47
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.013325501640792936
+        },
+        {
+          "seed": 47,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 115,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            15,
+            19,
+            33,
+            45
+          ],
+          "partial_purchase_refreshes": 5,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.01475249882787466
+        },
+        {
+          "seed": 48,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 67,
+          "rounds_played": 5,
+          "round_damage": [
+            1,
+            1,
+            12,
+            21,
+            32
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.010194489732384682
+        },
+        {
+          "seed": 49,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 125,
+          "rounds_played": 5,
+          "round_damage": [
+            9,
+            20,
+            31,
+            25,
+            40
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.014066499716136605
+        },
+        {
+          "seed": 50,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 87,
+          "rounds_played": 5,
+          "round_damage": [
+            10,
+            8,
+            14,
+            25,
+            30
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.011251009709667414
+        },
+        {
+          "seed": 51,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 101,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            11,
+            24,
+            25,
+            38
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.011451498721726239
+        },
+        {
+          "seed": 52,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 103,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            13,
+            18,
+            32,
+            33
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.011026007996406406
+        },
+        {
+          "seed": 53,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 66,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            8,
+            12,
+            16,
+            22
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.010429001122247428
+        },
+        {
+          "seed": 54,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 81,
+          "rounds_played": 5,
+          "round_damage": [
+            1,
+            6,
+            9,
+            22,
+            43
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.014181998267304152
+        },
+        {
+          "seed": 55,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 138,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            7,
+            22,
+            48,
+            57
+          ],
+          "partial_purchase_refreshes": 5,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.011000993254128844
+        },
+        {
+          "seed": 56,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 4,
+          "total_damage": 102,
+          "rounds_played": 4,
+          "round_damage": [
+            3,
+            7,
+            36,
+            56
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.012203003279864788
+        },
+        {
+          "seed": 57,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 81,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            9,
+            15,
+            15,
+            38
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.012163007340859622
+        },
+        {
+          "seed": 58,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 81,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            13,
+            10,
+            19,
+            35
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 3,
+          "decision_median_ms": 0.012288001016713679
+        },
+        {
+          "seed": 59,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 117,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            10,
+            21,
+            27,
+            55
+          ],
+          "partial_purchase_refreshes": 5,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.011351505236234516
+        },
+        {
+          "seed": 60,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 66,
+          "rounds_played": 5,
+          "round_damage": [
+            10,
+            7,
+            11,
+            18,
+            20
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.012183008948341012
+        },
+        {
+          "seed": 61,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 72,
+          "rounds_played": 5,
+          "round_damage": [
+            1,
+            6,
+            19,
+            23,
+            23
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.013535500329453498
+        },
+        {
+          "seed": 62,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 110,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            16,
+            24,
+            31,
+            33
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.011816999176517129
+        },
+        {
+          "seed": 63,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 100,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            16,
+            16,
+            23,
+            39
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.014647492207586765
+        },
+        {
+          "seed": 64,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 106,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            14,
+            19,
+            33,
+            36
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.010675496014300734
+        },
+        {
+          "seed": 65,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 79,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            18,
+            11,
+            14,
+            32
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.013646000297740102
+        },
+        {
+          "seed": 66,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 90,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            9,
+            17,
+            29,
+            32
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.019196500943508
+        },
+        {
+          "seed": 67,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 129,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            8,
+            27,
+            37,
+            54
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.012283002433832735
+        },
+        {
+          "seed": 68,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 103,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            7,
+            28,
+            30,
+            34
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.01008449908113107
+        },
+        {
+          "seed": 69,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 101,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            8,
+            13,
+            30,
+            43
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.013615499483421445
+        },
+        {
+          "seed": 70,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 92,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            7,
+            12,
+            20,
+            49
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.010665491572581232
+        },
+        {
+          "seed": 71,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 106,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            13,
+            26,
+            28,
+            34
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.017762999050319195
+        },
+        {
+          "seed": 72,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 100,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            7,
+            17,
+            30,
+            40
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.016826495993882418
+        },
+        {
+          "seed": 73,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 80,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            5,
+            15,
+            32,
+            24
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.009347502782475203
+        },
+        {
+          "seed": 74,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 77,
+          "rounds_played": 5,
+          "round_damage": [
+            0,
+            1,
+            6,
+            9,
+            61
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.012318501831032336
+        },
+        {
+          "seed": 75,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 74,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            10,
+            12,
+            22,
+            26
+          ],
+          "partial_purchase_refreshes": 5,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.01344549673376605
+        },
+        {
+          "seed": 76,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 97,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            9,
+            19,
+            24,
+            37
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.011632495443336666
+        },
+        {
+          "seed": 77,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 94,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            8,
+            16,
+            38,
+            28
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.011140989954583347
+        },
+        {
+          "seed": 78,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 106,
+          "rounds_played": 5,
+          "round_damage": [
+            9,
+            8,
+            20,
+            38,
+            31
+          ],
+          "partial_purchase_refreshes": 5,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.012022501323372126
+        },
+        {
+          "seed": 79,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 85,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            9,
+            15,
+            16,
+            38
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.01249850174644962
+        },
+        {
+          "seed": 80,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 96,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            9,
+            20,
+            29,
+            31
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.014873505278956145
+        },
+        {
+          "seed": 81,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 97,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            19,
+            21,
+            25,
+            29
+          ],
+          "partial_purchase_refreshes": 5,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.0103089987533167
+        },
+        {
+          "seed": 82,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 73,
+          "rounds_played": 5,
+          "round_damage": [
+            1,
+            1,
+            20,
+            19,
+            32
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.009497496648691595
+        },
+        {
+          "seed": 83,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 108,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            18,
+            25,
+            29,
+            30
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.01157199585577473
+        },
+        {
+          "seed": 84,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 109,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            8,
+            25,
+            33,
+            37
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.014377503248397261
+        },
+        {
+          "seed": 85,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 76,
+          "rounds_played": 5,
+          "round_damage": [
+            0,
+            1,
+            6,
+            18,
+            51
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.010930998541880399
+        },
+        {
+          "seed": 86,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 90,
+          "rounds_played": 5,
+          "round_damage": [
+            2,
+            8,
+            13,
+            26,
+            41
+          ],
+          "partial_purchase_refreshes": 5,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 0.012854005035478622
+        },
+        {
+          "seed": 87,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 86,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            9,
+            18,
+            20,
+            31
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.014121498679742217
+        },
+        {
+          "seed": 88,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 102,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            6,
+            17,
+            33,
+            42
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.013245495210867375
+        },
+        {
+          "seed": 89,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 105,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            8,
+            9,
+            36,
+            47
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.011471500329207629
+        },
+        {
+          "seed": 90,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 120,
+          "rounds_played": 5,
+          "round_damage": [
+            1,
+            18,
+            15,
+            34,
+            52
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.01740799780236557
+        },
+        {
+          "seed": 91,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 75,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            9,
+            13,
+            23,
+            27
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.012659002095460892
+        },
+        {
+          "seed": 92,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 70,
+          "rounds_played": 5,
+          "round_damage": [
+            9,
+            12,
+            10,
+            13,
+            26
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.01584950223332271
+        },
+        {
+          "seed": 93,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 121,
+          "rounds_played": 5,
+          "round_damage": [
+            1,
+            10,
+            21,
+            31,
+            58
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.011767500836867839
+        },
+        {
+          "seed": 94,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 97,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            9,
+            20,
+            22,
+            41
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.013781005691271275
+        },
+        {
+          "seed": 95,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 69,
+          "rounds_played": 5,
+          "round_damage": [
+            2,
+            5,
+            7,
+            18,
+            37
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.015138495655264705
+        },
+        {
+          "seed": 96,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 94,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            7,
+            19,
+            28,
+            28
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.011361502401996404
+        },
+        {
+          "seed": 97,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 96,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            15,
+            15,
+            15,
+            43
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 0.011622003512457013
+        },
+        {
+          "seed": 98,
+          "strategy": "whitelist",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 108,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            7,
+            15,
+            35,
+            39
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.007824506610631943
+        },
+        {
+          "seed": 99,
+          "strategy": "whitelist",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 81,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            10,
+            15,
+            23,
+            29
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 0.007969996659085155
+        }
+      ]
+    },
+    "damage_only": {
+      "summary": {
+        "games": 100,
+        "reach_100_rate": 0.8,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 3,
+          "5": 77
+        },
+        "mean_hit_round_among_successes": 4.9625,
+        "mean_damage": 111.59,
+        "median_damage": 111.0,
+        "min_damage": 77,
+        "max_damage": 153,
+        "decision_median_ms": 6.355760007863864,
+        "decision_p95_ms": 9.35641600517556,
+        "decision_max_ms": 24.516099991160445,
+        "partial_purchase_refreshes": 126,
+        "zero_purchase_refreshes": 0
+      },
+      "games": [
+        {
+          "seed": 0,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 118,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            16,
+            31,
+            35,
+            24
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.618455008720048
+        },
+        {
+          "seed": 1,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 135,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            10,
+            37,
+            39,
+            37
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.8039195064338855
+        },
+        {
+          "seed": 2,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 112,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            17,
+            16,
+            29,
+            38
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.595882499823347
+        },
+        {
+          "seed": 3,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 108,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            12,
+            25,
+            33,
+            30
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.858742995769717
+        },
+        {
+          "seed": 4,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 4,
+          "total_damage": 100,
+          "rounds_played": 4,
+          "round_damage": [
+            14,
+            16,
+            29,
+            41
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.25002000015229
+        },
+        {
+          "seed": 5,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 106,
+          "rounds_played": 5,
+          "round_damage": [
+            18,
+            12,
+            16,
+            31,
+            29
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.3219559960998595
+        },
+        {
+          "seed": 6,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 116,
+          "rounds_played": 5,
+          "round_damage": [
+            9,
+            14,
+            24,
+            32,
+            37
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.054541998310015
+        },
+        {
+          "seed": 7,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 118,
+          "rounds_played": 5,
+          "round_damage": [
+            13,
+            17,
+            23,
+            29,
+            36
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.83167099871207
+        },
+        {
+          "seed": 8,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 98,
+          "rounds_played": 5,
+          "round_damage": [
+            11,
+            9,
+            14,
+            31,
+            33
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.5017104973085225
+        },
+        {
+          "seed": 9,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 128,
+          "rounds_played": 5,
+          "round_damage": [
+            16,
+            14,
+            29,
+            28,
+            41
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.262177998200059
+        },
+        {
+          "seed": 10,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 120,
+          "rounds_played": 5,
+          "round_damage": [
+            10,
+            23,
+            29,
+            29,
+            29
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.281375001184642
+        },
+        {
+          "seed": 11,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 118,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            15,
+            28,
+            43,
+            25
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.96939100837335
+        },
+        {
+          "seed": 12,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 114,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            9,
+            24,
+            35,
+            38
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.406429998809472
+        },
+        {
+          "seed": 13,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 103,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            10,
+            16,
+            34,
+            39
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.673453502822667
+        },
+        {
+          "seed": 14,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 99,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            20,
+            20,
+            31,
+            20
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.848098000977188
+        },
+        {
+          "seed": 15,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 112,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            19,
+            21,
+            41,
+            25
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.827182998880744
+        },
+        {
+          "seed": 16,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 122,
+          "rounds_played": 5,
+          "round_damage": [
+            10,
+            19,
+            26,
+            32,
+            35
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.145679002860561
+        },
+        {
+          "seed": 17,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 131,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            22,
+            27,
+            36,
+            34
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.19977100379765
+        },
+        {
+          "seed": 18,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 118,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            21,
+            19,
+            42,
+            24
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.199790998129174
+        },
+        {
+          "seed": 19,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 4,
+          "total_damage": 100,
+          "rounds_played": 4,
+          "round_damage": [
+            6,
+            29,
+            26,
+            39
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 8.399951999308541
+        },
+        {
+          "seed": 20,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 123,
+          "rounds_played": 5,
+          "round_damage": [
+            16,
+            11,
+            24,
+            41,
+            31
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.793224503984675
+        },
+        {
+          "seed": 21,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 113,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            15,
+            26,
+            36,
+            30
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.290081506653223
+        },
+        {
+          "seed": 22,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 94,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            10,
+            21,
+            36,
+            22
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.5212965020909905
+        },
+        {
+          "seed": 23,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 146,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            8,
+            16,
+            60,
+            56
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 8.732875001442153
+        },
+        {
+          "seed": 24,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 111,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            19,
+            17,
+            32,
+            29
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.273053997778334
+        },
+        {
+          "seed": 25,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 89,
+          "rounds_played": 5,
+          "round_damage": [
+            17,
+            8,
+            13,
+            30,
+            21
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.268820001627319
+        },
+        {
+          "seed": 26,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 101,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            10,
+            18,
+            37,
+            30
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.146060004539322
+        },
+        {
+          "seed": 27,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 98,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            16,
+            16,
+            22,
+            30
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.719351000152528
+        },
+        {
+          "seed": 28,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 148,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            13,
+            28,
+            54,
+            49
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.946347999270074
+        },
+        {
+          "seed": 29,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 103,
+          "rounds_played": 5,
+          "round_damage": [
+            11,
+            9,
+            17,
+            33,
+            33
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.664416996296495
+        },
+        {
+          "seed": 30,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 96,
+          "rounds_played": 5,
+          "round_damage": [
+            13,
+            22,
+            17,
+            14,
+            30
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.852421003510244
+        },
+        {
+          "seed": 31,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 124,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            20,
+            30,
+            25,
+            42
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.707172502297908
+        },
+        {
+          "seed": 32,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 85,
+          "rounds_played": 5,
+          "round_damage": [
+            11,
+            15,
+            15,
+            28,
+            16
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.623835000733379
+        },
+        {
+          "seed": 33,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 101,
+          "rounds_played": 5,
+          "round_damage": [
+            11,
+            12,
+            19,
+            29,
+            30
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.465597005444579
+        },
+        {
+          "seed": 34,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 122,
+          "rounds_played": 5,
+          "round_damage": [
+            13,
+            20,
+            28,
+            25,
+            36
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.647719998203684
+        },
+        {
+          "seed": 35,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 138,
+          "rounds_played": 5,
+          "round_damage": [
+            11,
+            16,
+            23,
+            35,
+            53
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.256668501009699
+        },
+        {
+          "seed": 36,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 128,
+          "rounds_played": 5,
+          "round_damage": [
+            15,
+            20,
+            24,
+            27,
+            42
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.268109999131411
+        },
+        {
+          "seed": 37,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 116,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            20,
+            24,
+            26,
+            32
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.955775501206517
+        },
+        {
+          "seed": 38,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 113,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            13,
+            23,
+            34,
+            39
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.022681503964122
+        },
+        {
+          "seed": 39,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 122,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            13,
+            30,
+            28,
+            37
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.069775496143848
+        },
+        {
+          "seed": 40,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 105,
+          "rounds_played": 5,
+          "round_damage": [
+            9,
+            12,
+            18,
+            32,
+            34
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.97683600790333
+        },
+        {
+          "seed": 41,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 108,
+          "rounds_played": 5,
+          "round_damage": [
+            16,
+            8,
+            20,
+            30,
+            34
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.89030199625995
+        },
+        {
+          "seed": 42,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 110,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            13,
+            23,
+            25,
+            42
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.689298497803975
+        },
+        {
+          "seed": 43,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 112,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            18,
+            17,
+            26,
+            47
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.357228008506354
+        },
+        {
+          "seed": 44,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 112,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            13,
+            21,
+            30,
+            45
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 8.33840599807445
+        },
+        {
+          "seed": 45,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 153,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            10,
+            18,
+            46,
+            65
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.898426993051544
+        },
+        {
+          "seed": 46,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 104,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            13,
+            27,
+            22,
+            35
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.653305001440458
+        },
+        {
+          "seed": 47,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 113,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            12,
+            20,
+            37,
+            32
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 8.330647498951294
+        },
+        {
+          "seed": 48,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 94,
+          "rounds_played": 5,
+          "round_damage": [
+            11,
+            13,
+            19,
+            29,
+            22
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.344733996433206
+        },
+        {
+          "seed": 49,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 137,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            16,
+            29,
+            38,
+            46
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.454325499362312
+        },
+        {
+          "seed": 50,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 120,
+          "rounds_played": 5,
+          "round_damage": [
+            10,
+            13,
+            18,
+            35,
+            44
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.730841992772184
+        },
+        {
+          "seed": 51,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 84,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            15,
+            20,
+            22,
+            22
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.531165006686933
+        },
+        {
+          "seed": 52,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 132,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            16,
+            26,
+            39,
+            37
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.3339639998739585
+        },
+        {
+          "seed": 53,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 116,
+          "rounds_played": 5,
+          "round_damage": [
+            9,
+            21,
+            23,
+            33,
+            30
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.849816996487789
+        },
+        {
+          "seed": 54,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 136,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            11,
+            18,
+            52,
+            50
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.755317994044162
+        },
+        {
+          "seed": 55,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 119,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            13,
+            27,
+            34,
+            33
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.274051000014879
+        },
+        {
+          "seed": 56,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 97,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            19,
+            16,
+            32,
+            18
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.909438503498677
+        },
+        {
+          "seed": 57,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 84,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            17,
+            15,
+            27,
+            17
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.0824595022713766
+        },
+        {
+          "seed": 58,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 103,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            18,
+            22,
+            32,
+            26
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.1727400025120005
+        },
+        {
+          "seed": 59,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 111,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            17,
+            18,
+            36,
+            36
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.013484002323821
+        },
+        {
+          "seed": 60,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 111,
+          "rounds_played": 5,
+          "round_damage": [
+            16,
+            7,
+            21,
+            28,
+            39
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.74099100776948
+        },
+        {
+          "seed": 61,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 100,
+          "rounds_played": 5,
+          "round_damage": [
+            13,
+            10,
+            22,
+            22,
+            33
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.320453503576573
+        },
+        {
+          "seed": 62,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 104,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            16,
+            23,
+            24,
+            33
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.524221996893175
+        },
+        {
+          "seed": 63,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 4,
+          "total_damage": 108,
+          "rounds_played": 4,
+          "round_damage": [
+            6,
+            27,
+            30,
+            45
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.980427500617225
+        },
+        {
+          "seed": 64,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 104,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            16,
+            26,
+            29,
+            25
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.022411995218135
+        },
+        {
+          "seed": 65,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 112,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            17,
+            23,
+            24,
+            36
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.962327999644913
+        },
+        {
+          "seed": 66,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 95,
+          "rounds_played": 5,
+          "round_damage": [
+            11,
+            18,
+            20,
+            23,
+            23
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.620418993406929
+        },
+        {
+          "seed": 67,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 103,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            19,
+            25,
+            30,
+            23
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.2074050036026165
+        },
+        {
+          "seed": 68,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 127,
+          "rounds_played": 5,
+          "round_damage": [
+            9,
+            29,
+            31,
+            28,
+            30
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.813276999513619
+        },
+        {
+          "seed": 69,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 99,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            11,
+            20,
+            28,
+            28
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.206128004123457
+        },
+        {
+          "seed": 70,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 109,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            13,
+            23,
+            21,
+            47
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.774849498469848
+        },
+        {
+          "seed": 71,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 108,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            13,
+            24,
+            24,
+            35
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.772315009788144
+        },
+        {
+          "seed": 72,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 118,
+          "rounds_played": 5,
+          "round_damage": [
+            10,
+            7,
+            23,
+            36,
+            42
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.521747505757958
+        },
+        {
+          "seed": 73,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 108,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            12,
+            18,
+            33,
+            33
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 7.700604503042996
+        },
+        {
+          "seed": 74,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 90,
+          "rounds_played": 5,
+          "round_damage": [
+            13,
+            8,
+            19,
+            32,
+            18
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.935001991223544
+        },
+        {
+          "seed": 75,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 117,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            24,
+            32,
+            27,
+            27
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.489100996986963
+        },
+        {
+          "seed": 76,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 105,
+          "rounds_played": 5,
+          "round_damage": [
+            16,
+            8,
+            14,
+            34,
+            33
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.62685100157978
+        },
+        {
+          "seed": 77,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 94,
+          "rounds_played": 5,
+          "round_damage": [
+            13,
+            19,
+            13,
+            21,
+            28
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.619236500933766
+        },
+        {
+          "seed": 78,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 123,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            12,
+            28,
+            25,
+            44
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.681313490844332
+        },
+        {
+          "seed": 79,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 114,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            15,
+            20,
+            36,
+            38
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.322507004369982
+        },
+        {
+          "seed": 80,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 118,
+          "rounds_played": 5,
+          "round_damage": [
+            13,
+            15,
+            25,
+            31,
+            34
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.956586988759227
+        },
+        {
+          "seed": 81,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 141,
+          "rounds_played": 5,
+          "round_damage": [
+            11,
+            18,
+            16,
+            53,
+            43
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.816258002596442
+        },
+        {
+          "seed": 82,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 120,
+          "rounds_played": 5,
+          "round_damage": [
+            15,
+            16,
+            32,
+            19,
+            38
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.918335999012925
+        },
+        {
+          "seed": 83,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 121,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            11,
+            23,
+            34,
+            49
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.439346994739026
+        },
+        {
+          "seed": 84,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 107,
+          "rounds_played": 5,
+          "round_damage": [
+            15,
+            13,
+            27,
+            21,
+            31
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.364505999954417
+        },
+        {
+          "seed": 85,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 77,
+          "rounds_played": 5,
+          "round_damage": [
+            9,
+            16,
+            14,
+            19,
+            19
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.816769000375643
+        },
+        {
+          "seed": 86,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 99,
+          "rounds_played": 5,
+          "round_damage": [
+            10,
+            10,
+            18,
+            34,
+            27
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.871998000657186
+        },
+        {
+          "seed": 87,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 108,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            11,
+            13,
+            40,
+            39
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.5680350051261485
+        },
+        {
+          "seed": 88,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 86,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            8,
+            10,
+            24,
+            38
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.881585995666683
+        },
+        {
+          "seed": 89,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 111,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            11,
+            26,
+            36,
+            24
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.2340410077013075
+        },
+        {
+          "seed": 90,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 101,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            16,
+            17,
+            26,
+            34
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.70692699693609
+        },
+        {
+          "seed": 91,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 99,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            22,
+            17,
+            28,
+            27
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.548909000935964
+        },
+        {
+          "seed": 92,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 110,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            12,
+            25,
+            37,
+            29
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.144266000774223
+        },
+        {
+          "seed": 93,
+          "strategy": "damage_only",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 99,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            10,
+            21,
+            23,
+            33
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.656791996443644
+        },
+        {
+          "seed": 94,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 111,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            12,
+            29,
+            29,
+            29
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.355760007863864
+        },
+        {
+          "seed": 95,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 104,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            18,
+            18,
+            39,
+            23
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.1733510010526516
+        },
+        {
+          "seed": 96,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 144,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            20,
+            27,
+            30,
+            53
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.68371350527741
+        },
+        {
+          "seed": 97,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 113,
+          "rounds_played": 5,
+          "round_damage": [
+            13,
+            14,
+            19,
+            34,
+            33
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.38404899998568
+        },
+        {
+          "seed": 98,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 129,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            14,
+            25,
+            38,
+            38
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.827253000461496
+        },
+        {
+          "seed": 99,
+          "strategy": "damage_only",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 115,
+          "rounds_played": 5,
+          "round_damage": [
+            16,
+            7,
+            18,
+            39,
+            35
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.879055999685079
+        }
+      ]
+    },
+    "v1": {
+      "summary": {
+        "games": 100,
+        "reach_100_rate": 0.8,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 3,
+          "5": 77
+        },
+        "mean_hit_round_among_successes": 4.9625,
+        "mean_damage": 111.1,
+        "median_damage": 112.5,
+        "min_damage": 68,
+        "max_damage": 153,
+        "decision_median_ms": 5.939734997809865,
+        "decision_p95_ms": 8.318849999341182,
+        "decision_max_ms": 18.34121099091135,
+        "partial_purchase_refreshes": 227,
+        "zero_purchase_refreshes": 89
+      },
+      "games": [
+        {
+          "seed": 0,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 127,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            16,
+            22,
+            40,
+            37
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 6.576661500730552
+        },
+        {
+          "seed": 1,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 125,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            10,
+            37,
+            39,
+            27
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 6.445409002481028
+        },
+        {
+          "seed": 2,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 101,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            18,
+            18,
+            25,
+            28
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.769074006821029
+        },
+        {
+          "seed": 3,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 120,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            12,
+            12,
+            52,
+            36
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.906527498154901
+        },
+        {
+          "seed": 4,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 4,
+          "total_damage": 100,
+          "rounds_played": 4,
+          "round_damage": [
+            14,
+            16,
+            29,
+            41
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.362753003486432
+        },
+        {
+          "seed": 5,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 104,
+          "rounds_played": 5,
+          "round_damage": [
+            18,
+            12,
+            16,
+            30,
+            28
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.8471659940551035
+        },
+        {
+          "seed": 6,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 134,
+          "rounds_played": 5,
+          "round_damage": [
+            9,
+            14,
+            24,
+            27,
+            60
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.717882500903215
+        },
+        {
+          "seed": 7,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 129,
+          "rounds_played": 5,
+          "round_damage": [
+            13,
+            17,
+            17,
+            41,
+            41
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 6.257874993025325
+        },
+        {
+          "seed": 8,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 68,
+          "rounds_played": 5,
+          "round_damage": [
+            11,
+            12,
+            19,
+            15,
+            11
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 5.942269999650307
+        },
+        {
+          "seed": 9,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 121,
+          "rounds_played": 5,
+          "round_damage": [
+            16,
+            14,
+            29,
+            35,
+            27
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.597671501163859
+        },
+        {
+          "seed": 10,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 112,
+          "rounds_played": 5,
+          "round_damage": [
+            10,
+            23,
+            29,
+            25,
+            25
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.898388000787236
+        },
+        {
+          "seed": 11,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 124,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            14,
+            27,
+            31,
+            45
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 6.212680003955029
+        },
+        {
+          "seed": 12,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 113,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            9,
+            24,
+            30,
+            42
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 6.258085006265901
+        },
+        {
+          "seed": 13,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 105,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            16,
+            17,
+            14,
+            53
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 6.319646490737796
+        },
+        {
+          "seed": 14,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 102,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            20,
+            15,
+            15,
+            44
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 6.690034497296438
+        },
+        {
+          "seed": 15,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 103,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            19,
+            21,
+            33,
+            24
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.926760990405455
+        },
+        {
+          "seed": 16,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 124,
+          "rounds_played": 5,
+          "round_damage": [
+            10,
+            19,
+            26,
+            22,
+            47
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.56076650536852
+        },
+        {
+          "seed": 17,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 130,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            22,
+            27,
+            35,
+            34
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.616445996565744
+        },
+        {
+          "seed": 18,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 102,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            21,
+            25,
+            26,
+            18
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 7.016695992206223
+        },
+        {
+          "seed": 19,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 4,
+          "total_damage": 118,
+          "rounds_played": 4,
+          "round_damage": [
+            6,
+            29,
+            35,
+            48
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 6.731899004080333
+        },
+        {
+          "seed": 20,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 112,
+          "rounds_played": 5,
+          "round_damage": [
+            16,
+            11,
+            23,
+            33,
+            29
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.567152998992242
+        },
+        {
+          "seed": 21,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 124,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            15,
+            22,
+            30,
+            51
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 6.013063990394585
+        },
+        {
+          "seed": 22,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 107,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            10,
+            20,
+            40,
+            32
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.869353000889532
+        },
+        {
+          "seed": 23,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 108,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            9,
+            16,
+            34,
+            43
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.04640649544308
+        },
+        {
+          "seed": 24,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 93,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            19,
+            17,
+            27,
+            16
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 6.374360003974289
+        },
+        {
+          "seed": 25,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 103,
+          "rounds_played": 5,
+          "round_damage": [
+            17,
+            8,
+            13,
+            23,
+            42
+          ],
+          "partial_purchase_refreshes": 5,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.991949001327157
+        },
+        {
+          "seed": 26,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 100,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            10,
+            16,
+            36,
+            32
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 6.399286998203024
+        },
+        {
+          "seed": 27,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 114,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            6,
+            23,
+            37,
+            34
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.9807229990838096
+        },
+        {
+          "seed": 28,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 136,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            13,
+            26,
+            52,
+            41
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.012882993672974
+        },
+        {
+          "seed": 29,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 141,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            13,
+            16,
+            37,
+            61
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.723989001126029
+        },
+        {
+          "seed": 30,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 116,
+          "rounds_played": 5,
+          "round_damage": [
+            9,
+            15,
+            15,
+            35,
+            42
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 6.424589999369346
+        },
+        {
+          "seed": 31,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 117,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            20,
+            30,
+            20,
+            40
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.437840009108186
+        },
+        {
+          "seed": 32,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 75,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            15,
+            8,
+            17,
+            23
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 3,
+          "decision_median_ms": 7.20090249524219
+        },
+        {
+          "seed": 33,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 109,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            16,
+            19,
+            35,
+            35
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.911407504754607
+        },
+        {
+          "seed": 34,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 128,
+          "rounds_played": 5,
+          "round_damage": [
+            13,
+            20,
+            28,
+            25,
+            42
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.209759998251684
+        },
+        {
+          "seed": 35,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 119,
+          "rounds_played": 5,
+          "round_damage": [
+            11,
+            15,
+            17,
+            38,
+            38
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 5.733676996896975
+        },
+        {
+          "seed": 36,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 127,
+          "rounds_played": 5,
+          "round_damage": [
+            15,
+            20,
+            24,
+            27,
+            41
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.634093995671719
+        },
+        {
+          "seed": 37,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 116,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            12,
+            17,
+            36,
+            37
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 6.229617494682316
+        },
+        {
+          "seed": 38,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 120,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            13,
+            23,
+            32,
+            48
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.751635995693505
+        },
+        {
+          "seed": 39,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 113,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            13,
+            30,
+            22,
+            34
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.808373498439323
+        },
+        {
+          "seed": 40,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 121,
+          "rounds_played": 5,
+          "round_damage": [
+            9,
+            12,
+            18,
+            41,
+            41
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 5.876481496670749
+        },
+        {
+          "seed": 41,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 107,
+          "rounds_played": 5,
+          "round_damage": [
+            16,
+            8,
+            20,
+            31,
+            32
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.78089700138662
+        },
+        {
+          "seed": 42,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 89,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            13,
+            23,
+            23,
+            23
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 5.497581994859502
+        },
+        {
+          "seed": 43,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 120,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            18,
+            17,
+            28,
+            53
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.813708994537592
+        },
+        {
+          "seed": 44,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 107,
+          "rounds_played": 5,
+          "round_damage": [
+            3,
+            13,
+            21,
+            30,
+            40
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.682770999555942
+        },
+        {
+          "seed": 45,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 153,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            10,
+            18,
+            46,
+            65
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.3211100021144375
+        },
+        {
+          "seed": 46,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 121,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            13,
+            25,
+            38,
+            38
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.893933994229883
+        },
+        {
+          "seed": 47,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 98,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            12,
+            20,
+            27,
+            27
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.670277991157491
+        },
+        {
+          "seed": 48,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 86,
+          "rounds_played": 5,
+          "round_damage": [
+            11,
+            13,
+            19,
+            19,
+            24
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 6.199520503287204
+        },
+        {
+          "seed": 49,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 119,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            26,
+            30,
+            21,
+            34
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.990051002299879
+        },
+        {
+          "seed": 50,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 118,
+          "rounds_played": 5,
+          "round_damage": [
+            10,
+            22,
+            11,
+            24,
+            51
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.09921698924154
+        },
+        {
+          "seed": 51,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 95,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            15,
+            17,
+            37,
+            21
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 6.085591012379155
+        },
+        {
+          "seed": 52,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 128,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            16,
+            26,
+            36,
+            36
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.8553764974931255
+        },
+        {
+          "seed": 53,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 112,
+          "rounds_played": 5,
+          "round_damage": [
+            9,
+            21,
+            23,
+            33,
+            26
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.68491050216835
+        },
+        {
+          "seed": 54,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 135,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            11,
+            18,
+            52,
+            49
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.765481997514144
+        },
+        {
+          "seed": 55,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 141,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            13,
+            27,
+            34,
+            55
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.403745999501552
+        },
+        {
+          "seed": 56,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 99,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            10,
+            36,
+            26,
+            15
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.366013996535912
+        },
+        {
+          "seed": 57,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 75,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            16,
+            17,
+            17,
+            17
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 5.526416003704071
+        },
+        {
+          "seed": 58,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 122,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            30,
+            30,
+            19,
+            37
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 4.999292999855243
+        },
+        {
+          "seed": 59,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 106,
+          "rounds_played": 5,
+          "round_damage": [
+            21,
+            15,
+            24,
+            27,
+            19
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 5.216723002376966
+        },
+        {
+          "seed": 60,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 111,
+          "rounds_played": 5,
+          "round_damage": [
+            16,
+            7,
+            21,
+            28,
+            39
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 4.917068014037795
+        },
+        {
+          "seed": 61,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 95,
+          "rounds_played": 5,
+          "round_damage": [
+            17,
+            10,
+            14,
+            23,
+            31
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.509675000212155
+        },
+        {
+          "seed": 62,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 113,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            16,
+            23,
+            33,
+            33
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 6.355578996590339
+        },
+        {
+          "seed": 63,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 4,
+          "total_damage": 106,
+          "rounds_played": 4,
+          "round_damage": [
+            6,
+            27,
+            30,
+            43
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.8548160013742745
+        },
+        {
+          "seed": 64,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 117,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            16,
+            24,
+            24,
+            45
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.922443000599742
+        },
+        {
+          "seed": 65,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 102,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            17,
+            23,
+            27,
+            23
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 6.525009004690219
+        },
+        {
+          "seed": 66,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 75,
+          "rounds_played": 5,
+          "round_damage": [
+            11,
+            17,
+            13,
+            13,
+            21
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 6.287014992267359
+        },
+        {
+          "seed": 67,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 94,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            19,
+            19,
+            30,
+            20
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 3,
+          "decision_median_ms": 6.743685997207649
+        },
+        {
+          "seed": 68,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 117,
+          "rounds_played": 5,
+          "round_damage": [
+            9,
+            29,
+            24,
+            33,
+            22
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.938182002864778
+        },
+        {
+          "seed": 69,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 134,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            11,
+            18,
+            37,
+            56
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.16873700346332
+        },
+        {
+          "seed": 70,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 108,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            13,
+            23,
+            31,
+            36
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.584831502346788
+        },
+        {
+          "seed": 71,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 124,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            13,
+            23,
+            26,
+            50
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.303907503024675
+        },
+        {
+          "seed": 72,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 116,
+          "rounds_played": 5,
+          "round_damage": [
+            17,
+            8,
+            23,
+            36,
+            32
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.953471001703292
+        },
+        {
+          "seed": 73,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 102,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            11,
+            22,
+            32,
+            25
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 5.857390002347529
+        },
+        {
+          "seed": 74,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 106,
+          "rounds_played": 5,
+          "round_damage": [
+            13,
+            8,
+            18,
+            32,
+            35
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.348851500661112
+        },
+        {
+          "seed": 75,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 107,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            24,
+            32,
+            22,
+            22
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 6.566486998053733
+        },
+        {
+          "seed": 76,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 90,
+          "rounds_played": 5,
+          "round_damage": [
+            16,
+            8,
+            14,
+            23,
+            29
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 6.186099490150809
+        },
+        {
+          "seed": 77,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 103,
+          "rounds_played": 5,
+          "round_damage": [
+            13,
+            18,
+            13,
+            19,
+            40
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.227608500921633
+        },
+        {
+          "seed": 78,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 129,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            12,
+            18,
+            44,
+            41
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.799762504466344
+        },
+        {
+          "seed": 79,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 133,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            15,
+            19,
+            57,
+            37
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.700074005289935
+        },
+        {
+          "seed": 80,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 115,
+          "rounds_played": 5,
+          "round_damage": [
+            13,
+            15,
+            25,
+            31,
+            31
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.700023495592177
+        },
+        {
+          "seed": 81,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 77,
+          "rounds_played": 5,
+          "round_damage": [
+            11,
+            18,
+            14,
+            17,
+            17
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 3,
+          "decision_median_ms": 7.2252079989993945
+        },
+        {
+          "seed": 82,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 126,
+          "rounds_played": 5,
+          "round_damage": [
+            15,
+            16,
+            32,
+            27,
+            36
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.747271992731839
+        },
+        {
+          "seed": 83,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 132,
+          "rounds_played": 5,
+          "round_damage": [
+            4,
+            11,
+            23,
+            42,
+            52
+          ],
+          "partial_purchase_refreshes": 1,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.864844504685607
+        },
+        {
+          "seed": 84,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 89,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            12,
+            23,
+            23,
+            23
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 5.735791506594978
+        },
+        {
+          "seed": 85,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 70,
+          "rounds_played": 5,
+          "round_damage": [
+            13,
+            10,
+            10,
+            10,
+            27
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 6.537917994137388
+        },
+        {
+          "seed": 86,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 81,
+          "rounds_played": 5,
+          "round_damage": [
+            13,
+            13,
+            23,
+            16,
+            16
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 6.481331496615894
+        },
+        {
+          "seed": 87,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 107,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            11,
+            18,
+            37,
+            36
+          ],
+          "partial_purchase_refreshes": 5,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.298206495353952
+        },
+        {
+          "seed": 88,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 113,
+          "rounds_played": 5,
+          "round_damage": [
+            13,
+            12,
+            14,
+            37,
+            37
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.643636992317624
+        },
+        {
+          "seed": 89,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 86,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            16,
+            22,
+            10,
+            24
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.501549996552058
+        },
+        {
+          "seed": 90,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 90,
+          "rounds_played": 5,
+          "round_damage": [
+            8,
+            16,
+            16,
+            25,
+            25
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.752251992817037
+        },
+        {
+          "seed": 91,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 108,
+          "rounds_played": 5,
+          "round_damage": [
+            5,
+            22,
+            17,
+            23,
+            41
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 6.282211004872806
+        },
+        {
+          "seed": 92,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 140,
+          "rounds_played": 5,
+          "round_damage": [
+            7,
+            21,
+            26,
+            37,
+            49
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 5.728011499741115
+        },
+        {
+          "seed": 93,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 120,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            10,
+            27,
+            32,
+            39
+          ],
+          "partial_purchase_refreshes": 4,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.798169004265219
+        },
+        {
+          "seed": 94,
+          "strategy": "v1",
+          "reached_100": false,
+          "hit_round": null,
+          "total_damage": 98,
+          "rounds_played": 5,
+          "round_damage": [
+            12,
+            12,
+            16,
+            37,
+            21
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 6.603601505048573
+        },
+        {
+          "seed": 95,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 120,
+          "rounds_played": 5,
+          "round_damage": [
+            6,
+            18,
+            26,
+            42,
+            28
+          ],
+          "partial_purchase_refreshes": 0,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 6.361230502079707
+        },
+        {
+          "seed": 96,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 119,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            17,
+            33,
+            31,
+            24
+          ],
+          "partial_purchase_refreshes": 3,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.894501009606756
+        },
+        {
+          "seed": 97,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 105,
+          "rounds_played": 5,
+          "round_damage": [
+            13,
+            14,
+            19,
+            34,
+            25
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 1,
+          "decision_median_ms": 5.570935500145424
+        },
+        {
+          "seed": 98,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 129,
+          "rounds_played": 5,
+          "round_damage": [
+            14,
+            14,
+            25,
+            38,
+            38
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 0,
+          "decision_median_ms": 5.581650999374688
+        },
+        {
+          "seed": 99,
+          "strategy": "v1",
+          "reached_100": true,
+          "hit_round": 5,
+          "total_damage": 111,
+          "rounds_played": 5,
+          "round_damage": [
+            16,
+            15,
+            9,
+            31,
+            40
+          ],
+          "partial_purchase_refreshes": 2,
+          "zero_purchase_refreshes": 2,
+          "decision_median_ms": 5.815401003928855
+        }
+      ]
+    }
+  },
+  "illustrative_games": {
+    "whitelist": [
+      {
+        "seed": 0,
+        "strategy": "whitelist",
+        "reached_100": false,
+        "hit_round": null,
+        "total_damage": 67,
+        "rounds_played": 5,
+        "round_damage": [
+          3,
+          3,
+          15,
+          16,
+          30
+        ],
+        "partial_purchase_refreshes": 3,
+        "zero_purchase_refreshes": 2,
+        "decision_ms": [
+          0.023244007024914026,
+          0.012101998436264694,
+          0.010289993952028453,
+          0.005841007805429399,
+          0.007243012078106403,
+          0.007203998393379152,
+          0.009087001672014594,
+          0.00455799454357475,
+          0.03044700133614242,
+          0.011051000910811126
+        ],
+        "elapsed_s": 0.020084146002773196,
+        "trace": [
+          {
+            "round": 1,
+            "damage": 3,
+            "cumulative_damage": 3,
+            "bought": 2,
+            "income": 0,
+            "gold_at_end": 1,
+            "events": [
+              {
+                "hand": [
+                  "破云",
+                  "菩提覆面",
+                  "绯斩·苍牙",
+                  "焚天",
+                  "VVIP黑卡"
+                ],
+                "bought": [
+                  "菩提覆面",
+                  "绯斩·苍牙"
+                ],
+                "gold_before": 5,
+                "gold_left": 1,
+                "coin_value": 0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "雷龙之鞘",
+                  "菩提覆面",
+                  "怒鲤双生"
+                ],
+                "bought": [],
+                "gold_before": 1,
+                "gold_left": 1,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 2,
+            "damage": 3,
+            "cumulative_damage": 6,
+            "bought": 0,
+            "income": 0,
+            "gold_at_end": 4,
+            "events": [
+              {
+                "hand": [
+                  "VVIP黑卡",
+                  "破云",
+                  "雷龙之鞘",
+                  "寒绡·兮兰",
+                  "雷龙"
+                ],
+                "bought": [],
+                "gold_before": 4,
+                "gold_left": 4,
+                "coin_value": 0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "极刃·血影",
+                  "怒鲤双生",
+                  "夜叉·隼白",
+                  "霜刃·伊鹤",
+                  "巨阙·缚日"
+                ],
+                "bought": [],
+                "gold_before": 4,
+                "gold_left": 4,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 3,
+            "damage": 15,
+            "cumulative_damage": 21,
+            "bought": 3,
+            "income": 0,
+            "gold_at_end": 2,
+            "events": [
+              {
+                "hand": [
+                  "怒鲤双生",
+                  "巨阙·缚日",
+                  "瞬翎·伊鹤",
+                  "破雾·贯羽",
+                  "霜刃·伊鹤"
+                ],
+                "bought": [],
+                "gold_before": 9,
+                "gold_left": 9,
+                "coin_value": 0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "双焰·小椒",
+                  "金刚覆面",
+                  "焚天",
+                  "怒鲤双生",
+                  "龙吟·洛青"
+                ],
+                "bought": [
+                  "双焰·小椒",
+                  "金刚覆面",
+                  "焚天"
+                ],
+                "gold_before": 9,
+                "gold_left": 2,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 4,
+            "damage": 16,
+            "cumulative_damage": 37,
+            "bought": 2,
+            "income": 0,
+            "gold_at_end": 1,
+            "events": [
+              {
+                "hand": [
+                  "轮回之戒",
+                  "鬼斩头盔",
+                  "金刚覆面",
+                  "百棘",
+                  "怒鲤双生"
+                ],
+                "bought": [
+                  "金刚覆面"
+                ],
+                "gold_before": 5,
+                "gold_left": 3,
+                "coin_value": 0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "雷龙",
+                  "菩提覆面",
+                  "破雾·贯羽",
+                  "赤芒"
+                ],
+                "bought": [
+                  "菩提覆面"
+                ],
+                "gold_before": 3,
+                "gold_left": 1,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 5,
+            "damage": 30,
+            "cumulative_damage": 67,
+            "bought": 2,
+            "income": 0,
+            "gold_at_end": 1,
+            "events": [
+              {
+                "hand": [
+                  "神炎·小椒",
+                  "雷龙",
+                  "龙焰·小黑",
+                  "夜叉·隼白",
+                  "VVIP黑卡"
+                ],
+                "bought": [
+                  "神炎·小椒",
+                  "龙焰·小黑"
+                ],
+                "gold_before": 4,
+                "gold_left": 1,
+                "coin_value": 0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "炎魂·小黑",
+                  "鬼斩头盔",
+                  "黑龙"
+                ],
+                "bought": [],
+                "gold_before": 1,
+                "gold_left": 1,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "seed": 13,
+        "strategy": "whitelist",
+        "reached_100": false,
+        "hit_round": null,
+        "total_damage": 47,
+        "rounds_played": 5,
+        "round_damage": [
+          1,
+          13,
+          6,
+          12,
+          15
+        ],
+        "partial_purchase_refreshes": 2,
+        "zero_purchase_refreshes": 3,
+        "decision_ms": [
+          0.018784994608722627,
+          0.011411990271881223,
+          0.019136001355946064,
+          0.004417990567162633,
+          0.014437013305723667,
+          0.004418005119077861,
+          0.019767001504078507,
+          0.013636003131978214,
+          0.018443999579176307,
+          0.004098008503206074
+        ],
+        "elapsed_s": 0.026449573997524567,
+        "trace": [
+          {
+            "round": 1,
+            "damage": 1,
+            "cumulative_damage": 1,
+            "bought": 1,
+            "income": 0,
+            "gold_at_end": 3,
+            "events": [
+              {
+                "hand": [
+                  "奔雷·银枭",
+                  "巨阙·缚日",
+                  "猫太·老板娘",
+                  "月晖·小夜",
+                  "极刃·血影"
+                ],
+                "bought": [],
+                "gold_before": 5,
+                "gold_left": 5,
+                "coin_value": 0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "冰羽·兮兰",
+                  "雷羿·银枭",
+                  "龙吟·洛青",
+                  "星闪·小椒",
+                  "鬼斩臂甲"
+                ],
+                "bought": [
+                  "星闪·小椒"
+                ],
+                "gold_before": 5,
+                "gold_left": 3,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 2,
+            "damage": 13,
+            "cumulative_damage": 14,
+            "bought": 3,
+            "income": 0,
+            "gold_at_end": 1,
+            "events": [
+              {
+                "hand": [
+                  "焚天",
+                  "赤芒",
+                  "雪舞·琳",
+                  "雷龙之鞘",
+                  "夜叉·隼白"
+                ],
+                "bought": [
+                  "焚天",
+                  "赤芒",
+                  "雪舞·琳"
+                ],
+                "gold_before": 7,
+                "gold_left": 1,
+                "coin_value": 0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "龙焰·小黑",
+                  "破云"
+                ],
+                "bought": [],
+                "gold_before": 1,
+                "gold_left": 1,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 3,
+            "damage": 6,
+            "cumulative_damage": 20,
+            "bought": 0,
+            "income": 0,
+            "gold_at_end": 4,
+            "events": [
+              {
+                "hand": [
+                  "鬼斩·紫原",
+                  "霜刃·伊鹤",
+                  "破雾·贯羽",
+                  "鬼斩胸甲",
+                  "天鹰"
+                ],
+                "bought": [],
+                "gold_before": 4,
+                "gold_left": 4,
+                "coin_value": 0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "樱火·茜",
+                  "破雾·贯羽",
+                  "轮回之戒",
+                  "丛云之霜雨",
+                  "龙吟·洛青"
+                ],
+                "bought": [],
+                "gold_before": 4,
+                "gold_left": 4,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 4,
+            "damage": 12,
+            "cumulative_damage": 32,
+            "bought": 2,
+            "income": 0,
+            "gold_at_end": 4,
+            "events": [
+              {
+                "hand": [
+                  "鬼斩胸甲",
+                  "破雾·贯羽",
+                  "鬼斩头盔",
+                  "VVIP黑卡",
+                  "猫太·老板娘"
+                ],
+                "bought": [],
+                "gold_before": 9,
+                "gold_left": 9,
+                "coin_value": 0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "风林火山战旗",
+                  "瞬翎·伊鹤",
+                  "惠比寿御守",
+                  "菩提覆面",
+                  "夜叉·隼白"
+                ],
+                "bought": [
+                  "风林火山战旗",
+                  "菩提覆面"
+                ],
+                "gold_before": 9,
+                "gold_left": 4,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 5,
+            "damage": 15,
+            "cumulative_damage": 47,
+            "bought": 1,
+            "income": 0,
+            "gold_at_end": 5,
+            "events": [
+              {
+                "hand": [
+                  "VVIP黑卡",
+                  "乘霄·戌时",
+                  "龙焰·小黑",
+                  "破云",
+                  "瞬翎·伊鹤"
+                ],
+                "bought": [
+                  "龙焰·小黑"
+                ],
+                "gold_before": 7,
+                "gold_left": 5,
+                "coin_value": 0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "怒鲤双生",
+                  "超星太鼓",
+                  "丛云之霜雨",
+                  "怒鲤双生"
+                ],
+                "bought": [],
+                "gold_before": 5,
+                "gold_left": 5,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "seed": 23,
+        "strategy": "whitelist",
+        "reached_100": true,
+        "hit_round": 4,
+        "total_damage": 103,
+        "rounds_played": 4,
+        "round_damage": [
+          4,
+          14,
+          28,
+          57
+        ],
+        "partial_purchase_refreshes": 3,
+        "zero_purchase_refreshes": 1,
+        "decision_ms": [
+          0.01984699338208884,
+          0.005270005203783512,
+          0.013545999536290765,
+          0.009087001672014594,
+          0.01971700112335384,
+          0.005841007805429399,
+          0.014065997675061226,
+          0.004868998075835407
+        ],
+        "elapsed_s": 0.02023491999716498,
+        "trace": [
+          {
+            "round": 1,
+            "damage": 4,
+            "cumulative_damage": 4,
+            "bought": 2,
+            "income": 0,
+            "gold_at_end": 1,
+            "events": [
+              {
+                "hand": [
+                  "百棘",
+                  "双焰·小椒",
+                  "神乐·琳",
+                  "鬼斩臂甲",
+                  "封渊"
+                ],
+                "bought": [
+                  "双焰·小椒",
+                  "神乐·琳"
+                ],
+                "gold_before": 5,
+                "gold_left": 1,
+                "coin_value": 0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "金刚覆面",
+                  "修罗覆面",
+                  "云狐"
+                ],
+                "bought": [],
+                "gold_before": 1,
+                "gold_left": 1,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 2,
+            "damage": 14,
+            "cumulative_damage": 18,
+            "bought": 2,
+            "income": 0,
+            "gold_at_end": 0,
+            "events": [
+              {
+                "hand": [
+                  "破云",
+                  "极刃·血影",
+                  "樱火·茜",
+                  "巨阙·缚日",
+                  "雷龙之鞘"
+                ],
+                "bought": [],
+                "gold_before": 4,
+                "gold_left": 4,
+                "coin_value": 0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "龙焰·小黑",
+                  "奔雷·银枭",
+                  "惠比寿御守",
+                  "绯斩·苍牙",
+                  "极刃·血影"
+                ],
+                "bought": [
+                  "龙焰·小黑",
+                  "绯斩·苍牙"
+                ],
+                "gold_before": 4,
+                "gold_left": 0,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 3,
+            "damage": 28,
+            "cumulative_damage": 46,
+            "bought": 1,
+            "income": 0,
+            "gold_at_end": 2,
+            "events": [
+              {
+                "hand": [
+                  "霜刃·伊鹤",
+                  "鬼斩臂甲",
+                  "VVIP黑卡",
+                  "鬼狩·苍牙",
+                  "破云"
+                ],
+                "bought": [
+                  "鬼狩·苍牙"
+                ],
+                "gold_before": 3,
+                "gold_left": 2,
+                "coin_value": 0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "雷龙",
+                  "风林火山战旗",
+                  "剑心·卫鲤",
+                  "巨阙·缚日"
+                ],
+                "bought": [],
+                "gold_before": 2,
+                "gold_left": 2,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 4,
+            "damage": 57,
+            "cumulative_damage": 103,
+            "bought": 3,
+            "income": 0,
+            "gold_at_end": 1,
+            "events": [
+              {
+                "hand": [
+                  "神炎·小椒",
+                  "VVIP黑卡",
+                  "焚天",
+                  "丛云之霜雨",
+                  "黑龙"
+                ],
+                "bought": [
+                  "神炎·小椒",
+                  "焚天"
+                ],
+                "gold_before": 6,
+                "gold_left": 3,
+                "coin_value": 0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "丛云之霜雨",
+                  "鬼斩胸甲",
+                  "应龙覆面"
+                ],
+                "bought": [
+                  "应龙覆面"
+                ],
+                "gold_before": 3,
+                "gold_left": 1,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "damage_only": [
+      {
+        "seed": 0,
+        "strategy": "damage_only",
+        "reached_100": true,
+        "hit_round": 5,
+        "total_damage": 118,
+        "rounds_played": 5,
+        "round_damage": [
+          12,
+          16,
+          31,
+          35,
+          24
+        ],
+        "partial_purchase_refreshes": 0,
+        "zero_purchase_refreshes": 0,
+        "decision_ms": [
+          20.923489006236196,
+          8.896538987755775,
+          6.618455008720048,
+          4.7021520003909245,
+          5.2704039990203455
+        ],
+        "elapsed_s": 0.07697269300115295,
+        "trace": [
+          {
+            "round": 1,
+            "damage": 12,
+            "cumulative_damage": 12,
+            "bought": 3,
+            "income": 1,
+            "gold_at_end": 1,
+            "events": [
+              {
+                "hand": [
+                  "破云",
+                  "菩提覆面",
+                  "绯斩·苍牙",
+                  "焚天",
+                  "VVIP黑卡"
+                ],
+                "bought": [
+                  "焚天",
+                  "菩提覆面",
+                  "VVIP黑卡"
+                ],
+                "gold_before": 5,
+                "gold_left": 0,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 2,
+            "damage": 16,
+            "cumulative_damage": 28,
+            "bought": 2,
+            "income": 1,
+            "gold_at_end": 1,
+            "events": [
+              {
+                "hand": [
+                  "雷龙之鞘",
+                  "菩提覆面",
+                  "怒鲤双生",
+                  "VVIP黑卡",
+                  "破云"
+                ],
+                "bought": [
+                  "雷龙之鞘",
+                  "菩提覆面"
+                ],
+                "gold_before": 4,
+                "gold_left": 0,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 3,
+            "damage": 31,
+            "cumulative_damage": 59,
+            "bought": 2,
+            "income": 1,
+            "gold_at_end": 1,
+            "events": [
+              {
+                "hand": [
+                  "VVIP黑卡",
+                  "寒绡·兮兰",
+                  "雷龙",
+                  "极刃·血影",
+                  "怒鲤双生"
+                ],
+                "bought": [
+                  "怒鲤双生",
+                  "寒绡·兮兰"
+                ],
+                "gold_before": 4,
+                "gold_left": 0,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 4,
+            "damage": 35,
+            "cumulative_damage": 94,
+            "bought": 2,
+            "income": 2,
+            "gold_at_end": 3,
+            "events": [
+              {
+                "hand": [
+                  "夜叉·隼白",
+                  "霜刃·伊鹤",
+                  "巨阙·缚日",
+                  "VVIP黑卡",
+                  "瞬翎·伊鹤"
+                ],
+                "bought": [
+                  "瞬翎·伊鹤",
+                  "VVIP黑卡"
+                ],
+                "gold_before": 4,
+                "gold_left": 1,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 5,
+            "damage": 24,
+            "cumulative_damage": 118,
+            "bought": 0,
+            "income": 2,
+            "gold_at_end": 8,
+            "events": [
+              {
+                "hand": [
+                  "破雾·贯羽",
+                  "霜刃·伊鹤",
+                  "双焰·小椒",
+                  "金刚覆面",
+                  "绯斩·苍牙"
+                ],
+                "bought": [],
+                "gold_before": 6,
+                "gold_left": 6,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "seed": 85,
+        "strategy": "damage_only",
+        "reached_100": false,
+        "hit_round": null,
+        "total_damage": 77,
+        "rounds_played": 5,
+        "round_damage": [
+          9,
+          16,
+          14,
+          19,
+          19
+        ],
+        "partial_purchase_refreshes": 1,
+        "zero_purchase_refreshes": 0,
+        "decision_ms": [
+          7.022625999525189,
+          5.699462999473326,
+          5.077059991890565,
+          5.934075001277961,
+          6.666676010354422,
+          4.640326005755924
+        ],
+        "elapsed_s": 0.060404445001040585,
+        "trace": [
+          {
+            "round": 1,
+            "damage": 9,
+            "cumulative_damage": 9,
+            "bought": 3,
+            "income": 0,
+            "gold_at_end": 0,
+            "events": [
+              {
+                "hand": [
+                  "雷羿·银枭",
+                  "鬼斩头盔",
+                  "霜刃·伊鹤",
+                  "封渊",
+                  "鬼斩·紫原"
+                ],
+                "bought": [
+                  "鬼斩·紫原",
+                  "封渊",
+                  "鬼斩头盔"
+                ],
+                "gold_before": 5,
+                "gold_left": 0,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 2,
+            "damage": 16,
+            "cumulative_damage": 25,
+            "bought": 2,
+            "income": 0,
+            "gold_at_end": 0,
+            "events": [
+              {
+                "hand": [
+                  "冰羽·兮兰",
+                  "轮回之戒",
+                  "破云",
+                  "霜刃·伊鹤",
+                  "风铭·戌时"
+                ],
+                "bought": [
+                  "破云"
+                ],
+                "gold_before": 3,
+                "gold_left": 1,
+                "coin_value": 0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "菩提覆面",
+                  "鬼斩臂甲",
+                  "鬼斩臂甲",
+                  "奔雷·银枭"
+                ],
+                "bought": [
+                  "鬼斩臂甲"
+                ],
+                "gold_before": 1,
+                "gold_left": 0,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 3,
+            "damage": 14,
+            "cumulative_damage": 39,
+            "bought": 2,
+            "income": 1,
+            "gold_at_end": 1,
+            "events": [
+              {
+                "hand": [
+                  "奔雷·银枭",
+                  "菩提覆面",
+                  "VVIP黑卡",
+                  "轮回之戒",
+                  "龙吟·洛青"
+                ],
+                "bought": [
+                  "菩提覆面",
+                  "VVIP黑卡"
+                ],
+                "gold_before": 3,
+                "gold_left": 0,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 4,
+            "damage": 19,
+            "cumulative_damage": 58,
+            "bought": 2,
+            "income": 1,
+            "gold_at_end": 1,
+            "events": [
+              {
+                "hand": [
+                  "炎魂·小黑",
+                  "轮回之戒",
+                  "双焰·小椒",
+                  "惠比寿御守",
+                  "鬼斩胸甲"
+                ],
+                "bought": [
+                  "轮回之戒",
+                  "鬼斩胸甲"
+                ],
+                "gold_before": 4,
+                "gold_left": 0,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 5,
+            "damage": 19,
+            "cumulative_damage": 77,
+            "bought": 0,
+            "income": 1,
+            "gold_at_end": 5,
+            "events": [
+              {
+                "hand": [
+                  "云狐",
+                  "冰羽·兮兰",
+                  "百棘",
+                  "巨阙·缚日",
+                  "夜叉·隼白"
+                ],
+                "bought": [],
+                "gold_before": 4,
+                "gold_left": 4,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "seed": 4,
+        "strategy": "damage_only",
+        "reached_100": true,
+        "hit_round": 4,
+        "total_damage": 100,
+        "rounds_played": 4,
+        "round_damage": [
+          14,
+          16,
+          29,
+          41
+        ],
+        "partial_purchase_refreshes": 1,
+        "zero_purchase_refreshes": 0,
+        "decision_ms": [
+          7.0760670059826225,
+          6.25002000015229,
+          5.6083509989548475,
+          7.278919001691975,
+          5.747292001615278
+        ],
+        "elapsed_s": 0.055927817011252046,
+        "trace": [
+          {
+            "round": 1,
+            "damage": 14,
+            "cumulative_damage": 14,
+            "bought": 2,
+            "income": 0,
+            "gold_at_end": 0,
+            "events": [
+              {
+                "hand": [
+                  "月晖·小夜",
+                  "巨阙·缚日",
+                  "霜刃·伊鹤",
+                  "修罗覆面",
+                  "轮回之戒"
+                ],
+                "bought": [
+                  "巨阙·缚日",
+                  "修罗覆面"
+                ],
+                "gold_before": 5,
+                "gold_left": 0,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 2,
+            "damage": 16,
+            "cumulative_damage": 30,
+            "bought": 3,
+            "income": 0,
+            "gold_at_end": 0,
+            "events": [
+              {
+                "hand": [
+                  "夜叉·隼白",
+                  "剑心·卫鲤",
+                  "神炎·小椒",
+                  "神乐·琳",
+                  "金刚覆面"
+                ],
+                "bought": [
+                  "神乐·琳",
+                  "神炎·小椒"
+                ],
+                "gold_before": 3,
+                "gold_left": 1,
+                "coin_value": 0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "鬼斩头盔",
+                  "丛云之霜雨",
+                  "星闪·小椒"
+                ],
+                "bought": [
+                  "鬼斩头盔"
+                ],
+                "gold_before": 1,
+                "gold_left": 0,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 3,
+            "damage": 29,
+            "cumulative_damage": 59,
+            "bought": 2,
+            "income": 0,
+            "gold_at_end": 0,
+            "events": [
+              {
+                "hand": [
+                  "焚天",
+                  "鬼斩头盔",
+                  "轮回之戒",
+                  "应龙覆面",
+                  "丛云之霜雨"
+                ],
+                "bought": [
+                  "焚天",
+                  "鬼斩头盔"
+                ],
+                "gold_before": 3,
+                "gold_left": 0,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 4,
+            "damage": 41,
+            "cumulative_damage": 100,
+            "bought": 1,
+            "income": 0,
+            "gold_at_end": 0,
+            "events": [
+              {
+                "hand": [
+                  "寒绡·兮兰",
+                  "极刃·血影",
+                  "赤芒",
+                  "百棘",
+                  "鬼狩·苍牙"
+                ],
+                "bought": [
+                  "百棘"
+                ],
+                "gold_before": 3,
+                "gold_left": 0,
+                "coin_value": 0,
+                "next_action": "prepare"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "v1": [
+      {
+        "seed": 0,
+        "strategy": "v1",
+        "reached_100": true,
+        "hit_round": 5,
+        "total_damage": 127,
+        "rounds_played": 5,
+        "round_damage": [
+          12,
+          16,
+          22,
+          40,
+          37
+        ],
+        "partial_purchase_refreshes": 2,
+        "zero_purchase_refreshes": 1,
+        "decision_ms": [
+          11.535573008586653,
+          6.487728998763487,
+          6.758028001058847,
+          5.487091999384575,
+          7.080184994265437,
+          5.784794004284777,
+          6.665594002697617,
+          6.253486993955448
+        ],
+        "elapsed_s": 0.08475642499979585,
+        "trace": [
+          {
+            "round": 1,
+            "damage": 12,
+            "cumulative_damage": 12,
+            "bought": 3,
+            "income": 1,
+            "gold_at_end": 1,
+            "events": [
+              {
+                "hand": [
+                  "破云",
+                  "菩提覆面",
+                  "绯斩·苍牙",
+                  "焚天",
+                  "VVIP黑卡"
+                ],
+                "bought": [
+                  "焚天",
+                  "菩提覆面",
+                  "VVIP黑卡"
+                ],
+                "gold_before": 5,
+                "gold_left": 0,
+                "coin_value": 4.0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 2,
+            "damage": 16,
+            "cumulative_damage": 28,
+            "bought": 2,
+            "income": 1,
+            "gold_at_end": 1,
+            "events": [
+              {
+                "hand": [
+                  "雷龙之鞘",
+                  "菩提覆面",
+                  "怒鲤双生",
+                  "VVIP黑卡",
+                  "破云"
+                ],
+                "bought": [
+                  "雷龙之鞘",
+                  "菩提覆面"
+                ],
+                "gold_before": 4,
+                "gold_left": 0,
+                "coin_value": 4.333333333333333,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 3,
+            "damage": 22,
+            "cumulative_damage": 50,
+            "bought": 1,
+            "income": 1,
+            "gold_at_end": 3,
+            "events": [
+              {
+                "hand": [
+                  "VVIP黑卡",
+                  "寒绡·兮兰",
+                  "雷龙",
+                  "极刃·血影",
+                  "怒鲤双生"
+                ],
+                "bought": [
+                  "寒绡·兮兰"
+                ],
+                "gold_before": 4,
+                "gold_left": 2,
+                "coin_value": 6.5,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "夜叉·隼白",
+                  "霜刃·伊鹤",
+                  "巨阙·缚日",
+                  "VVIP黑卡"
+                ],
+                "bought": [],
+                "gold_before": 2,
+                "gold_left": 2,
+                "coin_value": 6.5,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 4,
+            "damage": 40,
+            "cumulative_damage": 90,
+            "bought": 2,
+            "income": 1,
+            "gold_at_end": 3,
+            "events": [
+              {
+                "hand": [
+                  "瞬翎·伊鹤",
+                  "破雾·贯羽",
+                  "霜刃·伊鹤",
+                  "双焰·小椒",
+                  "金刚覆面"
+                ],
+                "bought": [
+                  "金刚覆面",
+                  "霜刃·伊鹤"
+                ],
+                "gold_before": 7,
+                "gold_left": 2,
+                "coin_value": 5.0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "绯斩·苍牙",
+                  "双焰·小椒",
+                  "龙吟·洛青"
+                ],
+                "bought": [],
+                "gold_before": 2,
+                "gold_left": 2,
+                "coin_value": 5.0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 5,
+            "damage": 37,
+            "cumulative_damage": 127,
+            "bought": 0,
+            "income": 1,
+            "gold_at_end": 7,
+            "events": [
+              {
+                "hand": [
+                  "轮回之戒",
+                  "鬼斩头盔",
+                  "金刚覆面",
+                  "百棘",
+                  "霜刃·伊鹤"
+                ],
+                "bought": [],
+                "gold_before": 6,
+                "gold_left": 6,
+                "coin_value": 3.0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "破云",
+                  "龙吟·洛青",
+                  "赤芒",
+                  "神炎·小椒",
+                  "龙焰·小黑"
+                ],
+                "bought": [],
+                "gold_before": 6,
+                "gold_left": 6,
+                "coin_value": 3.0,
+                "next_action": "prepare"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "seed": 8,
+        "strategy": "v1",
+        "reached_100": false,
+        "hit_round": null,
+        "total_damage": 68,
+        "rounds_played": 5,
+        "round_damage": [
+          11,
+          12,
+          19,
+          15,
+          11
+        ],
+        "partial_purchase_refreshes": 2,
+        "zero_purchase_refreshes": 2,
+        "decision_ms": [
+          6.61787400895264,
+          5.263792001642287,
+          5.853121998370625,
+          4.660062986658886,
+          5.942269999650307,
+          4.878685998846777,
+          6.262213006266393,
+          7.532729010563344,
+          6.8379180011106655
+        ],
+        "elapsed_s": 0.08010183100122958,
+        "trace": [
+          {
+            "round": 1,
+            "damage": 11,
+            "cumulative_damage": 11,
+            "bought": 2,
+            "income": 0,
+            "gold_at_end": 1,
+            "events": [
+              {
+                "hand": [
+                  "乘霄·戌时",
+                  "破云",
+                  "破雾·贯羽",
+                  "龙吟·洛青",
+                  "雷羿·银枭"
+                ],
+                "bought": [
+                  "破云",
+                  "龙吟·洛青"
+                ],
+                "gold_before": 5,
+                "gold_left": 1,
+                "coin_value": 4.0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "绯斩·苍牙",
+                  "剑心·卫鲤",
+                  "夜叉·隼白"
+                ],
+                "bought": [],
+                "gold_before": 1,
+                "gold_left": 1,
+                "coin_value": 4.0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 2,
+            "damage": 12,
+            "cumulative_damage": 23,
+            "bought": 2,
+            "income": 0,
+            "gold_at_end": 0,
+            "events": [
+              {
+                "hand": [
+                  "百棘",
+                  "云狐",
+                  "风铭·戌时",
+                  "风林火山战旗",
+                  "雪舞·琳"
+                ],
+                "bought": [
+                  "风铭·戌时"
+                ],
+                "gold_before": 4,
+                "gold_left": 2,
+                "coin_value": 4.333333333333333,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "惠比寿御守",
+                  "鬼斩胸甲",
+                  "惠比寿御守",
+                  "风林火山战旗"
+                ],
+                "bought": [
+                  "鬼斩胸甲"
+                ],
+                "gold_before": 2,
+                "gold_left": 0,
+                "coin_value": 4.333333333333333,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 3,
+            "damage": 19,
+            "cumulative_damage": 42,
+            "bought": 2,
+            "income": 0,
+            "gold_at_end": 0,
+            "events": [
+              {
+                "hand": [
+                  "鬼斩头盔",
+                  "惠比寿御守",
+                  "冰羽·兮兰",
+                  "轮回之戒",
+                  "霜刃·伊鹤"
+                ],
+                "bought": [
+                  "冰羽·兮兰",
+                  "鬼斩头盔"
+                ],
+                "gold_before": 3,
+                "gold_left": 0,
+                "coin_value": 3.8333333333333335,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 4,
+            "damage": 15,
+            "cumulative_damage": 57,
+            "bought": 0,
+            "income": 0,
+            "gold_at_end": 3,
+            "events": [
+              {
+                "hand": [
+                  "雷羿·银枭",
+                  "怒鲤双生",
+                  "神乐·琳",
+                  "赤芒",
+                  "惠比寿御守"
+                ],
+                "bought": [],
+                "gold_before": 3,
+                "gold_left": 3,
+                "coin_value": 5.0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "天鹰",
+                  "夜叉·隼白",
+                  "雷龙之鞘",
+                  "瞬翎·伊鹤",
+                  "破云"
+                ],
+                "bought": [],
+                "gold_before": 3,
+                "gold_left": 3,
+                "coin_value": 5.0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 5,
+            "damage": 11,
+            "cumulative_damage": 68,
+            "bought": 0,
+            "income": 0,
+            "gold_at_end": 8,
+            "events": [
+              {
+                "hand": [
+                  "极刃·血影",
+                  "剑心·卫鲤",
+                  "鬼斩臂甲",
+                  "鬼斩臂甲",
+                  "猫太·老板娘"
+                ],
+                "bought": [],
+                "gold_before": 8,
+                "gold_left": 8,
+                "coin_value": 3.0,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "双焰·小椒",
+                  "VVIP黑卡",
+                  "修罗覆面",
+                  "瞬翎·伊鹤",
+                  "雷龙之鞘"
+                ],
+                "bought": [],
+                "gold_before": 8,
+                "gold_left": 8,
+                "coin_value": 3.0,
+                "next_action": "prepare"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "seed": 4,
+        "strategy": "v1",
+        "reached_100": true,
+        "hit_round": 4,
+        "total_damage": 100,
+        "rounds_played": 4,
+        "round_damage": [
+          14,
+          16,
+          29,
+          41
+        ],
+        "partial_purchase_refreshes": 1,
+        "zero_purchase_refreshes": 0,
+        "decision_ms": [
+          6.985686995903961,
+          6.296487990766764,
+          5.594654998276383,
+          6.552550999913365,
+          6.362753003486432
+        ],
+        "elapsed_s": 0.05415509600425139,
+        "trace": [
+          {
+            "round": 1,
+            "damage": 14,
+            "cumulative_damage": 14,
+            "bought": 2,
+            "income": 0,
+            "gold_at_end": 0,
+            "events": [
+              {
+                "hand": [
+                  "月晖·小夜",
+                  "巨阙·缚日",
+                  "霜刃·伊鹤",
+                  "修罗覆面",
+                  "轮回之戒"
+                ],
+                "bought": [
+                  "巨阙·缚日",
+                  "修罗覆面"
+                ],
+                "gold_before": 5,
+                "gold_left": 0,
+                "coin_value": 4.0,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 2,
+            "damage": 16,
+            "cumulative_damage": 30,
+            "bought": 3,
+            "income": 0,
+            "gold_at_end": 0,
+            "events": [
+              {
+                "hand": [
+                  "夜叉·隼白",
+                  "剑心·卫鲤",
+                  "神炎·小椒",
+                  "神乐·琳",
+                  "金刚覆面"
+                ],
+                "bought": [
+                  "神乐·琳",
+                  "神炎·小椒"
+                ],
+                "gold_before": 3,
+                "gold_left": 1,
+                "coin_value": 4.333333333333333,
+                "next_action": "refresh"
+              },
+              {
+                "hand": [
+                  "鬼斩头盔",
+                  "丛云之霜雨",
+                  "星闪·小椒"
+                ],
+                "bought": [
+                  "鬼斩头盔"
+                ],
+                "gold_before": 1,
+                "gold_left": 0,
+                "coin_value": 4.333333333333333,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 3,
+            "damage": 29,
+            "cumulative_damage": 59,
+            "bought": 2,
+            "income": 0,
+            "gold_at_end": 0,
+            "events": [
+              {
+                "hand": [
+                  "焚天",
+                  "鬼斩头盔",
+                  "轮回之戒",
+                  "应龙覆面",
+                  "丛云之霜雨"
+                ],
+                "bought": [
+                  "焚天",
+                  "鬼斩头盔"
+                ],
+                "gold_before": 3,
+                "gold_left": 0,
+                "coin_value": 6.5,
+                "next_action": "prepare"
+              }
+            ]
+          },
+          {
+            "round": 4,
+            "damage": 41,
+            "cumulative_damage": 100,
+            "bought": 1,
+            "income": 0,
+            "gold_at_end": 0,
+            "events": [
+              {
+                "hand": [
+                  "寒绡·兮兰",
+                  "极刃·血影",
+                  "赤芒",
+                  "百棘",
+                  "鬼狩·苍牙"
+                ],
+                "bought": [
+                  "百棘"
+                ],
+                "gold_before": 3,
+                "gold_left": 0,
+                "coin_value": 5.0,
+                "next_action": "prepare"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

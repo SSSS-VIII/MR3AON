@@ -15,6 +15,7 @@ def main():
     parser.add_argument('--samples',type=int,default=0,help='0全量；正数为对整个合法组合空间的随机采样数')
     parser.add_argument('--physical-sampling',action='store_true')
     parser.add_argument('--seed',type=int,default=1)
+    parser.add_argument('--profile',choices=['full','refresh_v1'],default='full')
     parser.add_argument('--growth-mode',choices=['since_entry','board_count'],default='since_entry')
     parser.add_argument('--count-only',action='store_true')
     parser.add_argument('--output',type=Path)
@@ -28,7 +29,7 @@ def main():
     for state in states:
         if args.count_only:result={'name':state.get('name','custom'),'space':count_space(prepare_state(state))}
         else:result=simulate(state,seconds=args.seconds,max_layouts=args.max_layouts,samples=args.samples,
-                             seed=args.seed,physical_sampling=args.physical_sampling,growth_mode=args.growth_mode)
+                             seed=args.seed,physical_sampling=args.physical_sampling,growth_mode=args.growth_mode,profile=args.profile)
         results.append(result)
         summary=result.get('statistics',result.get('sample_estimate',{}))
         stats=summary.get('unique_combinations',summary.get('sampled_distribution'))

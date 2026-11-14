@@ -14,12 +14,12 @@ using U = std::uint64_t;
 using Clock = std::chrono::steady_clock;
 struct Card { int attack,cost,element,category,copies,effect,param; };
 struct Cell { int id=-1, entered=1, bonus=0; };
-struct Evaluation { I damage=0,gold=0,refresh=0; bool instant=false; std::array<I,5> rounds{}; };
+struct Evaluation { I damage=0,gold=0,refresh=0; bool instant=false; std::array<I,5> rounds{}; std::array<I,9> cell_damage{}; };
 std::vector<Card> cards;
 std::array<Cell,9> board;
 int turn, gold, growth_mode;
 
-Evaluation evaluate(int spent, int purchases) {
+Evaluation evaluate(int spent) {
     Evaluation result;
     I money=gold-spent;
     int elements=0,weapons=0,tigers=0,thunder=0,armor=0;
@@ -94,28 +94,31 @@ Evaluation evaluate(int spent, int purchases) {
         }
         std::array<I,3> rows{},cols{};
         I damage=0;
-        for(int i=0;i<9;++i) {damage+=attack[i];rows[i/3]+=attack[i];cols[i%3]+=attack[i];}
+        for(int i=0;i<9;++i) {damage+=attack[i];result.cell_damage[i]+=attack[i];rows[i/3]+=attack[i];cols[i%3]+=attack[i];}
         for(int i=0;i<9;++i) if(board[i].id>=0) {
             const auto& c=cards[board[i].id];
-            if(c.effect==ICE_CRANE && r>=4) damage+=attack[i]*3;
-            if(c.effect==CAT && r==5) damage+=money*4;
+            I extra=0;
+            if(c.effect==ICE_CRANE && r>=4) extra+=attack[i]*3;
+            if(c.effect==CAT && r==5) extra+=money*4;
             if(c.effect==GHOST && armor==7) result.instant=true;
-            if(board[i].entered!=r) continue;
+            if(board[i].entered==r) {
             switch(c.effect) {
-                case HAYABUSA:damage+=15;break;
-                case WIND_CRANE:damage+=weapons*4;break;
-                case COLUMN_DAMAGE:damage+=cols[i%3];break;
-                case ROW_DAMAGE:damage+=rows[i/3];break;
-                case SELF_DAMAGE:damage+=attack[i]*3;break;
-                case FIXED_DAMAGE:damage+=c.param;break;
-                case EAGLE:damage+=cols[i%3]*2;break;
+                case HAYABUSA:extra+=15;break;
+                case WIND_CRANE:extra+=weapons*4;break;
+                case COLUMN_DAMAGE:extra+=cols[i%3];break;
+                case ROW_DAMAGE:extra+=rows[i/3];break;
+                case SELF_DAMAGE:extra+=attack[i]*3;break;
+                case FIXED_DAMAGE:extra+=c.param;break;
+                case EAGLE:extra+=cols[i%3]*2;break;
                 case FIRE_DAMAGE:case THUNDER_DAMAGE: {
                     int wanted=c.effect==FIRE_DAMAGE?1:4,count=0;
                     for(const auto& cell:board) count+=cell.id>=0 && cards[cell.id].element==wanted;
-                    damage+=count*4;break;
+                    extra+=count*4;break;
                 }
                 default:break;
             }
+            }
+            damage+=extra;result.cell_damage[i]+=extra;
         }
         result.rounds[r-1]=damage;result.damage+=damage;
         for(const auto& cell:board) if(cell.id>=0) {
@@ -133,17 +136,19 @@ Evaluation evaluate(int spent, int purchases) {
 }
 
 int main() {
-    int n,mode,samples; double seconds; U max_layouts;
-    if(!(std::cin>>n>>turn>>gold>>seconds>>max_layouts>>mode>>samples>>growth_mode)) return 2;
+    int n,mode,samples,profile,tiebreak,max_purchases,trace; double seconds; U max_layouts;
+    if(!(std::cin>>n>>turn>>gold>>seconds>>max_layouts>>mode>>samples>>growth_mode>>profile>>tiebreak>>max_purchases>>trace)) return 2;
     cards.resize(n);
     for(auto& c:cards) std::cin>>c.attack>>c.cost>>c.element>>c.category>>c.copies>>c.effect>>c.param;
+    if(profile==1) for(auto& c:cards)
+        if(c.effect==CAT || c.effect==GHOST || c.effect==RING) c.effect=PLAIN;
     std::vector<int> pool(n),used(n);
     for(auto& x:pool)std::cin>>x;
     for(auto& c:board)std::cin>>c.id>>c.entered>>c.bonus;
     if(!std::cin) return 2;
     auto started=Clock::now();
     auto original=board;
-    auto baseline=evaluate(0,0);
+    auto baseline=evaluate(0);
     std::vector<int> empty,combo,best_combo;
     for(int i=0;i<9;++i)if(board[i].id<0)empty.push_back(i);
     U layouts=0,completed=0,physical=0,instant_count=0,instant_weight=0;
@@ -155,16 +160,37 @@ int main() {
         return (max_layouts && layouts>=max_layouts) ||
           (seconds>0 && std::chrono::duration<double>(Clock::now()-started).count()>=seconds);
     };
+    struct Choice {std::vector<int> cards;int spent,priority;I damage;std::array<Cell,9> board;Evaluation eval;};
+    std::vector<Choice> choices;
+    auto priority=[&] {
+        int value=0;
+        for(int i:empty)if(board[i].id>=0) {
+            const auto& c=cards[board[i].id];
+            bool center=i==4,edge=(i==1 || i==3 || i==5 || i==7);
+            if(c.effect==MASK || c.effect==SHEATH) value+=center?100:edge?40:0;
+            if(c.effect==TIGER5 || c.effect==WATER_DOUBLE || c.effect==WIND_TRIPLE ||
+               c.effect==THUNDER_TRIPLE || c.effect==ICE_CRANE || c.effect==SELF_DAMAGE)
+                value+=edge?30:center?20:0;
+            if(c.effect==FLAG || c.effect==DRUM || c.effect==FOX || c.effect==ROW_ELEMENT || c.effect==ROW_ALL)
+                value+=i/3==1?10:0;
+            if(c.effect==COLUMN_ELEMENT || c.effect==COLUMN_ALL)value+=i%3==1?10:0;
+        }
+        return value;
+    };
     auto run_combo=[&](int spent,U weight) {
         I best=std::numeric_limits<I>::min();
         auto candidate_board=board;
+        Evaluation candidate_eval;int best_priority=std::numeric_limits<int>::min();
         bool instant=false;
         auto place=[&](auto&& self,int at,int previous_cell)->void {
             if(stopped)return;
             if((layouts%1024==0 || (max_layouts && layouts>=max_layouts)) && expired()){stopped=true;return;}
             if(at==(int)combo.size()) {
-                ++layouts;auto e=evaluate(spent,(int)combo.size());
-                if(e.damage>best) {best=e.damage;candidate_board=board;instant=e.instant;}
+                ++layouts;auto e=evaluate(spent);
+                int pos=tiebreak?priority():0;
+                if(e.damage>best || (e.damage==best && pos>best_priority)) {
+                    best=e.damage;best_priority=pos;candidate_board=board;instant=e.instant;candidate_eval=e;
+                }
                 return;
             }
             int begin=at>0 && combo[at]==combo[at-1]?previous_cell+1:0;
@@ -176,6 +202,7 @@ int main() {
         place(place,0,-1);
         if(stopped)return;
         ++completed;physical+=weight;
+        if(trace)choices.push_back({combo,spent,best_priority,best,candidate_board,candidate_eval});
         auto& bin=histogram[best-baseline.damage];++bin.first;bin.second+=weight;
         if(instant){++instant_count;instant_weight+=weight;}
         if(best>overall){overall=best;best_combo=combo;best_board=candidate_board;}
@@ -183,7 +210,7 @@ int main() {
     if(mode==0) {
         auto visit=[&](auto&& self,int start,int spent,U weight)->void {
             run_combo(spent,weight);if(stopped)return;
-            if(combo.size()==empty.size())return;
+            if(combo.size()>=std::min(empty.size(),(std::size_t)max_purchases))return;
             for(int i=start;i<n;++i)if(used[i]<pool[i] && spent+cards[i].cost<=gold) {
                 int before=used[i]++;
                 // C(pool,k+1)/C(pool,k); pool<=2, so multiplication is exact.
@@ -211,8 +238,27 @@ int main() {
     std::cout<<"],\"best_board\":[";
     for(int i=0;i<9;++i){if(i)std::cout<<',';std::cout<<best_board[i].id;}
     board=best_board;int spent=0;for(auto id:best_combo)spent+=cards[id].cost;
-    auto best=evaluate(spent,(int)best_combo.size());
+    auto best=evaluate(spent);
     std::cout<<"],\"best_round_damage\":[";
     for(int i=0;i<5;++i){if(i)std::cout<<',';std::cout<<best.rounds[i];}
-    std::cout<<"],\"best_damage\":"<<best.damage<<",\"best_end_gold\":"<<best.gold<<"}\n";
+    std::cout<<"],\"best_damage\":"<<best.damage<<",\"best_end_gold\":"<<best.gold;
+    std::cout<<",\"baseline_cell_damage\":[";
+    for(int i=0;i<9;++i){if(i)std::cout<<',';std::cout<<baseline.cell_damage[i];}
+    std::cout<<"],\"choices\":[";
+    bool first_choice=true;
+    for(const auto& c:choices) {
+        if(!first_choice)std::cout<<',';first_choice=false;
+        std::cout<<"{\"spent\":"<<c.spent<<",\"gold_left\":"<<gold-c.spent
+          <<",\"damage\":"<<c.damage<<",\"position_priority\":"<<c.priority
+          <<",\"end_gold\":"<<c.eval.gold<<",\"extra_refreshes\":"<<c.eval.refresh<<",\"cards\":[";
+        for(unsigned i=0;i<c.cards.size();++i){if(i)std::cout<<',';std::cout<<c.cards[i];}
+        std::cout<<"],\"board\":[";
+        for(int i=0;i<9;++i){if(i)std::cout<<',';std::cout<<c.board[i].id;}
+        std::cout<<"],\"cell_damage\":[";
+        for(int i=0;i<9;++i){if(i)std::cout<<',';std::cout<<c.eval.cell_damage[i];}
+        std::cout<<"],\"round_damage\":[";
+        for(int i=0;i<5;++i){if(i)std::cout<<',';std::cout<<c.eval.rounds[i];}
+        std::cout<<"]}";
+    }
+    std::cout<<"]}\n";
 }

@@ -78,14 +78,15 @@ def prepare_state(raw):
             'board': board, 'pool': pool, 'empty': sum(c[0] < 0 for c in board)}
 
 
-def count_space(state):
+def count_space(state, max_purchases=None):
     """Exact DP counts without visiting placements; identical copies are not permuted."""
     gold, empty = state['gold'], state['empty']
+    limit = empty if max_purchases is None else min(empty, max_purchases)
     dp = {(0, 0): (1, 1, 1)}
     for card, remaining in zip(CARDS, state['pool']):
         nxt = {}
         for (spent, used), (unique, physical, layouts) in dp.items():
-            for k in range(min(remaining, (gold-spent)//card['cost'], empty-used)+1):
+            for k in range(min(remaining, (gold-spent)//card['cost'], limit-used)+1):
                 key = spent+k*card['cost'], used+k
                 a, b, c = nxt.get(key, (0, 0, 0))
                 nxt[key] = (a+unique, b+physical*math.comb(remaining, k),
@@ -96,7 +97,7 @@ def count_space(state):
             'layouts': sum(v[2] for v in dp.values()), 'includes_pass': True}
 
 
-def sample_combinations(state, count, seed, physical=False):
+def sample_combinations(state, count, seed, physical=False, max_purchases=None):
     """Draw uniformly from all affordable unique/physical subsets, not random shops."""
     pool = state['pool']
     @lru_cache(None)
@@ -110,7 +111,7 @@ def sample_combinations(state, count, seed, physical=False):
     rng = random.Random(seed)
     result = []
     for _ in range(count):
-        gold, slots = state['gold'], state['empty']
+        gold, slots = state['gold'], state['empty'] if max_purchases is None else min(state['empty'],max_purchases)
         combo = []
         for i, card in enumerate(CARDS):
             choice = rng.randrange(ways(i, gold, slots))
@@ -171,21 +172,26 @@ def histogram_summary(histogram, index):
 
 
 def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
-             physical_sampling=False, growth_mode='since_entry'):
+             physical_sampling=False, growth_mode='since_entry', profile='full',
+             max_purchases=None, trace_choices=False, position_tiebreak=False):
     if not math.isfinite(seconds) or seconds < 0:
         raise ValueError('seconds必须是有限非负数，0表示不限时')
     _integer(samples, 'samples', 0, 1000000)
     _integer(max_layouts, 'max_layouts', 0, 10**18)
     if growth_mode not in {'since_entry', 'board_count'}:
         raise ValueError('未知growth_mode')
+    if profile not in {'full','refresh_v1'}:
+        raise ValueError('未知profile')
+    if max_purchases is not None:
+        _integer(max_purchases,'max_purchases',0,9)
     started = time.perf_counter()
     state = prepare_state(raw)
-    space = count_space(state)
-    combinations = sample_combinations(state, samples, seed, physical_sampling) if samples else []
+    space = count_space(state,max_purchases)
+    combinations = sample_combinations(state, samples, seed, physical_sampling,max_purchases) if samples else []
     preparation_s = time.perf_counter()-started
     binary, compiler, build_s = build_engine()
     codes = CATALOG['effect_codes']
-    lines = [f"{len(CARDS)} {state['round']} {state['gold']} {seconds} {max_layouts} {int(bool(samples))} {samples} {int(growth_mode=='since_entry')}"]
+    lines = [f"{len(CARDS)} {state['round']} {state['gold']} {seconds} {max_layouts} {int(bool(samples))} {samples} {int(growth_mode=='since_entry')} {int(profile=='refresh_v1')} {int(position_tiebreak)} {9 if max_purchases is None else max_purchases} {int(trace_choices)}"]
     lines.extend(' '.join(str(c[k]) for k in ('attack','cost','element','category','copies'))+
                  f" {codes.index(c['effect'])} {c['param']}" for c in CARDS)
     lines.append(' '.join(map(str, state['pool'])))
@@ -204,9 +210,10 @@ def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
     result.update(name=state['name'], round=state['round'], gold=state['gold'], empty=state['empty'],
                   remaining_cards=sum(state['pool']), space=space,
                   mode='sample' if samples else 'exact', sampling='physical_subsets' if physical_sampling else 'unique_combinations',
-                  samples_requested=samples, seed=seed, growth_mode=growth_mode,
+                  samples_requested=samples, seed=seed, growth_mode=growth_mode, profile=profile,
+                  max_purchases=max_purchases, position_tiebreak=position_tiebreak,
                   compiler=compiler, build_s=build_s, preparation_s=preparation_s, wall_s=wall_s,
-                  assumptions=ASSUMPTIONS)
+                  assumptions=ASSUMPTIONS+(['refresh_v1: 老板娘、紫原、轮回戒指及鬼斩铠甲按白板；不加空格潜力或未触发羁绊估值。'] if profile=='refresh_v1' else []))
     key = 'statistics' if result['complete'] and not samples else 'sample_estimate' if result['complete'] else 'partial_prefix_statistics_not_pool_estimate'
     def summarize(index):
         gain = histogram_summary(histogram, index)
@@ -219,6 +226,13 @@ def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
         for metric in result[key]['sampled_distribution'].values():
             metric['mean_standard_error'] = metric['stddev']/math.sqrt(metric['count']) if metric['count'] else None
         result[key]['distribution'] = result['sampling']
+    for choice in result['choices']:
+        choice['cards']=[CARDS[i]['name'] for i in choice['cards']]
+        choice['board']=[CARDS[i]['name'] if i>=0 else None for i in choice['board']]
+        choice['damage_gain']=choice['damage']-result['baseline_damage']
+        choice['existing_card_damage_gain']=sum(value-result['baseline_cell_damage'][i] for i,value in enumerate(choice['cell_damage']) if state['board'][i][0]>=0)
+        choice['new_card_damage']=sum(value for i,value in enumerate(choice['cell_damage']) if state['board'][i][0]<0)
+        assert choice['existing_card_damage_gain']+choice['new_card_damage']==choice['damage_gain']
     for name in ('best_combo', 'best_board'):
         result[name] = [CARDS[i]['name'] if i>=0 else None for i in result[name]]
     result['histogram'] = histogram
