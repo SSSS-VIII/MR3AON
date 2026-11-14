@@ -71,10 +71,10 @@ def test_native_batch_click_placement_refresh_settlement_and_daily():
     report=json.loads(result.stdout.strip().splitlines()[-1])
     assert report['daily_claimed'] is True
     assert report['daily_missing_first'] is False and report['daily_missing_second'] is False
-    assert report['roles']==['小黑','小椒']
+    assert report['roles']==['小黑','焚天','小椒']
     assert '小椒' in report['xiaojiao_roles']
     assert report['swipes']==0
-    assert report['clicks']==10  # 两轮各两张、每张两次点击，另有刷新和准备
+    assert report['clicks']==14  # 两轮各三张、每张两次点击，另有刷新和准备
     assert report['refresh_clicks']==1 and report['ready_clicks']==1
     assert report['settlement'] is True and report['round_is_not_settlement'] is False
 
@@ -99,7 +99,7 @@ def test_round_reset_and_flip_retry_do_not_advance_phase():
     assert calls[-1]==(P+'第二轮选牌',[P+'第二轮选牌'])
 
 
-@pytest.mark.parametrize('name',['风林火山战旗','凤林火山战旗','修罗覆面','其他覆面'])
+@pytest.mark.parametrize('name',['风林火山战旗','凤林火山战旗','修罗覆面','其他覆面','赤芒','焚天','黑龙'])
 def test_additional_flag_and_mask_candidates(name):
     from utils.intelligence_cards import plan_cards
     result=plan_cards([(name,[680,365,120,25]),('云狐',[880,365,95,25]),
