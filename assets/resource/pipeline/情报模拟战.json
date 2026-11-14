@@ -771,7 +771,7 @@
         "next": [
             "情报模拟战总超时",
             "情报模拟战未开放",
-            "情报模拟战开始匹配"
+            "情报模拟战准备匹配策略"
         ]
     },
     "情报模拟战开始匹配": {
@@ -851,6 +851,7 @@
             "情报模拟战总超时",
             "情报模拟战对局超时",
             "情报模拟战结算确定",
+            "情报模拟战已准备等待",
             "情报模拟战第1回合",
             "情报模拟战第2回合",
             "情报模拟战第3回合",
@@ -925,6 +926,28 @@
                                 ]
                             }
                         }
+                    },
+                    "情报模拟战第一轮选牌": {
+                        "action": {
+                            "param": {
+                                "custom_action_param": {
+                                    "round": 1,
+                                    "refreshes": 1,
+                                    "after": "情报模拟战刷新手牌"
+                                }
+                            }
+                        }
+                    },
+                    "情报模拟战第二轮选牌": {
+                        "action": {
+                            "param": {
+                                "custom_action_param": {
+                                    "round": 1,
+                                    "refreshes": 0,
+                                    "after": "情报模拟战准备就绪"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -983,6 +1006,28 @@
                                     320,
                                     65
                                 ]
+                            }
+                        }
+                    },
+                    "情报模拟战第一轮选牌": {
+                        "action": {
+                            "param": {
+                                "custom_action_param": {
+                                    "round": 2,
+                                    "refreshes": 1,
+                                    "after": "情报模拟战刷新手牌"
+                                }
+                            }
+                        }
+                    },
+                    "情报模拟战第二轮选牌": {
+                        "action": {
+                            "param": {
+                                "custom_action_param": {
+                                    "round": 2,
+                                    "refreshes": 0,
+                                    "after": "情报模拟战准备就绪"
+                                }
                             }
                         }
                     }
@@ -1045,6 +1090,28 @@
                                 ]
                             }
                         }
+                    },
+                    "情报模拟战第一轮选牌": {
+                        "action": {
+                            "param": {
+                                "custom_action_param": {
+                                    "round": 3,
+                                    "refreshes": 1,
+                                    "after": "情报模拟战刷新手牌"
+                                }
+                            }
+                        }
+                    },
+                    "情报模拟战第二轮选牌": {
+                        "action": {
+                            "param": {
+                                "custom_action_param": {
+                                    "round": 3,
+                                    "refreshes": 0,
+                                    "after": "情报模拟战准备就绪"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1103,6 +1170,28 @@
                                     320,
                                     65
                                 ]
+                            }
+                        }
+                    },
+                    "情报模拟战第一轮选牌": {
+                        "action": {
+                            "param": {
+                                "custom_action_param": {
+                                    "round": 4,
+                                    "refreshes": 1,
+                                    "after": "情报模拟战刷新手牌"
+                                }
+                            }
+                        }
+                    },
+                    "情报模拟战第二轮选牌": {
+                        "action": {
+                            "param": {
+                                "custom_action_param": {
+                                    "round": 4,
+                                    "refreshes": 0,
+                                    "after": "情报模拟战准备就绪"
+                                }
                             }
                         }
                     }
@@ -1165,6 +1254,28 @@
                                 ]
                             }
                         }
+                    },
+                    "情报模拟战第一轮选牌": {
+                        "action": {
+                            "param": {
+                                "custom_action_param": {
+                                    "round": 5,
+                                    "refreshes": 1,
+                                    "after": "情报模拟战刷新手牌"
+                                }
+                            }
+                        }
+                    },
+                    "情报模拟战第二轮选牌": {
+                        "action": {
+                            "param": {
+                                "custom_action_param": {
+                                    "round": 5,
+                                    "refreshes": 0,
+                                    "after": "情报模拟战准备就绪"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1193,6 +1304,20 @@
                                 ]
                             }
                         }
+                    },
+                    "情报模拟战当前回合",
+                    {
+                        "recognition": {
+                            "type": "Or",
+                            "param": {
+                                "any_of": [
+                                    "情报模拟战对手血量",
+                                    {
+                                        "recognition": "DirectHit"
+                                    }
+                                ]
+                            }
+                        }
                     }
                 ],
                 "box_index": 1
@@ -1203,7 +1328,9 @@
             "param": {
                 "custom_action": "PlanIntelligenceHand",
                 "custom_action_param": {
-                    "after": "情报模拟战刷新手牌"
+                    "after": "情报模拟战刷新手牌",
+                    "round": 1,
+                    "refreshes": 1
                 }
             }
         },
@@ -1233,6 +1360,20 @@
                                 ]
                             }
                         }
+                    },
+                    "情报模拟战当前回合",
+                    {
+                        "recognition": {
+                            "type": "Or",
+                            "param": {
+                                "any_of": [
+                                    "情报模拟战对手血量",
+                                    {
+                                        "recognition": "DirectHit"
+                                    }
+                                ]
+                            }
+                        }
                     }
                 ],
                 "box_index": 1
@@ -1243,7 +1384,9 @@
             "param": {
                 "custom_action": "PlanIntelligenceHand",
                 "custom_action_param": {
-                    "after": "情报模拟战准备就绪"
+                    "after": "情报模拟战准备就绪",
+                    "round": 1,
+                    "refreshes": 0
                 }
             }
         },
@@ -1608,7 +1751,7 @@
                 "roi": [
                     620,
                     145,
-                    600,
+                    650,
                     475
                 ],
                 "expected": [
@@ -1810,6 +1953,128 @@
         ],
         "pre_delay": 0,
         "post_delay": 0,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "情报模拟战对手血量": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1110,
+                    40,
+                    95,
+                    45
+                ],
+                "expected": [
+                    "[0-9OoIl]"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "rate_limit": 0
+    },
+    "情报模拟战确认落位": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    "情报模拟战商店文字",
+                    {
+                        "recognition": {
+                            "type": "Or",
+                            "param": {
+                                "any_of": [
+                                    "情报模拟战空位",
+                                    {
+                                        "recognition": "DirectHit"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "情报模拟战当前回合",
+                    {
+                        "recognition": {
+                            "type": "Or",
+                            "param": {
+                                "any_of": [
+                                    "情报模拟战对手血量",
+                                    {
+                                        "recognition": "DirectHit"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ConfirmIntelligenceHand",
+                "custom_action_param": {
+                    "round": 1,
+                    "after": "情报模拟战准备就绪"
+                }
+            }
+        },
+        "pre_delay": 120,
+        "post_delay": 0,
+        "rate_limit": 0,
+        "on_error": [
+            "情报模拟战等待对局"
+        ]
+    },
+    "情报模拟战准备匹配策略": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "WarmIntelligenceStrategy"
+            }
+        },
+        "next": [
+            "情报模拟战开始匹配"
+        ],
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "情报模拟战已准备等待": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "情报模拟战倒计时",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    990,
+                                    625,
+                                    280,
+                                    90
+                                ],
+                                "expected": [
+                                    "对手放置中|等待对手|已准备"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "next": [
+            "情报模拟战等待对局"
+        ],
+        "post_delay": 300,
         "on_error": [
             "Default_on_error"
         ]

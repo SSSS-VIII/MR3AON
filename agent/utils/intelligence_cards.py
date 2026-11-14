@@ -30,7 +30,7 @@ def hand_is_visible(items):
     for text, box in items:
         x, y, w, h = box_xywh(box)
         cy = y + h / 2
-        if len(text.strip()) >= 2 and (350 <= cy <= 405 or 565 <= cy <= 615) and x + w / 2 < 1020:
+        if len(re.findall(r'[\u4e00-\u9fffA-Za-z]',text)) >= 2 and (350 <= cy <= 405 or 565 <= cy <= 615) and 640 <= x + w / 2 < 1220:
             return True
     return False
 

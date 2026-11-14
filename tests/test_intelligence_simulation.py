@@ -45,9 +45,11 @@ def test_two_hands_round_identity_and_fail_closed_completion():
         assert gate['max_hit']==1
         assert len(gate['recognition']['param']['all_of'])==2
         override=gate['action']['param']['custom_action_param']
-        assert set(override)=={P+'当前回合'}
+        assert set(override)=={P+'当前回合',P+'第一轮选牌',P+'第二轮选牌'}
+        assert override[P+'第一轮选牌']['action']['param']['custom_action_param']['round']==i
+        assert override[P+'第二轮选牌']['action']['param']['custom_action_param']['refreshes']==0
     for phase, after in [('第一轮选牌','刷新手牌'),('第二轮选牌','准备就绪')]:
-        assert PIPELINE[P+phase]['action']['param']['custom_action_param']=={'after':P+after}
+        assert PIPELINE[P+phase]['action']['param']['custom_action_param']=={'after':P+after,'round':1,'refreshes':int(phase=='第一轮选牌')}
         assert PIPELINE[P+phase]['post_delay']==0
     assert P+'结算确定' in PIPELINE[P+'导航']['next']
     for node in PIPELINE.values():
@@ -189,7 +191,9 @@ def _native():
         scan=recognize('第一轮选牌',frame)
         plans=plan_cards(iter_ocr_boxes(scan),empty_cells(scan))
         report={'roles':[v[2] for v in plans]}
+        assert r.override_pipeline({P+'当前回合':{'recognition':{'param':{'expected':['第.*回合']}}}})
         scan2=recognize('第一轮选牌',load('xiaojiao.png'))
+        assert r.override_pipeline({P+'当前回合':pattern})
         report['xiaojiao_roles']=[v[2] for v in plan_cards(iter_ocr_boxes(scan2),empty_cells(scan2))]
         assert t.post_task(P+'第一轮选牌').wait().succeeded
         report.update(swipes=len(c.drags),clicks=len(c.clicks),

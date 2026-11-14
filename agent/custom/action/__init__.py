@@ -120,4 +120,4 @@ from .bounty_companion import (
     BindBountyFriendRow, BeginBountyCompanionJoin, ReportBountyCompanionState,
 )
 
-from .intelligence_simulation import PlanIntelligenceHand, ResetIntelligenceRounds
+from .intelligence_simulation import PlanIntelligenceHand, ResetIntelligenceRounds, WarmIntelligenceStrategy, ConfirmIntelligenceHand

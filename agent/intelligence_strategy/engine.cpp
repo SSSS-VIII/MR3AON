@@ -141,8 +141,9 @@ Evaluation evaluate(int spent) {
 int main() {
     int n,mode,samples,profile,tiebreak,max_purchases,trace; double seconds; U max_layouts;
     if(!(std::cin>>n>>turn>>gold>>seconds>>max_layouts>>mode>>samples>>growth_mode>>profile>>tiebreak>>max_purchases>>trace)) return 2;
-    double passive_weight,aura_weight,vacancy_weight,cumulative_damage,finish_priority;
-    std::cin>>passive_weight>>aura_weight>>vacancy_weight>>cumulative_damage>>finish_priority;
+    double passive_weight,aura_weight,vacancy_weight,cumulative_damage,finish_priority,role_position_bias;
+    int position_candidates;
+    std::cin>>passive_weight>>aura_weight>>vacancy_weight>>cumulative_damage>>finish_priority>>role_position_bias>>position_candidates;
     cards.resize(n);
     for(auto& c:cards) std::cin>>c.attack>>c.cost>>c.element>>c.category>>c.copies>>c.effect>>c.param;
     if(profile>=1) for(auto& c:cards)
@@ -170,14 +171,20 @@ int main() {
           (seconds>0 && std::chrono::duration<double>(Clock::now()-started).count()>=seconds);
     };
     struct Choice {std::vector<int> cards;int spent,priority;I damage;std::array<Cell,9> board;Evaluation eval;Potential potential;double strategic;bool finishing;};
-    std::vector<Choice> choices;
+    std::vector<Choice> choices,position_choices;
+    auto layout_better=[](const Choice& a,const Choice& b) {
+        if(a.finishing!=b.finishing)return a.finishing>b.finishing;
+        if(std::abs(a.strategic-b.strategic)>1e-9)return a.strategic>b.strategic;
+        if(a.damage!=b.damage)return a.damage>b.damage;
+        return a.priority>b.priority;
+    };
     auto priority=[&] {
         int value=0;
         for(int i:empty)if(board[i].id>=0) {
             const auto& c=cards[board[i].id];
             bool center=i==4,edge=(i==1 || i==3 || i==5 || i==7);
             if(c.effect==MASK || c.effect==SHEATH) value+=center?100:edge?40:0;
-            if(c.effect==TIGER5 || c.effect==WATER_DOUBLE || c.effect==WIND_TRIPLE ||
+            if((role_position_bias>0 && c.category==0) || c.effect==TIGER5 || c.effect==WATER_DOUBLE || c.effect==WIND_TRIPLE ||
                c.effect==THUNDER_TRIPLE || c.effect==ICE_CRANE || c.effect==SELF_DAMAGE)
                 value+=edge?30:center?20:0;
             if(c.effect==FLAG || c.effect==DRUM || c.effect==FOX || c.effect==ROW_ELEMENT || c.effect==ROW_ALL)
@@ -191,6 +198,7 @@ int main() {
         auto candidate_board=board;
         Evaluation candidate_eval;Potential candidate_potential;double best_value=-std::numeric_limits<double>::infinity();int best_priority=std::numeric_limits<int>::min();
         bool instant=false,candidate_finished=false;
+        std::vector<Choice> top_positions;
         auto place=[&](auto&& self,int at,int previous_cell)->void {
             if(stopped)return;
             if((layouts%1024==0 || (max_layouts && layouts>=max_layouts)) && expired()){stopped=true;return;}
@@ -201,6 +209,20 @@ int main() {
                 double value=finishing?double(e.rounds[turn-1]):
                     e.damage+potential.value-vacancy_weight*(5-turn)*combo.size();
                 int pos=tiebreak?priority():0;
+                if(trace && position_candidates>1) {
+                    bool keep=(int)top_positions.size()<position_candidates;
+                    if(!keep) {
+                        auto& last=top_positions.back();
+                        keep=finishing>last.finishing || (finishing==last.finishing &&
+                            (value>last.strategic+1e-9 || (std::abs(value-last.strategic)<1e-9 &&
+                            (e.damage>last.damage || (e.damage==last.damage && pos>last.priority)))));
+                    }
+                    if(keep) {
+                        top_positions.push_back({combo,spent,pos,e.damage,board,e,potential,value,finishing});
+                        std::stable_sort(top_positions.begin(),top_positions.end(),layout_better);
+                        if((int)top_positions.size()>position_candidates)top_positions.pop_back();
+                    }
+                }
                 if(finishing>candidate_finished || (finishing==candidate_finished &&
                     (value>best_value+1e-9 || (std::abs(value-best_value)<1e-9 &&
                     (e.damage>best || (e.damage==best && pos>best_priority)))))) {
@@ -219,6 +241,10 @@ int main() {
         if(stopped)return;
         ++completed;physical+=weight;
         if(trace)choices.push_back({combo,spent,best_priority,best,candidate_board,candidate_eval,candidate_potential,best_value,candidate_finished});
+        for(auto& alternative:top_positions) {
+            bool same=true;for(int i=0;i<9;++i)same&=alternative.board[i].id==candidate_board[i].id;
+            if(!same)position_choices.push_back(alternative);
+        }
         auto& bin=histogram[best-baseline.damage];++bin.first;bin.second+=weight;
         if(instant){++instant_count;instant_weight+=weight;}
         if(candidate_finished>overall_finished || (candidate_finished==overall_finished &&
@@ -265,8 +291,9 @@ int main() {
     std::cout<<",\"baseline_cell_damage\":[";
     for(int i=0;i<9;++i){if(i)std::cout<<',';std::cout<<baseline.cell_damage[i];}
     std::cout<<"],\"baseline_potential\":"<<baseline_potential.value<<",\"choices\":[";
+    auto print_choices=[&](const std::vector<Choice>& rows) {
     bool first_choice=true;
-    for(const auto& c:choices) {
+    for(const auto& c:rows) {
         if(!first_choice)std::cout<<',';first_choice=false;
         std::cout<<"{\"spent\":"<<c.spent<<",\"gold_left\":"<<gold-c.spent
           <<",\"damage\":"<<c.damage<<",\"finishing\":"<<(c.finishing?"true":"false")<<",\"strategic_damage\":"<<c.strategic<<",\"position_priority\":"<<c.priority
@@ -289,5 +316,9 @@ int main() {
         }
         std::cout<<"]}";
     }
+    };
+    print_choices(choices);
+    std::cout<<"],\"position_choices\":[";
+    print_choices(position_choices);
     std::cout<<"]}\n";
 }

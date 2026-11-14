@@ -65,7 +65,8 @@ def play(seed, strategy, reference=None, *, policy=None, stop_at_100=True):
             events.append({'hand':hand,'bought':[a['card'] for a in plan['actions']],
                            'gold_before':before_gold,'gold_left':gold,'coin_value':value,
                            'next_action':plan['next_action'],'refresh_available':refreshes,
-                           'board_after':[c['name'] if c else None for c in board]})
+                           'board_after':[c['name'] if c else None for c in board],
+                           'forecast':{k:v for k,v in plan['forecast'].items() if k not in {'elapsed_s','build_s'}} if plan.get('forecast') else None})
             inventory_check()
             if plan['next_action']!='refresh':break
             assert refreshes>0

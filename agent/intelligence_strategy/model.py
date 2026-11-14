@@ -131,7 +131,9 @@ def _compiler_version(compiler):
     return subprocess.check_output([compiler, '--version'], text=True).splitlines()[0]
 
 
-def build_engine():
+def build_engine(source='engine.cpp'):
+    if source not in {'engine.cpp','forecast.cpp','rollout.cpp'}:
+        raise ValueError('未知离线内核')
     compiler = shutil.which('g++') or shutil.which('clang++')
     if not compiler:
         raise RuntimeError('离线性能核需要g++或clang++（不安装或下载依赖）')
@@ -140,6 +142,7 @@ def build_engine():
         raise ValueError('cards.json与effects.hpp效果编号不一致')
     version = _compiler_version(compiler)
     digest = hashlib.sha256((HERE/'engine.cpp').read_bytes() + (HERE/'effects.hpp').read_bytes() + (HERE/'synergy.hpp').read_bytes()
+                            + ((HERE/source).read_bytes() if source!='engine.cpp' else b'')
                             + (compiler+version).encode()).hexdigest()[:16]
     cache = Path(tempfile.gettempdir()) / f'mr3a-intelligence-sim-{os.getuid()}'
     cache.mkdir(mode=0o700, exist_ok=True)
@@ -148,7 +151,7 @@ def build_engine():
     if not binary.exists():
         temporary = cache / f'{digest}.{os.getpid()}.tmp'
         try:
-            subprocess.run([compiler, '-std=c++17', '-O3', '-DNDEBUG', str(HERE/'engine.cpp'),
+            subprocess.run([compiler, '-std=c++17', '-O3', '-DNDEBUG', str(HERE/source),
                             '-o', str(temporary)], check=True, capture_output=True, text=True, timeout=60)
             temporary.replace(binary)
         finally:
@@ -178,7 +181,7 @@ def histogram_summary(histogram, index):
 
 def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
              physical_sampling=False, growth_mode='since_entry', profile='full',
-             max_purchases=None, trace_choices=False, position_tiebreak=False, future_pool=None, heuristics=None):
+             max_purchases=None, trace_choices=False, position_tiebreak=False, future_pool=None, heuristics=None, position_candidates=1):
     if not math.isfinite(seconds) or seconds < 0:
         raise ValueError('seconds必须是有限非负数，0表示不限时')
     _integer(samples, 'samples', 0, 1000000)
@@ -190,12 +193,13 @@ def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
     if max_purchases is not None:
         _integer(max_purchases,'max_purchases',0,9)
     heuristics = dict(heuristics or {})
-    defaults = dict(passive_weight=1, aura_weight=0, vacancy_weight=0, cumulative_damage=0, finish_priority=0)
+    defaults = dict(passive_weight=1, aura_weight=0, vacancy_weight=0, cumulative_damage=0, finish_priority=0, role_position_bias=0)
     if set(heuristics)-defaults.keys():
         raise ValueError('未知heuristics参数')
     defaults.update(heuristics); heuristics=defaults
     if any(not math.isfinite(v) or v<0 for v in heuristics.values()):
         raise ValueError('heuristics必须是有限非负值')
+    _integer(position_candidates,'position_candidates',1,8)
     started = time.perf_counter()
     state = prepare_state(raw)
     space = count_space(state,max_purchases)
@@ -204,7 +208,7 @@ def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
     binary, compiler, build_s = build_engine()
     codes = CATALOG['effect_codes']
     lines = [f"{len(CARDS)} {state['round']} {state['gold']} {seconds} {max_layouts} {int(bool(samples))} {samples} {int(growth_mode=='since_entry')} {dict(full=0,refresh_v1=1,synergy_v2=2)[profile]} {int(position_tiebreak)} {9 if max_purchases is None else max_purchases} {int(trace_choices)}"]
-    lines[0]+=' '+' '.join(map(str,heuristics.values()))
+    lines[0]+=' '+' '.join(map(str,heuristics.values()))+f' {position_candidates}'
     lines.extend(' '.join(str(c[k]) for k in ('attack','cost','element','category','copies'))+
                  f" {codes.index(c['effect'])} {c['param']}" for c in CARDS)
     lines.append(' '.join(map(str, state['pool'])))
@@ -251,7 +255,7 @@ def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
         for metric in result[key]['sampled_distribution'].values():
             metric['mean_standard_error'] = metric['stddev']/math.sqrt(metric['count']) if metric['count'] else None
         result[key]['distribution'] = result['sampling']
-    for choice in result['choices']:
+    for choice in result['choices']+result['position_choices']:
         choice['cards']=[CARDS[i]['name'] for i in choice['cards']]
         choice['board']=[CARDS[i]['name'] if i>=0 else None for i in choice['board']]
         choice['potential_gain']=choice['synergy_potential']-result['baseline_potential']

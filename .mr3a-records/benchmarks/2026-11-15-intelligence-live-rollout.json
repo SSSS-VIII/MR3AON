@@ -1,0 +1,2687 @@
+{
+  "version": "live-rollout-64",
+  "first_seed": 110000,
+  "games": 200,
+  "policy": {
+    "gold_before_refresh": [
+      6,
+      4.8,
+      3.6,
+      2.4,
+      1.2
+    ],
+    "gold_after_refresh": [
+      4,
+      3,
+      2,
+      1,
+      0
+    ],
+    "heuristics": {
+      "aura_weight": 2,
+      "vacancy_weight": 3,
+      "role_position_bias": 1
+    },
+    "income_weight": 2,
+    "prioritize_finish": true,
+    "refresh_slot_budget": 3,
+    "lookahead_weight": 1,
+    "lookahead_gold_scale": 1,
+    "lookahead_seconds": 0.65,
+    "lookahead_mode": "rollout",
+    "position_candidates": 1,
+    "rollout_samples": 64,
+    "rollout_width": 8,
+    "rollout_candidates": 6,
+    "rollout_safety_penalty": 50,
+    "rollout_early_bonus": 10
+  },
+  "summary": {
+    "games": 200,
+    "four_round_kill_rate": 0.47,
+    "mean_five_round_damage": 144.285,
+    "reach_100_rate": 1.0,
+    "hit_round_counts": {
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 94,
+      "5": 106
+    },
+    "mean_hit_round_among_successes": 4.53,
+    "mean_damage": 124.185,
+    "median_damage": 121.0,
+    "min_damage": 100,
+    "max_damage": 190,
+    "decision_median_ms": 36.738868497195654,
+    "decision_p95_ms": 205.27816000685561,
+    "decision_max_ms": 285.69050299120136,
+    "partial_purchase_refreshes": 450,
+    "zero_purchase_refreshes": 196
+  },
+  "budget_limited": 0,
+  "samples_min": 64,
+  "scope": "离线单边评估；非实机胜率。当前回合及模拟未来可终结时均优先击杀。用户要求先接入，后续调参暂停。",
+  "source_sha256": {
+    "agent/intelligence_strategy/cards.json": "79c98a89b720efff393820eef9fb154fc3210413d5157d031fc8e9c31f7af991",
+    "agent/intelligence_strategy/engine.cpp": "c49af9b04ed3d63228464066712ecb8ca6fc1c855f600bf4a29d61d9110f1c2d",
+    "agent/intelligence_strategy/model.py": "891df1659fcc4de765c5a704160a2065f6901c92b105762d2f459da772873609",
+    "agent/intelligence_strategy/forecast.py": "bbe577e027139ec7377f8b7558bb7be55601174c0fe010b070c19faaeb8e6ecc",
+    "agent/intelligence_strategy/rollout.cpp": "1dfb2f65740e69dab5cf58a7bd25702b0ad5df6bfd92761bbe4a5aac1c3a0cbd",
+    "agent/intelligence_strategy/tuned.py": "18b10d2349b85cf398f67f733008d111acd0bf41e74195944eb8b0e35e2e73ba",
+    "agent/utils/intelligence_live.py": "7cfe3a2c63a4974691448cdd7762008946250360c3a185cddd207444184afee6",
+    "agent/custom/action/intelligence_simulation.py": "667992a800e8d2a5b9188a4c66a618e264cf3185b17583abeb92c08c66d0b341",
+    "assets/resource/pipeline/情报模拟战.json": "c58597dc1ab8e1f0d00ed826f308aca3365d299771ac80702249b5fbd75d13e1"
+  },
+  "screenshot_sha256": {
+    "tests/fixtures/intelligence_simulation/round.png": "c065f67f99d4cd4c6b148e301a8670bf6367c345506c85c8bcabc80112c47702",
+    "tests/fixtures/intelligence_simulation/daily_claimed.png": "ba402b0dba991773e67ab1041323a1792c380e00290dd65ea8a447df94cac030",
+    "tests/fixtures/intelligence_simulation/settlement.png": "fdbb4078f73e0583d6909d90531e00db1163ea3601af70c3cc6ca2e4818d6f77",
+    "tests/fixtures/intelligence_simulation/xiaojiao.png": "ee5fa931252de675611245e60157a0b0b1f83ee981a848ed066f3fb9930482db",
+    "tests/fixtures/intelligence_simulation/purchase_before.png": "a2ea7307cf36aa3acb774449e1a0da07dff2e87eda0d79deb17abfb1d23cdeb1",
+    "tests/fixtures/intelligence_simulation/purchase_after.png": "965280b368dc006cca215588a039d0edf65d06827bf2b107cd92d8923982bc56",
+    "tests/fixtures/intelligence_simulation/four_tigers.png": "8cb22083762a314579d57f6cc4aa3e608178887af7336c760465b8505b5bab0f"
+  },
+  "cases": [
+    {
+      "seed": 110000,
+      "hit_round": 4,
+      "actual_stop_damage": 119,
+      "five_round_damage": 156,
+      "round_damage": [
+        2,
+        8,
+        29,
+        80,
+        37
+      ]
+    },
+    {
+      "seed": 110001,
+      "hit_round": 5,
+      "actual_stop_damage": 136,
+      "five_round_damage": 136,
+      "round_damage": [
+        3,
+        19,
+        30,
+        37,
+        47
+      ]
+    },
+    {
+      "seed": 110002,
+      "hit_round": 5,
+      "actual_stop_damage": 137,
+      "five_round_damage": 137,
+      "round_damage": [
+        1,
+        27,
+        30,
+        30,
+        49
+      ]
+    },
+    {
+      "seed": 110003,
+      "hit_round": 5,
+      "actual_stop_damage": 144,
+      "five_round_damage": 144,
+      "round_damage": [
+        4,
+        5,
+        27,
+        49,
+        59
+      ]
+    },
+    {
+      "seed": 110004,
+      "hit_round": 4,
+      "actual_stop_damage": 101,
+      "five_round_damage": 132,
+      "round_damage": [
+        1,
+        6,
+        39,
+        55,
+        31
+      ]
+    },
+    {
+      "seed": 110005,
+      "hit_round": 5,
+      "actual_stop_damage": 140,
+      "five_round_damage": 140,
+      "round_damage": [
+        1,
+        30,
+        19,
+        48,
+        42
+      ]
+    },
+    {
+      "seed": 110006,
+      "hit_round": 4,
+      "actual_stop_damage": 100,
+      "five_round_damage": 154,
+      "round_damage": [
+        9,
+        17,
+        27,
+        47,
+        54
+      ]
+    },
+    {
+      "seed": 110007,
+      "hit_round": 5,
+      "actual_stop_damage": 137,
+      "five_round_damage": 137,
+      "round_damage": [
+        12,
+        8,
+        36,
+        35,
+        46
+      ]
+    },
+    {
+      "seed": 110008,
+      "hit_round": 5,
+      "actual_stop_damage": 137,
+      "five_round_damage": 137,
+      "round_damage": [
+        2,
+        15,
+        16,
+        42,
+        62
+      ]
+    },
+    {
+      "seed": 110009,
+      "hit_round": 4,
+      "actual_stop_damage": 107,
+      "five_round_damage": 154,
+      "round_damage": [
+        9,
+        11,
+        16,
+        71,
+        47
+      ]
+    },
+    {
+      "seed": 110010,
+      "hit_round": 4,
+      "actual_stop_damage": 112,
+      "five_round_damage": 162,
+      "round_damage": [
+        5,
+        14,
+        31,
+        62,
+        50
+      ]
+    },
+    {
+      "seed": 110011,
+      "hit_round": 5,
+      "actual_stop_damage": 131,
+      "five_round_damage": 131,
+      "round_damage": [
+        4,
+        21,
+        31,
+        33,
+        42
+      ]
+    },
+    {
+      "seed": 110012,
+      "hit_round": 4,
+      "actual_stop_damage": 111,
+      "five_round_damage": 143,
+      "round_damage": [
+        1,
+        39,
+        26,
+        45,
+        32
+      ]
+    },
+    {
+      "seed": 110013,
+      "hit_round": 5,
+      "actual_stop_damage": 127,
+      "five_round_damage": 127,
+      "round_damage": [
+        2,
+        15,
+        24,
+        38,
+        48
+      ]
+    },
+    {
+      "seed": 110014,
+      "hit_round": 4,
+      "actual_stop_damage": 108,
+      "five_round_damage": 139,
+      "round_damage": [
+        6,
+        15,
+        36,
+        51,
+        31
+      ]
+    },
+    {
+      "seed": 110015,
+      "hit_round": 5,
+      "actual_stop_damage": 126,
+      "five_round_damage": 126,
+      "round_damage": [
+        2,
+        21,
+        17,
+        36,
+        50
+      ]
+    },
+    {
+      "seed": 110016,
+      "hit_round": 4,
+      "actual_stop_damage": 101,
+      "five_round_damage": 137,
+      "round_damage": [
+        13,
+        28,
+        24,
+        36,
+        36
+      ]
+    },
+    {
+      "seed": 110017,
+      "hit_round": 5,
+      "actual_stop_damage": 142,
+      "five_round_damage": 142,
+      "round_damage": [
+        6,
+        18,
+        14,
+        47,
+        57
+      ]
+    },
+    {
+      "seed": 110018,
+      "hit_round": 5,
+      "actual_stop_damage": 151,
+      "five_round_damage": 151,
+      "round_damage": [
+        2,
+        4,
+        28,
+        53,
+        64
+      ]
+    },
+    {
+      "seed": 110019,
+      "hit_round": 5,
+      "actual_stop_damage": 125,
+      "five_round_damage": 125,
+      "round_damage": [
+        8,
+        13,
+        15,
+        42,
+        47
+      ]
+    },
+    {
+      "seed": 110020,
+      "hit_round": 5,
+      "actual_stop_damage": 160,
+      "five_round_damage": 160,
+      "round_damage": [
+        1,
+        13,
+        41,
+        38,
+        67
+      ]
+    },
+    {
+      "seed": 110021,
+      "hit_round": 5,
+      "actual_stop_damage": 145,
+      "five_round_damage": 145,
+      "round_damage": [
+        5,
+        5,
+        32,
+        49,
+        54
+      ]
+    },
+    {
+      "seed": 110022,
+      "hit_round": 5,
+      "actual_stop_damage": 151,
+      "five_round_damage": 151,
+      "round_damage": [
+        1,
+        6,
+        12,
+        72,
+        60
+      ]
+    },
+    {
+      "seed": 110023,
+      "hit_round": 5,
+      "actual_stop_damage": 147,
+      "five_round_damage": 147,
+      "round_damage": [
+        1,
+        12,
+        21,
+        49,
+        64
+      ]
+    },
+    {
+      "seed": 110024,
+      "hit_round": 5,
+      "actual_stop_damage": 135,
+      "five_round_damage": 135,
+      "round_damage": [
+        1,
+        20,
+        21,
+        54,
+        39
+      ]
+    },
+    {
+      "seed": 110025,
+      "hit_round": 5,
+      "actual_stop_damage": 161,
+      "five_round_damage": 161,
+      "round_damage": [
+        1,
+        13,
+        32,
+        38,
+        77
+      ]
+    },
+    {
+      "seed": 110026,
+      "hit_round": 5,
+      "actual_stop_damage": 151,
+      "five_round_damage": 151,
+      "round_damage": [
+        2,
+        8,
+        14,
+        70,
+        57
+      ]
+    },
+    {
+      "seed": 110027,
+      "hit_round": 4,
+      "actual_stop_damage": 113,
+      "five_round_damage": 168,
+      "round_damage": [
+        5,
+        7,
+        46,
+        55,
+        55
+      ]
+    },
+    {
+      "seed": 110028,
+      "hit_round": 5,
+      "actual_stop_damage": 124,
+      "five_round_damage": 124,
+      "round_damage": [
+        2,
+        4,
+        21,
+        39,
+        58
+      ]
+    },
+    {
+      "seed": 110029,
+      "hit_round": 4,
+      "actual_stop_damage": 121,
+      "five_round_damage": 157,
+      "round_damage": [
+        4,
+        22,
+        48,
+        47,
+        36
+      ]
+    },
+    {
+      "seed": 110030,
+      "hit_round": 4,
+      "actual_stop_damage": 124,
+      "five_round_damage": 187,
+      "round_damage": [
+        7,
+        24,
+        31,
+        62,
+        63
+      ]
+    },
+    {
+      "seed": 110031,
+      "hit_round": 4,
+      "actual_stop_damage": 116,
+      "five_round_damage": 152,
+      "round_damage": [
+        6,
+        6,
+        38,
+        66,
+        36
+      ]
+    },
+    {
+      "seed": 110032,
+      "hit_round": 4,
+      "actual_stop_damage": 110,
+      "five_round_damage": 158,
+      "round_damage": [
+        4,
+        5,
+        40,
+        61,
+        48
+      ]
+    },
+    {
+      "seed": 110033,
+      "hit_round": 4,
+      "actual_stop_damage": 102,
+      "five_round_damage": 125,
+      "round_damage": [
+        8,
+        20,
+        37,
+        37,
+        23
+      ]
+    },
+    {
+      "seed": 110034,
+      "hit_round": 4,
+      "actual_stop_damage": 100,
+      "five_round_damage": 132,
+      "round_damage": [
+        4,
+        10,
+        33,
+        53,
+        32
+      ]
+    },
+    {
+      "seed": 110035,
+      "hit_round": 4,
+      "actual_stop_damage": 103,
+      "five_round_damage": 153,
+      "round_damage": [
+        1,
+        10,
+        31,
+        61,
+        50
+      ]
+    },
+    {
+      "seed": 110036,
+      "hit_round": 5,
+      "actual_stop_damage": 134,
+      "five_round_damage": 134,
+      "round_damage": [
+        4,
+        9,
+        33,
+        44,
+        44
+      ]
+    },
+    {
+      "seed": 110037,
+      "hit_round": 4,
+      "actual_stop_damage": 103,
+      "five_round_damage": 129,
+      "round_damage": [
+        12,
+        27,
+        15,
+        49,
+        26
+      ]
+    },
+    {
+      "seed": 110038,
+      "hit_round": 4,
+      "actual_stop_damage": 112,
+      "five_round_damage": 172,
+      "round_damage": [
+        1,
+        7,
+        41,
+        63,
+        60
+      ]
+    },
+    {
+      "seed": 110039,
+      "hit_round": 5,
+      "actual_stop_damage": 140,
+      "five_round_damage": 140,
+      "round_damage": [
+        1,
+        11,
+        19,
+        49,
+        60
+      ]
+    },
+    {
+      "seed": 110040,
+      "hit_round": 4,
+      "actual_stop_damage": 116,
+      "five_round_damage": 144,
+      "round_damage": [
+        2,
+        6,
+        52,
+        56,
+        28
+      ]
+    },
+    {
+      "seed": 110041,
+      "hit_round": 5,
+      "actual_stop_damage": 131,
+      "five_round_damage": 131,
+      "round_damage": [
+        3,
+        14,
+        30,
+        52,
+        32
+      ]
+    },
+    {
+      "seed": 110042,
+      "hit_round": 4,
+      "actual_stop_damage": 110,
+      "five_round_damage": 140,
+      "round_damage": [
+        14,
+        9,
+        23,
+        64,
+        30
+      ]
+    },
+    {
+      "seed": 110043,
+      "hit_round": 4,
+      "actual_stop_damage": 121,
+      "five_round_damage": 155,
+      "round_damage": [
+        2,
+        36,
+        37,
+        46,
+        34
+      ]
+    },
+    {
+      "seed": 110044,
+      "hit_round": 5,
+      "actual_stop_damage": 131,
+      "five_round_damage": 131,
+      "round_damage": [
+        8,
+        16,
+        14,
+        46,
+        47
+      ]
+    },
+    {
+      "seed": 110045,
+      "hit_round": 5,
+      "actual_stop_damage": 140,
+      "five_round_damage": 140,
+      "round_damage": [
+        2,
+        12,
+        21,
+        59,
+        46
+      ]
+    },
+    {
+      "seed": 110046,
+      "hit_round": 5,
+      "actual_stop_damage": 158,
+      "five_round_damage": 158,
+      "round_damage": [
+        12,
+        16,
+        31,
+        30,
+        69
+      ]
+    },
+    {
+      "seed": 110047,
+      "hit_round": 5,
+      "actual_stop_damage": 149,
+      "five_round_damage": 149,
+      "round_damage": [
+        1,
+        11,
+        15,
+        67,
+        55
+      ]
+    },
+    {
+      "seed": 110048,
+      "hit_round": 4,
+      "actual_stop_damage": 100,
+      "five_round_damage": 127,
+      "round_damage": [
+        1,
+        33,
+        21,
+        45,
+        27
+      ]
+    },
+    {
+      "seed": 110049,
+      "hit_round": 4,
+      "actual_stop_damage": 101,
+      "five_round_damage": 148,
+      "round_damage": [
+        4,
+        30,
+        16,
+        51,
+        47
+      ]
+    },
+    {
+      "seed": 110050,
+      "hit_round": 4,
+      "actual_stop_damage": 108,
+      "five_round_damage": 136,
+      "round_damage": [
+        2,
+        4,
+        37,
+        65,
+        28
+      ]
+    },
+    {
+      "seed": 110051,
+      "hit_round": 4,
+      "actual_stop_damage": 111,
+      "five_round_damage": 149,
+      "round_damage": [
+        5,
+        5,
+        35,
+        66,
+        38
+      ]
+    },
+    {
+      "seed": 110052,
+      "hit_round": 5,
+      "actual_stop_damage": 134,
+      "five_round_damage": 134,
+      "round_damage": [
+        5,
+        9,
+        25,
+        48,
+        47
+      ]
+    },
+    {
+      "seed": 110053,
+      "hit_round": 5,
+      "actual_stop_damage": 141,
+      "five_round_damage": 141,
+      "round_damage": [
+        1,
+        16,
+        44,
+        34,
+        46
+      ]
+    },
+    {
+      "seed": 110054,
+      "hit_round": 4,
+      "actual_stop_damage": 106,
+      "five_round_damage": 159,
+      "round_damage": [
+        4,
+        31,
+        33,
+        38,
+        53
+      ]
+    },
+    {
+      "seed": 110055,
+      "hit_round": 5,
+      "actual_stop_damage": 136,
+      "five_round_damage": 136,
+      "round_damage": [
+        12,
+        9,
+        21,
+        53,
+        41
+      ]
+    },
+    {
+      "seed": 110056,
+      "hit_round": 4,
+      "actual_stop_damage": 111,
+      "five_round_damage": 158,
+      "round_damage": [
+        3,
+        10,
+        36,
+        62,
+        47
+      ]
+    },
+    {
+      "seed": 110057,
+      "hit_round": 5,
+      "actual_stop_damage": 128,
+      "five_round_damage": 128,
+      "round_damage": [
+        1,
+        1,
+        40,
+        46,
+        40
+      ]
+    },
+    {
+      "seed": 110058,
+      "hit_round": 5,
+      "actual_stop_damage": 140,
+      "five_round_damage": 140,
+      "round_damage": [
+        1,
+        11,
+        16,
+        54,
+        58
+      ]
+    },
+    {
+      "seed": 110059,
+      "hit_round": 4,
+      "actual_stop_damage": 108,
+      "five_round_damage": 146,
+      "round_damage": [
+        5,
+        17,
+        47,
+        39,
+        38
+      ]
+    },
+    {
+      "seed": 110060,
+      "hit_round": 5,
+      "actual_stop_damage": 141,
+      "five_round_damage": 141,
+      "round_damage": [
+        1,
+        4,
+        17,
+        52,
+        67
+      ]
+    },
+    {
+      "seed": 110061,
+      "hit_round": 5,
+      "actual_stop_damage": 136,
+      "five_round_damage": 136,
+      "round_damage": [
+        1,
+        11,
+        15,
+        56,
+        53
+      ]
+    },
+    {
+      "seed": 110062,
+      "hit_round": 4,
+      "actual_stop_damage": 120,
+      "five_round_damage": 159,
+      "round_damage": [
+        1,
+        21,
+        43,
+        55,
+        39
+      ]
+    },
+    {
+      "seed": 110063,
+      "hit_round": 5,
+      "actual_stop_damage": 158,
+      "five_round_damage": 158,
+      "round_damage": [
+        4,
+        11,
+        22,
+        47,
+        74
+      ]
+    },
+    {
+      "seed": 110064,
+      "hit_round": 4,
+      "actual_stop_damage": 105,
+      "five_round_damage": 151,
+      "round_damage": [
+        6,
+        23,
+        33,
+        43,
+        46
+      ]
+    },
+    {
+      "seed": 110065,
+      "hit_round": 5,
+      "actual_stop_damage": 127,
+      "five_round_damage": 127,
+      "round_damage": [
+        1,
+        17,
+        14,
+        44,
+        51
+      ]
+    },
+    {
+      "seed": 110066,
+      "hit_round": 4,
+      "actual_stop_damage": 109,
+      "five_round_damage": 155,
+      "round_damage": [
+        3,
+        11,
+        35,
+        60,
+        46
+      ]
+    },
+    {
+      "seed": 110067,
+      "hit_round": 5,
+      "actual_stop_damage": 135,
+      "five_round_damage": 135,
+      "round_damage": [
+        4,
+        16,
+        21,
+        54,
+        40
+      ]
+    },
+    {
+      "seed": 110068,
+      "hit_round": 4,
+      "actual_stop_damage": 106,
+      "five_round_damage": 144,
+      "round_damage": [
+        5,
+        14,
+        34,
+        53,
+        38
+      ]
+    },
+    {
+      "seed": 110069,
+      "hit_round": 4,
+      "actual_stop_damage": 103,
+      "five_round_damage": 133,
+      "round_damage": [
+        4,
+        24,
+        31,
+        44,
+        30
+      ]
+    },
+    {
+      "seed": 110070,
+      "hit_round": 5,
+      "actual_stop_damage": 146,
+      "five_round_damage": 146,
+      "round_damage": [
+        2,
+        5,
+        24,
+        61,
+        54
+      ]
+    },
+    {
+      "seed": 110071,
+      "hit_round": 4,
+      "actual_stop_damage": 112,
+      "five_round_damage": 166,
+      "round_damage": [
+        8,
+        20,
+        25,
+        59,
+        54
+      ]
+    },
+    {
+      "seed": 110072,
+      "hit_round": 5,
+      "actual_stop_damage": 175,
+      "five_round_damage": 175,
+      "round_damage": [
+        4,
+        10,
+        17,
+        63,
+        81
+      ]
+    },
+    {
+      "seed": 110073,
+      "hit_round": 5,
+      "actual_stop_damage": 122,
+      "five_round_damage": 122,
+      "round_damage": [
+        2,
+        7,
+        18,
+        35,
+        60
+      ]
+    },
+    {
+      "seed": 110074,
+      "hit_round": 4,
+      "actual_stop_damage": 103,
+      "five_round_damage": 152,
+      "round_damage": [
+        8,
+        36,
+        20,
+        39,
+        49
+      ]
+    },
+    {
+      "seed": 110075,
+      "hit_round": 5,
+      "actual_stop_damage": 106,
+      "five_round_damage": 106,
+      "round_damage": [
+        1,
+        21,
+        7,
+        41,
+        36
+      ]
+    },
+    {
+      "seed": 110076,
+      "hit_round": 4,
+      "actual_stop_damage": 110,
+      "five_round_damage": 162,
+      "round_damage": [
+        7,
+        12,
+        43,
+        48,
+        52
+      ]
+    },
+    {
+      "seed": 110077,
+      "hit_round": 5,
+      "actual_stop_damage": 122,
+      "five_round_damage": 122,
+      "round_damage": [
+        6,
+        19,
+        27,
+        33,
+        37
+      ]
+    },
+    {
+      "seed": 110078,
+      "hit_round": 4,
+      "actual_stop_damage": 106,
+      "five_round_damage": 152,
+      "round_damage": [
+        3,
+        12,
+        30,
+        61,
+        46
+      ]
+    },
+    {
+      "seed": 110079,
+      "hit_round": 5,
+      "actual_stop_damage": 107,
+      "five_round_damage": 107,
+      "round_damage": [
+        1,
+        4,
+        13,
+        38,
+        51
+      ]
+    },
+    {
+      "seed": 110080,
+      "hit_round": 4,
+      "actual_stop_damage": 106,
+      "five_round_damage": 150,
+      "round_damage": [
+        4,
+        29,
+        15,
+        58,
+        44
+      ]
+    },
+    {
+      "seed": 110081,
+      "hit_round": 5,
+      "actual_stop_damage": 131,
+      "five_round_damage": 131,
+      "round_damage": [
+        12,
+        13,
+        13,
+        44,
+        49
+      ]
+    },
+    {
+      "seed": 110082,
+      "hit_round": 5,
+      "actual_stop_damage": 137,
+      "five_round_damage": 137,
+      "round_damage": [
+        5,
+        7,
+        38,
+        35,
+        52
+      ]
+    },
+    {
+      "seed": 110083,
+      "hit_round": 4,
+      "actual_stop_damage": 101,
+      "five_round_damage": 129,
+      "round_damage": [
+        11,
+        15,
+        15,
+        60,
+        28
+      ]
+    },
+    {
+      "seed": 110084,
+      "hit_round": 5,
+      "actual_stop_damage": 139,
+      "five_round_damage": 139,
+      "round_damage": [
+        4,
+        9,
+        23,
+        47,
+        56
+      ]
+    },
+    {
+      "seed": 110085,
+      "hit_round": 4,
+      "actual_stop_damage": 116,
+      "five_round_damage": 157,
+      "round_damage": [
+        8,
+        17,
+        36,
+        55,
+        41
+      ]
+    },
+    {
+      "seed": 110086,
+      "hit_round": 4,
+      "actual_stop_damage": 101,
+      "five_round_damage": 153,
+      "round_damage": [
+        3,
+        13,
+        29,
+        56,
+        52
+      ]
+    },
+    {
+      "seed": 110087,
+      "hit_round": 5,
+      "actual_stop_damage": 149,
+      "five_round_damage": 149,
+      "round_damage": [
+        3,
+        9,
+        25,
+        44,
+        68
+      ]
+    },
+    {
+      "seed": 110088,
+      "hit_round": 5,
+      "actual_stop_damage": 145,
+      "five_round_damage": 145,
+      "round_damage": [
+        1,
+        13,
+        21,
+        50,
+        60
+      ]
+    },
+    {
+      "seed": 110089,
+      "hit_round": 4,
+      "actual_stop_damage": 104,
+      "five_round_damage": 146,
+      "round_damage": [
+        9,
+        29,
+        20,
+        46,
+        42
+      ]
+    },
+    {
+      "seed": 110090,
+      "hit_round": 4,
+      "actual_stop_damage": 100,
+      "five_round_damage": 133,
+      "round_damage": [
+        12,
+        8,
+        51,
+        29,
+        33
+      ]
+    },
+    {
+      "seed": 110091,
+      "hit_round": 5,
+      "actual_stop_damage": 137,
+      "five_round_damage": 137,
+      "round_damage": [
+        4,
+        15,
+        18,
+        42,
+        58
+      ]
+    },
+    {
+      "seed": 110092,
+      "hit_round": 4,
+      "actual_stop_damage": 102,
+      "five_round_damage": 146,
+      "round_damage": [
+        4,
+        9,
+        43,
+        46,
+        44
+      ]
+    },
+    {
+      "seed": 110093,
+      "hit_round": 4,
+      "actual_stop_damage": 116,
+      "five_round_damage": 151,
+      "round_damage": [
+        4,
+        16,
+        27,
+        69,
+        35
+      ]
+    },
+    {
+      "seed": 110094,
+      "hit_round": 4,
+      "actual_stop_damage": 115,
+      "five_round_damage": 164,
+      "round_damage": [
+        1,
+        13,
+        29,
+        72,
+        49
+      ]
+    },
+    {
+      "seed": 110095,
+      "hit_round": 4,
+      "actual_stop_damage": 101,
+      "five_round_damage": 146,
+      "round_damage": [
+        1,
+        3,
+        40,
+        57,
+        45
+      ]
+    },
+    {
+      "seed": 110096,
+      "hit_round": 5,
+      "actual_stop_damage": 152,
+      "five_round_damage": 152,
+      "round_damage": [
+        1,
+        9,
+        15,
+        66,
+        61
+      ]
+    },
+    {
+      "seed": 110097,
+      "hit_round": 5,
+      "actual_stop_damage": 147,
+      "five_round_damage": 147,
+      "round_damage": [
+        1,
+        10,
+        29,
+        40,
+        67
+      ]
+    },
+    {
+      "seed": 110098,
+      "hit_round": 5,
+      "actual_stop_damage": 174,
+      "five_round_damage": 174,
+      "round_damage": [
+        4,
+        10,
+        19,
+        53,
+        88
+      ]
+    },
+    {
+      "seed": 110099,
+      "hit_round": 4,
+      "actual_stop_damage": 103,
+      "five_round_damage": 151,
+      "round_damage": [
+        4,
+        32,
+        32,
+        35,
+        48
+      ]
+    },
+    {
+      "seed": 110100,
+      "hit_round": 4,
+      "actual_stop_damage": 103,
+      "five_round_damage": 148,
+      "round_damage": [
+        1,
+        23,
+        17,
+        62,
+        45
+      ]
+    },
+    {
+      "seed": 110101,
+      "hit_round": 4,
+      "actual_stop_damage": 103,
+      "five_round_damage": 132,
+      "round_damage": [
+        1,
+        9,
+        42,
+        51,
+        29
+      ]
+    },
+    {
+      "seed": 110102,
+      "hit_round": 4,
+      "actual_stop_damage": 112,
+      "five_round_damage": 136,
+      "round_damage": [
+        13,
+        21,
+        22,
+        56,
+        24
+      ]
+    },
+    {
+      "seed": 110103,
+      "hit_round": 5,
+      "actual_stop_damage": 162,
+      "five_round_damage": 162,
+      "round_damage": [
+        5,
+        9,
+        33,
+        45,
+        70
+      ]
+    },
+    {
+      "seed": 110104,
+      "hit_round": 4,
+      "actual_stop_damage": 108,
+      "five_round_damage": 161,
+      "round_damage": [
+        6,
+        31,
+        27,
+        44,
+        53
+      ]
+    },
+    {
+      "seed": 110105,
+      "hit_round": 4,
+      "actual_stop_damage": 102,
+      "five_round_damage": 148,
+      "round_damage": [
+        2,
+        21,
+        29,
+        50,
+        46
+      ]
+    },
+    {
+      "seed": 110106,
+      "hit_round": 5,
+      "actual_stop_damage": 122,
+      "five_round_damage": 122,
+      "round_damage": [
+        4,
+        6,
+        37,
+        25,
+        50
+      ]
+    },
+    {
+      "seed": 110107,
+      "hit_round": 5,
+      "actual_stop_damage": 131,
+      "five_round_damage": 131,
+      "round_damage": [
+        12,
+        20,
+        23,
+        37,
+        39
+      ]
+    },
+    {
+      "seed": 110108,
+      "hit_round": 5,
+      "actual_stop_damage": 190,
+      "five_round_damage": 190,
+      "round_damage": [
+        3,
+        8,
+        26,
+        60,
+        93
+      ]
+    },
+    {
+      "seed": 110109,
+      "hit_round": 4,
+      "actual_stop_damage": 100,
+      "five_round_damage": 144,
+      "round_damage": [
+        16,
+        15,
+        22,
+        47,
+        44
+      ]
+    },
+    {
+      "seed": 110110,
+      "hit_round": 5,
+      "actual_stop_damage": 117,
+      "five_round_damage": 117,
+      "round_damage": [
+        2,
+        5,
+        18,
+        51,
+        41
+      ]
+    },
+    {
+      "seed": 110111,
+      "hit_round": 4,
+      "actual_stop_damage": 113,
+      "five_round_damage": 154,
+      "round_damage": [
+        8,
+        6,
+        36,
+        63,
+        41
+      ]
+    },
+    {
+      "seed": 110112,
+      "hit_round": 5,
+      "actual_stop_damage": 148,
+      "five_round_damage": 148,
+      "round_damage": [
+        8,
+        13,
+        25,
+        51,
+        51
+      ]
+    },
+    {
+      "seed": 110113,
+      "hit_round": 4,
+      "actual_stop_damage": 107,
+      "five_round_damage": 139,
+      "round_damage": [
+        5,
+        40,
+        29,
+        33,
+        32
+      ]
+    },
+    {
+      "seed": 110114,
+      "hit_round": 4,
+      "actual_stop_damage": 104,
+      "five_round_damage": 194,
+      "round_damage": [
+        5,
+        7,
+        30,
+        62,
+        90
+      ]
+    },
+    {
+      "seed": 110115,
+      "hit_round": 5,
+      "actual_stop_damage": 153,
+      "five_round_damage": 153,
+      "round_damage": [
+        2,
+        8,
+        11,
+        78,
+        54
+      ]
+    },
+    {
+      "seed": 110116,
+      "hit_round": 5,
+      "actual_stop_damage": 125,
+      "five_round_damage": 125,
+      "round_damage": [
+        2,
+        4,
+        16,
+        49,
+        54
+      ]
+    },
+    {
+      "seed": 110117,
+      "hit_round": 5,
+      "actual_stop_damage": 120,
+      "five_round_damage": 120,
+      "round_damage": [
+        2,
+        6,
+        32,
+        31,
+        49
+      ]
+    },
+    {
+      "seed": 110118,
+      "hit_round": 5,
+      "actual_stop_damage": 129,
+      "five_round_damage": 129,
+      "round_damage": [
+        2,
+        28,
+        29,
+        26,
+        44
+      ]
+    },
+    {
+      "seed": 110119,
+      "hit_round": 5,
+      "actual_stop_damage": 120,
+      "five_round_damage": 120,
+      "round_damage": [
+        1,
+        11,
+        35,
+        39,
+        34
+      ]
+    },
+    {
+      "seed": 110120,
+      "hit_round": 4,
+      "actual_stop_damage": 101,
+      "five_round_damage": 155,
+      "round_damage": [
+        5,
+        10,
+        19,
+        67,
+        54
+      ]
+    },
+    {
+      "seed": 110121,
+      "hit_round": 4,
+      "actual_stop_damage": 112,
+      "five_round_damage": 141,
+      "round_damage": [
+        13,
+        19,
+        35,
+        45,
+        29
+      ]
+    },
+    {
+      "seed": 110122,
+      "hit_round": 4,
+      "actual_stop_damage": 113,
+      "five_round_damage": 163,
+      "round_damage": [
+        2,
+        33,
+        17,
+        61,
+        50
+      ]
+    },
+    {
+      "seed": 110123,
+      "hit_round": 5,
+      "actual_stop_damage": 151,
+      "five_round_damage": 151,
+      "round_damage": [
+        4,
+        22,
+        32,
+        40,
+        53
+      ]
+    },
+    {
+      "seed": 110124,
+      "hit_round": 5,
+      "actual_stop_damage": 123,
+      "five_round_damage": 123,
+      "round_damage": [
+        1,
+        14,
+        24,
+        31,
+        53
+      ]
+    },
+    {
+      "seed": 110125,
+      "hit_round": 4,
+      "actual_stop_damage": 107,
+      "five_round_damage": 156,
+      "round_damage": [
+        7,
+        16,
+        28,
+        56,
+        49
+      ]
+    },
+    {
+      "seed": 110126,
+      "hit_round": 5,
+      "actual_stop_damage": 125,
+      "five_round_damage": 125,
+      "round_damage": [
+        12,
+        32,
+        20,
+        31,
+        30
+      ]
+    },
+    {
+      "seed": 110127,
+      "hit_round": 5,
+      "actual_stop_damage": 111,
+      "five_round_damage": 111,
+      "round_damage": [
+        5,
+        9,
+        17,
+        40,
+        40
+      ]
+    },
+    {
+      "seed": 110128,
+      "hit_round": 4,
+      "actual_stop_damage": 106,
+      "five_round_damage": 145,
+      "round_damage": [
+        5,
+        13,
+        39,
+        49,
+        39
+      ]
+    },
+    {
+      "seed": 110129,
+      "hit_round": 4,
+      "actual_stop_damage": 116,
+      "five_round_damage": 185,
+      "round_damage": [
+        9,
+        25,
+        35,
+        47,
+        69
+      ]
+    },
+    {
+      "seed": 110130,
+      "hit_round": 5,
+      "actual_stop_damage": 137,
+      "five_round_damage": 137,
+      "round_damage": [
+        3,
+        21,
+        26,
+        38,
+        49
+      ]
+    },
+    {
+      "seed": 110131,
+      "hit_round": 4,
+      "actual_stop_damage": 104,
+      "five_round_damage": 140,
+      "round_damage": [
+        2,
+        11,
+        39,
+        52,
+        36
+      ]
+    },
+    {
+      "seed": 110132,
+      "hit_round": 4,
+      "actual_stop_damage": 110,
+      "five_round_damage": 160,
+      "round_damage": [
+        2,
+        21,
+        16,
+        71,
+        50
+      ]
+    },
+    {
+      "seed": 110133,
+      "hit_round": 4,
+      "actual_stop_damage": 104,
+      "five_round_damage": 137,
+      "round_damage": [
+        5,
+        32,
+        35,
+        32,
+        33
+      ]
+    },
+    {
+      "seed": 110134,
+      "hit_round": 5,
+      "actual_stop_damage": 141,
+      "five_round_damage": 141,
+      "round_damage": [
+        6,
+        19,
+        23,
+        31,
+        62
+      ]
+    },
+    {
+      "seed": 110135,
+      "hit_round": 4,
+      "actual_stop_damage": 111,
+      "five_round_damage": 150,
+      "round_damage": [
+        2,
+        38,
+        30,
+        41,
+        39
+      ]
+    },
+    {
+      "seed": 110136,
+      "hit_round": 5,
+      "actual_stop_damage": 133,
+      "five_round_damage": 133,
+      "round_damage": [
+        12,
+        16,
+        19,
+        31,
+        55
+      ]
+    },
+    {
+      "seed": 110137,
+      "hit_round": 5,
+      "actual_stop_damage": 113,
+      "five_round_damage": 113,
+      "round_damage": [
+        1,
+        3,
+        34,
+        41,
+        34
+      ]
+    },
+    {
+      "seed": 110138,
+      "hit_round": 4,
+      "actual_stop_damage": 104,
+      "five_round_damage": 132,
+      "round_damage": [
+        5,
+        34,
+        35,
+        30,
+        28
+      ]
+    },
+    {
+      "seed": 110139,
+      "hit_round": 5,
+      "actual_stop_damage": 119,
+      "five_round_damage": 119,
+      "round_damage": [
+        13,
+        11,
+        30,
+        26,
+        39
+      ]
+    },
+    {
+      "seed": 110140,
+      "hit_round": 4,
+      "actual_stop_damage": 102,
+      "five_round_damage": 141,
+      "round_damage": [
+        7,
+        8,
+        44,
+        43,
+        39
+      ]
+    },
+    {
+      "seed": 110141,
+      "hit_round": 4,
+      "actual_stop_damage": 112,
+      "five_round_damage": 140,
+      "round_damage": [
+        10,
+        24,
+        40,
+        38,
+        28
+      ]
+    },
+    {
+      "seed": 110142,
+      "hit_round": 5,
+      "actual_stop_damage": 137,
+      "five_round_damage": 137,
+      "round_damage": [
+        1,
+        14,
+        41,
+        34,
+        47
+      ]
+    },
+    {
+      "seed": 110143,
+      "hit_round": 5,
+      "actual_stop_damage": 174,
+      "five_round_damage": 174,
+      "round_damage": [
+        4,
+        4,
+        13,
+        66,
+        87
+      ]
+    },
+    {
+      "seed": 110144,
+      "hit_round": 5,
+      "actual_stop_damage": 148,
+      "five_round_damage": 148,
+      "round_damage": [
+        1,
+        11,
+        15,
+        53,
+        68
+      ]
+    },
+    {
+      "seed": 110145,
+      "hit_round": 5,
+      "actual_stop_damage": 155,
+      "five_round_damage": 155,
+      "round_damage": [
+        4,
+        18,
+        25,
+        51,
+        57
+      ]
+    },
+    {
+      "seed": 110146,
+      "hit_round": 4,
+      "actual_stop_damage": 107,
+      "five_round_damage": 151,
+      "round_damage": [
+        6,
+        19,
+        39,
+        43,
+        44
+      ]
+    },
+    {
+      "seed": 110147,
+      "hit_round": 4,
+      "actual_stop_damage": 125,
+      "five_round_damage": 184,
+      "round_damage": [
+        7,
+        21,
+        26,
+        71,
+        59
+      ]
+    },
+    {
+      "seed": 110148,
+      "hit_round": 5,
+      "actual_stop_damage": 130,
+      "five_round_damage": 130,
+      "round_damage": [
+        1,
+        23,
+        23,
+        38,
+        45
+      ]
+    },
+    {
+      "seed": 110149,
+      "hit_round": 5,
+      "actual_stop_damage": 130,
+      "five_round_damage": 130,
+      "round_damage": [
+        5,
+        9,
+        22,
+        47,
+        47
+      ]
+    },
+    {
+      "seed": 110150,
+      "hit_round": 5,
+      "actual_stop_damage": 151,
+      "five_round_damage": 151,
+      "round_damage": [
+        4,
+        12,
+        28,
+        48,
+        59
+      ]
+    },
+    {
+      "seed": 110151,
+      "hit_round": 5,
+      "actual_stop_damage": 135,
+      "five_round_damage": 135,
+      "round_damage": [
+        3,
+        10,
+        18,
+        40,
+        64
+      ]
+    },
+    {
+      "seed": 110152,
+      "hit_round": 5,
+      "actual_stop_damage": 137,
+      "five_round_damage": 137,
+      "round_damage": [
+        5,
+        15,
+        37,
+        32,
+        48
+      ]
+    },
+    {
+      "seed": 110153,
+      "hit_round": 4,
+      "actual_stop_damage": 117,
+      "five_round_damage": 156,
+      "round_damage": [
+        3,
+        21,
+        36,
+        57,
+        39
+      ]
+    },
+    {
+      "seed": 110154,
+      "hit_round": 5,
+      "actual_stop_damage": 152,
+      "five_round_damage": 152,
+      "round_damage": [
+        7,
+        10,
+        31,
+        45,
+        59
+      ]
+    },
+    {
+      "seed": 110155,
+      "hit_round": 4,
+      "actual_stop_damage": 100,
+      "five_round_damage": 135,
+      "round_damage": [
+        4,
+        19,
+        30,
+        47,
+        35
+      ]
+    },
+    {
+      "seed": 110156,
+      "hit_round": 4,
+      "actual_stop_damage": 117,
+      "five_round_damage": 161,
+      "round_damage": [
+        5,
+        22,
+        26,
+        64,
+        44
+      ]
+    },
+    {
+      "seed": 110157,
+      "hit_round": 5,
+      "actual_stop_damage": 161,
+      "five_round_damage": 161,
+      "round_damage": [
+        5,
+        11,
+        15,
+        65,
+        65
+      ]
+    },
+    {
+      "seed": 110158,
+      "hit_round": 4,
+      "actual_stop_damage": 121,
+      "five_round_damage": 171,
+      "round_damage": [
+        13,
+        23,
+        35,
+        50,
+        50
+      ]
+    },
+    {
+      "seed": 110159,
+      "hit_round": 5,
+      "actual_stop_damage": 140,
+      "five_round_damage": 140,
+      "round_damage": [
+        12,
+        30,
+        22,
+        19,
+        57
+      ]
+    },
+    {
+      "seed": 110160,
+      "hit_round": 4,
+      "actual_stop_damage": 101,
+      "five_round_damage": 142,
+      "round_damage": [
+        4,
+        16,
+        41,
+        40,
+        41
+      ]
+    },
+    {
+      "seed": 110161,
+      "hit_round": 4,
+      "actual_stop_damage": 100,
+      "five_round_damage": 147,
+      "round_damage": [
+        1,
+        14,
+        14,
+        71,
+        47
+      ]
+    },
+    {
+      "seed": 110162,
+      "hit_round": 4,
+      "actual_stop_damage": 112,
+      "five_round_damage": 164,
+      "round_damage": [
+        1,
+        15,
+        19,
+        77,
+        52
+      ]
+    },
+    {
+      "seed": 110163,
+      "hit_round": 5,
+      "actual_stop_damage": 142,
+      "five_round_damage": 142,
+      "round_damage": [
+        2,
+        19,
+        21,
+        49,
+        51
+      ]
+    },
+    {
+      "seed": 110164,
+      "hit_round": 5,
+      "actual_stop_damage": 128,
+      "five_round_damage": 128,
+      "round_damage": [
+        1,
+        12,
+        39,
+        38,
+        38
+      ]
+    },
+    {
+      "seed": 110165,
+      "hit_round": 4,
+      "actual_stop_damage": 111,
+      "five_round_damage": 162,
+      "round_damage": [
+        4,
+        6,
+        37,
+        64,
+        51
+      ]
+    },
+    {
+      "seed": 110166,
+      "hit_round": 5,
+      "actual_stop_damage": 142,
+      "five_round_damage": 142,
+      "round_damage": [
+        5,
+        7,
+        25,
+        38,
+        67
+      ]
+    },
+    {
+      "seed": 110167,
+      "hit_round": 4,
+      "actual_stop_damage": 102,
+      "five_round_damage": 152,
+      "round_damage": [
+        12,
+        9,
+        24,
+        57,
+        50
+      ]
+    },
+    {
+      "seed": 110168,
+      "hit_round": 4,
+      "actual_stop_damage": 105,
+      "five_round_damage": 138,
+      "round_damage": [
+        5,
+        17,
+        31,
+        52,
+        33
+      ]
+    },
+    {
+      "seed": 110169,
+      "hit_round": 5,
+      "actual_stop_damage": 135,
+      "five_round_damage": 135,
+      "round_damage": [
+        2,
+        6,
+        24,
+        61,
+        42
+      ]
+    },
+    {
+      "seed": 110170,
+      "hit_round": 4,
+      "actual_stop_damage": 107,
+      "five_round_damage": 179,
+      "round_damage": [
+        5,
+        5,
+        34,
+        63,
+        72
+      ]
+    },
+    {
+      "seed": 110171,
+      "hit_round": 4,
+      "actual_stop_damage": 101,
+      "five_round_damage": 142,
+      "round_damage": [
+        3,
+        21,
+        21,
+        56,
+        41
+      ]
+    },
+    {
+      "seed": 110172,
+      "hit_round": 5,
+      "actual_stop_damage": 157,
+      "five_round_damage": 157,
+      "round_damage": [
+        5,
+        13,
+        15,
+        66,
+        58
+      ]
+    },
+    {
+      "seed": 110173,
+      "hit_round": 5,
+      "actual_stop_damage": 159,
+      "five_round_damage": 159,
+      "round_damage": [
+        2,
+        9,
+        13,
+        49,
+        86
+      ]
+    },
+    {
+      "seed": 110174,
+      "hit_round": 5,
+      "actual_stop_damage": 142,
+      "five_round_damage": 142,
+      "round_damage": [
+        8,
+        11,
+        18,
+        47,
+        58
+      ]
+    },
+    {
+      "seed": 110175,
+      "hit_round": 5,
+      "actual_stop_damage": 123,
+      "five_round_damage": 123,
+      "round_damage": [
+        12,
+        6,
+        10,
+        42,
+        53
+      ]
+    },
+    {
+      "seed": 110176,
+      "hit_round": 4,
+      "actual_stop_damage": 101,
+      "five_round_damage": 178,
+      "round_damage": [
+        1,
+        12,
+        26,
+        62,
+        77
+      ]
+    },
+    {
+      "seed": 110177,
+      "hit_round": 4,
+      "actual_stop_damage": 110,
+      "five_round_damage": 149,
+      "round_damage": [
+        5,
+        31,
+        35,
+        39,
+        39
+      ]
+    },
+    {
+      "seed": 110178,
+      "hit_round": 5,
+      "actual_stop_damage": 126,
+      "five_round_damage": 126,
+      "round_damage": [
+        5,
+        15,
+        42,
+        37,
+        27
+      ]
+    },
+    {
+      "seed": 110179,
+      "hit_round": 5,
+      "actual_stop_damage": 137,
+      "five_round_damage": 137,
+      "round_damage": [
+        3,
+        9,
+        27,
+        55,
+        43
+      ]
+    },
+    {
+      "seed": 110180,
+      "hit_round": 4,
+      "actual_stop_damage": 125,
+      "five_round_damage": 173,
+      "round_damage": [
+        4,
+        11,
+        21,
+        89,
+        48
+      ]
+    },
+    {
+      "seed": 110181,
+      "hit_round": 5,
+      "actual_stop_damage": 130,
+      "five_round_damage": 130,
+      "round_damage": [
+        6,
+        6,
+        27,
+        45,
+        46
+      ]
+    },
+    {
+      "seed": 110182,
+      "hit_round": 5,
+      "actual_stop_damage": 145,
+      "five_round_damage": 145,
+      "round_damage": [
+        3,
+        4,
+        21,
+        48,
+        69
+      ]
+    },
+    {
+      "seed": 110183,
+      "hit_round": 5,
+      "actual_stop_damage": 131,
+      "five_round_damage": 131,
+      "round_damage": [
+        4,
+        9,
+        18,
+        47,
+        53
+      ]
+    },
+    {
+      "seed": 110184,
+      "hit_round": 5,
+      "actual_stop_damage": 145,
+      "five_round_damage": 145,
+      "round_damage": [
+        1,
+        16,
+        25,
+        57,
+        46
+      ]
+    },
+    {
+      "seed": 110185,
+      "hit_round": 5,
+      "actual_stop_damage": 134,
+      "five_round_damage": 134,
+      "round_damage": [
+        5,
+        5,
+        22,
+        48,
+        54
+      ]
+    },
+    {
+      "seed": 110186,
+      "hit_round": 5,
+      "actual_stop_damage": 146,
+      "five_round_damage": 146,
+      "round_damage": [
+        2,
+        7,
+        35,
+        41,
+        61
+      ]
+    },
+    {
+      "seed": 110187,
+      "hit_round": 5,
+      "actual_stop_damage": 125,
+      "five_round_damage": 125,
+      "round_damage": [
+        4,
+        10,
+        13,
+        39,
+        59
+      ]
+    },
+    {
+      "seed": 110188,
+      "hit_round": 5,
+      "actual_stop_damage": 155,
+      "five_round_damage": 155,
+      "round_damage": [
+        12,
+        5,
+        27,
+        39,
+        72
+      ]
+    },
+    {
+      "seed": 110189,
+      "hit_round": 4,
+      "actual_stop_damage": 108,
+      "five_round_damage": 146,
+      "round_damage": [
+        2,
+        26,
+        32,
+        48,
+        38
+      ]
+    },
+    {
+      "seed": 110190,
+      "hit_round": 5,
+      "actual_stop_damage": 106,
+      "five_round_damage": 106,
+      "round_damage": [
+        2,
+        3,
+        25,
+        35,
+        41
+      ]
+    },
+    {
+      "seed": 110191,
+      "hit_round": 4,
+      "actual_stop_damage": 104,
+      "five_round_damage": 135,
+      "round_damage": [
+        2,
+        19,
+        23,
+        60,
+        31
+      ]
+    },
+    {
+      "seed": 110192,
+      "hit_round": 5,
+      "actual_stop_damage": 148,
+      "five_round_damage": 148,
+      "round_damage": [
+        5,
+        9,
+        29,
+        37,
+        68
+      ]
+    },
+    {
+      "seed": 110193,
+      "hit_round": 4,
+      "actual_stop_damage": 113,
+      "five_round_damage": 162,
+      "round_damage": [
+        16,
+        18,
+        31,
+        48,
+        49
+      ]
+    },
+    {
+      "seed": 110194,
+      "hit_round": 4,
+      "actual_stop_damage": 102,
+      "five_round_damage": 151,
+      "round_damage": [
+        8,
+        13,
+        28,
+        53,
+        49
+      ]
+    },
+    {
+      "seed": 110195,
+      "hit_round": 4,
+      "actual_stop_damage": 105,
+      "five_round_damage": 156,
+      "round_damage": [
+        4,
+        9,
+        31,
+        61,
+        51
+      ]
+    },
+    {
+      "seed": 110196,
+      "hit_round": 4,
+      "actual_stop_damage": 106,
+      "five_round_damage": 128,
+      "round_damage": [
+        3,
+        6,
+        52,
+        45,
+        22
+      ]
+    },
+    {
+      "seed": 110197,
+      "hit_round": 4,
+      "actual_stop_damage": 108,
+      "five_round_damage": 141,
+      "round_damage": [
+        13,
+        16,
+        45,
+        34,
+        33
+      ]
+    },
+    {
+      "seed": 110198,
+      "hit_round": 5,
+      "actual_stop_damage": 134,
+      "five_round_damage": 134,
+      "round_damage": [
+        6,
+        20,
+        38,
+        33,
+        37
+      ]
+    },
+    {
+      "seed": 110199,
+      "hit_round": 5,
+      "actual_stop_damage": 116,
+      "five_round_damage": 116,
+      "round_damage": [
+        2,
+        9,
+        22,
+        30,
+        53
+      ]
+    }
+  ]
+}

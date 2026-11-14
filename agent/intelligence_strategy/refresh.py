@@ -72,7 +72,7 @@ def spendable_gold(raw, choice):
     return min(choice['gold_left'],sum(costs[:state['empty']]))
 
 
-def hand_choices(raw, hand, *, synergy=False, heuristics=None):
+def hand_choices(raw, hand, *, synergy=False, heuristics=None, position_candidates=1):
     if not isinstance(hand,list) or len(hand)>5 or any(name not in BY_NAME for name in hand):
         raise ValueError('hand必须是最多5张有效牌名')
     full=prepare_state(raw)
@@ -82,9 +82,10 @@ def hand_choices(raw, hand, *, synergy=False, heuristics=None):
             raise ValueError(f'{name}手牌张数超过单边已知余量')
     partial=deepcopy(raw);partial['pool_override']=dict(requested)
     result=simulate(partial,profile='synergy_v2' if synergy else PROFILE,trace_choices=True,
-                    position_tiebreak=True,seconds=2,future_pool=full['pool'],heuristics=heuristics)
+                    position_tiebreak=True,seconds=2,future_pool=full['pool'],heuristics=heuristics,position_candidates=position_candidates)
     if not result['complete']:
         raise RuntimeError('当前手牌搜索未完成，不作为已完成决策')
+    if position_candidates>1:result['choices']+=result.pop('position_choices')
     for choice in result['choices']:
         choice['valued_gold']=spendable_gold(raw,choice)
         choice['empty_left']=choice['board'].count(None)
