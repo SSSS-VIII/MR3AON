@@ -141,6 +141,8 @@ Evaluation evaluate(int spent) {
 int main() {
     int n,mode,samples,profile,tiebreak,max_purchases,trace; double seconds; U max_layouts;
     if(!(std::cin>>n>>turn>>gold>>seconds>>max_layouts>>mode>>samples>>growth_mode>>profile>>tiebreak>>max_purchases>>trace)) return 2;
+    double passive_weight,aura_weight,vacancy_weight,cumulative_damage,finish_priority;
+    std::cin>>passive_weight>>aura_weight>>vacancy_weight>>cumulative_damage>>finish_priority;
     cards.resize(n);
     for(auto& c:cards) std::cin>>c.attack>>c.cost>>c.element>>c.category>>c.copies>>c.effect>>c.param;
     if(profile>=1) for(auto& c:cards)
@@ -154,7 +156,7 @@ int main() {
     auto started=Clock::now();
     auto original=board;
     auto baseline=evaluate(0);
-    auto baseline_potential=profile==2?estimate_potential(baseline,future_pool,original):Potential{};
+    auto baseline_potential=profile==2?estimate_potential(baseline,future_pool,original,passive_weight,aura_weight):Potential{};
     std::vector<int> empty,combo,best_combo;
     for(int i=0;i<9;++i)if(board[i].id<0)empty.push_back(i);
     U layouts=0,completed=0,physical=0,instant_count=0,instant_weight=0;
@@ -162,12 +164,12 @@ int main() {
     std::map<I,std::pair<U,U>> histogram;
     I overall=std::numeric_limits<I>::min();
     double overall_value=-std::numeric_limits<double>::infinity(),overall_potential=0;
-    auto best_board=board;
+    auto best_board=board;bool overall_finished=false;
     auto expired=[&] {
         return (max_layouts && layouts>=max_layouts) ||
           (seconds>0 && std::chrono::duration<double>(Clock::now()-started).count()>=seconds);
     };
-    struct Choice {std::vector<int> cards;int spent,priority;I damage;std::array<Cell,9> board;Evaluation eval;Potential potential;};
+    struct Choice {std::vector<int> cards;int spent,priority;I damage;std::array<Cell,9> board;Evaluation eval;Potential potential;double strategic;bool finishing;};
     std::vector<Choice> choices;
     auto priority=[&] {
         int value=0;
@@ -188,19 +190,22 @@ int main() {
         I best=std::numeric_limits<I>::min();
         auto candidate_board=board;
         Evaluation candidate_eval;Potential candidate_potential;double best_value=-std::numeric_limits<double>::infinity();int best_priority=std::numeric_limits<int>::min();
-        bool instant=false;
+        bool instant=false,candidate_finished=false;
         auto place=[&](auto&& self,int at,int previous_cell)->void {
             if(stopped)return;
             if((layouts%1024==0 || (max_layouts && layouts>=max_layouts)) && expired()){stopped=true;return;}
             if(at==(int)combo.size()) {
                 ++layouts;auto e=evaluate(spent);
-                auto potential=profile==2?estimate_potential(e,future_pool,original):Potential{};
-                double value=e.damage+potential.value;
+                auto potential=profile==2?estimate_potential(e,future_pool,original,passive_weight,aura_weight):Potential{};
+                bool finishing=finish_priority>0 && e.rounds[turn-1]+cumulative_damage>=100;
+                double value=finishing?double(e.rounds[turn-1]):
+                    e.damage+potential.value-vacancy_weight*(5-turn)*combo.size();
                 int pos=tiebreak?priority():0;
-                if(value>best_value+1e-9 || (std::abs(value-best_value)<1e-9 &&
-                    (e.damage>best || (e.damage==best && pos>best_priority)))) {
+                if(finishing>candidate_finished || (finishing==candidate_finished &&
+                    (value>best_value+1e-9 || (std::abs(value-best_value)<1e-9 &&
+                    (e.damage>best || (e.damage==best && pos>best_priority)))))) {
                     best=e.damage;best_value=value;best_priority=pos;candidate_board=board;
-                    instant=e.instant;candidate_eval=e;candidate_potential=potential;
+                    instant=e.instant;candidate_finished=finishing;candidate_eval=e;candidate_potential=potential;
                 }
                 return;
             }
@@ -213,11 +218,12 @@ int main() {
         place(place,0,-1);
         if(stopped)return;
         ++completed;physical+=weight;
-        if(trace)choices.push_back({combo,spent,best_priority,best,candidate_board,candidate_eval,candidate_potential});
+        if(trace)choices.push_back({combo,spent,best_priority,best,candidate_board,candidate_eval,candidate_potential,best_value,candidate_finished});
         auto& bin=histogram[best-baseline.damage];++bin.first;bin.second+=weight;
         if(instant){++instant_count;instant_weight+=weight;}
-        if(best_value>overall_value+1e-9 || (std::abs(best_value-overall_value)<1e-9 && best>overall)) {
-            overall=best;overall_value=best_value;overall_potential=candidate_potential.value;
+        if(candidate_finished>overall_finished || (candidate_finished==overall_finished &&
+            (best_value>overall_value+1e-9 || (std::abs(best_value-overall_value)<1e-9 && best>overall)))) {
+            overall_finished=candidate_finished;overall=best;overall_value=best_value;overall_potential=candidate_potential.value;
             best_combo=combo;best_board=candidate_board;
         }
     };
@@ -263,7 +269,7 @@ int main() {
     for(const auto& c:choices) {
         if(!first_choice)std::cout<<',';first_choice=false;
         std::cout<<"{\"spent\":"<<c.spent<<",\"gold_left\":"<<gold-c.spent
-          <<",\"damage\":"<<c.damage<<",\"position_priority\":"<<c.priority
+          <<",\"damage\":"<<c.damage<<",\"finishing\":"<<(c.finishing?"true":"false")<<",\"strategic_damage\":"<<c.strategic<<",\"position_priority\":"<<c.priority
           <<",\"end_gold\":"<<c.eval.gold<<",\"extra_refreshes\":"<<c.eval.refresh<<",\"cards\":[";
         for(unsigned i=0;i<c.cards.size();++i){if(i)std::cout<<',';std::cout<<c.cards[i];}
         std::cout<<"],\"board\":[";

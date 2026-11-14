@@ -9,7 +9,7 @@ constexpr double SYNERGY_LAG_DECAY=0.5;
 constexpr double FUTURE_SHOP_EXPOSURES=10.0;
 
 Potential estimate_potential(const Evaluation& evaluated,const std::vector<int>& future_pool,
-                             const std::array<Cell,9>& original) {
+                             const std::array<Cell,9>& original, double passive_weight=1, double aura_weight=0) {
     Potential p;
     auto remaining=future_pool;
     int empty=0,tigers=0,thunder=0,roles=0,weapons=0,fire=0,total=0;
@@ -21,7 +21,12 @@ Potential estimate_potential(const Evaluation& evaluated,const std::vector<int>&
         thunder+=c.element==4;fire+=c.element==1;
         roles+=c.category==0;weapons+=c.category==1;
     }
-    for(int n:remaining)total+=std::max(0,n);
+    int future_elements=0,future_categories=0;
+    for(unsigned id=0;id<cards.size();++id)if(remaining[id]>0) {
+        total+=remaining[id];
+        if(cards[id].element)future_elements|=1<<cards[id].element;
+        future_categories|=1<<(cards[id].category+1);
+    }
     auto supply=[&](int element,bool tiger,bool weapon) {
         int count=0;
         for(unsigned i=0;i<cards.size();++i) {
@@ -104,6 +109,45 @@ Potential estimate_potential(const Evaluation& evaluated,const std::vector<int>&
             }
         }
         p.value+=p.by_cell[i];
+    }
+    for(int i=0;i<9;++i)p.by_cell[i]*=passive_weight;
+    p.value*=passive_weight;
+    // Expected future occupancy is shared across empty cells, not one invented
+    // full-strength recipient for every source. Unknown cards' own damage is absent.
+    if(aura_weight>0 && empty>0 && total>0)for(int i=0;i<9;++i)if(board[i].id>=0) {
+        const auto& c=cards[board[i].id];
+        int mask=0;
+        if(c.effect==FLAG || c.effect==DRUM)for(int j=0;j<9;++j)if(board[j].id>=0 && board[j].entered>=board[i].entered) {
+            int kind=c.effect==FLAG?cards[board[j].id].element:cards[board[j].id].category+1;
+            if(kind)mask|=1<<kind;
+        }
+        int distinct=__builtin_popcount((unsigned)mask);
+        double added=0;
+        for(int r=turn+1;r<=5;++r) {
+            double filled=std::min({1.0,double(total)/empty,2.0*(r-turn)/empty});
+            int available_types=__builtin_popcount((unsigned)((c.effect==FLAG?future_elements:future_categories)&~mask));
+            double diversity=std::min(double(available_types),.5*(r-turn));
+            bool active=r-board[i].entered<2;
+            for(int j=0;j<9;++j)if(j!=i) {
+                bool row=i/3==j/3,col=i%3==j%3;
+                bool adjacent=std::abs(i/3-j/3)+std::abs(i%3-j%3)==1;
+                if(board[j].id<0) {
+                    double boost=0;
+                    if(c.effect==MASK && adjacent)boost=1.25;
+                    if(c.effect==SHEATH && adjacent)boost=.8;
+                    if((c.effect==FLAG || c.effect==DRUM) && row)boost=distinct+diversity;
+                    if(c.effect==FOX && row)boost=2;
+                    if(active && c.effect==COLUMN_ELEMENT && col)boost=.75;
+                    if(active && c.effect==ROW_ELEMENT && row)boost=.75;
+                    if(active && c.effect==COLUMN_ALL && col)boost=2;
+                    if(active && c.effect==ROW_ALL && row)boost=2;
+                    if(active && c.effect==THUNDER_ALL)boost=.25;
+                    added+=boost*filled;
+                } else if(row && (c.effect==FLAG || c.effect==DRUM))added+=diversity*multiplier(j,r);
+            }
+        }
+        added*=aura_weight;p.value+=added;p.by_cell[i]+=added;
+        if(added>0)p.reason[i]=6;
     }
     return p;
 }

@@ -1,0 +1,5325 @@
+{
+  "version": "refresh-stage-v3",
+  "first_seed": 60000,
+  "games_per_strategy": 1000,
+  "policy": {
+    "gold_before_refresh": [
+      6,
+      4.8,
+      3.6,
+      2.4,
+      1.2
+    ],
+    "gold_after_refresh": [
+      4,
+      3,
+      2,
+      1,
+      0
+    ],
+    "heuristics": {
+      "aura_weight": 2,
+      "vacancy_weight": 3
+    },
+    "income_weight": 2,
+    "prioritize_finish": true,
+    "refresh_slot_budget": 3
+  },
+  "source_sha256": {
+    "tools/intelligence_simulator/engine.cpp": "06f06c216d3f38706dad17774c9432036de26ec913d82418ce7c8acc6f3a9eba",
+    "tools/intelligence_simulator/synergy.hpp": "09cfb0cc9c853f21672b2fa04df918f881ced39b8694b96b91210287bd36c1a4",
+    "tools/intelligence_simulator/model.py": "be0f8fd911db1a1680fe986efd8088a7ae8a2fc2f7ff45c4f7c9f685a09b6b28",
+    "tools/intelligence_simulator/refresh.py": "37a7dd3bf3dda8515274e47b37f53d68b62aba9dce3e2e533953a7f51cba66dd",
+    "tools/intelligence_simulator/single_player.py": "88f48f18d06f1b34f4617d27f721e02fd519eb2c5b880da2e6249c30ad323c21",
+    "tools/intelligence_simulator/tuned.py": "e8efb7f144759dac9ce6d98c744b5f3c44172bfd90b3135bfb55b1c553c46628",
+    "tools/intelligence_simulator/cards.json": "79c98a89b720efff393820eef9fb154fc3210413d5157d031fc8e9c31f7af991"
+  },
+  "metrics_note": "mean_damage为首次100后立即结束的实际伤害；mean_five_round_damage为同策略继续虚拟到第5回合总伤害；两个验收结果分开，实际均伤130尚未通过。",
+  "full_hand_warm_benchmark": [
+    {
+      "complete": true,
+      "layouts": 36046,
+      "combinations": 32,
+      "engine_s": 0.0909914,
+      "wall_s": 0.09939376499096397
+    },
+    {
+      "complete": true,
+      "layouts": 36046,
+      "combinations": 32,
+      "engine_s": 0.0688842,
+      "wall_s": 0.07354976600618102
+    },
+    {
+      "complete": true,
+      "layouts": 36046,
+      "combinations": 32,
+      "engine_s": 0.0761553,
+      "wall_s": 0.08001304299978074
+    }
+  ],
+  "strategies": {
+    "damage_only": {
+      "summary": {
+        "games": 1000,
+        "four_round_kill_rate": 0.048,
+        "mean_five_round_damage": 112.605,
+        "reach_100_rate": 0.792,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 48,
+          "5": 744
+        },
+        "mean_hit_round_among_successes": 4.9393939393939394,
+        "mean_damage": 110.995,
+        "median_damage": 111.0,
+        "min_damage": 68,
+        "max_damage": 161,
+        "decision_median_ms": 2.6576990057947114,
+        "decision_p95_ms": 4.450317996088415,
+        "decision_max_ms": 22.38747398951091,
+        "partial_purchase_refreshes": 1104,
+        "zero_purchase_refreshes": 0
+      },
+      "acceptance_actual_stop": {
+        "mean_130": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": false,
+        "all_met": false
+      },
+      "acceptance_five_rounds": {
+        "mean_130": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": false,
+        "all_met": false
+      },
+      "failed_seeds": [
+        60001,
+        60002,
+        60009,
+        60010,
+        60023,
+        60031,
+        60033,
+        60039,
+        60041,
+        60045,
+        60047,
+        60053,
+        60054,
+        60055,
+        60056,
+        60058,
+        60061,
+        60066,
+        60072,
+        60074,
+        60079,
+        60080,
+        60083,
+        60088,
+        60100,
+        60103,
+        60104,
+        60118,
+        60124,
+        60126,
+        60132,
+        60135,
+        60137,
+        60140,
+        60147,
+        60153,
+        60154,
+        60166,
+        60169,
+        60180,
+        60187,
+        60192,
+        60202,
+        60203,
+        60209,
+        60212,
+        60216,
+        60218,
+        60219,
+        60223,
+        60224,
+        60226,
+        60235,
+        60241,
+        60247,
+        60250,
+        60254,
+        60255,
+        60261,
+        60264,
+        60281,
+        60287,
+        60291,
+        60302,
+        60322,
+        60327,
+        60328,
+        60331,
+        60336,
+        60341,
+        60346,
+        60347,
+        60348,
+        60354,
+        60356,
+        60362,
+        60365,
+        60368,
+        60372,
+        60378,
+        60381,
+        60382,
+        60386,
+        60389,
+        60393,
+        60395,
+        60397,
+        60398,
+        60399,
+        60410,
+        60413,
+        60414,
+        60417,
+        60421,
+        60431,
+        60438,
+        60439,
+        60446,
+        60449,
+        60452,
+        60455,
+        60456,
+        60459,
+        60463,
+        60467,
+        60487,
+        60489,
+        60490,
+        60500,
+        60511,
+        60512,
+        60513,
+        60516,
+        60523,
+        60524,
+        60527,
+        60537,
+        60543,
+        60545,
+        60553,
+        60554,
+        60555,
+        60562,
+        60563,
+        60566,
+        60567,
+        60585,
+        60591,
+        60595,
+        60598,
+        60610,
+        60612,
+        60613,
+        60615,
+        60619,
+        60620,
+        60629,
+        60634,
+        60636,
+        60639,
+        60644,
+        60645,
+        60647,
+        60655,
+        60671,
+        60676,
+        60683,
+        60684,
+        60685,
+        60686,
+        60687,
+        60690,
+        60692,
+        60693,
+        60700,
+        60704,
+        60707,
+        60710,
+        60714,
+        60717,
+        60720,
+        60722,
+        60723,
+        60726,
+        60733,
+        60734,
+        60735,
+        60740,
+        60743,
+        60756,
+        60757,
+        60763,
+        60779,
+        60781,
+        60785,
+        60787,
+        60791,
+        60800,
+        60804,
+        60811,
+        60823,
+        60826,
+        60829,
+        60835,
+        60836,
+        60842,
+        60843,
+        60856,
+        60859,
+        60869,
+        60887,
+        60888,
+        60894,
+        60907,
+        60909,
+        60915,
+        60922,
+        60925,
+        60931,
+        60932,
+        60937,
+        60939,
+        60947,
+        60954,
+        60977,
+        60982,
+        60986,
+        60998
+      ]
+    },
+    "synergy_v2": {
+      "summary": {
+        "games": 1000,
+        "four_round_kill_rate": 0.119,
+        "mean_five_round_damage": 107.016,
+        "reach_100_rate": 0.641,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 119,
+          "5": 522
+        },
+        "mean_hit_round_among_successes": 4.814352574102964,
+        "mean_damage": 102.473,
+        "median_damage": 105.0,
+        "min_damage": 0,
+        "max_damage": 176,
+        "decision_median_ms": 3.019930998561904,
+        "decision_p95_ms": 6.595920989639126,
+        "decision_max_ms": 47.9778730077669,
+        "partial_purchase_refreshes": 1873,
+        "zero_purchase_refreshes": 2158
+      },
+      "acceptance_actual_stop": {
+        "mean_130": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": false,
+        "all_met": false
+      },
+      "acceptance_five_rounds": {
+        "mean_130": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": false,
+        "all_met": false
+      },
+      "failed_seeds": [
+        60000,
+        60001,
+        60002,
+        60003,
+        60007,
+        60008,
+        60009,
+        60011,
+        60014,
+        60015,
+        60016,
+        60017,
+        60019,
+        60020,
+        60021,
+        60026,
+        60027,
+        60028,
+        60029,
+        60030,
+        60033,
+        60034,
+        60036,
+        60038,
+        60042,
+        60043,
+        60052,
+        60053,
+        60055,
+        60058,
+        60062,
+        60065,
+        60069,
+        60071,
+        60072,
+        60073,
+        60074,
+        60076,
+        60077,
+        60078,
+        60082,
+        60084,
+        60089,
+        60090,
+        60093,
+        60094,
+        60096,
+        60097,
+        60101,
+        60104,
+        60110,
+        60115,
+        60119,
+        60122,
+        60123,
+        60125,
+        60126,
+        60127,
+        60130,
+        60133,
+        60137,
+        60140,
+        60143,
+        60148,
+        60150,
+        60153,
+        60163,
+        60164,
+        60166,
+        60168,
+        60172,
+        60173,
+        60174,
+        60177,
+        60180,
+        60186,
+        60190,
+        60202,
+        60203,
+        60204,
+        60205,
+        60208,
+        60214,
+        60219,
+        60221,
+        60223,
+        60225,
+        60232,
+        60233,
+        60240,
+        60242,
+        60244,
+        60245,
+        60247,
+        60250,
+        60251,
+        60258,
+        60259,
+        60261,
+        60263,
+        60268,
+        60271,
+        60272,
+        60280,
+        60286,
+        60287,
+        60293,
+        60298,
+        60302,
+        60303,
+        60304,
+        60307,
+        60310,
+        60312,
+        60313,
+        60317,
+        60319,
+        60320,
+        60322,
+        60325,
+        60326,
+        60327,
+        60330,
+        60331,
+        60333,
+        60336,
+        60338,
+        60343,
+        60345,
+        60348,
+        60351,
+        60355,
+        60368,
+        60369,
+        60371,
+        60372,
+        60373,
+        60378,
+        60384,
+        60385,
+        60387,
+        60391,
+        60395,
+        60396,
+        60400,
+        60402,
+        60406,
+        60409,
+        60410,
+        60411,
+        60415,
+        60416,
+        60425,
+        60428,
+        60435,
+        60436,
+        60438,
+        60439,
+        60449,
+        60451,
+        60453,
+        60455,
+        60458,
+        60459,
+        60462,
+        60472,
+        60478,
+        60479,
+        60485,
+        60486,
+        60487,
+        60488,
+        60489,
+        60490,
+        60492,
+        60498,
+        60500,
+        60501,
+        60503,
+        60507,
+        60508,
+        60509,
+        60510,
+        60516,
+        60519,
+        60521,
+        60523,
+        60524,
+        60527,
+        60531,
+        60532,
+        60535,
+        60536,
+        60537,
+        60544,
+        60547,
+        60548,
+        60550,
+        60555,
+        60559,
+        60565,
+        60567,
+        60570,
+        60571,
+        60585,
+        60587,
+        60591,
+        60595,
+        60600,
+        60602,
+        60603,
+        60604,
+        60610,
+        60612,
+        60613,
+        60615,
+        60623,
+        60627,
+        60633,
+        60634,
+        60635,
+        60636,
+        60638,
+        60639,
+        60640,
+        60644,
+        60646,
+        60647,
+        60650,
+        60653,
+        60657,
+        60660,
+        60663,
+        60665,
+        60667,
+        60669,
+        60671,
+        60674,
+        60677,
+        60681,
+        60682,
+        60684,
+        60685,
+        60687,
+        60691,
+        60692,
+        60698,
+        60701,
+        60702,
+        60705,
+        60708,
+        60710,
+        60712,
+        60713,
+        60714,
+        60717,
+        60720,
+        60725,
+        60730,
+        60732,
+        60735,
+        60738,
+        60739,
+        60745,
+        60758,
+        60761,
+        60762,
+        60763,
+        60765,
+        60768,
+        60770,
+        60772,
+        60773,
+        60774,
+        60779,
+        60783,
+        60788,
+        60789,
+        60795,
+        60796,
+        60800,
+        60802,
+        60804,
+        60807,
+        60808,
+        60809,
+        60811,
+        60813,
+        60817,
+        60821,
+        60823,
+        60824,
+        60825,
+        60826,
+        60827,
+        60828,
+        60830,
+        60831,
+        60832,
+        60834,
+        60835,
+        60838,
+        60839,
+        60842,
+        60845,
+        60849,
+        60853,
+        60856,
+        60858,
+        60859,
+        60862,
+        60871,
+        60873,
+        60874,
+        60878,
+        60881,
+        60882,
+        60884,
+        60892,
+        60896,
+        60901,
+        60902,
+        60908,
+        60909,
+        60917,
+        60922,
+        60924,
+        60929,
+        60930,
+        60931,
+        60932,
+        60933,
+        60936,
+        60937,
+        60938,
+        60941,
+        60942,
+        60943,
+        60946,
+        60947,
+        60952,
+        60954,
+        60956,
+        60957,
+        60958,
+        60959,
+        60962,
+        60964,
+        60966,
+        60967,
+        60970,
+        60972,
+        60978,
+        60980,
+        60986,
+        60990,
+        60994,
+        60995,
+        60996
+      ]
+    },
+    "tuned": {
+      "summary": {
+        "games": 1000,
+        "four_round_kill_rate": 0.237,
+        "mean_five_round_damage": 134.11,
+        "reach_100_rate": 0.991,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 237,
+          "5": 754
+        },
+        "mean_hit_round_among_successes": 4.760847628657921,
+        "mean_damage": 124.502,
+        "median_damage": 124.0,
+        "min_damage": 79,
+        "max_damage": 200,
+        "decision_median_ms": 3.0022885039215907,
+        "decision_p95_ms": 7.518920989241451,
+        "decision_max_ms": 60.05507500958629,
+        "partial_purchase_refreshes": 2079,
+        "zero_purchase_refreshes": 475
+      },
+      "acceptance_actual_stop": {
+        "mean_130": false,
+        "five_round_100_rate_99pct": true,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      },
+      "acceptance_five_rounds": {
+        "mean_130": true,
+        "five_round_100_rate_99pct": true,
+        "four_round_kill_rate_20pct": true,
+        "all_met": true
+      },
+      "failed_seeds": [
+        60004,
+        60010,
+        60079,
+        60255,
+        60263,
+        60356,
+        60421,
+        60825,
+        60862
+      ]
+    }
+  },
+  "calibration_note": "早期探针包含演进中模型的参数，非最终模型可直接回放配置；仅用于调参审计。0..99初筛、100..399两候选选择；60000..60999为冻结参数后最终独立验证。未根据最终验证修改参数。",
+  "calibration": {
+    "tune-gold-split": [
+      {
+        "policy": {
+          "gold_before_refresh": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "gold_after_refresh": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.79,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 2,
+            "5": 77
+          },
+          "mean_hit_round_among_successes": 4.974683544303797,
+          "mean_damage": 111.97,
+          "median_damage": 111.0,
+          "min_damage": 67,
+          "max_damage": 167,
+          "decision_median_ms": 3.491761992336251,
+          "decision_p95_ms": 5.2606469980673864,
+          "decision_max_ms": 13.989742990816012,
+          "partial_purchase_refreshes": 127,
+          "zero_purchase_refreshes": 0
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            2.0,
+            1.6,
+            1.2,
+            0.8,
+            0.4
+          ],
+          "gold_after_refresh": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.78,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 2,
+            "5": 76
+          },
+          "mean_hit_round_among_successes": 4.9743589743589745,
+          "mean_damage": 112.63,
+          "median_damage": 111.0,
+          "min_damage": 67,
+          "max_damage": 167,
+          "decision_median_ms": 3.4672764959395863,
+          "decision_p95_ms": 5.226462992141023,
+          "decision_max_ms": 13.663167002960108,
+          "partial_purchase_refreshes": 127,
+          "zero_purchase_refreshes": 1
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            4.0,
+            3.2,
+            2.4,
+            1.6,
+            0.8
+          ],
+          "gold_after_refresh": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.78,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 2,
+            "5": 76
+          },
+          "mean_hit_round_among_successes": 4.9743589743589745,
+          "mean_damage": 113.28,
+          "median_damage": 112.0,
+          "min_damage": 73,
+          "max_damage": 167,
+          "decision_median_ms": 3.418328989937436,
+          "decision_p95_ms": 5.553409006097354,
+          "decision_max_ms": 18.132743003661744,
+          "partial_purchase_refreshes": 149,
+          "zero_purchase_refreshes": 7
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6.0,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.9,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 4,
+            "5": 86
+          },
+          "mean_hit_round_among_successes": 4.955555555555556,
+          "mean_damage": 117.74,
+          "median_damage": 116.5,
+          "min_damage": 84,
+          "max_damage": 167,
+          "decision_median_ms": 3.381404996616766,
+          "decision_p95_ms": 5.38595300167799,
+          "decision_max_ms": 18.35552300326526,
+          "partial_purchase_refreshes": 172,
+          "zero_purchase_refreshes": 17
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            3.0,
+            2.4,
+            1.8,
+            1.2,
+            0.6
+          ],
+          "gold_after_refresh": [
+            1.0,
+            0.75,
+            0.5,
+            0.25,
+            0.0
+          ]
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.78,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 2,
+            "5": 76
+          },
+          "mean_hit_round_among_successes": 4.9743589743589745,
+          "mean_damage": 113.25,
+          "median_damage": 112.0,
+          "min_damage": 67,
+          "max_damage": 167,
+          "decision_median_ms": 3.322383010527119,
+          "decision_p95_ms": 5.251700000371784,
+          "decision_max_ms": 19.752716994844377,
+          "partial_purchase_refreshes": 136,
+          "zero_purchase_refreshes": 1
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            5.0,
+            4.0,
+            3.0,
+            2.0,
+            1.0
+          ],
+          "gold_after_refresh": [
+            2.0,
+            1.5,
+            1.0,
+            0.5,
+            0.0
+          ]
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.86,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 3,
+            "5": 83
+          },
+          "mean_hit_round_among_successes": 4.965116279069767,
+          "mean_damage": 116.19,
+          "median_damage": 116.0,
+          "min_damage": 76,
+          "max_damage": 167,
+          "decision_median_ms": 3.2926370040513575,
+          "decision_p95_ms": 4.901901003904641,
+          "decision_max_ms": 21.86082099797204,
+          "partial_purchase_refreshes": 180,
+          "zero_purchase_refreshes": 7
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            7.0,
+            5.6,
+            4.2,
+            2.8,
+            1.4
+          ],
+          "gold_after_refresh": [
+            3.0,
+            2.25,
+            1.5,
+            0.75,
+            0.0
+          ]
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.9,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 5,
+            "5": 85
+          },
+          "mean_hit_round_among_successes": 4.944444444444445,
+          "mean_damage": 116.76,
+          "median_damage": 116.5,
+          "min_damage": 84,
+          "max_damage": 167,
+          "decision_median_ms": 3.323224496853072,
+          "decision_p95_ms": 5.575791001319885,
+          "decision_max_ms": 15.122668002732098,
+          "partial_purchase_refreshes": 186,
+          "zero_purchase_refreshes": 33
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            4.0,
+            3.2,
+            2.4,
+            1.6,
+            0.8
+          ],
+          "gold_after_refresh": [
+            1.0,
+            0.75,
+            0.5,
+            0.25,
+            0.0
+          ]
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.78,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 2,
+            "5": 76
+          },
+          "mean_hit_round_among_successes": 4.9743589743589745,
+          "mean_damage": 113.28,
+          "median_damage": 112.0,
+          "min_damage": 73,
+          "max_damage": 167,
+          "decision_median_ms": 3.247251494030934,
+          "decision_p95_ms": 5.264314007945359,
+          "decision_max_ms": 18.86232900142204,
+          "partial_purchase_refreshes": 149,
+          "zero_purchase_refreshes": 7
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6.0,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2.0,
+            1.5,
+            1.0,
+            0.5,
+            0.0
+          ]
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.9,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 4,
+            "5": 86
+          },
+          "mean_hit_round_among_successes": 4.955555555555556,
+          "mean_damage": 117.78,
+          "median_damage": 116.5,
+          "min_damage": 84,
+          "max_damage": 167,
+          "decision_median_ms": 3.3662459900369868,
+          "decision_p95_ms": 5.287719002808444,
+          "decision_max_ms": 15.993100008927286,
+          "partial_purchase_refreshes": 170,
+          "zero_purchase_refreshes": 17
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            8.0,
+            6.4,
+            4.8,
+            3.2,
+            1.6
+          ],
+          "gold_after_refresh": [
+            4.0,
+            3.0,
+            2.0,
+            1.0,
+            0.0
+          ]
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.9,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 8,
+            "5": 82
+          },
+          "mean_hit_round_among_successes": 4.911111111111111,
+          "mean_damage": 117.45,
+          "median_damage": 117.0,
+          "min_damage": 80,
+          "max_damage": 164,
+          "decision_median_ms": 3.507471992634237,
+          "decision_p95_ms": 5.81307899847161,
+          "decision_max_ms": 19.927938003093004,
+          "partial_purchase_refreshes": 187,
+          "zero_purchase_refreshes": 52
+        }
+      }
+    ],
+    "tune-aura": [
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 1,
+            "vacancy_weight": 0,
+            "early_weight": 0
+          }
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.92,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 6,
+            "5": 86
+          },
+          "mean_hit_round_among_successes": 4.934782608695652,
+          "mean_damage": 118.71,
+          "median_damage": 121.0,
+          "min_damage": 83,
+          "max_damage": 155,
+          "decision_median_ms": 3.466560010565445,
+          "decision_p95_ms": 6.057869992218912,
+          "decision_max_ms": 21.323919005226344,
+          "partial_purchase_refreshes": 182,
+          "zero_purchase_refreshes": 8
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 0,
+            "early_weight": 0
+          }
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.92,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 6,
+            "5": 86
+          },
+          "mean_hit_round_among_successes": 4.934782608695652,
+          "mean_damage": 118.81,
+          "median_damage": 119.5,
+          "min_damage": 87,
+          "max_damage": 159,
+          "decision_median_ms": 3.407719501410611,
+          "decision_p95_ms": 5.972619008389302,
+          "decision_max_ms": 25.644774999818765,
+          "partial_purchase_refreshes": 158,
+          "zero_purchase_refreshes": 4
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 3,
+            "vacancy_weight": 0,
+            "early_weight": 0
+          }
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.83,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 4,
+            "5": 79
+          },
+          "mean_hit_round_among_successes": 4.951807228915663,
+          "mean_damage": 112.96,
+          "median_damage": 111.0,
+          "min_damage": 78,
+          "max_damage": 159,
+          "decision_median_ms": 3.407884498301428,
+          "decision_p95_ms": 5.3716069960501045,
+          "decision_max_ms": 25.836435001110658,
+          "partial_purchase_refreshes": 164,
+          "zero_purchase_refreshes": 4
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 1,
+            "vacancy_weight": 1,
+            "early_weight": 0
+          }
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.96,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 9,
+            "5": 87
+          },
+          "mean_hit_round_among_successes": 4.90625,
+          "mean_damage": 121.77,
+          "median_damage": 123.0,
+          "min_damage": 85,
+          "max_damage": 163,
+          "decision_median_ms": 3.5260519944131374,
+          "decision_p95_ms": 6.71007001074031,
+          "decision_max_ms": 24.369550999836065,
+          "partial_purchase_refreshes": 199,
+          "zero_purchase_refreshes": 28
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 1,
+            "early_weight": 0
+          }
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.95,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 8,
+            "5": 87
+          },
+          "mean_hit_round_among_successes": 4.91578947368421,
+          "mean_damage": 122.23,
+          "median_damage": 124.5,
+          "min_damage": 87,
+          "max_damage": 163,
+          "decision_median_ms": 3.6011034972034395,
+          "decision_p95_ms": 6.864670998766087,
+          "decision_max_ms": 23.428276006598026,
+          "partial_purchase_refreshes": 176,
+          "zero_purchase_refreshes": 22
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "early_weight": 0
+          }
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 7,
+            "5": 92
+          },
+          "mean_hit_round_among_successes": 4.929292929292929,
+          "mean_damage": 122.75,
+          "median_damage": 125.0,
+          "min_damage": 70,
+          "max_damage": 159,
+          "decision_median_ms": 3.4978240000782534,
+          "decision_p95_ms": 7.036825001705438,
+          "decision_max_ms": 23.695740004768595,
+          "partial_purchase_refreshes": 199,
+          "zero_purchase_refreshes": 31
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 1,
+            "vacancy_weight": 0,
+            "early_weight": 0.25
+          }
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.84,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 5,
+            "5": 79
+          },
+          "mean_hit_round_among_successes": 4.940476190476191,
+          "mean_damage": 114.46,
+          "median_damage": 113.0,
+          "min_damage": 83,
+          "max_damage": 145,
+          "decision_median_ms": 3.280524499132298,
+          "decision_p95_ms": 5.7258339948020875,
+          "decision_max_ms": 24.22779399785213,
+          "partial_purchase_refreshes": 150,
+          "zero_purchase_refreshes": 3
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 0,
+            "early_weight": 0.25
+          }
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.87,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 7,
+            "5": 80
+          },
+          "mean_hit_round_among_successes": 4.919540229885057,
+          "mean_damage": 117.23,
+          "median_damage": 120.0,
+          "min_damage": 83,
+          "max_damage": 155,
+          "decision_median_ms": 3.481532505247742,
+          "decision_p95_ms": 6.147218999103643,
+          "decision_max_ms": 21.774317996460013,
+          "partial_purchase_refreshes": 141,
+          "zero_purchase_refreshes": 4
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 1,
+            "early_weight": 0.25
+          }
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.93,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 7,
+            "5": 86
+          },
+          "mean_hit_round_among_successes": 4.924731182795699,
+          "mean_damage": 119.77,
+          "median_damage": 121.0,
+          "min_damage": 91,
+          "max_damage": 155,
+          "decision_median_ms": 3.4279709943803027,
+          "decision_p95_ms": 5.824017003760673,
+          "decision_max_ms": 22.11369799624663,
+          "partial_purchase_refreshes": 168,
+          "zero_purchase_refreshes": 2
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 1,
+            "early_weight": 0.5
+          }
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.86,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 8,
+            "5": 78
+          },
+          "mean_hit_round_among_successes": 4.906976744186046,
+          "mean_damage": 116.98,
+          "median_damage": 117.0,
+          "min_damage": 84,
+          "max_damage": 155,
+          "decision_median_ms": 3.5524909908417612,
+          "decision_p95_ms": 5.979839988867752,
+          "decision_max_ms": 21.07616199646145,
+          "partial_purchase_refreshes": 152,
+          "zero_purchase_refreshes": 4
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 3,
+            "vacancy_weight": 1,
+            "early_weight": 0.5
+          }
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.85,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 6,
+            "5": 79
+          },
+          "mean_hit_round_among_successes": 4.929411764705883,
+          "mean_damage": 117.04,
+          "median_damage": 118.5,
+          "min_damage": 83,
+          "max_damage": 163,
+          "decision_median_ms": 3.6544369941111654,
+          "decision_p95_ms": 6.396625991328619,
+          "decision_max_ms": 21.225844000582583,
+          "partial_purchase_refreshes": 136,
+          "zero_purchase_refreshes": 1
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 3,
+            "vacancy_weight": 2,
+            "early_weight": 0.5
+          }
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.94,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 6,
+            "5": 88
+          },
+          "mean_hit_round_among_successes": 4.9361702127659575,
+          "mean_damage": 119.91,
+          "median_damage": 119.0,
+          "min_damage": 88,
+          "max_damage": 163,
+          "decision_median_ms": 3.511347997118719,
+          "decision_p95_ms": 5.922591997659765,
+          "decision_max_ms": 26.162176989600994,
+          "partial_purchase_refreshes": 163,
+          "zero_purchase_refreshes": 1
+        }
+      }
+    ],
+    "tune-economy": [
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 0,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.98,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 7,
+            "5": 91
+          },
+          "mean_hit_round_among_successes": 4.928571428571429,
+          "mean_damage": 123.06,
+          "median_damage": 125.0,
+          "min_damage": 92,
+          "max_damage": 159,
+          "decision_median_ms": 3.485659501166083,
+          "decision_p95_ms": 6.849700002931058,
+          "decision_max_ms": 21.212028004811145,
+          "partial_purchase_refreshes": 201,
+          "zero_purchase_refreshes": 30
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 1,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.98,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 16,
+            "5": 82
+          },
+          "mean_hit_round_among_successes": 4.836734693877551,
+          "mean_damage": 122.05,
+          "median_damage": 124.5,
+          "min_damage": 91,
+          "max_damage": 181,
+          "decision_median_ms": 3.5872859953087755,
+          "decision_p95_ms": 7.082088006427512,
+          "decision_max_ms": 19.370716996490955,
+          "partial_purchase_refreshes": 152,
+          "zero_purchase_refreshes": 14
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.98,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 9,
+            "5": 89
+          },
+          "mean_hit_round_among_successes": 4.908163265306122,
+          "mean_damage": 125,
+          "median_damage": 127.5,
+          "min_damage": 92,
+          "max_damage": 170,
+          "decision_median_ms": 3.63889350410318,
+          "decision_p95_ms": 7.022125006187707,
+          "decision_max_ms": 22.90309499949217,
+          "partial_purchase_refreshes": 182,
+          "zero_purchase_refreshes": 23
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 1.0,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 19,
+            "5": 81
+          },
+          "mean_hit_round_among_successes": 4.81,
+          "mean_damage": 125.5,
+          "median_damage": 126.0,
+          "min_damage": 100,
+          "max_damage": 170,
+          "decision_median_ms": 3.5988830059068277,
+          "decision_p95_ms": 7.588152002426796,
+          "decision_max_ms": 41.047682010685094,
+          "partial_purchase_refreshes": 210,
+          "zero_purchase_refreshes": 56
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 4,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 16,
+            "5": 83
+          },
+          "mean_hit_round_among_successes": 4.838383838383838,
+          "mean_damage": 125.22,
+          "median_damage": 126.0,
+          "min_damage": 95,
+          "max_damage": 168,
+          "decision_median_ms": 3.798824494879227,
+          "decision_p95_ms": 9.996180000598542,
+          "decision_max_ms": 57.00096998771187,
+          "partial_purchase_refreshes": 205,
+          "zero_purchase_refreshes": 99
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "passive_weight": 0.5,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 13,
+            "5": 86
+          },
+          "mean_hit_round_among_successes": 4.8686868686868685,
+          "mean_damage": 124.57,
+          "median_damage": 125.0,
+          "min_damage": 99,
+          "max_damage": 170,
+          "decision_median_ms": 3.537467011483386,
+          "decision_p95_ms": 7.0935700059635565,
+          "decision_max_ms": 25.782041004276834,
+          "partial_purchase_refreshes": 183,
+          "zero_purchase_refreshes": 37
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "passive_weight": 2,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.94,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 7,
+            "5": 87
+          },
+          "mean_hit_round_among_successes": 4.925531914893617,
+          "mean_damage": 123.44,
+          "median_damage": 127.5,
+          "min_damage": 75,
+          "max_damage": 170,
+          "decision_median_ms": 3.533259005052969,
+          "decision_p95_ms": 6.187031001900323,
+          "decision_max_ms": 20.127113006310537,
+          "partial_purchase_refreshes": 196,
+          "zero_purchase_refreshes": 16
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.97,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 11,
+            "5": 86
+          },
+          "mean_hit_round_among_successes": 4.88659793814433,
+          "mean_damage": 125.23,
+          "median_damage": 128.0,
+          "min_damage": 90,
+          "max_damage": 170,
+          "decision_median_ms": 3.548658001818694,
+          "decision_p95_ms": 7.379276998108253,
+          "decision_max_ms": 19.82772900373675,
+          "partial_purchase_refreshes": 173,
+          "zero_purchase_refreshes": 27
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 1.0,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 20,
+            "5": 80
+          },
+          "mean_hit_round_among_successes": 4.8,
+          "mean_damage": 127.46,
+          "median_damage": 128.5,
+          "min_damage": 100,
+          "max_damage": 170,
+          "decision_median_ms": 3.741672000614926,
+          "decision_p95_ms": 7.785093010170385,
+          "decision_max_ms": 38.44814300828148,
+          "partial_purchase_refreshes": 204,
+          "zero_purchase_refreshes": 45
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 4,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 20,
+            "5": 79
+          },
+          "mean_hit_round_among_successes": 4.797979797979798,
+          "mean_damage": 125.69,
+          "median_damage": 127.0,
+          "min_damage": 94,
+          "max_damage": 163,
+          "decision_median_ms": 4.013904996099882,
+          "decision_p95_ms": 10.237043999950401,
+          "decision_max_ms": 57.88781998853665,
+          "partial_purchase_refreshes": 201,
+          "zero_purchase_refreshes": 90
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 0.5,
+            "early_weight": 0
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 18,
+            "5": 81
+          },
+          "mean_hit_round_among_successes": 4.818181818181818,
+          "mean_damage": 127.44,
+          "median_damage": 128.0,
+          "min_damage": 95,
+          "max_damage": 174,
+          "decision_median_ms": 3.7098819884704426,
+          "decision_p95_ms": 8.481634999043308,
+          "decision_max_ms": 60.93720700300764,
+          "partial_purchase_refreshes": 208,
+          "zero_purchase_refreshes": 63
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 2,
+            "early_weight": 0
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.97,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 16,
+            "5": 81
+          },
+          "mean_hit_round_among_successes": 4.835051546391752,
+          "mean_damage": 124.14,
+          "median_damage": 126.0,
+          "min_damage": 75,
+          "max_damage": 170,
+          "decision_median_ms": 3.746752001461573,
+          "decision_p95_ms": 7.339361996855587,
+          "decision_max_ms": 30.712203006260097,
+          "partial_purchase_refreshes": 201,
+          "zero_purchase_refreshes": 30
+        }
+      }
+    ],
+    "tune-stage": [
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.97,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 14,
+            "5": 83
+          },
+          "mean_hit_round_among_successes": 4.855670103092783,
+          "mean_damage": 124.74,
+          "median_damage": 127.0,
+          "min_damage": 90,
+          "max_damage": 170,
+          "decision_median_ms": 3.6726519974763505,
+          "decision_p95_ms": 7.443208000040613,
+          "decision_max_ms": 25.4759140079841,
+          "partial_purchase_refreshes": 183,
+          "zero_purchase_refreshes": 29
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 1.0,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 23,
+            "5": 77
+          },
+          "mean_hit_round_among_successes": 4.77,
+          "mean_damage": 126.87,
+          "median_damage": 127.5,
+          "min_damage": 100,
+          "max_damage": 170,
+          "decision_median_ms": 3.5756400029640645,
+          "decision_p95_ms": 8.035524006118067,
+          "decision_max_ms": 35.607869998784736,
+          "partial_purchase_refreshes": 211,
+          "zero_purchase_refreshes": 57
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            6,
+            5,
+            4,
+            3
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.96,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 20,
+            "5": 76
+          },
+          "mean_hit_round_among_successes": 4.791666666666667,
+          "mean_damage": 124.81,
+          "median_damage": 127.0,
+          "min_damage": 97,
+          "max_damage": 170,
+          "decision_median_ms": 3.6453654975048266,
+          "decision_p95_ms": 7.108877995051444,
+          "decision_max_ms": 23.16296500794124,
+          "partial_purchase_refreshes": 209,
+          "zero_purchase_refreshes": 67
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            6,
+            5,
+            4,
+            3
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 26,
+            "5": 73
+          },
+          "mean_hit_round_among_successes": 4.737373737373737,
+          "mean_damage": 127.74,
+          "median_damage": 128.0,
+          "min_damage": 94,
+          "max_damage": 169,
+          "decision_median_ms": 3.8228000048547983,
+          "decision_p95_ms": 7.853792005334981,
+          "decision_max_ms": 41.62053199252114,
+          "partial_purchase_refreshes": 223,
+          "zero_purchase_refreshes": 105
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            7,
+            6,
+            5,
+            4,
+            3
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.96,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 24,
+            "5": 72
+          },
+          "mean_hit_round_among_successes": 4.75,
+          "mean_damage": 124.25,
+          "median_damage": 127.5,
+          "min_damage": 97,
+          "max_damage": 170,
+          "decision_median_ms": 3.4438204966136254,
+          "decision_p95_ms": 7.189128999016248,
+          "decision_max_ms": 26.92593699612189,
+          "partial_purchase_refreshes": 211,
+          "zero_purchase_refreshes": 75
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            7,
+            6,
+            5,
+            4,
+            3
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 28,
+            "5": 71
+          },
+          "mean_hit_round_among_successes": 4.717171717171717,
+          "mean_damage": 125.95,
+          "median_damage": 127.0,
+          "min_damage": 94,
+          "max_damage": 169,
+          "decision_median_ms": 3.486179994069971,
+          "decision_p95_ms": 8.362970998859964,
+          "decision_max_ms": 47.058721000212245,
+          "partial_purchase_refreshes": 230,
+          "zero_purchase_refreshes": 109
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            6,
+            6,
+            5,
+            4
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 21,
+            "5": 78
+          },
+          "mean_hit_round_among_successes": 4.787878787878788,
+          "mean_damage": 125.16,
+          "median_damage": 128.0,
+          "min_damage": 99,
+          "max_damage": 169,
+          "decision_median_ms": 3.5157659876858816,
+          "decision_p95_ms": 6.779887989978306,
+          "decision_max_ms": 26.127192002604716,
+          "partial_purchase_refreshes": 207,
+          "zero_purchase_refreshes": 95
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            6,
+            6,
+            5,
+            4
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 29,
+            "5": 70
+          },
+          "mean_hit_round_among_successes": 4.707070707070707,
+          "mean_damage": 126.79,
+          "median_damage": 128.5,
+          "min_damage": 92,
+          "max_damage": 169,
+          "decision_median_ms": 3.551664005499333,
+          "decision_p95_ms": 8.007181007997133,
+          "decision_max_ms": 43.48053800640628,
+          "partial_purchase_refreshes": 227,
+          "zero_purchase_refreshes": 137
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            8,
+            7,
+            6,
+            5,
+            4
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 1.0,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 30,
+            "5": 70
+          },
+          "mean_hit_round_among_successes": 4.7,
+          "mean_damage": 123.96,
+          "median_damage": 125.0,
+          "min_damage": 100,
+          "max_damage": 169,
+          "decision_median_ms": 3.4422325043124147,
+          "decision_p95_ms": 7.193538011051714,
+          "decision_max_ms": 20.163983004749753,
+          "partial_purchase_refreshes": 218,
+          "zero_purchase_refreshes": 118
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            8,
+            7,
+            6,
+            5,
+            4
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.98,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 25,
+            "5": 73
+          },
+          "mean_hit_round_among_successes": 4.744897959183674,
+          "mean_damage": 127.94,
+          "median_damage": 130.0,
+          "min_damage": 87,
+          "max_damage": 173,
+          "decision_median_ms": 3.8487129932036623,
+          "decision_p95_ms": 8.53741099126637,
+          "decision_max_ms": 48.538770992308855,
+          "partial_purchase_refreshes": 217,
+          "zero_purchase_refreshes": 185
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            8,
+            8,
+            7,
+            6,
+            5
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.98,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 34,
+            "5": 64
+          },
+          "mean_hit_round_among_successes": 4.653061224489796,
+          "mean_damage": 123.62,
+          "median_damage": 122.0,
+          "min_damage": 95,
+          "max_damage": 169,
+          "decision_median_ms": 3.730090000317432,
+          "decision_p95_ms": 7.575968003948219,
+          "decision_max_ms": 23.440707998815924,
+          "partial_purchase_refreshes": 190,
+          "zero_purchase_refreshes": 181
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            8,
+            8,
+            7,
+            6,
+            5
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 28,
+            "5": 71
+          },
+          "mean_hit_round_among_successes": 4.717171717171717,
+          "mean_damage": 126.85,
+          "median_damage": 128.0,
+          "min_damage": 93,
+          "max_damage": 173,
+          "decision_median_ms": 3.992008503701072,
+          "decision_p95_ms": 9.036982010002248,
+          "decision_max_ms": 81.31139700708445,
+          "partial_purchase_refreshes": 183,
+          "zero_purchase_refreshes": 227
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            6,
+            5,
+            4,
+            3
+          ],
+          "gold_after_refresh": [
+            3,
+            2,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 1,
+            "vacancy_weight": 3,
+            "passive_weight": 0.5,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 26,
+            "5": 73
+          },
+          "mean_hit_round_among_successes": 4.737373737373737,
+          "mean_damage": 124.73,
+          "median_damage": 125.5,
+          "min_damage": 95,
+          "max_damage": 160,
+          "decision_median_ms": 4.257820495695341,
+          "decision_p95_ms": 27.50155200192239,
+          "decision_max_ms": 85.58485099638347,
+          "partial_purchase_refreshes": 159,
+          "zero_purchase_refreshes": 241
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            6,
+            5,
+            4,
+            3
+          ],
+          "gold_after_refresh": [
+            3,
+            2,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 1,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 33,
+            "5": 66
+          },
+          "mean_hit_round_among_successes": 4.666666666666667,
+          "mean_damage": 123.42,
+          "median_damage": 124.5,
+          "min_damage": 95,
+          "max_damage": 174,
+          "decision_median_ms": 4.151088498474564,
+          "decision_p95_ms": 15.385417005745694,
+          "decision_max_ms": 70.00975699338596,
+          "partial_purchase_refreshes": 185,
+          "zero_purchase_refreshes": 194
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            6,
+            5,
+            4,
+            3
+          ],
+          "gold_after_refresh": [
+            3,
+            2,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 1.5,
+            "vacancy_weight": 3,
+            "passive_weight": 0.5,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.98,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 33,
+            "5": 65
+          },
+          "mean_hit_round_among_successes": 4.663265306122449,
+          "mean_damage": 124.25,
+          "median_damage": 126.0,
+          "min_damage": 95,
+          "max_damage": 160,
+          "decision_median_ms": 4.172804998233914,
+          "decision_p95_ms": 16.16241100418847,
+          "decision_max_ms": 78.97963200230151,
+          "partial_purchase_refreshes": 168,
+          "zero_purchase_refreshes": 210
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            6,
+            5,
+            4,
+            3
+          ],
+          "gold_after_refresh": [
+            3,
+            2,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 1.5,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 32,
+            "5": 67
+          },
+          "mean_hit_round_among_successes": 4.6767676767676765,
+          "mean_damage": 124.11,
+          "median_damage": 124.0,
+          "min_damage": 95,
+          "max_damage": 174,
+          "decision_median_ms": 4.05957100156229,
+          "decision_p95_ms": 11.839344006148167,
+          "decision_max_ms": 76.2074969970854,
+          "partial_purchase_refreshes": 199,
+          "zero_purchase_refreshes": 156
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            6,
+            5,
+            4,
+            3
+          ],
+          "gold_after_refresh": [
+            3,
+            2,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 0.5,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 26,
+            "5": 73
+          },
+          "mean_hit_round_among_successes": 4.737373737373737,
+          "mean_damage": 127.9,
+          "median_damage": 128.5,
+          "min_damage": 94,
+          "max_damage": 173,
+          "decision_median_ms": 3.964401999837719,
+          "decision_p95_ms": 11.252887998125516,
+          "decision_max_ms": 61.031214994727634,
+          "partial_purchase_refreshes": 207,
+          "zero_purchase_refreshes": 128
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            6,
+            5,
+            4,
+            3
+          ],
+          "gold_after_refresh": [
+            3,
+            2,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 1.5,
+            "early_weight": 0
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 22,
+            "5": 77
+          },
+          "mean_hit_round_among_successes": 4.777777777777778,
+          "mean_damage": 126.89,
+          "median_damage": 127.0,
+          "min_damage": 76,
+          "max_damage": 169,
+          "decision_median_ms": 3.7673600018024445,
+          "decision_p95_ms": 8.173295005690306,
+          "decision_max_ms": 37.19679500500206,
+          "partial_purchase_refreshes": 230,
+          "zero_purchase_refreshes": 81
+        }
+      }
+    ],
+    "tune-support": [
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "support_weight": 0
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 25,
+            "5": 74
+          },
+          "mean_hit_round_among_successes": 4.747474747474747,
+          "mean_damage": 125.49,
+          "median_damage": 127.0,
+          "min_damage": 92,
+          "max_damage": 163,
+          "decision_median_ms": 3.8135174982016906,
+          "decision_p95_ms": 7.684553012950346,
+          "decision_max_ms": 34.82018499926198,
+          "partial_purchase_refreshes": 208,
+          "zero_purchase_refreshes": 61
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "support_weight": 1
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 24,
+            "5": 75
+          },
+          "mean_hit_round_among_successes": 4.757575757575758,
+          "mean_damage": 125.9,
+          "median_damage": 126.0,
+          "min_damage": 92,
+          "max_damage": 172,
+          "decision_median_ms": 3.7983689981047064,
+          "decision_p95_ms": 8.40349801001139,
+          "decision_max_ms": 44.315552004263736,
+          "partial_purchase_refreshes": 206,
+          "zero_purchase_refreshes": 63
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "support_weight": 2
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.98,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 22,
+            "5": 76
+          },
+          "mean_hit_round_among_successes": 4.775510204081633,
+          "mean_damage": 125.55,
+          "median_damage": 125.0,
+          "min_damage": 92,
+          "max_damage": 172,
+          "decision_median_ms": 3.7661979949916713,
+          "decision_p95_ms": 8.14802700188011,
+          "decision_max_ms": 50.50082800153177,
+          "partial_purchase_refreshes": 221,
+          "zero_purchase_refreshes": 53
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "support_weight": 3
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 20,
+            "5": 79
+          },
+          "mean_hit_round_among_successes": 4.797979797979798,
+          "mean_damage": 125.74,
+          "median_damage": 125.0,
+          "min_damage": 92,
+          "max_damage": 172,
+          "decision_median_ms": 3.678036999190226,
+          "decision_p95_ms": 7.846198001061566,
+          "decision_max_ms": 45.15355100738816,
+          "partial_purchase_refreshes": 218,
+          "zero_purchase_refreshes": 56
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "support_weight": 1
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 14,
+            "5": 85
+          },
+          "mean_hit_round_among_successes": 4.858585858585859,
+          "mean_damage": 126.89,
+          "median_damage": 128.0,
+          "min_damage": 99,
+          "max_damage": 172,
+          "decision_median_ms": 3.724510010215454,
+          "decision_p95_ms": 8.171301000402309,
+          "decision_max_ms": 22.499583996250294,
+          "partial_purchase_refreshes": 183,
+          "zero_purchase_refreshes": 34
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "support_weight": 2
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 1.0,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 16,
+            "5": 84
+          },
+          "mean_hit_round_among_successes": 4.84,
+          "mean_damage": 126.77,
+          "median_damage": 128.0,
+          "min_damage": 100,
+          "max_damage": 172,
+          "decision_median_ms": 3.7752054995507933,
+          "decision_p95_ms": 7.561681006336585,
+          "decision_max_ms": 26.130518002901226,
+          "partial_purchase_refreshes": 197,
+          "zero_purchase_refreshes": 31
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 1,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "support_weight": 1
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 24,
+            "5": 75
+          },
+          "mean_hit_round_among_successes": 4.757575757575758,
+          "mean_damage": 126.04,
+          "median_damage": 127.0,
+          "min_damage": 89,
+          "max_damage": 161,
+          "decision_median_ms": 3.976334002800286,
+          "decision_p95_ms": 9.649355997680686,
+          "decision_max_ms": 80.49232300254516,
+          "partial_purchase_refreshes": 207,
+          "zero_purchase_refreshes": 123
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 1,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "support_weight": 2
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 18,
+            "5": 81
+          },
+          "mean_hit_round_among_successes": 4.818181818181818,
+          "mean_damage": 126.52,
+          "median_damage": 127.0,
+          "min_damage": 89,
+          "max_damage": 161,
+          "decision_median_ms": 3.981753994594328,
+          "decision_p95_ms": 9.104960001423024,
+          "decision_max_ms": 69.99249399814289,
+          "partial_purchase_refreshes": 216,
+          "zero_purchase_refreshes": 103
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "support_weight": 1
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 1.0,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 24,
+            "5": 76
+          },
+          "mean_hit_round_among_successes": 4.76,
+          "mean_damage": 126.36,
+          "median_damage": 126.0,
+          "min_damage": 100,
+          "max_damage": 172,
+          "decision_median_ms": 3.871316002914682,
+          "decision_p95_ms": 8.229330007452518,
+          "decision_max_ms": 45.04803099553101,
+          "partial_purchase_refreshes": 206,
+          "zero_purchase_refreshes": 58
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "support_weight": 2
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.98,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 19,
+            "5": 79
+          },
+          "mean_hit_round_among_successes": 4.8061224489795915,
+          "mean_damage": 126.41,
+          "median_damage": 127.0,
+          "min_damage": 97,
+          "max_damage": 172,
+          "decision_median_ms": 3.763993998290971,
+          "decision_p95_ms": 8.063678003964014,
+          "decision_max_ms": 53.5298570030136,
+          "partial_purchase_refreshes": 227,
+          "zero_purchase_refreshes": 49
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 4,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "support_weight": 1
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 25,
+            "5": 74
+          },
+          "mean_hit_round_among_successes": 4.747474747474747,
+          "mean_damage": 125.81,
+          "median_damage": 126.0,
+          "min_damage": 92,
+          "max_damage": 183,
+          "decision_median_ms": 4.076633005752228,
+          "decision_p95_ms": 11.2873629987007,
+          "decision_max_ms": 69.45471999642905,
+          "partial_purchase_refreshes": 210,
+          "zero_purchase_refreshes": 106
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 4,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "support_weight": 2
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 24,
+            "5": 75
+          },
+          "mean_hit_round_among_successes": 4.757575757575758,
+          "mean_damage": 126.47,
+          "median_damage": 127.0,
+          "min_damage": 92,
+          "max_damage": 183,
+          "decision_median_ms": 4.091982002137229,
+          "decision_p95_ms": 11.674562992993742,
+          "decision_max_ms": 66.74115599889774,
+          "partial_purchase_refreshes": 201,
+          "zero_purchase_refreshes": 102
+        }
+      }
+    ],
+    "tune-pressure": [
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "vacancy_pressure": 0.25
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.21,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 21,
+            "5": 78
+          },
+          "mean_hit_round_among_successes": 4.787878787878788,
+          "mean_damage": 123.74,
+          "median_damage": 126.0,
+          "min_damage": 78,
+          "max_damage": 163,
+          "decision_median_ms": 3.714079997735098,
+          "decision_p95_ms": 7.601104996865615,
+          "decision_max_ms": 1933.8620920025278,
+          "partial_purchase_refreshes": 197,
+          "zero_purchase_refreshes": 44
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "vacancy_pressure": 0.5
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.25,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 25,
+            "5": 74
+          },
+          "mean_hit_round_among_successes": 4.747474747474747,
+          "mean_damage": 124.1,
+          "median_damage": 128.0,
+          "min_damage": 78,
+          "max_damage": 163,
+          "decision_median_ms": 3.78438200277742,
+          "decision_p95_ms": 7.674104010220617,
+          "decision_max_ms": 22.857710006064735,
+          "partial_purchase_refreshes": 208,
+          "zero_purchase_refreshes": 48
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "vacancy_pressure": 1
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.27,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 27,
+            "5": 72
+          },
+          "mean_hit_round_among_successes": 4.7272727272727275,
+          "mean_damage": 124.58,
+          "median_damage": 124.5,
+          "min_damage": 75,
+          "max_damage": 178,
+          "decision_median_ms": 3.7948019889881834,
+          "decision_p95_ms": 7.36502101062797,
+          "decision_max_ms": 23.531108992756344,
+          "partial_purchase_refreshes": 238,
+          "zero_purchase_refreshes": 70
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "vacancy_pressure": 2
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.27,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.98,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 27,
+            "5": 71
+          },
+          "mean_hit_round_among_successes": 4.724489795918367,
+          "mean_damage": 125.53,
+          "median_damage": 126.5,
+          "min_damage": 77,
+          "max_damage": 178,
+          "decision_median_ms": 4.091541006346233,
+          "decision_p95_ms": 7.965732002048753,
+          "decision_max_ms": 24.08893000392709,
+          "partial_purchase_refreshes": 245,
+          "zero_purchase_refreshes": 109
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "vacancy_pressure": 0.25
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.24,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 24,
+            "5": 75
+          },
+          "mean_hit_round_among_successes": 4.757575757575758,
+          "mean_damage": 126.8,
+          "median_damage": 127.0,
+          "min_damage": 92,
+          "max_damage": 164,
+          "decision_median_ms": 4.078952501004096,
+          "decision_p95_ms": 8.503356002620421,
+          "decision_max_ms": 34.71160099434201,
+          "partial_purchase_refreshes": 232,
+          "zero_purchase_refreshes": 70
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "vacancy_pressure": 0.5
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.27,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 27,
+            "5": 72
+          },
+          "mean_hit_round_among_successes": 4.7272727272727275,
+          "mean_damage": 127.08,
+          "median_damage": 129.0,
+          "min_damage": 94,
+          "max_damage": 173,
+          "decision_median_ms": 3.973539001890458,
+          "decision_p95_ms": 8.4875160100637,
+          "decision_max_ms": 37.67693899862934,
+          "partial_purchase_refreshes": 233,
+          "zero_purchase_refreshes": 94
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "vacancy_pressure": 1
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.27,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.97,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 27,
+            "5": 70
+          },
+          "mean_hit_round_among_successes": 4.721649484536083,
+          "mean_damage": 127.31,
+          "median_damage": 128.0,
+          "min_damage": 94,
+          "max_damage": 169,
+          "decision_median_ms": 4.089693000423722,
+          "decision_p95_ms": 9.389356011524796,
+          "decision_max_ms": 44.85386599844787,
+          "partial_purchase_refreshes": 223,
+          "zero_purchase_refreshes": 130
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 1,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "vacancy_pressure": 0.25
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.15,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.98,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 15,
+            "5": 83
+          },
+          "mean_hit_round_among_successes": 4.846938775510204,
+          "mean_damage": 123.63,
+          "median_damage": 125.0,
+          "min_damage": 90,
+          "max_damage": 170,
+          "decision_median_ms": 3.753242999664508,
+          "decision_p95_ms": 7.208516006357968,
+          "decision_max_ms": 25.120393998804502,
+          "partial_purchase_refreshes": 187,
+          "zero_purchase_refreshes": 19
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 1,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "vacancy_pressure": 0.5
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.18,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.98,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 18,
+            "5": 80
+          },
+          "mean_hit_round_among_successes": 4.816326530612245,
+          "mean_damage": 124.1,
+          "median_damage": 125.0,
+          "min_damage": 90,
+          "max_damage": 170,
+          "decision_median_ms": 3.7514409923460335,
+          "decision_p95_ms": 7.261035003466532,
+          "decision_max_ms": 29.81541201006621,
+          "partial_purchase_refreshes": 185,
+          "zero_purchase_refreshes": 22
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 1,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "vacancy_pressure": 1
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.21,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.98,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 21,
+            "5": 77
+          },
+          "mean_hit_round_among_successes": 4.785714285714286,
+          "mean_damage": 123.43,
+          "median_damage": 125.0,
+          "min_damage": 94,
+          "max_damage": 163,
+          "decision_median_ms": 3.7311320047592744,
+          "decision_p95_ms": 7.200790991191752,
+          "decision_max_ms": 21.833058999618515,
+          "partial_purchase_refreshes": 206,
+          "zero_purchase_refreshes": 32
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 1,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "vacancy_pressure": 2
+          },
+          "income_weight": 2,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.19,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 19,
+            "5": 80
+          },
+          "mean_hit_round_among_successes": 4.808080808080808,
+          "mean_damage": 125.14,
+          "median_damage": 127.5,
+          "min_damage": 97,
+          "max_damage": 163,
+          "decision_median_ms": 3.7099165056133643,
+          "decision_p95_ms": 6.900215012137778,
+          "decision_max_ms": 25.748718006070703,
+          "partial_purchase_refreshes": 232,
+          "zero_purchase_refreshes": 47
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "passive_weight": 1,
+            "early_weight": 0,
+            "vacancy_pressure": 0.5
+          },
+          "income_weight": 1,
+          "finish_bonus": 100
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.24,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 24,
+            "5": 75
+          },
+          "mean_hit_round_among_successes": 4.757575757575758,
+          "mean_damage": 125.09,
+          "median_damage": 129.0,
+          "min_damage": 78,
+          "max_damage": 163,
+          "decision_median_ms": 3.826482003205456,
+          "decision_p95_ms": 7.708798992098309,
+          "decision_max_ms": 18.43534500221722,
+          "partial_purchase_refreshes": 209,
+          "zero_purchase_refreshes": 50
+        }
+      }
+    ],
+    "tune-final-candidates": [
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "vacancy_pressure": 0
+          },
+          "income_weight": 2,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.2,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 1.0,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 20,
+            "5": 80
+          },
+          "mean_hit_round_among_successes": 4.8,
+          "mean_damage": 127.22,
+          "median_damage": 128.5,
+          "min_damage": 100,
+          "max_damage": 170,
+          "decision_median_ms": 3.9731384968035854,
+          "decision_p95_ms": 7.912842993391678,
+          "decision_max_ms": 1960.88616400084,
+          "partial_purchase_refreshes": 197,
+          "zero_purchase_refreshes": 45
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "vacancy_pressure": 0
+          },
+          "income_weight": 2,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.25,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 25,
+            "5": 74
+          },
+          "mean_hit_round_among_successes": 4.747474747474747,
+          "mean_damage": 124.68,
+          "median_damage": 126.0,
+          "min_damage": 92,
+          "max_damage": 163,
+          "decision_median_ms": 3.9450850017601624,
+          "decision_p95_ms": 8.283803006634116,
+          "decision_max_ms": 41.54275599285029,
+          "partial_purchase_refreshes": 197,
+          "zero_purchase_refreshes": 55
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            6,
+            5,
+            4,
+            3
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "vacancy_pressure": 0
+          },
+          "income_weight": 2,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.26,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.98,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 26,
+            "5": 72
+          },
+          "mean_hit_round_among_successes": 4.73469387755102,
+          "mean_damage": 125.04,
+          "median_damage": 125.5,
+          "min_damage": 92,
+          "max_damage": 173,
+          "decision_median_ms": 3.9529950081487186,
+          "decision_p95_ms": 8.407265006098896,
+          "decision_max_ms": 41.72314499737695,
+          "partial_purchase_refreshes": 191,
+          "zero_purchase_refreshes": 97
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            4,
+            3,
+            2,
+            1,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "vacancy_pressure": 0
+          },
+          "income_weight": 2,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.21,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 1.0,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 21,
+            "5": 79
+          },
+          "mean_hit_round_among_successes": 4.79,
+          "mean_damage": 127.77,
+          "median_damage": 129.5,
+          "min_damage": 100,
+          "max_damage": 170,
+          "decision_median_ms": 3.9827864966355264,
+          "decision_p95_ms": 9.415846012416296,
+          "decision_max_ms": 47.31419199379161,
+          "partial_purchase_refreshes": 201,
+          "zero_purchase_refreshes": 44
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            4,
+            3,
+            2,
+            1,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "vacancy_pressure": 0
+          },
+          "income_weight": 2,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.25,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 1.0,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 25,
+            "5": 75
+          },
+          "mean_hit_round_among_successes": 4.75,
+          "mean_damage": 125.87,
+          "median_damage": 128.0,
+          "min_damage": 100,
+          "max_damage": 163,
+          "decision_median_ms": 3.9523934974567965,
+          "decision_p95_ms": 9.565168002154678,
+          "decision_max_ms": 43.53555099805817,
+          "partial_purchase_refreshes": 204,
+          "zero_purchase_refreshes": 51
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "gold_after_refresh": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "vacancy_pressure": 0
+          },
+          "income_weight": 2,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.26,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.97,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 26,
+            "5": 71
+          },
+          "mean_hit_round_among_successes": 4.731958762886598,
+          "mean_damage": 122.66,
+          "median_damage": 124.5,
+          "min_damage": 75,
+          "max_damage": 163,
+          "decision_median_ms": 3.865555001539178,
+          "decision_p95_ms": 7.811161995050497,
+          "decision_max_ms": 25.034122008946724,
+          "partial_purchase_refreshes": 193,
+          "zero_purchase_refreshes": 52
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2,
+            "vacancy_pressure": 0
+          },
+          "income_weight": 2,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.12,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.97,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 12,
+            "5": 85
+          },
+          "mean_hit_round_among_successes": 4.876288659793815,
+          "mean_damage": 124.67,
+          "median_damage": 128.0,
+          "min_damage": 90,
+          "max_damage": 170,
+          "decision_median_ms": 3.6386674983077683,
+          "decision_p95_ms": 7.533167998190038,
+          "decision_max_ms": 24.81315500335768,
+          "partial_purchase_refreshes": 170,
+          "zero_purchase_refreshes": 26
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 3,
+            "vacancy_weight": 3,
+            "vacancy_pressure": 0
+          },
+          "income_weight": 2,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.12,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.95,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 12,
+            "5": 83
+          },
+          "mean_hit_round_among_successes": 4.873684210526315,
+          "mean_damage": 122.8,
+          "median_damage": 122.0,
+          "min_damage": 84,
+          "max_damage": 179,
+          "decision_median_ms": 3.7937499946565367,
+          "decision_p95_ms": 7.771627002512105,
+          "decision_max_ms": 28.236055994057097,
+          "partial_purchase_refreshes": 203,
+          "zero_purchase_refreshes": 35
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 4,
+            "vacancy_weight": 3,
+            "vacancy_pressure": 0
+          },
+          "income_weight": 2,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.11,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.89,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 11,
+            "5": 78
+          },
+          "mean_hit_round_among_successes": 4.876404494382022,
+          "mean_damage": 117.34,
+          "median_damage": 118.0,
+          "min_damage": 79,
+          "max_damage": 159,
+          "decision_median_ms": 3.8309150040731765,
+          "decision_p95_ms": 7.812144001945853,
+          "decision_max_ms": 29.477154996129684,
+          "partial_purchase_refreshes": 196,
+          "zero_purchase_refreshes": 33
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3,
+            "vacancy_pressure": 0.5
+          },
+          "income_weight": 2,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.25,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 25,
+            "5": 74
+          },
+          "mean_hit_round_among_successes": 4.747474747474747,
+          "mean_damage": 127.5,
+          "median_damage": 128.0,
+          "min_damage": 94,
+          "max_damage": 173,
+          "decision_median_ms": 3.656811997643672,
+          "decision_p95_ms": 8.398728998145089,
+          "decision_max_ms": 46.92232400702778,
+          "partial_purchase_refreshes": 222,
+          "zero_purchase_refreshes": 68
+        }
+      }
+    ],
+    "tune-reserve": [
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            5,
+            4,
+            3,
+            2,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3
+          },
+          "income_weight": 2,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.22,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 22,
+            "5": 77
+          },
+          "mean_hit_round_among_successes": 4.777777777777778,
+          "mean_damage": 126.98,
+          "median_damage": 128.0,
+          "min_damage": 93,
+          "max_damage": 170,
+          "decision_median_ms": 3.7856994968024082,
+          "decision_p95_ms": 9.849452995695174,
+          "decision_max_ms": 39.02495000511408,
+          "partial_purchase_refreshes": 204,
+          "zero_purchase_refreshes": 44
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            6,
+            5,
+            4,
+            3,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3
+          },
+          "income_weight": 2,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.21,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.98,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 21,
+            "5": 77
+          },
+          "mean_hit_round_among_successes": 4.785714285714286,
+          "mean_damage": 127.09,
+          "median_damage": 128.0,
+          "min_damage": 94,
+          "max_damage": 170,
+          "decision_median_ms": 3.813241499301512,
+          "decision_p95_ms": 11.099960000137798,
+          "decision_max_ms": 40.294233011081815,
+          "partial_purchase_refreshes": 201,
+          "zero_purchase_refreshes": 44
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            4,
+            3,
+            2,
+            1,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3
+          },
+          "income_weight": 3,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.25,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 1.0,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 25,
+            "5": 75
+          },
+          "mean_hit_round_among_successes": 4.75,
+          "mean_damage": 125.69,
+          "median_damage": 128.0,
+          "min_damage": 100,
+          "max_damage": 163,
+          "decision_median_ms": 3.899854993505869,
+          "decision_p95_ms": 9.972345011192374,
+          "decision_max_ms": 43.19067100004759,
+          "partial_purchase_refreshes": 200,
+          "zero_purchase_refreshes": 45
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            4,
+            3,
+            2,
+            1,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3
+          },
+          "income_weight": 4,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.23,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 1.0,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 23,
+            "5": 77
+          },
+          "mean_hit_round_among_successes": 4.77,
+          "mean_damage": 125.78,
+          "median_damage": 127.0,
+          "min_damage": 100,
+          "max_damage": 163,
+          "decision_median_ms": 3.996270999778062,
+          "decision_p95_ms": 9.435732994461432,
+          "decision_max_ms": 40.90830899076536,
+          "partial_purchase_refreshes": 197,
+          "zero_purchase_refreshes": 43
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            4,
+            3,
+            2,
+            1,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2
+          },
+          "income_weight": 2,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.13,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 1.0,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 13,
+            "5": 87
+          },
+          "mean_hit_round_among_successes": 4.87,
+          "mean_damage": 126.01,
+          "median_damage": 128.0,
+          "min_damage": 100,
+          "max_damage": 170,
+          "decision_median_ms": 3.872949499054812,
+          "decision_p95_ms": 8.189313986804336,
+          "decision_max_ms": 33.124559005955234,
+          "partial_purchase_refreshes": 171,
+          "zero_purchase_refreshes": 28
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            4,
+            3,
+            2,
+            1,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 4
+          },
+          "income_weight": 2,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.21,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.98,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 21,
+            "5": 77
+          },
+          "mean_hit_round_among_successes": 4.785714285714286,
+          "mean_damage": 125.01,
+          "median_damage": 125.0,
+          "min_damage": 94,
+          "max_damage": 163,
+          "decision_median_ms": 4.228498990414664,
+          "decision_p95_ms": 13.999143993714824,
+          "decision_max_ms": 62.39155901130289,
+          "partial_purchase_refreshes": 191,
+          "zero_purchase_refreshes": 85
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            3,
+            3,
+            2,
+            2,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3
+          },
+          "income_weight": 3,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.24,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 1.0,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 24,
+            "5": 76
+          },
+          "mean_hit_round_among_successes": 4.76,
+          "mean_damage": 125.55,
+          "median_damage": 127.0,
+          "min_damage": 100,
+          "max_damage": 163,
+          "decision_median_ms": 4.097593002370559,
+          "decision_p95_ms": 9.155425999779254,
+          "decision_max_ms": 49.90300099598244,
+          "partial_purchase_refreshes": 196,
+          "zero_purchase_refreshes": 45
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            4,
+            4,
+            3,
+            2,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3
+          },
+          "income_weight": 3,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.24,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 24,
+            "5": 75
+          },
+          "mean_hit_round_among_successes": 4.757575757575758,
+          "mean_damage": 126.01,
+          "median_damage": 127.0,
+          "min_damage": 93,
+          "max_damage": 163,
+          "decision_median_ms": 4.048274502565619,
+          "decision_p95_ms": 10.163985993131064,
+          "decision_max_ms": 41.38478799723089,
+          "partial_purchase_refreshes": 198,
+          "zero_purchase_refreshes": 48
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            4,
+            3,
+            2,
+            1,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 2
+          },
+          "income_weight": 3,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.16,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 1.0,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 16,
+            "5": 84
+          },
+          "mean_hit_round_among_successes": 4.84,
+          "mean_damage": 125.59,
+          "median_damage": 126.5,
+          "min_damage": 100,
+          "max_damage": 170,
+          "decision_median_ms": 3.9045790035743266,
+          "decision_p95_ms": 8.080048995907418,
+          "decision_max_ms": 31.605466007022187,
+          "partial_purchase_refreshes": 172,
+          "zero_purchase_refreshes": 27
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            4,
+            3,
+            2,
+            1,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 4
+          },
+          "income_weight": 3,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 100,
+          "four_round_kill_rate": 0.17,
+          "mean_five_round_damage": null,
+          "reach_100_rate": 0.99,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 17,
+            "5": 82
+          },
+          "mean_hit_round_among_successes": 4.828282828282828,
+          "mean_damage": 126.71,
+          "median_damage": 127.5,
+          "min_damage": 98,
+          "max_damage": 163,
+          "decision_median_ms": 4.165901002124883,
+          "decision_p95_ms": 16.05365601426456,
+          "decision_max_ms": 44.497815004433505,
+          "partial_purchase_refreshes": 188,
+          "zero_purchase_refreshes": 84
+        }
+      }
+    ],
+    "select-intelligence-final": [
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            2,
+            1.5,
+            1,
+            0.5,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3
+          },
+          "income_weight": 2,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 300,
+          "four_round_kill_rate": 0.26666666666666666,
+          "mean_five_round_damage": 135.38,
+          "reach_100_rate": 0.9933333333333333,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 80,
+            "5": 218
+          },
+          "mean_hit_round_among_successes": 4.731543624161074,
+          "mean_damage": 123.85666666666667,
+          "median_damage": 123.0,
+          "min_damage": 94,
+          "max_damage": 182,
+          "decision_median_ms": 3.169087001879234,
+          "decision_p95_ms": 6.80163899960462,
+          "decision_max_ms": 69.75575799879152,
+          "partial_purchase_refreshes": 620,
+          "zero_purchase_refreshes": 136
+        }
+      },
+      {
+        "policy": {
+          "gold_before_refresh": [
+            6,
+            4.8,
+            3.6,
+            2.4,
+            1.2
+          ],
+          "gold_after_refresh": [
+            4,
+            3,
+            2,
+            1,
+            0
+          ],
+          "heuristics": {
+            "aura_weight": 2,
+            "vacancy_weight": 3
+          },
+          "income_weight": 2,
+          "finish_bonus": 10000
+        },
+        "summary": {
+          "games": 300,
+          "four_round_kill_rate": 0.25,
+          "mean_five_round_damage": 135.77,
+          "reach_100_rate": 0.9933333333333333,
+          "hit_round_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 75,
+            "5": 223
+          },
+          "mean_hit_round_among_successes": 4.748322147651007,
+          "mean_damage": 124.73,
+          "median_damage": 124.0,
+          "min_damage": 97,
+          "max_damage": 193,
+          "decision_median_ms": 3.1358299966086634,
+          "decision_p95_ms": 7.1863850025692955,
+          "decision_max_ms": 63.846560995443724,
+          "partial_purchase_refreshes": 633,
+          "zero_purchase_refreshes": 131
+        }
+      }
+    ]
+  }
+}

@@ -72,7 +72,7 @@ def spendable_gold(raw, choice):
     return min(choice['gold_left'],sum(costs[:state['empty']]))
 
 
-def hand_choices(raw, hand, *, synergy=False):
+def hand_choices(raw, hand, *, synergy=False, heuristics=None):
     if not isinstance(hand,list) or len(hand)>5 or any(name not in BY_NAME for name in hand):
         raise ValueError('hand必须是最多5张有效牌名')
     full=prepare_state(raw)
@@ -82,7 +82,7 @@ def hand_choices(raw, hand, *, synergy=False):
             raise ValueError(f'{name}手牌张数超过单边已知余量')
     partial=deepcopy(raw);partial['pool_override']=dict(requested)
     result=simulate(partial,profile='synergy_v2' if synergy else PROFILE,trace_choices=True,
-                    position_tiebreak=True,seconds=2,future_pool=full['pool'])
+                    position_tiebreak=True,seconds=2,future_pool=full['pool'],heuristics=heuristics)
     if not result['complete']:
         raise RuntimeError('当前手牌搜索未完成，不作为已完成决策')
     for choice in result['choices']:
@@ -134,9 +134,9 @@ def purchase_actions(raw,hand,choice):
     return actions
 
 
-def analyze_hand(raw,hand,coin_value=7,refreshes=1, *, synergy=False):
+def analyze_hand(raw,hand,coin_value=7,refreshes=1, *, synergy=False, explain=True, heuristics=None):
     started=time.perf_counter()
-    result=hand_choices(raw,hand,synergy=synergy)
+    result=hand_choices(raw,hand,synergy=synergy,heuristics=heuristics)
     chosen=select_choice(result['choices'],coin_value)
     after=after_purchase(raw,chosen)
     pool=prepare_state(after)['pool']
@@ -146,7 +146,7 @@ def analyze_hand(raw,hand,coin_value=7,refreshes=1, *, synergy=False):
     return {'chosen':chosen,'actions':purchase_actions(raw,hand,chosen),
             'coin_value':coin_value,'score':chosen['adjusted_damage']+coin_value*chosen['valued_gold'],
             'next_action':'refresh' if can_refresh else 'prepare','replaceable_shop_slots':replaceable,
-            'frontier':sensitivity_frontier(result['choices']), 'choices':result['choices'],
+            'frontier':sensitivity_frontier(result['choices']) if explain else None, 'choices':result['choices'],
             'elapsed_s':time.perf_counter()-started,'engine_s':result['elapsed_s'],
             'latent_empty_cell_value':0,'inactive_synergy_value':chosen['synergy_potential'],
             'baseline_potential':result['baseline_potential'],'profile':result['profile'],

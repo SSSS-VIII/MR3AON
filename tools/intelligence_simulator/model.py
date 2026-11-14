@@ -126,6 +126,11 @@ def sample_combinations(state, count, seed, physical=False, max_purchases=None):
     return result
 
 
+@lru_cache(maxsize=None)
+def _compiler_version(compiler):
+    return subprocess.check_output([compiler, '--version'], text=True).splitlines()[0]
+
+
 def build_engine():
     compiler = shutil.which('g++') or shutil.which('clang++')
     if not compiler:
@@ -133,7 +138,7 @@ def build_engine():
     expected = 'enum Effect { '+', '.join(name.upper() for name in CATALOG['effect_codes'])+' };'
     if expected not in (HERE/'effects.hpp').read_text():
         raise ValueError('cards.json与effects.hpp效果编号不一致')
-    version = subprocess.check_output([compiler, '--version'], text=True).splitlines()[0]
+    version = _compiler_version(compiler)
     digest = hashlib.sha256((HERE/'engine.cpp').read_bytes() + (HERE/'effects.hpp').read_bytes() + (HERE/'synergy.hpp').read_bytes()
                             + (compiler+version).encode()).hexdigest()[:16]
     cache = Path(tempfile.gettempdir()) / f'mr3a-intelligence-sim-{os.getuid()}'
@@ -173,7 +178,7 @@ def histogram_summary(histogram, index):
 
 def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
              physical_sampling=False, growth_mode='since_entry', profile='full',
-             max_purchases=None, trace_choices=False, position_tiebreak=False, future_pool=None):
+             max_purchases=None, trace_choices=False, position_tiebreak=False, future_pool=None, heuristics=None):
     if not math.isfinite(seconds) or seconds < 0:
         raise ValueError('seconds必须是有限非负数，0表示不限时')
     _integer(samples, 'samples', 0, 1000000)
@@ -184,6 +189,13 @@ def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
         raise ValueError('未知profile')
     if max_purchases is not None:
         _integer(max_purchases,'max_purchases',0,9)
+    heuristics = dict(heuristics or {})
+    defaults = dict(passive_weight=1, aura_weight=0, vacancy_weight=0, cumulative_damage=0, finish_priority=0)
+    if set(heuristics)-defaults.keys():
+        raise ValueError('未知heuristics参数')
+    defaults.update(heuristics); heuristics=defaults
+    if any(not math.isfinite(v) or v<0 for v in heuristics.values()):
+        raise ValueError('heuristics必须是有限非负值')
     started = time.perf_counter()
     state = prepare_state(raw)
     space = count_space(state,max_purchases)
@@ -192,6 +204,7 @@ def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
     binary, compiler, build_s = build_engine()
     codes = CATALOG['effect_codes']
     lines = [f"{len(CARDS)} {state['round']} {state['gold']} {seconds} {max_layouts} {int(bool(samples))} {samples} {int(growth_mode=='since_entry')} {dict(full=0,refresh_v1=1,synergy_v2=2)[profile]} {int(position_tiebreak)} {9 if max_purchases is None else max_purchases} {int(trace_choices)}"]
+    lines[0]+=' '+' '.join(map(str,heuristics.values()))
     lines.extend(' '.join(str(c[k]) for k in ('attack','cost','element','category','copies'))+
                  f" {codes.index(c['effect'])} {c['param']}" for c in CARDS)
     lines.append(' '.join(map(str, state['pool'])))
@@ -222,7 +235,8 @@ def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
                   max_purchases=max_purchases, position_tiebreak=position_tiebreak,
                   compiler=compiler, build_s=build_s, preparation_s=preparation_s, wall_s=wall_s,
                   assumptions=ASSUMPTIONS+(['refresh_v1: 老板娘、紫原、轮回戒指及鬼斩铠甲按白板；不加空格潜力或未触发羁绊估值。'] if profile=='refresh_v1' else []))
-    result['placement_objective'] = 'damage+synergy_potential' if profile=='synergy_v2' else 'damage'
+    result['heuristics']=heuristics
+    result['placement_objective'] = 'strategic_damage' if profile=='synergy_v2' else 'damage'
     if profile=='synergy_v2':
         result['assumptions'].append('synergy_v2: 复杂牌沿用refresh_v1白板；未触发被动按场面、回合、余池和空位估值；潜力不属于真实伤害。')
     key = 'statistics' if result['complete'] and not samples else 'sample_estimate' if result['complete'] else 'partial_prefix_statistics_not_pool_estimate'
@@ -241,10 +255,12 @@ def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
         choice['cards']=[CARDS[i]['name'] for i in choice['cards']]
         choice['board']=[CARDS[i]['name'] if i>=0 else None for i in choice['board']]
         choice['potential_gain']=choice['synergy_potential']-result['baseline_potential']
-        choice['adjusted_damage']=choice['damage']+choice['synergy_potential']
+        choice['adjusted_damage']=choice['strategic_damage']
         for detail in choice['synergy_details']:
             detail['card']=choice['board'][detail['cell']]
-            detail['reason']=['active','row_blocked','insufficient_slots','insufficient_pool','past_round5','estimated'][detail['reason']]
+            detail['reason']=['active','row_blocked','insufficient_slots','insufficient_pool','past_round5','estimated','empty_slot_forecast'][detail['reason']]
+            if detail['reason']=='empty_slot_forecast':
+                detail['confidence']=detail['activation_round']=None
         choice['damage_gain']=choice['damage']-result['baseline_damage']
         choice['existing_card_damage_gain']=sum(value-result['baseline_cell_damage'][i] for i,value in enumerate(choice['cell_damage']) if state['board'][i][0]>=0)
         choice['new_card_damage']=sum(value for i,value in enumerate(choice['cell_damage']) if state['board'][i][0]<0)
