@@ -38,7 +38,7 @@ def test_workshop_persists_until_next_saturday(date, target):
     assert next_weekly_reset(now, param['weekday']).isoformat(timespec='minutes') == target + '+08:00'
 
 
-@pytest.mark.parametrize('case', ['eligible', 'only_clear_reward', 'no_claim_button', 'claimed_row', 'missing_claimed_status', 'flags_pending', 'flags_three', 'flags_all', 'fallback_clear', 'no_rewards', 'intro', 'intro_without_button', 'entry_icon'])
+@pytest.mark.parametrize('case', ['eligible', 'only_clear_reward', 'no_claim_button', 'claimed_row', 'missing_claimed_status', 'flags_pending', 'flags_three', 'flags_all', 'fallback_clear', 'no_rewards', 'intro', 'intro_without_button', 'entry_icon', 'entry_icon_lower', 'entry_icon_shifted', 'entry_live', 'entry_icon_lower_old_roi'])
 def test_native_task_row_pairing(case):
     import subprocess
     import sys
@@ -46,7 +46,7 @@ def test_native_task_row_pairing(case):
                             capture_output=True, text=True, timeout=60)
     assert result.returncode == 0, result.stdout[-3000:] + result.stderr[-3000:]
     report = json.loads(result.stdout.strip().splitlines()[-1])
-    assert report['hit'] is (case in {'eligible', 'only_clear_reward', 'claimed_row', 'flags_all', 'fallback_clear', 'intro', 'entry_icon'})
+    assert report['hit'] is (case in {'eligible', 'only_clear_reward', 'claimed_row', 'flags_all', 'fallback_clear', 'intro', 'entry_icon', 'entry_icon_lower', 'entry_icon_shifted', 'entry_live'})
     if case == 'eligible' and report['hit']:
         x, y, width, height = report['box']
         assert 980 <= x < x + width <= 1240
@@ -85,10 +85,15 @@ def _native_replay(case):
             root / 'tests/fixtures/workshop/intro.png').convert('RGB'))[:, :, ::-1]
         if case == 'intro_without_button':
             image[530:640, 940:1250] = 0
-    if case == 'entry_icon':
+    if case.startswith('entry_icon'):
         image[:] = 0
-        image[340:385, 109:166] = np.asarray(Image.open(
+        x,y={'entry_icon':(109,340),'entry_icon_lower':(109,425),'entry_icon_shifted':(229,500),'entry_icon_lower_old_roi':(109,425)}[case]
+        image[y:y+45, x:x+57] = np.asarray(Image.open(
             root / 'assets/resource/image/工坊挑战入口.png').convert('RGB'))[:, :, ::-1]
+    if case == 'entry_live':
+        image[:] = 0
+        crop=np.asarray(Image.open(root/'tests/fixtures/workshop/home_entry_moved.png').convert('RGB'))[:, :, ::-1]
+        image[100:600, 0:400]=crop
     if case == 'missing_claimed_status':
         image[450:545, 870:1130] = 0
     Tasker.set_stdout_level(LoggingLevelEnum.Error)
@@ -104,7 +109,7 @@ def _native_replay(case):
             node = '工坊逐项领取奖励'
         elif case.startswith('intro'):
             node = '工坊首次说明'
-        elif case == 'entry_icon':
+        elif case.startswith('entry_icon') or case == 'entry_live':
             node = '工坊主页进入'
         if case.startswith('flags_'):
             node = '工坊四目标齐'
@@ -113,6 +118,8 @@ def _native_replay(case):
             assert resource.override_pipeline({name: {'recognition': {'type': 'DirectHit'}} for name in flags[:count]})
             image[:] = 0
         rule = pipeline[node]['recognition']
+        if case == 'entry_icon_lower_old_roi':
+            rule['param']['any_of'][1]['recognition']['param']['roi']=[80,320,130,100]
         detail = tasker.post_recognition(rule['type'], (JAnd if rule['type'] == 'And' else JOr)(**rule['param']), image).wait().get().nodes[0].recognition
         report = {'hit': detail.hit, 'box': list(detail.box) if detail.box else None}
         del tasker, resource
