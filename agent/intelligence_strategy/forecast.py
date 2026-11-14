@@ -22,7 +22,9 @@ def forecast_choices(raw,choices,policy, *, cumulative_damage=0):
                 selected.insert(0,extra)
         eligible=[c for key in selected for c in groups[key]]
     if not eligible:return {'complete':True,'layouts':0,'elapsed_s':0}
-    heuristics=policy['heuristics'];binary,_,build_s=build_engine('rollout.cpp' if policy['lookahead_mode']=='rollout' else 'forecast.cpp')
+    heuristics=policy['heuristics']
+    kernel=('finish_rollout.cpp' if policy['rollout_objective']=='finish' else 'rollout.cpp') if policy['lookahead_mode']=='rollout' else 'forecast.cpp'
+    binary,_,build_s=build_engine(kernel,variant='diverse' if policy['rollout_beam_diversity'] else None)
     lines=[' '.join(map(str,[len(CARDS),state['round'],1,len(eligible),
         heuristics.get('passive_weight',1),heuristics.get('aura_weight',0),heuristics.get('vacancy_weight',0),
         policy['income_weight'],policy['lookahead_gold_scale'],policy['lookahead_seconds']]))]
@@ -41,11 +43,14 @@ def forecast_choices(raw,choices,policy, *, cumulative_damage=0):
             lines.append(' '.join(map(str,cell)))
     result=subprocess.run([str(binary)],input='\n'.join(lines)+'\n',text=True,capture_output=True,
                           check=True,timeout=policy['lookahead_seconds']+5)
-    out=json.loads(result.stdout);out['build_s']=build_s
+    out=json.loads(result.stdout);out['build_s']=build_s;out['objective']=policy['rollout_objective']
     if out.get('inventory_valid') is False:raise RuntimeError('rollout牌库张数失衡')
     if out['complete'] or out.get('samples_completed',0)>0:
         assert len(out['scores'])==len(eligible)
         for c in choices:c['decision_eligible']=any(c is selected for selected in eligible)
+        if 'failure_rates' in out:
+            assert len(out['failure_rates'])==len(eligible)
+            for c,rate in zip(eligible,out['failure_rates']):c['predicted_failure_rate']=rate
         for c,value in zip(eligible,out['scores']):
             c['lookahead_score']=value
             c['score']=(1-policy['lookahead_weight'])*c['score']+policy['lookahead_weight']*value

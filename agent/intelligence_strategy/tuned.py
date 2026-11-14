@@ -24,6 +24,9 @@ DEFAULT_POLICY = {
     'rollout_candidates':6,
     'rollout_safety_penalty':50,
     'rollout_early_bonus':10,
+    'rollout_objective':'damage',
+    'rollout_reliability_first':False,
+    'rollout_beam_diversity':False,
 }
 
 
@@ -36,6 +39,10 @@ def resolve_policy(overrides=None):
     policy=deepcopy(DEFAULT_POLICY)
     policy.update(deepcopy(overrides))
     policy['heuristics']=dict(DEFAULT_POLICY['heuristics'],**overrides.get('heuristics',{}))
+    if not isinstance(policy['rollout_beam_diversity'],bool):
+        raise ValueError('rollout_beam_diversity必须为布尔值')
+    if not isinstance(policy['rollout_reliability_first'],bool):
+        raise ValueError('rollout_reliability_first必须为布尔值')
     if not isinstance(policy.get('prioritize_finish',True),bool):
         raise ValueError('prioritize_finish必须为布尔值')
     for phase in ('gold_before_refresh','gold_after_refresh'):
@@ -51,6 +58,16 @@ def resolve_policy(overrides=None):
             raise ValueError('策略权重必须有限且非负')
     if not 0<=policy['lookahead_weight']<=1 or not 0<policy['lookahead_seconds']<=1:
         raise ValueError('lookahead_weight须在0..1，lookahead_seconds须在0..1内')
+    if policy['rollout_objective'] not in {'damage','finish'}:
+        raise ValueError('未知推演目标')
+    if policy['rollout_beam_diversity'] and policy['lookahead_mode']!='rollout':
+        raise ValueError('购买组合分散搜索仅适用于完整推演')
+    if policy['rollout_reliability_first'] and policy['rollout_objective']!='finish':
+        raise ValueError('失败率优先仅适用于提前终结目标')
+    if policy['rollout_objective']=='finish':
+        if not policy['prioritize_finish'] or policy['lookahead_mode']!='rollout' or policy['lookahead_weight']!=1:
+            raise ValueError('提前终结目标必须使用完整推演并保留优先击杀')
+        policy['rollout_early_bonus']=0  # Ordered score bands replace the old additive damage bonus.
     if policy['lookahead_mode'] not in {'single','rollout'}:
         raise ValueError('未知前瞻方式')
     for key,maximum in [('position_candidates',8),('rollout_samples',64),('rollout_width',16),('rollout_candidates',32)]:
@@ -95,8 +112,15 @@ def analyze_tuned(raw,hand,refreshes=1, *, policy=None, cumulative_damage=0):
         c['income_potential']*=policy.get('income_weight',0)
         c['score']=c['adjusted_damage']+(c['gold_value']+c['income_potential'] if not c['finishing'] else 0)
     forecast=forecast_choices(raw,result['choices'],policy,cumulative_damage=cumulative_damage) if policy['lookahead_weight'] else None
-    chosen=max((c for c in result['choices'] if c.get('decision_eligible',True)),key=lambda c:(c['finishing'],c['score'],c['damage'],c['gold_left'],c['position_priority']))
+    chosen=select_tuned_choice(result['choices'],policy)
     return {'chosen':chosen,'actions':purchase_actions(raw,hand,chosen),'score':chosen['score'],
             'coin_value':chosen['coin_value'],'gold_phase':chosen['gold_phase'],
             'next_action':'refresh' if chosen['will_refresh'] else 'prepare',
-            'elapsed_s':time.perf_counter()-started,'engine_s':result['elapsed_s'],'policy':policy,'forecast':forecast}
+            'elapsed_s':time.perf_counter()-started,'engine_s':result['elapsed_s'],'policy':policy,'forecast':forecast,
+            'score_unit':'immediate_damage' if chosen['finishing'] else 'finish_points' if policy['rollout_objective']=='finish' and 'lookahead_score' in chosen else 'modeled_damage'}
+
+
+def select_tuned_choice(choices,policy):
+    return max((c for c in choices if c.get('decision_eligible',True)),key=lambda c:(
+        c['finishing'],-c.get('predicted_failure_rate',0) if policy['rollout_reliability_first'] else 0,
+        c['score'],c['damage'],c['gold_left'],c['position_priority']))

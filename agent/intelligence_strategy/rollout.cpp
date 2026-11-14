@@ -7,6 +7,9 @@
 #include <iomanip>
 #include <random>
 #include <set>
+#ifdef FINISH_OBJECTIVE
+#include "outcome.hpp"
+#endif
 
 struct BeamState {
     std::array<Cell,9> cells;int cash=0,mask=0;double value=0;bool finish=false;
@@ -34,7 +37,7 @@ int main() {
         for(auto& cell:c.cells)std::cin>>cell.id>>cell.entered>>cell.bonus;
     }
     if(!std::cin)return 2;
-    const auto started=Clock::now();U layouts=0;bool inventory_valid=true;
+    const auto started=Clock::now();U layouts=0;bool inventory_valid=true,last_failure=false;int max_beam_cardsets=0;
     auto expired=[&]{return seconds>0 && std::chrono::duration<double>(Clock::now()-started).count()>=seconds;};
     auto rank=[](const BeamState& a,const BeamState& b) {
         if(a.finish!=b.finish)return a.finish>b.finish;
@@ -100,6 +103,19 @@ int main() {
                 int k=__builtin_popcount((unsigned)distinct[i].mask);
                 if(!(groups&(1<<k))){beam.push_back(distinct[i]);kept[i]=true;groups|=1<<k;}
             }
+#ifdef DIVERSE_BEAM
+            auto purchase_key=[&](const BeamState& state) {
+                std::array<int,5> key;key.fill(-1);int at=0;
+                for(int j=0;j<(int)hand.size();++j)if(state.mask&(1<<j))key[at++]=hand[j];
+                std::sort(key.begin(),key.end());return key;
+            };
+            std::set<std::array<int,5>> cardsets;
+            for(auto& state:beam)cardsets.insert(purchase_key(state));
+            for(unsigned i=0;i<distinct.size() && (int)beam.size()<width;++i)if(!kept[i] && cardsets.insert(purchase_key(distinct[i])).second) {
+                beam.push_back(distinct[i]);kept[i]=true;
+            }
+            max_beam_cardsets=std::max(max_beam_cardsets,int(cardsets.size()));
+#endif
             for(unsigned i=0;i<distinct.size() && (int)beam.size()<width;++i)if(!kept[i])beam.push_back(distinct[i]);
         }
         auto best=*std::max_element(beam.begin(),beam.end(),[&](const auto& a,const auto& b){return rank(b,a);});
@@ -121,6 +137,7 @@ int main() {
             for(int i=0;i<9;++i)if(original[i].id<0 && board[i].id>=0)++actual[board[i].id];
             if(actual!=pool){inventory_valid=false;return false;}return true;
         };
+        int first_hit=0;
         double damage=0,cumulative=past;bool hit4=cumulative>=100 && turn<=4;
         int slots=candidate.refresh_slots,refreshes=0;
         while(turn<=5) {
@@ -147,6 +164,10 @@ int main() {
             if(expired())return false;
             auto e=evaluate(0);damage+=e.rounds[turn-1];cumulative+=e.rounds[turn-1];
             if(turn<=4 && cumulative>=100)hit4=true;
+            if(!first_hit && cumulative>=100)first_hit=turn;
+#ifdef FINISH_OBJECTIVE
+            if(first_hit)break; // No reward for imaginary damage after the opponent is dead.
+#endif
             int new_buys=0,elements=0,black=0,amulets=0;
             for(auto cell:board)if(cell.id>=0) {
                 auto c=cards[cell.id];if(c.element)elements|=1<<c.element;
@@ -158,18 +179,35 @@ int main() {
             ++turn;if(turn>5)break;
             gold+=3+(new_buys==0?2:new_buys==1?1:0);slots=5;refreshes=1;
         }
-        answer=damage-(cumulative<100?safety:0)+(hit4?early:0);return true;
+#ifdef FINISH_OBJECTIVE
+        answer=finish_score(first_hit,cumulative)-(first_hit?0:safety);
+#else
+        answer=damage-(cumulative<100?safety:0)+(hit4?early:0);
+#endif
+        last_failure=first_hit==0;
+        return true;
     };
-    std::vector<double> sum(count,0);int completed=0;
+    std::vector<double> sum(count,0),fail_sum(count,0);int completed=0;
     for(int sample=0;sample<samples;++sample) {
-        std::vector<double> batch(count);bool valid=true;
-        for(int k=0;k<count;++k)if(!simulate(candidates[k],sample,batch[k])){valid=false;break;}
+        std::vector<double> batch(count),fail_batch(count);bool valid=true;
+        for(int k=0;k<count;++k) {
+            if(!simulate(candidates[k],sample,batch[k])){valid=false;break;}
+            fail_batch[k]=last_failure;
+        }
         if(!valid)break;
-        for(int k=0;k<count;++k)sum[k]+=batch[k];++completed;
+        for(int k=0;k<count;++k){sum[k]+=batch[k];fail_sum[k]+=fail_batch[k];}++completed;
     }
     std::cout<<std::setprecision(12)<<"{\"complete\":"<<(completed==samples?"true":"false")
         <<",\"inventory_valid\":"<<(inventory_valid?"true":"false")<<",\"samples_completed\":"<<completed<<",\"layouts\":"<<layouts<<",\"elapsed_s\":"
         <<std::chrono::duration<double>(Clock::now()-started).count()<<",\"scores\":[";
     if(completed)for(int k=0;k<count;++k){if(k)std::cout<<',';std::cout<<sum[k]/completed;}
+#ifdef FINISH_OBJECTIVE
+    std::cout<<"],\"failure_rates\":[";
+    if(completed)for(int k=0;k<count;++k){if(k)std::cout<<',';std::cout<<fail_sum[k]/completed;}
+#endif
+#ifdef DIVERSE_BEAM
+    std::cout<<"],\"beam_diversity\":true,\"max_beam_cardsets\":"<<max_beam_cardsets<<"}\n";
+#else
     std::cout<<"]}\n";
+#endif
 }

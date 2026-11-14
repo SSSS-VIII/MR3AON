@@ -10,6 +10,7 @@ p=argparse.ArgumentParser(description=__doc__)
 p.add_argument('--policies',type=Path,required=True)
 p.add_argument('--games',type=int,default=100)
 p.add_argument('--first-seed',type=int,default=0)
+p.add_argument('--target-five-mean',type=float,default=150)
 p.add_argument('--output',type=Path,required=True)
 a=p.parse_args()
 if not 1<=a.games<=10000:p.error('games必须为1..10000')
@@ -22,7 +23,7 @@ for overrides in policies:
            for seed in range(a.first_seed,a.first_seed+a.games)]
     summary=aggregate(games)
     row={'policy':policy,'summary':summary,'acceptance_actual_stop':target_checks(summary),
-         'acceptance_five_rounds':target_checks(summary,five_rounds=True)}
+         'acceptance_five_rounds':target_checks(summary,five_rounds=True,mean_target=a.target_five_mean)}
     rows.append(row)
     print(json.dumps(row,ensure_ascii=False),flush=True)
 a.output.parent.mkdir(parents=True,exist_ok=True)

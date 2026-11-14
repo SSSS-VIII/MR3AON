@@ -108,7 +108,8 @@ def aggregate(games):
     hits=[g['hit_round'] for g in games if g['reached_100']]
     damages=[g.get('actual_stop_damage',g['total_damage']) for g in games]
     full=[g['five_round_damage'] for g in games if g.get('five_round_damage') is not None]
-    return {'games':len(games),'four_round_kill_rate':sum(r<=4 for r in hits)/len(games),
+    return {'games':len(games),'mean_finish_score':statistics.mean(finish_score(g['hit_round'],d) for g,d in zip(games,damages)),
+            'four_round_kill_rate':sum(r<=4 for r in hits)/len(games),
             'mean_five_round_damage':statistics.mean(full) if len(full)==len(games) else None,
             'reach_100_rate':len(hits)/len(games),
             'hit_round_counts':{str(r):hits.count(r) for r in range(1,6)},
@@ -122,19 +123,20 @@ def aggregate(games):
             'zero_purchase_refreshes':sum(g['zero_purchase_refreshes'] for g in games)}
 
 
-def run_regression(count,first_seed,reference=None,strategies=None, *, policy=None, full_five_rounds=False):
+def run_regression(count,first_seed,reference=None,strategies=None, *, policy=None, full_five_rounds=False, target_five_mean=150):
     if not 1<=count<=10000:raise ValueError('games必须为1..10000')
     started=time.perf_counter();report={}
     for strategy in (strategies or ['damage_only','synergy_v2','tuned']):
         games=[play(seed,strategy,reference,policy=policy,stop_at_100=not full_five_rounds) for seed in range(first_seed,first_seed+count)]
         summary=aggregate(games)
         report[strategy]={'summary':summary,'acceptance_actual_stop':target_checks(summary),
-                          'acceptance_five_rounds':target_checks(summary,five_rounds=True),'games':games}
+                          'acceptance_five_rounds':target_checks(summary,five_rounds=True,mean_target=target_five_mean),'games':games}
     return {'version':'refresh-stage-v3','first_seed':first_seed,'games_per_strategy':count,
             'elapsed_s':time.perf_counter()-started,'profile':'refresh_v1',
             'evaluation':'首次累计100记录击杀回合；mean_damage始终为提前结束实际伤害，full_five_rounds额外提供固定五回合总伤害；不混用两种均值。',
             'reference':reference,'policy':resolve_policy(policy),
-            'full_five_rounds':full_five_rounds,'strategies':report,
+            'full_five_rounds':full_five_rounds,'target_five_round_mean':target_five_mean,
+            'finish_score_note':'独立等级评分：四回合击杀200..299，五回合击杀100..199；不是实际伤害。','strategies':report,
             'limitations':['单边牌库，不扣对手牌；无锁牌/撤回；synergy_v2/tuned含启发式被动潜力；tuned含空格buff/经济潜力与占位成本。',
                            '游戏规则未实测部分沿用模型假设，结果不是实机胜率。',
                            '白名单为原名单/顺序买入/首空格的离线对照，全部策略使用相同白板规则。',
@@ -142,9 +144,14 @@ def run_regression(count,first_seed,reference=None,strategies=None, *, policy=No
                            'fixed7和synergy_v2金币系数固定7；tuned区分刷新阶段并经过离线调参；v1沿用旧表。']}
 
 
-def target_checks(summary, *, five_rounds=False):
+def target_checks(summary, *, five_rounds=False, mean_target=130):
     mean=summary['mean_five_round_damage'] if five_rounds else summary['mean_damage']
-    checks={'mean_130':None if mean is None else mean>=130,
+    checks={f'mean_{mean_target:g}':None if mean is None else mean>=mean_target,
             'five_round_100_rate_99pct':summary['reach_100_rate']>=.99,
             'four_round_kill_rate_20pct':summary['four_round_kill_rate']>=.2}
     return dict(checks,all_met=all(v is True for v in checks.values()))
+
+
+def finish_score(hit_round,damage_at_stop):
+    """Score, never physical damage: 5-round wins 100..199, 4-round wins 200..299."""
+    return damage_at_stop if hit_round is None else 100*(6-hit_round)+min(99,max(0,damage_at_stop-100))
