@@ -134,7 +134,7 @@ def build_engine():
     if expected not in (HERE/'effects.hpp').read_text():
         raise ValueError('cards.json与effects.hpp效果编号不一致')
     version = subprocess.check_output([compiler, '--version'], text=True).splitlines()[0]
-    digest = hashlib.sha256((HERE/'engine.cpp').read_bytes() + (HERE/'effects.hpp').read_bytes()
+    digest = hashlib.sha256((HERE/'engine.cpp').read_bytes() + (HERE/'effects.hpp').read_bytes() + (HERE/'synergy.hpp').read_bytes()
                             + (compiler+version).encode()).hexdigest()[:16]
     cache = Path(tempfile.gettempdir()) / f'mr3a-intelligence-sim-{os.getuid()}'
     cache.mkdir(mode=0o700, exist_ok=True)
@@ -173,14 +173,14 @@ def histogram_summary(histogram, index):
 
 def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
              physical_sampling=False, growth_mode='since_entry', profile='full',
-             max_purchases=None, trace_choices=False, position_tiebreak=False):
+             max_purchases=None, trace_choices=False, position_tiebreak=False, future_pool=None):
     if not math.isfinite(seconds) or seconds < 0:
         raise ValueError('seconds必须是有限非负数，0表示不限时')
     _integer(samples, 'samples', 0, 1000000)
     _integer(max_layouts, 'max_layouts', 0, 10**18)
     if growth_mode not in {'since_entry', 'board_count'}:
         raise ValueError('未知growth_mode')
-    if profile not in {'full','refresh_v1'}:
+    if profile not in {'full','refresh_v1','synergy_v2'}:
         raise ValueError('未知profile')
     if max_purchases is not None:
         _integer(max_purchases,'max_purchases',0,9)
@@ -191,10 +191,18 @@ def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
     preparation_s = time.perf_counter()-started
     binary, compiler, build_s = build_engine()
     codes = CATALOG['effect_codes']
-    lines = [f"{len(CARDS)} {state['round']} {state['gold']} {seconds} {max_layouts} {int(bool(samples))} {samples} {int(growth_mode=='since_entry')} {int(profile=='refresh_v1')} {int(position_tiebreak)} {9 if max_purchases is None else max_purchases} {int(trace_choices)}"]
+    lines = [f"{len(CARDS)} {state['round']} {state['gold']} {seconds} {max_layouts} {int(bool(samples))} {samples} {int(growth_mode=='since_entry')} {dict(full=0,refresh_v1=1,synergy_v2=2)[profile]} {int(position_tiebreak)} {9 if max_purchases is None else max_purchases} {int(trace_choices)}"]
     lines.extend(' '.join(str(c[k]) for k in ('attack','cost','element','category','copies'))+
                  f" {codes.index(c['effect'])} {c['param']}" for c in CARDS)
     lines.append(' '.join(map(str, state['pool'])))
+    future_pool = state['pool'] if future_pool is None else future_pool
+    bound_raw = dict(raw); bound_raw.pop('pool_override', None)
+    bounds = prepare_state(bound_raw)['pool']
+    if len(future_pool) != len(CARDS):
+        raise ValueError('future_pool长度错误')
+    for i, count in enumerate(future_pool):
+        _integer(count, 'future_pool', state['pool'][i], bounds[i])
+    lines.append(' '.join(map(str, future_pool)))
     lines.extend(' '.join(map(str, cell)) for cell in state['board'])
     lines.extend(' '.join(map(str, [len(combo), *combo])) for combo in combinations)
     started = time.perf_counter()
@@ -214,6 +222,9 @@ def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
                   max_purchases=max_purchases, position_tiebreak=position_tiebreak,
                   compiler=compiler, build_s=build_s, preparation_s=preparation_s, wall_s=wall_s,
                   assumptions=ASSUMPTIONS+(['refresh_v1: 老板娘、紫原、轮回戒指及鬼斩铠甲按白板；不加空格潜力或未触发羁绊估值。'] if profile=='refresh_v1' else []))
+    result['placement_objective'] = 'damage+synergy_potential' if profile=='synergy_v2' else 'damage'
+    if profile=='synergy_v2':
+        result['assumptions'].append('synergy_v2: 复杂牌沿用refresh_v1白板；未触发被动按场面、回合、余池和空位估值；潜力不属于真实伤害。')
     key = 'statistics' if result['complete'] and not samples else 'sample_estimate' if result['complete'] else 'partial_prefix_statistics_not_pool_estimate'
     def summarize(index):
         gain = histogram_summary(histogram, index)
@@ -229,6 +240,11 @@ def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
     for choice in result['choices']:
         choice['cards']=[CARDS[i]['name'] for i in choice['cards']]
         choice['board']=[CARDS[i]['name'] if i>=0 else None for i in choice['board']]
+        choice['potential_gain']=choice['synergy_potential']-result['baseline_potential']
+        choice['adjusted_damage']=choice['damage']+choice['synergy_potential']
+        for detail in choice['synergy_details']:
+            detail['card']=choice['board'][detail['cell']]
+            detail['reason']=['active','row_blocked','insufficient_slots','insufficient_pool','past_round5','estimated'][detail['reason']]
         choice['damage_gain']=choice['damage']-result['baseline_damage']
         choice['existing_card_damage_gain']=sum(value-result['baseline_cell_damage'][i] for i,value in enumerate(choice['cell_damage']) if state['board'][i][0]>=0)
         choice['new_card_damage']=sum(value for i,value in enumerate(choice['cell_damage']) if state['board'][i][0]<0)

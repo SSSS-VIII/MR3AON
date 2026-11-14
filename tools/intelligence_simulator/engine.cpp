@@ -14,7 +14,7 @@ using U = std::uint64_t;
 using Clock = std::chrono::steady_clock;
 struct Card { int attack,cost,element,category,copies,effect,param; };
 struct Cell { int id=-1, entered=1, bonus=0; };
-struct Evaluation { I damage=0,gold=0,refresh=0; bool instant=false; std::array<I,5> rounds{}; std::array<I,9> cell_damage{}; };
+struct Evaluation { I damage=0,gold=0,refresh=0; bool instant=false; std::array<I,5> rounds{}; std::array<I,9> cell_damage{}; std::array<std::array<I,9>,5> attack_by_round{}; };
 std::vector<Card> cards;
 std::array<Cell,9> board;
 int turn, gold, growth_mode;
@@ -92,6 +92,7 @@ Evaluation evaluate(int spent) {
                 if(count==3) attack[i]*=2;
             }
         }
+        result.attack_by_round[r-1]=attack;
         std::array<I,3> rows{},cols{};
         I damage=0;
         for(int i=0;i<9;++i) {damage+=attack[i];result.cell_damage[i]+=attack[i];rows[i/3]+=attack[i];cols[i%3]+=attack[i];}
@@ -135,32 +136,38 @@ Evaluation evaluate(int spent) {
     result.gold=money;return result;
 }
 
+#include "synergy.hpp"
+
 int main() {
     int n,mode,samples,profile,tiebreak,max_purchases,trace; double seconds; U max_layouts;
     if(!(std::cin>>n>>turn>>gold>>seconds>>max_layouts>>mode>>samples>>growth_mode>>profile>>tiebreak>>max_purchases>>trace)) return 2;
     cards.resize(n);
     for(auto& c:cards) std::cin>>c.attack>>c.cost>>c.element>>c.category>>c.copies>>c.effect>>c.param;
-    if(profile==1) for(auto& c:cards)
+    if(profile>=1) for(auto& c:cards)
         if(c.effect==CAT || c.effect==GHOST || c.effect==RING) c.effect=PLAIN;
     std::vector<int> pool(n),used(n);
     for(auto& x:pool)std::cin>>x;
+    std::vector<int> future_pool(n);
+    for(auto& x:future_pool)std::cin>>x;
     for(auto& c:board)std::cin>>c.id>>c.entered>>c.bonus;
     if(!std::cin) return 2;
     auto started=Clock::now();
     auto original=board;
     auto baseline=evaluate(0);
+    auto baseline_potential=profile==2?estimate_potential(baseline,future_pool,original):Potential{};
     std::vector<int> empty,combo,best_combo;
     for(int i=0;i<9;++i)if(board[i].id<0)empty.push_back(i);
     U layouts=0,completed=0,physical=0,instant_count=0,instant_weight=0;
     bool stopped=false;
     std::map<I,std::pair<U,U>> histogram;
     I overall=std::numeric_limits<I>::min();
+    double overall_value=-std::numeric_limits<double>::infinity(),overall_potential=0;
     auto best_board=board;
     auto expired=[&] {
         return (max_layouts && layouts>=max_layouts) ||
           (seconds>0 && std::chrono::duration<double>(Clock::now()-started).count()>=seconds);
     };
-    struct Choice {std::vector<int> cards;int spent,priority;I damage;std::array<Cell,9> board;Evaluation eval;};
+    struct Choice {std::vector<int> cards;int spent,priority;I damage;std::array<Cell,9> board;Evaluation eval;Potential potential;};
     std::vector<Choice> choices;
     auto priority=[&] {
         int value=0;
@@ -180,16 +187,20 @@ int main() {
     auto run_combo=[&](int spent,U weight) {
         I best=std::numeric_limits<I>::min();
         auto candidate_board=board;
-        Evaluation candidate_eval;int best_priority=std::numeric_limits<int>::min();
+        Evaluation candidate_eval;Potential candidate_potential;double best_value=-std::numeric_limits<double>::infinity();int best_priority=std::numeric_limits<int>::min();
         bool instant=false;
         auto place=[&](auto&& self,int at,int previous_cell)->void {
             if(stopped)return;
             if((layouts%1024==0 || (max_layouts && layouts>=max_layouts)) && expired()){stopped=true;return;}
             if(at==(int)combo.size()) {
                 ++layouts;auto e=evaluate(spent);
+                auto potential=profile==2?estimate_potential(e,future_pool,original):Potential{};
+                double value=e.damage+potential.value;
                 int pos=tiebreak?priority():0;
-                if(e.damage>best || (e.damage==best && pos>best_priority)) {
-                    best=e.damage;best_priority=pos;candidate_board=board;instant=e.instant;candidate_eval=e;
+                if(value>best_value+1e-9 || (std::abs(value-best_value)<1e-9 &&
+                    (e.damage>best || (e.damage==best && pos>best_priority)))) {
+                    best=e.damage;best_value=value;best_priority=pos;candidate_board=board;
+                    instant=e.instant;candidate_eval=e;candidate_potential=potential;
                 }
                 return;
             }
@@ -202,10 +213,13 @@ int main() {
         place(place,0,-1);
         if(stopped)return;
         ++completed;physical+=weight;
-        if(trace)choices.push_back({combo,spent,best_priority,best,candidate_board,candidate_eval});
+        if(trace)choices.push_back({combo,spent,best_priority,best,candidate_board,candidate_eval,candidate_potential});
         auto& bin=histogram[best-baseline.damage];++bin.first;bin.second+=weight;
         if(instant){++instant_count;instant_weight+=weight;}
-        if(best>overall){overall=best;best_combo=combo;best_board=candidate_board;}
+        if(best_value>overall_value+1e-9 || (std::abs(best_value-overall_value)<1e-9 && best>overall)) {
+            overall=best;overall_value=best_value;overall_potential=candidate_potential.value;
+            best_combo=combo;best_board=candidate_board;
+        }
     };
     if(mode==0) {
         auto visit=[&](auto&& self,int start,int spent,U weight)->void {
@@ -241,10 +255,10 @@ int main() {
     auto best=evaluate(spent);
     std::cout<<"],\"best_round_damage\":[";
     for(int i=0;i<5;++i){if(i)std::cout<<',';std::cout<<best.rounds[i];}
-    std::cout<<"],\"best_damage\":"<<best.damage<<",\"best_end_gold\":"<<best.gold;
+    std::cout<<"],\"best_damage\":"<<best.damage<<",\"best_end_gold\":"<<best.gold<<",\"best_potential\":"<<overall_potential;
     std::cout<<",\"baseline_cell_damage\":[";
     for(int i=0;i<9;++i){if(i)std::cout<<',';std::cout<<baseline.cell_damage[i];}
-    std::cout<<"],\"choices\":[";
+    std::cout<<"],\"baseline_potential\":"<<baseline_potential.value<<",\"choices\":[";
     bool first_choice=true;
     for(const auto& c:choices) {
         if(!first_choice)std::cout<<',';first_choice=false;
@@ -258,6 +272,15 @@ int main() {
         for(int i=0;i<9;++i){if(i)std::cout<<',';std::cout<<c.eval.cell_damage[i];}
         std::cout<<"],\"round_damage\":[";
         for(int i=0;i<5;++i){if(i)std::cout<<',';std::cout<<c.eval.rounds[i];}
+        std::cout<<"],\"synergy_potential\":"<<c.potential.value<<",\"synergy_details\":[";
+        bool first_term=true;
+        for(int i=0;i<9;++i)if(c.potential.threshold[i] || c.potential.by_cell[i]!=0) {
+            if(!first_term)std::cout<<',';first_term=false;
+            std::cout<<"{\"cell\":"<<i<<",\"value\":"<<c.potential.by_cell[i]
+              <<",\"progress\":"<<c.potential.progress[i]<<",\"threshold\":"<<c.potential.threshold[i]
+              <<",\"activation_round\":"<<c.potential.activation[i]<<",\"confidence\":"<<c.potential.confidence[i]
+              <<",\"reason\":"<<c.potential.reason[i]<<"}";
+        }
         std::cout<<"]}";
     }
     std::cout<<"]}\n";

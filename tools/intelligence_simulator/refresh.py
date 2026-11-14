@@ -1,4 +1,4 @@
-"""第一版离线刷新策略：可见手牌子集＋金币机会成本；无设备接口。"""
+"""离线刷新策略：可见手牌子集＋金币机会成本＋可选被动潜力；无设备接口。"""
 from __future__ import annotations
 
 from collections import Counter, defaultdict, deque
@@ -72,7 +72,7 @@ def spendable_gold(raw, choice):
     return min(choice['gold_left'],sum(costs[:state['empty']]))
 
 
-def hand_choices(raw, hand):
+def hand_choices(raw, hand, *, synergy=False):
     if not isinstance(hand,list) or len(hand)>5 or any(name not in BY_NAME for name in hand):
         raise ValueError('hand必须是最多5张有效牌名')
     full=prepare_state(raw)
@@ -81,7 +81,8 @@ def hand_choices(raw, hand):
         if n>full['pool'][BY_NAME[name]['id']]:
             raise ValueError(f'{name}手牌张数超过单边已知余量')
     partial=deepcopy(raw);partial['pool_override']=dict(requested)
-    result=simulate(partial,profile=PROFILE,trace_choices=True,position_tiebreak=True,seconds=2)
+    result=simulate(partial,profile='synergy_v2' if synergy else PROFILE,trace_choices=True,
+                    position_tiebreak=True,seconds=2,future_pool=full['pool'])
     if not result['complete']:
         raise RuntimeError('当前手牌搜索未完成，不作为已完成决策')
     for choice in result['choices']:
@@ -97,15 +98,18 @@ def sensitivity_frontier(choices):
         low=Fraction(0);high=None
         for j,other in enumerate(choices):
             if i==j:continue
-            d=choice['damage']-other['damage'];g=choice['valued_gold']-other['valued_gold']
+            d=(Fraction(str(choice.get('adjusted_damage',choice['damage'])))
+               -Fraction(str(other.get('adjusted_damage',other['damage']))))
+            g=choice['valued_gold']-other['valued_gold']
             if g==0:
                 if d<0:high=Fraction(-1);break
-            elif g>0:low=max(low,Fraction(-d,g))
+            elif g>0:low=max(low,-d/g)
             else:
-                boundary=Fraction(d,-g)
+                boundary=d/(-g)
                 high=boundary if high is None else min(high,boundary)
         if high is None or low<=high:
             frontier.append({'cards':choice['cards'],'damage':choice['damage'],
+                             'synergy_potential':choice.get('synergy_potential',0),
                              'gold_left':choice['gold_left'],'valued_gold':choice['valued_gold'],
                              'lambda_from':float(low),'lambda_to':float(high) if high is not None else None})
     return frontier
@@ -115,7 +119,7 @@ def select_choice(choices, coin_value):
     if not math.isfinite(coin_value) or coin_value<0:
         raise ValueError('金币价值必须为有限非负数')
     def key(choice):
-        return (choice['damage']+coin_value*choice['valued_gold'],choice['gold_left'],
+        return (choice.get('adjusted_damage',choice['damage'])+coin_value*choice['valued_gold'],choice['gold_left'],
                 choice['empty_left'],choice['position_priority'])
     return max(choices,key=key)
 
@@ -130,9 +134,9 @@ def purchase_actions(raw,hand,choice):
     return actions
 
 
-def analyze_hand(raw,hand,coin_value,refreshes=1):
+def analyze_hand(raw,hand,coin_value=7,refreshes=1, *, synergy=False):
     started=time.perf_counter()
-    result=hand_choices(raw,hand)
+    result=hand_choices(raw,hand,synergy=synergy)
     chosen=select_choice(result['choices'],coin_value)
     after=after_purchase(raw,chosen)
     pool=prepare_state(after)['pool']
@@ -140,11 +144,12 @@ def analyze_hand(raw,hand,coin_value,refreshes=1):
     replaceable=len(hand)-len(chosen['cards'])  # 已买空的槽位不会被主动刷新补齐。
     can_refresh=(refreshes>0 and replaceable>0 and chosen['empty_left']>0 and chosen['gold_left']>=min_cost)
     return {'chosen':chosen,'actions':purchase_actions(raw,hand,chosen),
-            'coin_value':coin_value,'score':chosen['damage']+coin_value*chosen['valued_gold'],
+            'coin_value':coin_value,'score':chosen['adjusted_damage']+coin_value*chosen['valued_gold'],
             'next_action':'refresh' if can_refresh else 'prepare','replaceable_shop_slots':replaceable,
             'frontier':sensitivity_frontier(result['choices']), 'choices':result['choices'],
             'elapsed_s':time.perf_counter()-started,'engine_s':result['elapsed_s'],
-            'latent_empty_cell_value':0,'inactive_synergy_value':0,
+            'latent_empty_cell_value':0,'inactive_synergy_value':chosen['synergy_potential'],
+            'baseline_potential':result['baseline_potential'],'profile':result['profile'],
             'future_coin_income_note':'end_gold仅展示；本版尚未把经济卡未来产币另折算进当前金币项。'}
 
 

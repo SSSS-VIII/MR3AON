@@ -24,7 +24,7 @@ def _whitelist(raw, hand, refreshes):
 
 
 def play(seed, strategy, reference):
-    if strategy not in {'whitelist','damage_only','v1'}:raise ValueError(strategy)
+    if strategy not in {'whitelist','damage_only','v1','fixed7','synergy_v2'}:raise ValueError(strategy)
     rng=random.Random(seed)
     deck=[c['name'] for c in CARDS for _ in range(c['copies'])]
     total_cards=Counter(deck)
@@ -46,9 +46,9 @@ def play(seed, strategy, reference):
             slots=[i for i,c in enumerate(shop) if c]
             hand=[shop[i] for i in slots]
             raw={'round':turn,'gold':gold,'board':board}
-            value=lookup_coin_value(reference,turn,board.count(None)) if strategy=='v1' else 0
+            value=lookup_coin_value(reference,turn,board.count(None)) if strategy=='v1' else 7 if strategy in {'fixed7','synergy_v2'} else 0
             begin=time.perf_counter()
-            plan=_whitelist(raw,hand,refreshes) if strategy=='whitelist' else analyze_hand(raw,hand,value,refreshes)
+            plan=_whitelist(raw,hand,refreshes) if strategy=='whitelist' else analyze_hand(raw,hand,value,refreshes,synergy=strategy=='synergy_v2')
             decision_times.append((time.perf_counter()-begin)*1000)
             before_gold=gold
             for action in plan['actions']:
@@ -107,18 +107,18 @@ def aggregate(games):
             'zero_purchase_refreshes':sum(g['zero_purchase_refreshes'] for g in games)}
 
 
-def run_regression(count,first_seed,reference):
+def run_regression(count,first_seed,reference,strategies=None):
     if not 1<=count<=10000:raise ValueError('games必须为1..10000')
     started=time.perf_counter();report={}
-    for strategy in ['whitelist','damage_only','v1']:
+    for strategy in (strategies or ['whitelist','damage_only','v1']):
         games=[play(seed,strategy,reference) for seed in range(first_seed,first_seed+count)]
         report[strategy]={'summary':aggregate(games),'games':games}
-    return {'version':'refresh-v1-first-pass','first_seed':first_seed,'games_per_strategy':count,
+    return {'version':'offline-passive-v2','first_seed':first_seed,'games_per_strategy':count,
             'elapsed_s':time.perf_counter()-started,'profile':'refresh_v1',
             'evaluation':'累计到100即停止，越早越好；未达100时比较第五回合累计伤害。策略本身仍用到第五回合累计增伤＋金币项，不加提前结束偏好。',
             'reference':reference,'strategies':report,
-            'limitations':['单边牌库，不扣对手牌；无锁牌/撤回/未知潜力分。',
+            'limitations':['单边牌库，不扣对手牌；无锁牌/撤回；synergy_v2含启发式被动潜力。',
                            '游戏规则未实测部分沿用模型假设，结果不是实机胜率。',
                            '白名单为原名单/顺序买入/首空格的离线对照，全部策略使用相同白板规则。',
                            '每个策略用相同种子区间；后续发牌随购买/刷新分岔，不能视作逐手完全相同。',
-                           '金币系数先由单张余池参考确定，未按本次测试结果二次调参。']}
+                           'fixed7和synergy_v2金币系数固定7；v1沿用参考表；未按本次结果二次调参。']}
