@@ -174,6 +174,16 @@ class FallbackBountyCompanion(CustomAction):
         return True
 
 
+@AgentServer.custom_recognition('BountyCompanionSession')
+class BountyCompanionSession(CustomRecognition):
+    """只提供当前CLI是否是父任务创建的小号会话，不读取或操作设备。"""
+    def analyze(self, context, argv):
+        session = read_session()
+        if not session.get('name'):
+            return None
+        return CustomRecognition.AnalyzeResult(box=[0, 0, 1, 1], detail={})
+
+
 @AgentServer.custom_recognition('BountyCompanionState')
 class BountyCompanionState(CustomRecognition):
     def analyze(self, context, argv):

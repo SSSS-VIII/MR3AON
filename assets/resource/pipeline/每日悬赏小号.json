@@ -1217,5 +1217,98 @@
         "on_error": [
             "每日悬赏小号失败"
         ]
+    },
+    "悬赏小号启动会话": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "BountyCompanionSession"
+            }
+        }
+    },
+    "悬赏小号启动返回": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "悬赏小号启动会话",
+                    "点击左上角退出"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "max_hit": 8,
+        "pre_delay": 0,
+        "post_delay": 500
+    },
+    "悬赏小号启动确认离队": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "悬赏小号启动会话",
+                    "悬赏小号确认离队"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "max_hit": 2,
+        "pre_delay": 0,
+        "post_delay": 500
+    },
+    "悬赏小号启动取消悬浮窗提示": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "悬赏小号启动会话",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    200,
+                                    150,
+                                    880,
+                                    420
+                                ],
+                                "expected": [
+                                    "(请打开|开启)悬浮窗权(限)?"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    250,
+                                    500,
+                                    430,
+                                    200
+                                ],
+                                "expected": [
+                                    "^取消$"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 2
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "pre_delay": 0,
+        "post_delay": 500,
+        "max_hit": 3
     }
 }
