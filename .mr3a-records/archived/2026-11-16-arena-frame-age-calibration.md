@@ -97,7 +97,7 @@ CPU只读脚本 `analyze_dynamic_native.py` 输出 `dynamic-native-review.json`�
 
 CPU逐图人工核对留下 `dynamic-player-misses-review.png`（绿为同帧原Role框，红为raw检测）。7张下翻缺检index8/9/11/67/68/70/72和1张上翻缺检index22的原Role框均约 **7.90×7.90px**；前3张没有金币闪光仍缺检，后4张另叠金币/闪光。index101为普通绳下身体被黑色前景遮挡。最大X误差index17/18为−7.751/−8.281px，均处于普通绳下被大块深色前景遮挡，框置信仅0.377/0.426；不能用它们修正全局root位置或原运动常量。
 
-**这9张只是禁用ROI的原始全帧缺框，不是实际actor缺9帧。** 正式 `ObbDetector.detect` 已有局部ROI fallback，`ObbPerception`还会对短缺口做受限动作外推，必须单独验证。已准备 `compare_dynamic_player_roi.py` 沿用原detect+ROI、仍禁native选择，输出与原始全帧分离；目前仅CPU编译/--help通过，**尚未执行第二套GPU比较**。期间主任务独占GPU进行14板原生首轮，本子任务没有操作实例/GPU或改runtime。
+**这9张只是禁用ROI的原始全帧缺框，不是实际actor缺9帧。** 正式 `ObbDetector.detect` 已有局部ROI fallback，`ObbPerception`还会对短缺口做受限动作外推，必须单独验证。已准备 `compare_dynamic_player_roi.py` 沿用原detect+ROI、仍禁native选择，输出与原始全帧分离；准备时仅CPU编译/--help通过；随后原版ROI复放已由主任务执行，结果见本节补充。期间主任务独占GPU进行14板原生首轮，本子任务没有操作实例/GPU或改runtime。
 
 新增两项CPU保护验证精确nonce/frame关联、PNG/捕获码不一致拒绝、resume/pause边界排除和有符号几何误差。与原探针14项合计 **16通过**；模型推理由主任务实际执行，CPU单测不冒充模型或无伤验收。
 
@@ -110,3 +110,10 @@ CPU逐图人工核对留下 `dynamic-player-misses-review.png`（绿为同帧原
 观测队列必须放在 `ObbPerception.observe` 最开头，早于缺检外推及slide偏移支撑查询；只放在 `_finish` 前不足。保留capture_return与image_time两个字段，避免把runner的fresh_intervals和请求耗时混入backdate。年龄估计若变化造成image_time倒退，需要显式拒绝/快照重放，不能用epsilon制造差分速度。native码/原root/物理状态始终只在事后评分中使用。
 
 上述仅为设计与独立校准证据，未接入演员、未设置固定27/35/45ms补偿，未改变任何正式输入或物理参数。父任务原14板测试期间运行源保持冻结。
+
+
+## 原版ROI fallback复放补充：九次尝试均未补上
+
+主任务随后执行 `compare_dynamic_player_roi.py`，session47516退出0。仍是相同121张原图、固定main21权重/profile、同样抹除时间码、像素结果全部保存后再读native。120张严格活动图中source为 **111 full_frame、9 missing、0 local_roi**；9个缺框索引与上一套逐一相同，111个有框的坐标和后验误差也逐项相同。原ROI尝试均实际运行，9次耗时最小5.525ms、中位5.870ms、最大7.545ms，不能将零补框误说成没有走fallback。
+
+两套结果及CPU交叉检查分别在 `main21-roi-same-frame-review.json`、`main21-roi-manifest.json`、`main21-roi-independent-review.json`。这说明原240×240局部窗口/imgsz320路径在本组未弥补小翻转姿态及遮挡缺口，后续需要独立研究窗口/尺度与可见性。当前仍未执行完整actor的运动缺框外推评分，所以 **9次检测器缺框仍不等于9次actor完全无角色状态**。未为本case临时改检测阈值、裁剪尺度或正式策略；原生多板测试源继续冻结。
