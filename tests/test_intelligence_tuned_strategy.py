@@ -30,7 +30,7 @@ def test_immediate_finish_preferred_to_more_damage_after_game_would_end():
     names=['樱火·茜','寒绡·兮兰','乘霄·戌时','月晖·小夜','冰羽·兮兰','风铭·戌时','奔雷·银枭','猫太·老板娘']
     raw={'round':4,'gold':3,'board':[{'name':n,'entered_round':1} for n in names]+[None]}
     hand=['怒鲤双生','极刃·血影']
-    greedy=analyze_tuned(raw,hand,0,policy=policy(prioritize_finish=False,lookahead_weight=0),cumulative_damage=85)
+    greedy=analyze_tuned(raw,hand,0,policy=policy(prioritize_finish=False),cumulative_damage=85)
     finish=analyze_tuned(raw,hand,0,policy=policy(prioritize_finish=True),cumulative_damage=85)
     assert greedy['chosen']['cards']==['极刃·血影']
     assert finish['chosen']['cards']==['怒鲤双生']
@@ -44,6 +44,17 @@ def test_policy_validation_and_no_mutation():
     assert p==saved and raw=={'round':5,'gold':2}
     for bad in [policy(gold_after_refresh=[1]*5),policy(income_weight=float('nan'))]:
         with pytest.raises(ValueError):analyze_tuned(raw,[],policy=bad)
+
+
+def test_all_current_purchase_combinations_are_scored_without_rollouts():
+    hand=['龙吟·洛青','怒鲤双生','菩提覆面','VVIP黑卡','霜刃·伊鹤']
+    result=analyze_tuned({'round':1,'gold':20},hand)
+    assert result['candidates_evaluated']==32  # Five distinct affordable cards, including buying none.
+    c=result['chosen']
+    assert result['score']==pytest.approx(c['adjusted_damage']+c['gold_value']+c['income_potential'])
+    assert 'forecast' not in result and 'lookahead_score' not in c
+    for obsolete in [{'lookahead_weight':1},{'rollout_samples':64}]:
+        with pytest.raises(ValueError):analyze_tuned({'round':1,'gold':5},[],policy=obsolete)
 
 
 def test_when_both_options_finish_maximize_damage_now():

@@ -47,7 +47,7 @@ def test_payment_and_placement_are_confirmed_before_board_changes(tmp_path):
         assert kw['policy']['prioritize_finish'] is True
         return {'actions':[{'card':hand[0],'shop_slot':0,'cell':1}],'next_action':'prepare'}
     result=state.prepare(seen(),1,1,planner=plan)
-    assert result['mode']=='rollout' and state.board==[None]*9
+    assert result['mode']=='scored' and state.board==[None]*9
     assert state.confirm(seen(gold=4,hand={},empty=set(range(9))-{1}),1)
     assert state.board[1]=={'name':'神乐·琳','entered_round':1}
     assert IntelligenceSession(tmp_path/'state.json').board==state.board
@@ -85,6 +85,13 @@ def test_unknown_currency_skips_purchase():
     state=IntelligenceSession();state.reset()
     assert state.prepare(seen(gold=None),1,1)['mode']=='skip_unknown_gold'
     assert state.pending is None
+
+
+def test_warm_only_builds_the_current_hand_engine(monkeypatch):
+    calls=[]
+    monkeypatch.setattr('utils.intelligence_live.build_engine',lambda:calls.append('current_hand'))
+    assert IntelligenceSession().warm()
+    assert calls==['current_hand']
 
 
 def test_third_and_fourth_cells_remain_distinct_in_native_click_queue():

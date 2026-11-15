@@ -65,8 +65,7 @@ def play(seed, strategy, reference=None, *, policy=None, stop_at_100=True):
             events.append({'hand':hand,'bought':[a['card'] for a in plan['actions']],
                            'gold_before':before_gold,'gold_left':gold,'coin_value':value,
                            'next_action':plan['next_action'],'refresh_available':refreshes,
-                           'board_after':[c['name'] if c else None for c in board],
-                           'forecast':{k:v for k,v in plan['forecast'].items() if k not in {'elapsed_s','build_s'}} if plan.get('forecast') else None})
+                           'board_after':[c['name'] if c else None for c in board]})
             inventory_check()
             if plan['next_action']!='refresh':break
             assert refreshes>0
@@ -131,7 +130,7 @@ def run_regression(count,first_seed,reference=None,strategies=None, *, policy=No
         summary=aggregate(games)
         report[strategy]={'summary':summary,'acceptance_actual_stop':target_checks(summary),
                           'acceptance_five_rounds':target_checks(summary,five_rounds=True,mean_target=target_five_mean),'games':games}
-    return {'version':'refresh-stage-v3','first_seed':first_seed,'games_per_strategy':count,
+    return {'version':'current-hand-v4','first_seed':first_seed,'games_per_strategy':count,
             'elapsed_s':time.perf_counter()-started,'profile':'refresh_v1',
             'evaluation':'首次累计100记录击杀回合；mean_damage始终为提前结束实际伤害，full_five_rounds额外提供固定五回合总伤害；不混用两种均值。',
             'reference':reference,'policy':resolve_policy(policy),

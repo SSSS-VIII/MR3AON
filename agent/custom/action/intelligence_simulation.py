@@ -37,7 +37,7 @@ class PlanIntelligenceHand(CustomAction):
         after=P+('刷新手牌' if plan['next_action']=='refresh' else '准备就绪')
         placements=[f"{a['card']}→第{a['cell']//3+1}行第{a['cell']%3+1}列" for a in plan['actions']]
         logger.info(f"情报模拟战策略: round={round_number} gold={seen['gold']} health={seen['health']} mode={plan['mode']} placements={placements} next={plan['next_action']}")
-        if plan['mode']!='rollout':logger.warning(f'情报模拟战降级: {state.reason}')
+        if plan['mode']!='scored':logger.warning(f'情报模拟战降级: {state.reason}')
         if plan['actions']:
             if not context.override_pipeline({P+'确认落位':{'action':{'param':{
                 'custom_action_param':{'round':round_number,'after':after}}}}}):return False

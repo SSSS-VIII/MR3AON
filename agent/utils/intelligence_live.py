@@ -109,7 +109,7 @@ class IntelligenceSession:
 
     def warm(self):
         try:
-            build_engine();build_engine('rollout.cpp');self.disabled=False
+            build_engine();self.disabled=False
         except (OSError,RuntimeError,ValueError,subprocess.SubprocessError) as error:
             self.disabled=True;self.reason=f'kernel_unavailable:{type(error).__name__}'
         return not self.disabled
@@ -147,7 +147,7 @@ class IntelligenceSession:
             try:
                 raw={'round':round_number,'gold':seen['gold'],'board':self.board,'shop_slots':len(seen['visible_slots'])}
                 plan=planner(raw,hand,available,policy={'prioritize_finish':True},cumulative_damage=100-seen['health'] if seen['health'] is not None else (100 if round_number>=3 else 0))
-                plan['mode']='rollout'
+                plan['mode']='scored'
                 for action in plan['actions']:action['shop_slot']=slots[action['shop_slot']]
             except (OSError,RuntimeError,ValueError,KeyError,subprocess.SubprocessError) as error:
                 self.reason=f'planning_fallback:{type(error).__name__}';plan=self.fallback(seen,round_number,available)

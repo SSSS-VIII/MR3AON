@@ -131,11 +131,7 @@ def _compiler_version(compiler):
     return subprocess.check_output([compiler, '--version'], text=True).splitlines()[0]
 
 
-def build_engine(source='engine.cpp', *, variant=None):
-    if variant not in {None,'diverse'} or variant and source not in {'rollout.cpp','finish_rollout.cpp'}:
-        raise ValueError('未知离线编译变体')
-    if source not in {'engine.cpp','forecast.cpp','rollout.cpp','finish_rollout.cpp'}:
-        raise ValueError('未知离线内核')
+def build_engine():
     compiler = shutil.which('g++') or shutil.which('clang++')
     if not compiler:
         raise RuntimeError('离线性能核需要g++或clang++（不安装或下载依赖）')
@@ -144,9 +140,7 @@ def build_engine(source='engine.cpp', *, variant=None):
         raise ValueError('cards.json与effects.hpp效果编号不一致')
     version = _compiler_version(compiler)
     digest = hashlib.sha256((HERE/'engine.cpp').read_bytes() + (HERE/'effects.hpp').read_bytes() + (HERE/'synergy.hpp').read_bytes()
-                            + ((HERE/source).read_bytes() if source!='engine.cpp' else b'')
-                            + ((HERE/'rollout.cpp').read_bytes()+(HERE/'outcome.hpp').read_bytes() if source=='finish_rollout.cpp' else b'')
-                            + (variant.encode() if variant else b'') + (compiler+version).encode()).hexdigest()[:16]
+                            + (compiler+version).encode()).hexdigest()[:16]
     cache = Path(tempfile.gettempdir()) / f'mr3a-intelligence-sim-{os.getuid()}'
     cache.mkdir(mode=0o700, exist_ok=True)
     binary = cache / digest
@@ -154,7 +148,7 @@ def build_engine(source='engine.cpp', *, variant=None):
     if not binary.exists():
         temporary = cache / f'{digest}.{os.getpid()}.tmp'
         try:
-            subprocess.run([compiler, '-std=c++17', '-O3', '-DNDEBUG', *(['-DDIVERSE_BEAM'] if variant else []), str(HERE/source),
+            subprocess.run([compiler, '-std=c++17', '-O3', '-DNDEBUG', str(HERE/'engine.cpp'),
                             '-o', str(temporary)], check=True, capture_output=True, text=True, timeout=60)
             temporary.replace(binary)
         finally:
