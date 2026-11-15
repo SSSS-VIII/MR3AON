@@ -1,0 +1,122 @@
+{
+  "version": "current-hand-v4",
+  "first_seed": 160000,
+  "games_per_strategy": 1000,
+  "elapsed_s": 56.78843390800466,
+  "profile": "refresh_v1",
+  "evaluation": "首次累计100记录击杀回合；mean_damage始终为提前结束实际伤害，full_five_rounds额外提供固定五回合总伤害；不混用两种均值。",
+  "reference": null,
+  "policy": {
+    "gold_before_refresh": [
+      6,
+      4.8,
+      3.6,
+      2.4,
+      1.2
+    ],
+    "gold_after_refresh": [
+      4,
+      3,
+      2,
+      1,
+      0
+    ],
+    "heuristics": {
+      "aura_weight": 1,
+      "vacancy_weight": 3,
+      "role_position_bias": 1
+    },
+    "income_weight": 2,
+    "prioritize_finish": true,
+    "refresh_slot_budget": 3
+  },
+  "full_five_rounds": true,
+  "target_five_round_mean": 150.0,
+  "finish_score_note": "独立等级评分：四回合击杀200..299，五回合击杀100..199；不是实际伤害。",
+  "limitations": [
+    "单边牌库，不扣对手牌；无锁牌/撤回；synergy_v2/tuned含启发式被动潜力；tuned含空格buff/经济潜力与占位成本。",
+    "游戏规则未实测部分沿用模型假设，结果不是实机胜率。",
+    "白名单为原名单/顺序买入/首空格的离线对照，全部策略使用相同白板规则。",
+    "每个策略用相同种子区间；后续发牌随购买/刷新分岔，不能视作逐手完全相同。",
+    "fixed7和synergy_v2金币系数固定7；tuned区分刷新阶段并经过离线调参；v1沿用旧表。"
+  ],
+  "source_commit": "eb61a1f0e527fa15f825e03e35a2f76899551827",
+  "source_sha256": {
+    "agent/intelligence_strategy/__init__.py": "c424a9491d562298c22e3b45c4a6a4059f12f0492c9fb80e5a6724614220ac73",
+    "agent/intelligence_strategy/cards.json": "79c98a89b720efff393820eef9fb154fc3210413d5157d031fc8e9c31f7af991",
+    "agent/intelligence_strategy/effects.hpp": "fbef33a06b19c0bb92db166154e2b41aeeec00d66b068291e11129b65dd8abc9",
+    "agent/intelligence_strategy/engine.cpp": "c49af9b04ed3d63228464066712ecb8ca6fc1c855f600bf4a29d61d9110f1c2d",
+    "agent/intelligence_strategy/gold_value.py": "0f9039a96d957e8e5e7bea1b6a8c54ce8725131076a77280327ddf381cfa7587",
+    "agent/intelligence_strategy/model.py": "8b430bf17f708b3d93368145a3ab4eee261c9798712a144eead95ddbfe43281c",
+    "agent/intelligence_strategy/refresh.py": "6319dff28666f6d2601970fa2f45da8f6fb2c4d9efcdb291a92274c8cdd78d93",
+    "agent/intelligence_strategy/single_player.py": "16ff2e801d18fe0161edb8176e08256734c11d08b18d21f95fbf5bccf0b6a254",
+    "agent/intelligence_strategy/synergy.hpp": "09cfb0cc9c853f21672b2fa04df918f881ced39b8694b96b91210287bd36c1a4",
+    "agent/intelligence_strategy/tuned.py": "e3d6834f4c2a7d335105e785c64513e78c79d50c803dbec934213b1836b4fe4e"
+  },
+  "summary": {
+    "games": 1000,
+    "mean_finish_score": 152.817,
+    "four_round_kill_rate": 0.319,
+    "mean_five_round_damage": 133.504,
+    "reach_100_rate": 0.974,
+    "hit_round_counts": {
+      "1": 0,
+      "2": 0,
+      "3": 1,
+      "4": 318,
+      "5": 655
+    },
+    "mean_hit_round_among_successes": 4.671457905544147,
+    "mean_damage": 120.817,
+    "median_damage": 120.0,
+    "min_damage": 59,
+    "max_damage": 181,
+    "decision_median_ms": 3.3394375059287995,
+    "decision_p95_ms": 20.96483598870691,
+    "decision_max_ms": 93.47515199624468,
+    "partial_purchase_refreshes": 1865,
+    "zero_purchase_refreshes": 1183
+  },
+  "acceptance_five_rounds": {
+    "mean_150": false,
+    "five_round_100_rate_99pct": false,
+    "four_round_kill_rate_20pct": true,
+    "all_met": false
+  },
+  "acceptance_actual_stop": {
+    "mean_130": false,
+    "five_round_100_rate_99pct": false,
+    "four_round_kill_rate_20pct": true,
+    "all_met": false
+  },
+  "failed_seeds": [
+    160009,
+    160077,
+    160100,
+    160145,
+    160177,
+    160204,
+    160210,
+    160225,
+    160291,
+    160371,
+    160393,
+    160399,
+    160430,
+    160437,
+    160459,
+    160460,
+    160568,
+    160584,
+    160641,
+    160647,
+    160661,
+    160738,
+    160756,
+    160774,
+    160983,
+    160986
+  ],
+  "raw_report_sha256": "cad026a5a9ad1e916181171e797bd27546f3c3240fa201e3d7ee2bd5d3b69c01",
+  "note": "固定参数、新独立种子1000局，只验证当前策略成绩，未据此调参。固定五回合是击杀后继续虚拟的反事实伤害；实际停止伤害单列。已预热枚举核，决策耗时不含OCR/ADB。原始完整逐手JSON在/tmp，逐局CSV入库。"
+}
