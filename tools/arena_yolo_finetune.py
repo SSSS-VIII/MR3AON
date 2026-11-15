@@ -42,6 +42,8 @@ def main():
     sdk=offline_sdk();model=sdk.YOLO(str(a.weights))
     if a.transfer:
         model.load(str(a.transfer))
+    from arena_yolo_checkpoint import install_fp32_export
+    exported=install_fp32_export(model,a.output,a.data.parent/'profile.json')
     model.train(data=str(a.data.resolve()),epochs=a.epochs,batch=a.batch,imgsz=a.imgsz,device=0,
         workers=2,cache=False,amp=True,freeze=a.freeze,seed=17,deterministic=True,plots=False,
         project=str(a.output.resolve().parent),name=a.output.name,exist_ok=False,
@@ -57,7 +59,11 @@ def main():
                 for path in(a.weights,a.data,*([a.transfer]if a.transfer else[]))}
     (a.output/'source-checkpoints.json').write_text(json.dumps(provenance,indent=2)+'\n')
     (a.output/'profile-transfer.json').write_text(json.dumps(transfer_profile,indent=2)+'\n')
-    print(json.dumps(dict(output=str(a.output),best=str(a.output/'weights/best.pt'))),flush=True)
+    if not exported.best_path.is_file():
+        raise RuntimeError('Training produced no audited FP32 EMA checkpoint')
+    print(json.dumps(dict(output=str(a.output),best=str(exported.best_path),
+                          standard_best=str(a.output/'weights/best.pt'),
+                          audit=str(a.output/'fp32-best.json'))),flush=True)
 
 
 if __name__=='__main__':
