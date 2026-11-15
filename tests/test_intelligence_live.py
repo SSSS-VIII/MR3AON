@@ -72,6 +72,22 @@ def test_unknown_currency_skips_purchase():
     assert state.pending is None
 
 
+def test_third_and_fourth_cells_remain_distinct_in_native_click_queue():
+    from utils.intelligence_live import click_plans,cell_index
+    from utils.intelligence_cards import apply_hand_plan
+    actions=[{'card':'神乐·琳','shop_slot':0,'cell':2},
+             {'card':'龙吟·洛青','shop_slot':1,'cell':3}]
+    patches={}
+    context=SimpleNamespace(override_pipeline=lambda patch:patches.update(patch) or True,
+                            override_next=lambda *_:True)
+    assert apply_hand_plan(context,P+'第一轮选牌',click_plans(actions),P+'准备就绪')
+    # Operation numbers are queue order; board targets use row-major 0..8.
+    assert patches[P+'放置卡牌1']['action']['param']['target']==[485,222]
+    assert patches[P+'放置卡牌2']['action']['param']['target']==[142,412]
+    assert cell_index([450,190,70,64])==2
+    assert cell_index([107,380,70,64])==3
+
+
 def test_native_saved_images_invoke_production_action(tmp_path):
     process=subprocess.run([sys.executable,__file__,'native'],cwd=ROOT,capture_output=True,text=True,timeout=90,env=dict(os.environ,MR3A_TEST_WORK=str(tmp_path)))
     assert process.returncode==0,process.stdout[-4000:]+process.stderr[-4000:]
