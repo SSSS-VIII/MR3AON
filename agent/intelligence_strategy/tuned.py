@@ -7,8 +7,8 @@ from .model import BY_NAME,CARDS,prepare_state
 from .refresh import hand_choices,purchase_actions
 
 DEFAULT_POLICY = {
-    'gold_before_refresh':[6,4.8,3.6,2.4,1.2],
-    'gold_after_refresh':[4,3,2,1,0],
+    'gold_before_refresh':[12,9.6,7.2,4.8,2.4],
+    'gold_after_refresh':[8,6,4,2,0],
     'heuristics':{'aura_weight':1,'role_position_bias':1},
     'income_weight':2,
     'prioritize_finish':True,

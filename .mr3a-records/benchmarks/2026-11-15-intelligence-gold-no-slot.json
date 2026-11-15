@@ -1,0 +1,1003 @@
+{
+  "source_base_commit": "967c471",
+  "method": "其它参数固定，只改刷新前/后金币表；11组170000..170099初筛、2组180000..180299选择后冻结B；190000..190999各1000局最终独立对照，未使用最终样本重新调参。",
+  "training": [
+    {
+      "policy": {
+        "gold_before_refresh": [
+          6,
+          4.8,
+          3.6,
+          2.4,
+          1.2
+        ],
+        "gold_after_refresh": [
+          4,
+          3,
+          2,
+          1,
+          0
+        ],
+        "heuristics": {
+          "aura_weight": 1,
+          "role_position_bias": 1
+        },
+        "income_weight": 2,
+        "prioritize_finish": true,
+        "refresh_slot_budget": 3
+      },
+      "summary": {
+        "games": 100,
+        "mean_finish_score": 130.17,
+        "four_round_kill_rate": 0.13,
+        "mean_five_round_damage": 121.34,
+        "reach_100_rate": 0.89,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 13,
+          "5": 76
+        },
+        "mean_hit_round_among_successes": 4.853932584269663,
+        "mean_damage": 117.17,
+        "median_damage": 117.5,
+        "min_damage": 82,
+        "max_damage": 161,
+        "decision_median_ms": 2.7179519966011867,
+        "decision_p95_ms": 6.200136005645618,
+        "decision_max_ms": 13.879789999919012,
+        "partial_purchase_refreshes": 159,
+        "zero_purchase_refreshes": 2
+      },
+      "acceptance_actual_stop": {
+        "mean_130": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": false,
+        "all_met": false
+      },
+      "acceptance_five_rounds": {
+        "mean_150": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": false,
+        "all_met": false
+      }
+    },
+    {
+      "policy": {
+        "gold_before_refresh": [
+          9.0,
+          7.2,
+          5.4,
+          3.6,
+          1.8
+        ],
+        "gold_after_refresh": [
+          4,
+          3,
+          2,
+          1,
+          0
+        ],
+        "heuristics": {
+          "aura_weight": 1,
+          "role_position_bias": 1
+        },
+        "income_weight": 2,
+        "prioritize_finish": true,
+        "refresh_slot_budget": 3
+      },
+      "summary": {
+        "games": 100,
+        "mean_finish_score": 138.99,
+        "four_round_kill_rate": 0.2,
+        "mean_five_round_damage": 126.05,
+        "reach_100_rate": 0.98,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 20,
+          "5": 78
+        },
+        "mean_hit_round_among_successes": 4.795918367346939,
+        "mean_damage": 118.99,
+        "median_damage": 119.0,
+        "min_damage": 98,
+        "max_damage": 161,
+        "decision_median_ms": 2.2307190010906197,
+        "decision_p95_ms": 5.598803007160313,
+        "decision_max_ms": 10.434095995151438,
+        "partial_purchase_refreshes": 194,
+        "zero_purchase_refreshes": 34
+      },
+      "acceptance_actual_stop": {
+        "mean_130": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      },
+      "acceptance_five_rounds": {
+        "mean_150": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      }
+    },
+    {
+      "policy": {
+        "gold_before_refresh": [
+          9.0,
+          7.2,
+          5.4,
+          3.6,
+          1.8
+        ],
+        "gold_after_refresh": [
+          6.0,
+          4.5,
+          3.0,
+          1.5,
+          0.0
+        ],
+        "heuristics": {
+          "aura_weight": 1,
+          "role_position_bias": 1
+        },
+        "income_weight": 2,
+        "prioritize_finish": true,
+        "refresh_slot_budget": 3
+      },
+      "summary": {
+        "games": 100,
+        "mean_finish_score": 141.19,
+        "four_round_kill_rate": 0.22,
+        "mean_five_round_damage": 127.23,
+        "reach_100_rate": 0.99,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 22,
+          "5": 77
+        },
+        "mean_hit_round_among_successes": 4.777777777777778,
+        "mean_damage": 119.19,
+        "median_damage": 119.0,
+        "min_damage": 98,
+        "max_damage": 161,
+        "decision_median_ms": 2.3000049986876547,
+        "decision_p95_ms": 5.28337799187284,
+        "decision_max_ms": 53.26746699574869,
+        "partial_purchase_refreshes": 194,
+        "zero_purchase_refreshes": 33
+      },
+      "acceptance_actual_stop": {
+        "mean_130": false,
+        "five_round_100_rate_99pct": true,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      },
+      "acceptance_five_rounds": {
+        "mean_150": false,
+        "five_round_100_rate_99pct": true,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      }
+    },
+    {
+      "policy": {
+        "gold_before_refresh": [
+          9.0,
+          7.2,
+          5.4,
+          3.6,
+          1.8
+        ],
+        "gold_after_refresh": [
+          8,
+          6,
+          4,
+          2,
+          0
+        ],
+        "heuristics": {
+          "aura_weight": 1,
+          "role_position_bias": 1
+        },
+        "income_weight": 2,
+        "prioritize_finish": true,
+        "refresh_slot_budget": 3
+      },
+      "summary": {
+        "games": 100,
+        "mean_finish_score": 144,
+        "four_round_kill_rate": 0.24,
+        "mean_five_round_damage": 128.78,
+        "reach_100_rate": 0.99,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 24,
+          "5": 75
+        },
+        "mean_hit_round_among_successes": 4.757575757575758,
+        "mean_damage": 120,
+        "median_damage": 120.0,
+        "min_damage": 98,
+        "max_damage": 161,
+        "decision_median_ms": 2.3012719975668006,
+        "decision_p95_ms": 5.924245997448452,
+        "decision_max_ms": 44.68748500221409,
+        "partial_purchase_refreshes": 193,
+        "zero_purchase_refreshes": 33
+      },
+      "acceptance_actual_stop": {
+        "mean_130": false,
+        "five_round_100_rate_99pct": true,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      },
+      "acceptance_five_rounds": {
+        "mean_150": false,
+        "five_round_100_rate_99pct": true,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      }
+    },
+    {
+      "policy": {
+        "gold_before_refresh": [
+          12,
+          9.6,
+          7.2,
+          4.8,
+          2.4
+        ],
+        "gold_after_refresh": [
+          6.0,
+          4.5,
+          3.0,
+          1.5,
+          0.0
+        ],
+        "heuristics": {
+          "aura_weight": 1,
+          "role_position_bias": 1
+        },
+        "income_weight": 2,
+        "prioritize_finish": true,
+        "refresh_slot_budget": 3
+      },
+      "summary": {
+        "games": 100,
+        "mean_finish_score": 157.23,
+        "four_round_kill_rate": 0.38,
+        "mean_five_round_damage": 133.23,
+        "reach_100_rate": 1.0,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 38,
+          "5": 62
+        },
+        "mean_hit_round_among_successes": 4.62,
+        "mean_damage": 119.23,
+        "median_damage": 116.0,
+        "min_damage": 100,
+        "max_damage": 173,
+        "decision_median_ms": 2.3590010023326613,
+        "decision_p95_ms": 6.113441995694302,
+        "decision_max_ms": 62.55502199928742,
+        "partial_purchase_refreshes": 187,
+        "zero_purchase_refreshes": 129
+      },
+      "acceptance_actual_stop": {
+        "mean_130": false,
+        "five_round_100_rate_99pct": true,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      },
+      "acceptance_five_rounds": {
+        "mean_150": false,
+        "five_round_100_rate_99pct": true,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      }
+    },
+    {
+      "policy": {
+        "gold_before_refresh": [
+          12,
+          9.6,
+          7.2,
+          4.8,
+          2.4
+        ],
+        "gold_after_refresh": [
+          8,
+          6,
+          4,
+          2,
+          0
+        ],
+        "heuristics": {
+          "aura_weight": 1,
+          "role_position_bias": 1
+        },
+        "income_weight": 2,
+        "prioritize_finish": true,
+        "refresh_slot_budget": 3
+      },
+      "summary": {
+        "games": 100,
+        "mean_finish_score": 156.42,
+        "four_round_kill_rate": 0.36,
+        "mean_five_round_damage": 134.09,
+        "reach_100_rate": 1.0,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 36,
+          "5": 64
+        },
+        "mean_hit_round_among_successes": 4.64,
+        "mean_damage": 120.42,
+        "median_damage": 120.0,
+        "min_damage": 100,
+        "max_damage": 153,
+        "decision_median_ms": 2.5071604977711104,
+        "decision_p95_ms": 6.955720004043542,
+        "decision_max_ms": 43.97755800164305,
+        "partial_purchase_refreshes": 184,
+        "zero_purchase_refreshes": 130
+      },
+      "acceptance_actual_stop": {
+        "mean_130": false,
+        "five_round_100_rate_99pct": true,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      },
+      "acceptance_five_rounds": {
+        "mean_150": false,
+        "five_round_100_rate_99pct": true,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      }
+    },
+    {
+      "policy": {
+        "gold_before_refresh": [
+          12,
+          9.6,
+          7.2,
+          4.8,
+          2.4
+        ],
+        "gold_after_refresh": [
+          10.0,
+          7.5,
+          5.0,
+          2.5,
+          0.0
+        ],
+        "heuristics": {
+          "aura_weight": 1,
+          "role_position_bias": 1
+        },
+        "income_weight": 2,
+        "prioritize_finish": true,
+        "refresh_slot_budget": 3
+      },
+      "summary": {
+        "games": 100,
+        "mean_finish_score": 148.88,
+        "four_round_kill_rate": 0.3,
+        "mean_five_round_damage": 130.67,
+        "reach_100_rate": 0.96,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 30,
+          "5": 66
+        },
+        "mean_hit_round_among_successes": 4.6875,
+        "mean_damage": 118.88,
+        "median_damage": 118.5,
+        "min_damage": 86,
+        "max_damage": 153,
+        "decision_median_ms": 2.9214060050435364,
+        "decision_p95_ms": 14.308697995147668,
+        "decision_max_ms": 54.78921400208492,
+        "partial_purchase_refreshes": 189,
+        "zero_purchase_refreshes": 144
+      },
+      "acceptance_actual_stop": {
+        "mean_130": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      },
+      "acceptance_five_rounds": {
+        "mean_150": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      }
+    },
+    {
+      "policy": {
+        "gold_before_refresh": [
+          15.0,
+          12.0,
+          9.0,
+          6.0,
+          3.0
+        ],
+        "gold_after_refresh": [
+          8,
+          6,
+          4,
+          2,
+          0
+        ],
+        "heuristics": {
+          "aura_weight": 1,
+          "role_position_bias": 1
+        },
+        "income_weight": 2,
+        "prioritize_finish": true,
+        "refresh_slot_budget": 3
+      },
+      "summary": {
+        "games": 100,
+        "mean_finish_score": 150.35,
+        "four_round_kill_rate": 0.31,
+        "mean_five_round_damage": 131.05,
+        "reach_100_rate": 0.97,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 31,
+          "5": 66
+        },
+        "mean_hit_round_among_successes": 4.680412371134021,
+        "mean_damage": 119.35,
+        "median_damage": 119.0,
+        "min_damage": 76,
+        "max_damage": 151,
+        "decision_median_ms": 2.6351464985054918,
+        "decision_p95_ms": 8.850080004776828,
+        "decision_max_ms": 47.683241005870514,
+        "partial_purchase_refreshes": 120,
+        "zero_purchase_refreshes": 228
+      },
+      "acceptance_actual_stop": {
+        "mean_130": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      },
+      "acceptance_five_rounds": {
+        "mean_150": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      }
+    },
+    {
+      "policy": {
+        "gold_before_refresh": [
+          15.0,
+          12.0,
+          9.0,
+          6.0,
+          3.0
+        ],
+        "gold_after_refresh": [
+          10.0,
+          7.5,
+          5.0,
+          2.5,
+          0.0
+        ],
+        "heuristics": {
+          "aura_weight": 1,
+          "role_position_bias": 1
+        },
+        "income_weight": 2,
+        "prioritize_finish": true,
+        "refresh_slot_budget": 3
+      },
+      "summary": {
+        "games": 100,
+        "mean_finish_score": 143.62,
+        "four_round_kill_rate": 0.26,
+        "mean_five_round_damage": 128.01,
+        "reach_100_rate": 0.96,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 26,
+          "5": 70
+        },
+        "mean_hit_round_among_successes": 4.729166666666667,
+        "mean_damage": 117.62,
+        "median_damage": 114.0,
+        "min_damage": 86,
+        "max_damage": 151,
+        "decision_median_ms": 2.852816993254237,
+        "decision_p95_ms": 21.24026200908702,
+        "decision_max_ms": 55.39082799805328,
+        "partial_purchase_refreshes": 126,
+        "zero_purchase_refreshes": 237
+      },
+      "acceptance_actual_stop": {
+        "mean_130": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      },
+      "acceptance_five_rounds": {
+        "mean_150": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      }
+    },
+    {
+      "policy": {
+        "gold_before_refresh": [
+          18,
+          14.4,
+          10.8,
+          7.2,
+          3.6
+        ],
+        "gold_after_refresh": [
+          8,
+          6,
+          4,
+          2,
+          0
+        ],
+        "heuristics": {
+          "aura_weight": 1,
+          "role_position_bias": 1
+        },
+        "income_weight": 2,
+        "prioritize_finish": true,
+        "refresh_slot_budget": 3
+      },
+      "summary": {
+        "games": 100,
+        "mean_finish_score": 140.44,
+        "four_round_kill_rate": 0.21,
+        "mean_five_round_damage": 127.88,
+        "reach_100_rate": 0.97,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 21,
+          "5": 76
+        },
+        "mean_hit_round_among_successes": 4.783505154639175,
+        "mean_damage": 119.44,
+        "median_damage": 120.0,
+        "min_damage": 76,
+        "max_damage": 151,
+        "decision_median_ms": 2.7708069974323735,
+        "decision_p95_ms": 9.759012988070026,
+        "decision_max_ms": 47.769623997737654,
+        "partial_purchase_refreshes": 84,
+        "zero_purchase_refreshes": 284
+      },
+      "acceptance_actual_stop": {
+        "mean_130": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      },
+      "acceptance_five_rounds": {
+        "mean_150": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      }
+    },
+    {
+      "policy": {
+        "gold_before_refresh": [
+          18,
+          14.4,
+          10.8,
+          7.2,
+          3.6
+        ],
+        "gold_after_refresh": [
+          12,
+          9,
+          6,
+          3,
+          0
+        ],
+        "heuristics": {
+          "aura_weight": 1,
+          "role_position_bias": 1
+        },
+        "income_weight": 2,
+        "prioritize_finish": true,
+        "refresh_slot_budget": 3
+      },
+      "summary": {
+        "games": 100,
+        "mean_finish_score": 125.49,
+        "four_round_kill_rate": 0.17,
+        "mean_five_round_damage": 115.84,
+        "reach_100_rate": 0.8,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 17,
+          "5": 63
+        },
+        "mean_hit_round_among_successes": 4.7875,
+        "mean_damage": 108.49,
+        "median_damage": 110.0,
+        "min_damage": 19,
+        "max_damage": 169,
+        "decision_median_ms": 4.836175008676946,
+        "decision_p95_ms": 30.003559004398994,
+        "decision_max_ms": 52.86198199610226,
+        "partial_purchase_refreshes": 83,
+        "zero_purchase_refreshes": 316
+      },
+      "acceptance_actual_stop": {
+        "mean_130": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": false,
+        "all_met": false
+      },
+      "acceptance_five_rounds": {
+        "mean_150": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": false,
+        "all_met": false
+      }
+    }
+  ],
+  "selection": {
+    "a": {
+      "policy": {
+        "gold_before_refresh": [
+          12,
+          9.6,
+          7.2,
+          4.8,
+          2.4
+        ],
+        "gold_after_refresh": [
+          6,
+          4.5,
+          3.0,
+          1.5,
+          0
+        ],
+        "heuristics": {
+          "aura_weight": 1,
+          "role_position_bias": 1
+        },
+        "income_weight": 2,
+        "prioritize_finish": true,
+        "refresh_slot_budget": 3
+      },
+      "summary": {
+        "games": 300,
+        "mean_finish_score": 153.35,
+        "four_round_kill_rate": 0.3566666666666667,
+        "mean_five_round_damage": 130.85333333333332,
+        "reach_100_rate": 0.9733333333333334,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 107,
+          "5": 185
+        },
+        "mean_hit_round_among_successes": 4.633561643835616,
+        "mean_damage": 117.68333333333334,
+        "median_damage": 115.0,
+        "min_damage": 76,
+        "max_damage": 169,
+        "decision_median_ms": 2.509214507881552,
+        "decision_p95_ms": 5.767189999460243,
+        "decision_max_ms": 29.013432998908684,
+        "partial_purchase_refreshes": 527,
+        "zero_purchase_refreshes": 395
+      }
+    },
+    "b": {
+      "policy": {
+        "gold_before_refresh": [
+          12,
+          9.6,
+          7.2,
+          4.8,
+          2.4
+        ],
+        "gold_after_refresh": [
+          8,
+          6.0,
+          4.0,
+          2.0,
+          0
+        ],
+        "heuristics": {
+          "aura_weight": 1,
+          "role_position_bias": 1
+        },
+        "income_weight": 2,
+        "prioritize_finish": true,
+        "refresh_slot_budget": 3
+      },
+      "summary": {
+        "games": 300,
+        "mean_finish_score": 156.11666666666667,
+        "four_round_kill_rate": 0.36333333333333334,
+        "mean_five_round_damage": 133.31666666666666,
+        "reach_100_rate": 0.98,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 109,
+          "5": 185
+        },
+        "mean_hit_round_among_successes": 4.629251700680272,
+        "mean_damage": 119.78333333333333,
+        "median_damage": 119.0,
+        "min_damage": 90,
+        "max_damage": 173,
+        "decision_median_ms": 2.588157993159257,
+        "decision_p95_ms": 7.750237011350691,
+        "decision_max_ms": 55.44047200237401,
+        "partial_purchase_refreshes": 518,
+        "zero_purchase_refreshes": 398
+      }
+    }
+  },
+  "holdout": {
+    "baseline": {
+      "policy": {
+        "gold_before_refresh": [
+          6,
+          4.8,
+          3.6,
+          2.4,
+          1.2
+        ],
+        "gold_after_refresh": [
+          4,
+          3,
+          2,
+          1,
+          0
+        ],
+        "heuristics": {
+          "aura_weight": 1,
+          "role_position_bias": 1
+        },
+        "income_weight": 2,
+        "prioritize_finish": true,
+        "refresh_slot_budget": 3
+      },
+      "summary": {
+        "games": 1000,
+        "mean_finish_score": 131.399,
+        "four_round_kill_rate": 0.144,
+        "mean_five_round_damage": 122.04,
+        "reach_100_rate": 0.936,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 144,
+          "5": 792
+        },
+        "mean_hit_round_among_successes": 4.846153846153846,
+        "mean_damage": 116.999,
+        "median_damage": 116.5,
+        "min_damage": 78,
+        "max_damage": 162,
+        "decision_median_ms": 3.100262998486869,
+        "decision_p95_ms": 7.710051999310963,
+        "decision_max_ms": 24.449661999824457,
+        "partial_purchase_refreshes": 1643,
+        "zero_purchase_refreshes": 42
+      },
+      "failed_seeds": [
+        190024,
+        190033,
+        190063,
+        190072,
+        190073,
+        190091,
+        190108,
+        190112,
+        190136,
+        190139,
+        190191,
+        190194,
+        190216,
+        190226,
+        190235,
+        190249,
+        190266,
+        190274,
+        190275,
+        190282,
+        190305,
+        190322,
+        190335,
+        190343,
+        190359,
+        190367,
+        190378,
+        190387,
+        190403,
+        190429,
+        190455,
+        190469,
+        190471,
+        190475,
+        190482,
+        190488,
+        190501,
+        190505,
+        190506,
+        190525,
+        190556,
+        190563,
+        190572,
+        190577,
+        190580,
+        190599,
+        190608,
+        190625,
+        190649,
+        190664,
+        190665,
+        190669,
+        190689,
+        190709,
+        190716,
+        190775,
+        190813,
+        190822,
+        190825,
+        190833,
+        190840,
+        190843,
+        190846,
+        190919
+      ],
+      "acceptance_five_rounds": {
+        "mean_150": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": false,
+        "all_met": false
+      }
+    },
+    "candidate": {
+      "policy": {
+        "gold_before_refresh": [
+          12,
+          9.6,
+          7.2,
+          4.8,
+          2.4
+        ],
+        "gold_after_refresh": [
+          8,
+          6.0,
+          4.0,
+          2.0,
+          0
+        ],
+        "heuristics": {
+          "aura_weight": 1,
+          "role_position_bias": 1
+        },
+        "income_weight": 2,
+        "prioritize_finish": true,
+        "refresh_slot_budget": 3
+      },
+      "summary": {
+        "games": 1000,
+        "mean_finish_score": 151.842,
+        "four_round_kill_rate": 0.316,
+        "mean_five_round_damage": 132.277,
+        "reach_100_rate": 0.982,
+        "hit_round_counts": {
+          "1": 0,
+          "2": 0,
+          "3": 1,
+          "4": 315,
+          "5": 666
+        },
+        "mean_hit_round_among_successes": 4.677189409368635,
+        "mean_damage": 120.142,
+        "median_damage": 119.0,
+        "min_damage": 66,
+        "max_damage": 179,
+        "decision_median_ms": 3.4612729941727594,
+        "decision_p95_ms": 9.71350799954962,
+        "decision_max_ms": 79.95811199361924,
+        "partial_purchase_refreshes": 1879,
+        "zero_purchase_refreshes": 1280
+      },
+      "failed_seeds": [
+        190031,
+        190085,
+        190112,
+        190116,
+        190133,
+        190251,
+        190287,
+        190301,
+        190344,
+        190483,
+        190513,
+        190535,
+        190564,
+        190594,
+        190695,
+        190771,
+        190811,
+        190885
+      ],
+      "acceptance_five_rounds": {
+        "mean_150": false,
+        "five_round_100_rate_99pct": false,
+        "four_round_kill_rate_20pct": true,
+        "all_met": false
+      }
+    }
+  },
+  "comparison": {
+    "five_round_damage": {
+      "candidate_minus_baseline": 10.237,
+      "approx_95pct_ci": [
+        9.031095967290222,
+        11.442904032709778
+      ]
+    },
+    "reached_100": {
+      "candidate_minus_baseline": 0.046,
+      "approx_95pct_ci": [
+        0.028693970037207462,
+        0.06330602996279254
+      ]
+    },
+    "kill_by_round4": {
+      "candidate_minus_baseline": 0.172,
+      "approx_95pct_ci": [
+        0.13987245598112602,
+        0.20412754401887395
+      ]
+    }
+  },
+  "raw_sha256": {
+    "baseline": "f520446fc3351c237a8a6a902356fef89065dfa025781c662df162eb7c8c0ea3",
+    "candidate": "7ba085a39e771df7c5732d556d251f9a33d803d6f2b88647786637d9d9742535"
+  },
+  "limits": "单边、复杂牌白板等既定简化；固定五回合包含击杀后反事实伤害，实际结束均伤单列。相同种子但购买/刷新使后续发牌分岔。区间为配对差值正态近似，非实机胜率。参数修改不涉及原生计算协议。"
+}
