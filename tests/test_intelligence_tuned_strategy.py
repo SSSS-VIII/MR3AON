@@ -67,15 +67,30 @@ def test_buying_a_card_has_no_separate_slot_charge():
         analyze_tuned({'round':1,'gold':5},[],policy={'heuristics':{'vacancy_weight':3}})
 
 
-def test_amulet_receives_no_future_coin_bonus():
+def test_zero_income_discount_disables_future_coin_bonus():
     raw={'round':1,'gold':3,'shop_slots':4,
          'board':[None,{'name':'龙吟·洛青','entered_round':1}]+[None]*7}
-    result=analyze_tuned(raw,['金刚覆面','龙焰·小黑','惠比寿御守'],0)
+    result=analyze_tuned(raw,['金刚覆面','龙焰·小黑','惠比寿御守'],0,policy={'income_weight':0})
     assert result['chosen']['cards']==['金刚覆面']
     assert result['chosen']['income_potential']==0
     assert result['score']==pytest.approx(result['chosen']['adjusted_damage']+result['chosen']['gold_value'])
     with pytest.raises(ValueError):
         analyze_tuned(raw,[],0,policy={'income_weight':2})
+
+
+def test_future_income_is_discounted_and_cannot_be_amplified():
+    from tools.intelligence_simulator.tuned import resolve_policy
+    raw={'round':1,'gold':3,'board':[None,{'name':'龙吟·洛青','entered_round':1}]+[None]*7}
+    result=analyze_tuned(raw,['惠比寿御守'],0,policy={'income_weight':.75})
+    assert result['chosen']['cards']==['惠比寿御守']
+    assert result['chosen']['income_before_discount']==pytest.approx(42)
+    assert result['chosen']['income_potential']==pytest.approx(31.5)
+    cautious=analyze_tuned(raw,['金刚覆面','龙焰·小黑','惠比寿御守'],0,policy={'income_weight':.2})
+    assert cautious['chosen']['cards']==['金刚覆面']
+    for bad in [-.1,1,2,float('nan'),float('inf'),True,'0.5']:
+        with pytest.raises(ValueError):resolve_policy({'income_weight':bad})
+    final=analyze_tuned({'round':5,'gold':3},['惠比寿御守'],0,policy={'income_weight':.75})
+    assert final['chosen']['income_potential']==0
 
 
 def test_running_agent_old_wire_slot_is_read_but_never_scored(monkeypatch):

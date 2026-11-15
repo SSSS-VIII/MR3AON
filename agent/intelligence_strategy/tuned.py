@@ -10,6 +10,7 @@ DEFAULT_POLICY = {
     'gold_before_refresh':[12,9.6,7.2,4.8,2.4],
     'gold_after_refresh':[8,6,4,2,0],
     'heuristics':{'aura_weight':1,'role_position_bias':1},
+    'income_weight':0.2,
     'prioritize_finish':True,
     'refresh_slot_budget':3,
 }
@@ -26,6 +27,9 @@ def resolve_policy(overrides=None):
     policy['heuristics']=dict(DEFAULT_POLICY['heuristics'],**overrides.get('heuristics',{}))
     if not isinstance(policy.get('prioritize_finish',True),bool):
         raise ValueError('prioritize_finish必须为布尔值')
+    weight=policy['income_weight']
+    if isinstance(weight,bool) or not isinstance(weight,(int,float)) or not math.isfinite(weight) or not 0<=weight<1:
+        raise ValueError('产币估值折扣必须为0到1之间的有限数，且小于1')
     for phase in ('gold_before_refresh','gold_after_refresh'):
         values=policy[phase]
         if len(values)!=5 or any(not math.isfinite(v) or v<0 for v in values):
@@ -64,9 +68,17 @@ def analyze_tuned(raw,hand,refreshes=1, *, policy=None, cumulative_damage=0):
         c['cash_for_later']=c['valued_gold']-c['cash_for_refresh']
         c['gold_value']=(c['cash_for_refresh']*policy['gold_before_refresh'][turn-1]
                          +c['cash_for_later']*policy['gold_after_refresh'][turn-1])
-        # Future coin production is deliberately worth zero in operation scoring.
-        c['income_potential']=0
-        c['score']=c['adjusted_damage']+(c['gold_value'] if not c['finishing'] else 0)
+        # Discount future production; never amplify it beyond its estimated coin value.
+        elements={BY_NAME[n]['element'] for n in c['board'] if n and BY_NAME[n]['element']}
+        producers=[BY_NAME[n]['effect'] for n in c['board'] if n and BY_NAME[n]['effect'] in {'income','amulet'}]
+        capacity=max(0,2.5*c['empty_left']-c['gold_left']-3*(5-turn))
+        c['income_before_discount']=0
+        for r in range(turn,5):
+            income=sum(1 if effect=='income' else min(4,len(elements)+.5*(r-turn)) for effect in producers)
+            useful=min(capacity,income);capacity-=useful
+            c['income_before_discount']+=useful*policy['gold_before_refresh'][r]
+        c['income_potential']=c['income_before_discount']*policy['income_weight']
+        c['score']=c['adjusted_damage']+(c['gold_value']+c['income_potential'] if not c['finishing'] else 0)
     chosen=max(result['choices'],key=lambda c:(c['finishing'],c['score'],c['damage'],c['gold_left'],c['position_priority']))
     return {'chosen':chosen,'actions':purchase_actions(raw,hand,chosen),'score':chosen['score'],
             'coin_value':chosen['coin_value'],'gold_phase':chosen['gold_phase'],

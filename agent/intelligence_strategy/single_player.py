@@ -136,7 +136,7 @@ def run_regression(count,first_seed,reference=None,strategies=None, *, policy=No
             'reference':reference,'policy':resolve_policy(policy),
             'full_five_rounds':full_five_rounds,'target_five_round_mean':target_five_mean,
             'finish_score_note':'独立等级评分：四回合击杀200..299，五回合击杀100..199；不是实际伤害。','strategies':report,
-            'limitations':['单边牌库，不扣对手牌；无锁牌/撤回；synergy_v2/tuned含启发式被动潜力；tuned含空格buff潜力，产币效果评分为0、不额外扣占位成本；模拟仍发放实际产币。',
+            'limitations':['单边牌库，不扣对手牌；无锁牌/撤回；synergy_v2/tuned含启发式被动潜力；tuned含空格buff潜力，产币估值按0<=income_weight<1折扣、不额外扣占位成本；模拟仍发放实际产币。',
                            '游戏规则未实测部分沿用模型假设，结果不是实机胜率。',
                            '白名单为原名单/顺序买入/首空格的离线对照，全部策略使用相同白板规则。',
                            '每个策略用相同种子区间；后续发牌随购买/刷新分岔，不能视作逐手完全相同。',
