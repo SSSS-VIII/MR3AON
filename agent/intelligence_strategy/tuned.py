@@ -10,7 +10,7 @@ from .forecast import forecast_choices
 DEFAULT_POLICY = {
     'gold_before_refresh':[6,4.8,3.6,2.4,1.2],
     'gold_after_refresh':[4,3,2,1,0],
-    'heuristics':{'aura_weight':2,'vacancy_weight':3,'role_position_bias':1},
+    'heuristics':{'aura_weight':1,'vacancy_weight':3,'role_position_bias':1},
     'income_weight':2,
     'prioritize_finish':True,
     'refresh_slot_budget':3,
