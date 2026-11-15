@@ -141,9 +141,10 @@ Evaluation evaluate(int spent) {
 int main() {
     int n,mode,samples,profile,tiebreak,max_purchases,trace; double seconds; U max_layouts;
     if(!(std::cin>>n>>turn>>gold>>seconds>>max_layouts>>mode>>samples>>growth_mode>>profile>>tiebreak>>max_purchases>>trace)) return 2;
-    double passive_weight,aura_weight,vacancy_weight,cumulative_damage,finish_priority,role_position_bias;
+    // Keep the wire slot for already-running Python agents; it no longer affects scoring.
+    double passive_weight,aura_weight,unused_slot_weight,cumulative_damage,finish_priority,role_position_bias;
     int position_candidates;
-    std::cin>>passive_weight>>aura_weight>>vacancy_weight>>cumulative_damage>>finish_priority>>role_position_bias>>position_candidates;
+    std::cin>>passive_weight>>aura_weight>>unused_slot_weight>>cumulative_damage>>finish_priority>>role_position_bias>>position_candidates;
     cards.resize(n);
     for(auto& c:cards) std::cin>>c.attack>>c.cost>>c.element>>c.category>>c.copies>>c.effect>>c.param;
     if(profile>=1) for(auto& c:cards)
@@ -207,7 +208,7 @@ int main() {
                 auto potential=profile==2?estimate_potential(e,future_pool,original,passive_weight,aura_weight):Potential{};
                 bool finishing=finish_priority>0 && e.rounds[turn-1]+cumulative_damage>=100;
                 double value=finishing?double(e.rounds[turn-1]):
-                    e.damage+potential.value-vacancy_weight*(5-turn)*combo.size();
+                    e.damage+potential.value;
                 int pos=tiebreak?priority():0;
                 if(trace && position_candidates>1) {
                     bool keep=(int)top_positions.size()<position_candidates;

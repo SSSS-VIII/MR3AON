@@ -87,6 +87,14 @@ def test_unknown_currency_skips_purchase():
     assert state.pending is None
 
 
+def test_engine_consistency_failure_is_a_logged_fallback_not_a_callback_exception():
+    state=IntelligenceSession();state.reset()
+    def broken_engine(*args,**kwargs):raise AssertionError('native layout count mismatch')
+    result=state.prepare(seen(),1,1,planner=broken_engine)
+    assert result['mode']=='fallback'
+    assert state.reason=='planning_fallback:AssertionError'
+
+
 def test_warm_only_builds_the_current_hand_engine(monkeypatch):
     calls=[]
     monkeypatch.setattr('utils.intelligence_live.build_engine',lambda:calls.append('current_hand'))

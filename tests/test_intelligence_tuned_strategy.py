@@ -57,6 +57,32 @@ def test_all_current_purchase_combinations_are_scored_without_rollouts():
         with pytest.raises(ValueError):analyze_tuned({'round':1,'gold':5},[],policy=obsolete)
 
 
+def test_buying_a_card_has_no_separate_slot_charge():
+    from tools.intelligence_simulator.refresh import hand_choices
+    result=hand_choices({'round':1,'gold':5},['神乐·琳','怒鲤双生'],synergy=True)
+    assert any(c['cards'] for c in result['choices'])
+    for choice in result['choices']:
+        assert choice['adjusted_damage']==pytest.approx(choice['damage']+choice['synergy_potential'])
+    with pytest.raises(ValueError):
+        analyze_tuned({'round':1,'gold':5},[],policy={'heuristics':{'vacancy_weight':3}})
+
+
+def test_running_agent_old_wire_slot_is_read_but_never_scored(monkeypatch):
+    from tools.intelligence_simulator import model
+    raw={'round':1,'gold':5,'pool_override':{'神乐·琳':1,'怒鲤双生':1}}
+    before=model.simulate(raw,profile='synergy_v2',trace_choices=True)
+    run=model.subprocess.run
+    def old_wire(*args,**kwargs):
+        lines=kwargs['input'].splitlines();header=lines[0].split()
+        assert header[14]=='0'
+        header[14]='3'  # A Python Agent that started before removal still sends this.
+        lines[0]=' '.join(header);kwargs['input']='\n'.join(lines)+'\n'
+        return run(*args,**kwargs)
+    monkeypatch.setattr(model.subprocess,'run',old_wire)
+    after=model.simulate(raw,profile='synergy_v2',trace_choices=True)
+    assert after['choices']==before['choices']
+
+
 def test_when_both_options_finish_maximize_damage_now():
     names=['樱火·茜','寒绡·兮兰','乘霄·戌时','月晖·小夜','冰羽·兮兰','风铭·戌时','奔雷·银枭','猫太·老板娘']
     raw={'round':4,'gold':3,'board':[{'name':n,'entered_round':1} for n in names]+[None]}

@@ -190,7 +190,7 @@ def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
     if max_purchases is not None:
         _integer(max_purchases,'max_purchases',0,9)
     heuristics = dict(heuristics or {})
-    defaults = dict(passive_weight=1, aura_weight=0, vacancy_weight=0, cumulative_damage=0, finish_priority=0, role_position_bias=0)
+    defaults = dict(passive_weight=1, aura_weight=0, cumulative_damage=0, finish_priority=0, role_position_bias=0)
     if set(heuristics)-defaults.keys():
         raise ValueError('未知heuristics参数')
     defaults.update(heuristics); heuristics=defaults
@@ -205,7 +205,10 @@ def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
     binary, compiler, build_s = build_engine()
     codes = CATALOG['effect_codes']
     lines = [f"{len(CARDS)} {state['round']} {state['gold']} {seconds} {max_layouts} {int(bool(samples))} {samples} {int(growth_mode=='since_entry')} {dict(full=0,refresh_v1=1,synergy_v2=2)[profile]} {int(position_tiebreak)} {9 if max_purchases is None else max_purchases} {int(trace_choices)}"]
-    lines[0]+=' '+' '.join(map(str,heuristics.values()))+f' {position_candidates}'
+    # Retain the removed slot-penalty wire field as zero for running-agent compatibility.
+    wire_values=[heuristics['passive_weight'],heuristics['aura_weight'],0,
+                 heuristics['cumulative_damage'],heuristics['finish_priority'],heuristics['role_position_bias']]
+    lines[0]+=' '+' '.join(map(str,wire_values))+f' {position_candidates}'
     lines.extend(' '.join(str(c[k]) for k in ('attack','cost','element','category','copies'))+
                  f" {codes.index(c['effect'])} {c['param']}" for c in CARDS)
     lines.append(' '.join(map(str, state['pool'])))

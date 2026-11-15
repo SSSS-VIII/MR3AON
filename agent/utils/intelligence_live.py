@@ -149,7 +149,7 @@ class IntelligenceSession:
                 plan=planner(raw,hand,available,policy={'prioritize_finish':True},cumulative_damage=100-seen['health'] if seen['health'] is not None else (100 if round_number>=3 else 0))
                 plan['mode']='scored'
                 for action in plan['actions']:action['shop_slot']=slots[action['shop_slot']]
-            except (OSError,RuntimeError,ValueError,KeyError,subprocess.SubprocessError) as error:
+            except (OSError,RuntimeError,ValueError,KeyError,AssertionError,subprocess.SubprocessError) as error:
                 self.reason=f'planning_fallback:{type(error).__name__}';plan=self.fallback(seen,round_number,available)
         else:plan=self.fallback(seen,round_number,available)
         if plan['actions']:
