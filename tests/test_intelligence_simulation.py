@@ -140,6 +140,22 @@ def test_task_is_selectable_without_touching_account_configuration():
     assert config=={'task':[]}
 
 
+def test_unlimited_mode_only_bypasses_the_claimed_completion_exit():
+    from runtime.task_options import build_task_config,load_task_interface
+    interface=load_task_interface(ROOT/'assets/interface.json')
+    option=interface['option'][P+'无限打']
+    assert option['default_case']=='No'
+    cases={c['name']:c['pipeline_override'] for c in option['cases']}
+    assert cases['Yes']=={P+'确认每日全领取':{'next':[P+'未完成关闭任务']}}
+    assert cases['No']=={P+'确认每日全领取':{'next':[P+'完成回主页']}}
+    assert PIPELINE[P+'未完成关闭任务']['next']==[P+'匹配前检查']
+    assert P+'未开放' in PIPELINE[P+'匹配前检查']['next']
+    config={'task':[{'name':P,'option':[{'name':P+'无限打','value':'Yes'}]}]}
+    task=build_task_config(interface,config,[P],{})[0]
+    assert task['option'][0]['value']=='Yes'
+    assert build_task_config(interface,config,[P],{P:{P+'无限打':False}})[0]['option'][0]['value']=='No'
+
+
 def _native():
     import tempfile
     import numpy as np
