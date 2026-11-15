@@ -220,7 +220,7 @@ def run(args):
     source_hashes={name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest()for name in sources}
     (args.output / 'setup.json').write_text(json.dumps(dict(seed=args.seed, level=args.level,
         map=args.map, start=start_board,goal_stage_index=goal,pins=pins, observe=args.observe_only, initial=initial,sources=source_hashes,
-        detector=detector_info), indent=2))
+        detector=detector_info,policy=dict(continuous_collision=getattr(policy,'continuous_collision',False))), indent=2))
     capture_times, vision_times, action_times, intervals, fresh_intervals,ages = [], [], [], [], [], []
     fresh_vision_times=[]
     first_evaluation=None

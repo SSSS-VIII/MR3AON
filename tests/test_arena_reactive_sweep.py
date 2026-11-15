@@ -7,7 +7,9 @@ from arena_vision import Box,Track
 from arena_policy import VisualAvoider,touching
 from arena_oriented import touching_capsule,transform
 from arena_reactive_sweep import swept_pair,rectangle_quad,player_smooth_padding
-SweptAvoider=VisualAvoider
+class SweptAvoider(VisualAvoider):
+    def __init__(self):
+        super().__init__(continuous_collision=True)
 
 # Frozen old endpoint checker is a test-only reference.
 from arena_policy import Avoider
@@ -119,3 +121,10 @@ def test_frozen_frame747_slide_miss_is_recovered_without_changing_40ms_steps(sna
     assert new[2][52][0]in(.28,.32)
     assert all(abs(t/.04-round(t/.04))<1e-8 for t,_ in new[2].values())
     assert SweptAvoider()._risk(snapshot,'jump')[0]==0
+
+
+def test_default_keeps_endpoint_policy_until_broader_candidate_acceptance(snapshot):
+    for action in ('none','jump','slide'):
+        assert VisualAvoider()._risk(snapshot,action)[:2]==EndpointAvoider()._risk(snapshot,action)[:2]
+    assert VisualAvoider().continuous_collision is False
+    assert SweptAvoider()._risk(snapshot,'slide')[0]>0
