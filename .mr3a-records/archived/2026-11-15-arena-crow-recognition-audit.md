@@ -45,3 +45,148 @@
 ## 工作区边界
 
 仅新增本归档和忽略目录研究文件/数据，没有修改 `arena_object_motion.py`、`arena_vision.py`、默认模型配置、用户任务配置或客户端。所有 CPU 作业已结束，无后台训练或设备控制者。后续是否训练及部署由主任务在 GPU 空闲窗口继续，失败滞回原型不带入运行路径。
+
+## 第五、六关原生补采计划（已准备，未执行）
+
+按原疾风目录 map41/42/43/51/52 的全部可达池，逐个扫描原 `EnemyStraightBatDataStruct` 与 `EnemyFlyBambooDataStruct`，而非仅按预设类型号猜测。去重后 16 个直冲板、17 处池绑定，201/223/286/228 分别 155/430/247/115 个原放置；没有 221 蜜蜂，也没有同一个板内同时放直冲与飞竹的配置。不得为凑齐五种家族在 5/6 关造怪。原始逐放置结果和源 SHA 见 `high-crow-source-scan.json`，生成脚本 `scan-high-crow.py`。
+
+主任务选定以下四场景，每场景独立 train/val 两种子，共 8 回合；先不采 test，待候选冻结再用新种子封存测试。每回合原游戏时间 12 秒、ticks2、原采集探索动作，场景发生死亡则如实提前结束。
+
+| 关级/原地图 | 原池位置/板子 | sample_block（0基） | 原目标段 | 种子 train/val |
+|---|---|---:|---|---|
+| 5 / 41 | 2 / 5102 | 0 | block1..6，55 乌鸦 | 40100 / 40101 |
+| 5 / 41 | 1 / 51012 | 0 | block1..5，27 蝙蝠 | 40110 / 40111 |
+| 5 / 42 | 7 / 50071 | 9 | block10..17，73 火精灵 | 40120 / 40121 |
+| 6 / 52 | 2 / 61021 | 27 | block28..33，35 蓝精灵 | 40130 / 40131 |
+
+这些数字是整段原放置总数，12 秒尤其不能保证覆盖 50071 全部末段。四个目标入口在源文件中都是水平、无敌人的原 block；实际落点仍必须经过原 `native_select` 的生成、通灵兽、落地和保护消退校验，**静态空入口不等于已实测安全**。没有修改位置、无敌、HP 或随机参数。
+
+`prepare-crow-high-v38.py` 默认只校验源池/入口/数量、打印计划；只读运行和 Python 语法检查已经通过。实际执行入口为加 `--execute`，输出 `crow-high-v38`，内部直接复用 `arena_collect_vision.collect`、同名 `InstanceSession('arena')` / `LocalClient` / `FastCapture.paired_step`，沿用原生渲染与碰撞配对。脚本最后恢复 1101 原暂停菜单；有挂起选板仅用已有协作取消，不停止共享 RPC coroutine。准备期间 arena 仍由主任务现有五板作业独占，未运行此执行入口。
+
+更密的六关乌鸦可后补 map52/slot3/61031，从空 block11 起，后段 59 个随机高度/1.3倍缩放乌鸦；极密蓝精灵 6111 的 block5/6 有 16+68 个，但前置 block4 有飞镖，不应标成安全空入口。需要飞竹与直冲同屏的样本应研究合法相邻板衔接（例如 map41 的 51043→51051），目前源配置只能说明相邻合法，不能保证实际同屏重叠。
+
+## 11-16：原生补采与标准阶段分类验证
+
+上节“未执行”是准备时状态。主任务随后在独占 `arena` 的 session27036 中执行八回合，全部完整结束、恢复文件存在；累计 2,411 张配对原帧，train1,205/val1,206，无采集死亡。随机探索动作造成了不同程度损血，这不是闭环策略成绩。采集不修改原无敌/位置，不构造第五、六关不存在的蜜蜂家族；当前没有新 test 回合。
+
+`build-crow-high-v38-data.py` 校验完整帧数、时间、种子、板号、来源 SHA 和恢复状态，追加至原完整回合划分，生成 `data-crow-roi-v38`。train20,605/val11,554 张局部裁图；旧 test6,976 张保持隔离。所有原 ID/状态仅用于标注/评分，模型输入只有像素。其 manifest SHA 为 `4c837e16c1e6072a744265d5b565335579541630ff230bafde6f73f5fdec7dcb`。
+
+主任务分配 GPU 窗口后，使用本地标准 YOLO26n-cls 与原 Trainer，64px 输入、batch96、AdamW、lr0=.0003，最多12轮，实际第11轮早停、best为第7轮。`fit-crow-roi-v38/weights/best.pt` SHA 为 `351e0c152e8171026a01bbd196f32cea2bfe3b0e4e3d9a482ca268a33d594e0d`。原碰撞中心裁图 val top1=.97187，不能等同于部署准确率。
+
+为检查部署偏移，另用 main15/main21 的真实 OBB proposal 中心裁剪、先分类再与原真值做一对一 IoU≥.5 评分。`score-crow-proposals-v38.py` 的三种规则预先固定：local>.8，否则 uncertain；agreement要求与主模型一致；override98仅>.98时允许覆盖，否则 agreement。ambiguous 真值另计，不放进下表分母。
+
+| 缓存 | 匹配对象 | 原主模型正确/错误 | override98正确/错误/不确定 |
+|---|---:|---:|---:|
+| 高级关四 val，main21 | 2,213 | 2,157 / 56 | 2,163 / 15 / 35 |
+| 高级关四 val，main15 | 2,193 | 2,138 / 55 | 2,139 / 15 / 39 |
+| 旧6,304帧，main21 | 2,184 | 2,152 / 32 | 2,131 / 19 / 34 |
+| 旧6,304帧，main15 | 2,186 | 2,152 / 34 | 2,138 / 19 / 29 |
+
+新 main21 的早期 ready205对象：原178正确/27错误，override98为180正确/14错误/11不确定；重叠160对象从151正确/9错误变为142正确/2错误/16不确定。局部头中位约2.9ms、P95约5.1ms（新 main21 批次）。该头减少误阶段却降低旧测试正确覆盖，而且无法弥补主几何漏检，**暂不接 runtime，不改默认模型**。原中心裁图成绩不能掩盖这个取舍。训练和评分已结束，GPU交还主任务。
+
+## 11-16：火精灵、蓝精灵的碰撞监督与主检测偏移
+
+新四 val 中，main21 的空间召回（原碰撞 IoU≥.5）为：蝙蝠729/812，乌鸦1,220/1,255，火精灵120/729，蓝精灵191/878；main15同样有缺口。旧6,304帧测试根本没有火精灵/蓝精灵，因此旧总体指标不能用于宣称这两种已覆盖。
+
+`audit-high-geometry-v38.py` 仅作诊断：对80px内最近的未用飞行 proposal 一对一关联，不把该宽距离匹配当召回。火/蓝精灵 enterScreen/stay 时，预测中心系统性向右约17px、向下约6.5px，直径约原碰撞的1.35–1.38倍，IoU中位约.18；真实 rush 时中心误差接近0、直径比接近1、IoU中位.93/.96。故问题不是每帧完全没有目标，而是阶段相关的碰撞几何预测错误。
+
+先核对监督，未直接加框偏移补丁：
+
+- 原 `enemystraightfirefairy.prefab` / `enemystraightsmurfs.prefab` 子节点 local x=+.69，SphereCollider center x=−.69、radius=.3；这两个局部偏移确实抵消。运行配对记录的 collider owner/object ID/callback owner 完全一致。
+- `check-crow-native-geometry-v38.py` 对八回合6,313个相关原 collider 复算：矩阵 TransformPoint 到 world_center 最大误差0.000059世界单位；bounds中心最大0.000061；半径与bounds extent最大0.000049；同帧相机矩阵重投影25,252个角点最大误差0.0071px，全部通过。
+- 旧训练 Smurfs 样本 `coverage-v6/train-w02-s21006-a1/000032.png` 的 stored label中心541.183/111.781与对应原目标541.181/111.785一致；同图旁边另有ready对象，不是把相邻目标的状态绑定进来。
+
+证据为 `native-geometry-v38-check.json` 和 `high-geometry-v38.json`。当前证据支持保留原碰撞监督、补充高级关数据微调主模型，不支持凭画面主体位置重写原碰撞中心。已准备 `build-crow-obb-v39.py` / `train-crow-obb-v39.py`：继承 main21 的20类与 support12，旧图片/标签原字节链接保留，仅追加完整新train/val回合，检查来源哈希、种子/关级/地图分组与新像素跨split隔离。主模型 GPU 微调尚未开始，等待主任务完成本轮实例动作验证后调度。
+
+## 11-16：main39 标准 OBB 候选已拒绝
+
+`data-crow-obb-v39` 已完整生成：train19,020、val9,694，原102回合加8个新回合，只有新train重复3份。校验22,841张原独立图片与2,411张新图的SHA，无新增跨split像素复用；所有旧标签与profile字节保留。profile仍为 `1c51f27e54cd7f0da5f5cb058e71e13a0450608f95ae710257e0a5f8e6443d4c`，support12和20类不变。
+
+获得独占GPU窗口后，官方YOLO26n-OBB从main21继续3轮，实际训练约443秒。**best来自第1轮**，SHA `cf419b6faa3da3ba0889b0dbda13311f3b1d41604159b23ee339bb7d45f17ce7`；第1轮Trainer mAP50=.89108/mAP50-95=.80102，第2、3轮live val mAP归零，loss仍有限。last不可靠，不能把best写成第3轮结果。
+
+固定物理框评分（IoU≥.5、conf=.25）显示候选明显退步，**拒绝部署、未进入native、默认不变**：
+
+| 完整评分集 | main21物理精度/召回 | main39物理精度/召回 | main39浮动平台假目标 |
+|---|---|---|---:|
+| 高级关val 1,206帧 | .69796 / .61513 | .08536 / .81219 | 78,703 |
+| dense 677帧 | .96523 / .81300 | .21628 / .75076 | 46,172 |
+| 修材质clean 284帧 | .98890 / .82037 | .31592 / .77687 | 17,979 |
+
+原6,304帧legacy评分被大量假目标拖慢；在确定失败并获主任务允许后SIGINT中止，实际留下5,848帧部分预测与 `crow-v39-legacy-validation/interrupted.json`，**没有完整legacy成绩**。不能将部分目录算完整回归。三套完整报告与对照在 `main39-fixed-regression.json`。全部GPU作业已结束并明确交还主任务做动作回归。
+
+高级关按原状态严格匹配，亦未用总体数掩盖阶段问题：
+
+| 家族/阶段 | main21匹配/真值 | main39匹配/真值 |
+|---|---:|---:|
+| 火精灵enterScreen | 0/169 | 120/169 |
+| 火精灵stay | 0/206 | 141/206 |
+| 火精灵ready | 0/189 | 85/189 |
+| 火精灵rushToNinja | 120/165 | 131/165 |
+| 蓝精灵enterScreen | 8/174 | 134/174 |
+| 蓝精灵stay | 2/235 | 179/235 |
+| 蓝精灵ready | 0/254 | 163/254 |
+| 蓝精灵rushToNinja | 181/215 | 183/215 |
+
+已匹配火/蓝精灵的待机框中心误差中位分别约.26/.16px，尺度比约1.008/.987，确实纠正了一部分几何；但ready仍大量漏检/误阶段，加上全局假检爆量，不能凭局部改善保留候选。完整分阶段召回、严格阶段召回和“仅已匹配对象”的中心偏差/尺度/IoU分布在 `high-stage-geometry-v39.json`。
+
+## 11-16：保存精度路径CPU复核与下一受控实验
+
+best/last加载后全部参数、buffer均有限，日志未出现NaN/Inf警告，但这**不能证明保存前没有数值问题**。安装的Ultralytics8.4.208 `trainer.py`、`validator.py`、`torch_utils.py`均与wheel RECORD校验一致，未改框架源码。其官方 `save_model` 会 `deepcopy(ema).half()` 再 `nan_to_num_`，FP16越界值会变成65504；加载 `.float()` 无法恢复丢掉的原数值。main15/main21已存在尾部BN running_var=65504，main39仍有、且相关running_mean继续增大（main21最大约24,896，main39 best约32,704）。相关证据 `main39-checkpoint-finiteness.json`、`main39-source-bn-range.json`。
+
+CPU标准FP32 predictor复现：同三张原图main21输出4/4/8个目标，main39 best输出150/125/150个目标，last均150个且几乎全是spider。这不是仅GPU FP16推理触发的问题；提高检测阈值或跳过异常类别不能修复根因。证据 `main39-cpu-fp32.json`。
+
+存在明确但尚未完全证明因果的差异：训练验证读取live FP32 EMA并autocast，磁盘检查点先被转FP16/截断。源码检查加载顺序为：`load_checkpoint`转FP32，`PyTorchBackend`先融合BN，之后才转推理FP16。因此另存完整FP32 EMA能让官方预测器先正确融合BN；不需要改网络、架构或推理路径。但**第2/3轮live val归零不能仅用磁盘保存截断解释**，仍保留未解项；标准warmup_bias_lr=.1远大于lr0=.00015，也只记为后续受控变量，不能提前认定根因。
+
+主任务要求准备一次同条件对照：`train-main40-precision-control.py` 默认只打印计划，实际GPU执行需 `--execute`。原main21/data/seed/全部超参保持一致，仍声明3轮原调度，以官方 `on_fit_epoch_end` 在第1轮完成后停止，避免直接改epochs=1连带改变cosine/mosaic时点。官方 `on_model_save` 保存同epoch标准FP16原字节副本与额外FP32 EMA标准YOLO检查点，保留metrics、val前后BN摘要、profile、文件SHA；不改框架源码或架构。该受控训练**尚未执行**，等待主任务动作回归结束后的GPU授权。
+
+CPU准备验证通过：`main40-kwargs-preflight.json` 对照main39保存的args，除输出名外声明参数语义一致；使用原main21真实权重在独立 `precision-control-cpu-smoke` 目录验证双保存/官方YOLO重载，两份加载后的FP32 tensor逐项相同、停止callback通过。smoke仅给已有权重临时epoch元数据，未训练或改模型tensor，不是实际main40实验结果。
+
+## 11-16：main40实际控制结果与剩余假检
+
+后续GPU窗口已完成三件同epoch对照：标准FP16、pre-val FP32、post-val FP32。原live指标逐项复现main39第1轮，验证前后所有浮点state SHA完全相同；完整EMA有110个BN方差超过FP16上限，最大2,740,721。同16图标准FP16输出2,141目标（1,168假浮动平台），pre/post FP32均123目标（0假浮动平台），由此确认本轮保存转换造成实际推理失真。具体数值路径、研究脚本收尾异常与独立修复helper见 [FP32检查点导出](2026-11-16-arena-fp32-checkpoint-export.md)；helper已独立提交 `aad1efe`。
+
+但main40 FP32候选仍拒绝actor。1,206/677/284/6,304帧四套完整固定评分和原图预测全部已落盘，GPU明确交还主任务；物理精度分别为 .5073/.8813/.9511/.6782，低于main21。没有替换默认权重、类别过滤或底边遮罩。
+
+新高关3,198个假muppet_bomb中心全部落在x139.75–493、y349–354.75的画面下缘，框宽中位66.57、高53.68、置信度中位.415，最高.963，呈现重复网格位置。唯一新增真实muppet在 `train-bat5-s40110/000300.png` 右上角（原裁剪目标约x609–640/y55–82.5），原owner/callback一致，并非把底边当成真实muppet的新标注。旧训练有250个muppet目标，旧val及新val均无该类真值，训练总mAP不能代替对这类假检的验收。
+
+其余误差也保留：legacy原生物理召回.9261→.9234，player少11次匹配；dense角色召回.9314→.9151、clean .8000→.7821。原绳中心线匹配亦少量退步（dense−3、clean−3、legacy−7），不能仅凭火/蓝精灵召回.8409/.9339宣称全面改善。`high-stage-geometry-v40.json` 已按enter/stay/ready/rush拆分空间与阶段匹配。
+
+CPU检查官方freeze行为：`_model_train` 会将命中冻结层的BN置eval。该YOLO模型freeze10仍有93个BN更新、33个冻结，model22两处大方差BN仍在train；freeze23冻结78个、剩48个检测头BN更新。EMA的model22两处方差上界从源文件65504变为2,311,957.75和2,740,721，均记录为统计变化，不能直接认定是全部假检的唯一原因。证据 `main40-bn-drift-freeze.json`。
+
+现已准备 `probe-main40-rect.py`：同一pre-val FP32文件与同16张或完整1,206张原图，以官方rect=True最小padding（预期384×640）和rect=False训练式square（640×640）对照，保存全部raw目标、沿用既有HUD排除的可比物理分数及CUDA同步耗时，不另加底边/类别过滤。默认只打印计划，实际 `--execute` 仍等待主任务GPU窗口。若形状分布有关，优先研究官方rect训练/一致预处理；冻结范围和较低LR仍是待评审计划，尚未开始下一轮训练。
+
+## 11-16：padding控制实测与统一原图可见域
+
+随后两个独占GPU窗口依次完成16图和完整1,206图对照，均正常退出并立即交还主任务做时间码测量；没有开展新训练。输入实际形状确认为rect384×640、square640×640，原像素和权重不变。
+
+16图最初仅看raw数量时，muppet为rect19/square20；进一步核对完整四角包络发现两者位置不同：rect全部与原图下缘相交，square全部在原640×360图外（中心y478–482）。因此“数量没降”不能用来否定padding解释，也不能把原有all-output精度直接当可见域精度。原始报告与全部预测均保留，没有覆盖原分数。
+
+完整1,206图的同口径结果：
+
+| 版本/预处理 | 原图相交物理命中/预测/真值 | 图内物理精度/召回 |
+|---|---:|---:|
+| main21原rect | 2,260 / 3,238 / 3,674 | .69796 / .61513 |
+| main40 FP32 rect | 3,462 / 6,823 / 3,674 | .50740 / .94230 |
+| main40 FP32 square | 3,478 / 3,659 / 3,674 | .95053 / .94665 |
+
+main40 rect raw4,703个muppet的完整包络全部跨原图底边；square raw2,982个全部完整位于图外，原图内无muppet假检。square仍保留其all-output统计：物理5,807预测/3,478匹配，不能隐藏这些padding输出。新增可见域统计统一以预测四边形与640×360原图的多边形交集为准，保留部分越界框；不按类别或中心位置屏蔽。旧main21用同1,206帧原缓存重算，该缓存已采用原HUD规则，没有新增过滤，图内外口径一致。
+
+square的火精灵空间召回621/729=.85185，蓝精灵820/878=.93394；相较rect总计多16个真实物理匹配。CUDA同步完整predict+CPU结果传回耗时：rect中位7.23ms/P95 10.95ms/max264.25ms，square7.09ms/11.58ms/14.51ms。rect最大尾点在val-bat5的000120帧，未剔除、尚未定位原因，不能只报平均延迟。测量不包含图像读取和原几何评分。
+
+证据 `main40-padding-high/{rect,square}/report.json`、完整raw预测、`main21-high-original-frame.json`、`main40-high-{rect,square}-original-frame.json`。现在先不重训；已准备旧dense677/clean284/legacy6,304帧的square回归，legacy按原已评分清单保留279帧缺失阶段的排除。此回归及随后通用图外检测边界修复/候选native验证仍待主任务GPU安排和结果审查，默认未改。
+
+## 11-16：旧三套square完整回归已结束
+
+获得下一GPU窗口后，session51183完成dense677、clean284、legacy6,304帧，exit0并明确交还GPU。全部使用同一FP32检查点、原已评分图片清单，保留raw、原all-output和统一原图交集统计；没有类别过滤、底边遮罩或下一轮训练。
+
+| 原图相交物理指标 | main21精度/召回 | main40 square精度/召回 |
+|---|---|---|
+| dense677 | .96523 / .81300 | .95548 / .81849 |
+| clean284 | .98890 / .82037 | .98037 / .81781 |
+| legacy6,304 | .96615 / .92615 | .95211 / .92790 |
+
+三套raw muppet分别647/286/10,551个，全部完整包络位于原图外，仍在原始文件中保留。legacy另外6个cue完全图外。具体指标、完整包络和延迟均在 `main40-padding-{dense,clean,legacy}/square/`；四套同口径总表为 `main40-square-visible-regression.json`，旧main21基线也按同一包络交集规则重算。
+
+不能写成全面不退步：dense飞竹实体命中213→201/286，clean119→110/145；clean locked595→588/635。角色分别少2/3/3次匹配，dense绳中心线少1、clean相同、legacy少6。高级关飞行normal/ready/rush则849→1,575、519→850、839→933，提升与旧板退步并存。因此目前仅为明确候选，需原生对照，不换默认。
+
+若后续仍需训练，供主任务评审的最小标准方案为：原main21、同data/seed，官方freeze23保留前78个BN的eval状态、只训练检测头，lr0=5e-5、warmup_bias_lr由默认.1显式降至5e-5，并用官方rect=True保持训练/推理形状一致，继续无损FP32导出与独立回归。此方案未执行；现阶段优先统一完全图外包络处理与square候选原生验证，不通过调低阈值或删muppet修补。
