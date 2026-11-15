@@ -42,14 +42,16 @@ def resolve_policy(overrides=None):
 def analyze_tuned(raw,hand,refreshes=1, *, policy=None, cumulative_damage=0):
     if not isinstance(refreshes,int) or refreshes<0:
         raise ValueError('refreshes必须是非负整数')
+    if not isinstance(hand,list):
+        raise ValueError('hand必须是最多5张有效牌名')
     started=time.perf_counter();policy=resolve_policy(policy)
     remaining=prepare_state(raw)['pool']
     heuristics=dict(policy.get('heuristics',{}),cumulative_damage=cumulative_damage,finish_priority=int(policy.get('prioritize_finish',True)))
-    result=hand_choices(raw,hand,synergy=True,heuristics=heuristics)
     turn=raw.get('round',1)
     shop_slots=raw.get('shop_slots',len(hand))
     if not isinstance(shop_slots,int) or not len(hand)<=shop_slots<=5:
         raise ValueError('shop_slots必须包含全部已识别手牌且不超过5')
+    result=hand_choices(dict(raw,refreshes=refreshes,shop_slots=shop_slots),hand,synergy=True,heuristics=heuristics)
     for c in result['choices']:
         pool=remaining.copy()
         for name in c['cards']:pool[BY_NAME[name]['id']]-=1

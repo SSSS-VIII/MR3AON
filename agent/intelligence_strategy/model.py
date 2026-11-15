@@ -222,6 +222,9 @@ def simulate(raw, *, seconds=2.0, max_layouts=0, samples=0, seed=1,
     lines.append(' '.join(map(str, future_pool)))
     lines.extend(' '.join(map(str, cell)) for cell in state['board'])
     lines.extend(' '.join(map(str, [len(combo), *combo])) for combo in combinations)
+    refreshes=_integer(raw.get('refreshes',0),'refreshes',0,9)
+    shop_slots=_integer(raw.get('shop_slots',0),'shop_slots',0,5)
+    lines.append(f'progress_context {refreshes} {shop_slots}')
     started = time.perf_counter()
     process = subprocess.run([str(binary)], input='\n'.join(lines)+'\n', text=True,
                              capture_output=True, check=True, timeout=seconds+10 if seconds else None)

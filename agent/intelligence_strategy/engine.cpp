@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <iomanip>
 #include <limits>
 #include <map>
 #include <vector>
@@ -18,6 +19,7 @@ struct Evaluation { I damage=0,gold=0,refresh=0; bool instant=false; std::array<
 std::vector<Card> cards;
 std::array<Cell,9> board;
 int turn, gold, growth_mode;
+int reference_refreshes=0, reference_shop_slots=0;
 
 Evaluation evaluate(int spent) {
     Evaluation result;
@@ -139,6 +141,7 @@ Evaluation evaluate(int spent) {
 #include "synergy.hpp"
 
 int main() {
+    std::cout<<std::setprecision(12);
     int n,mode,samples,profile,tiebreak,max_purchases,trace; double seconds; U max_layouts;
     if(!(std::cin>>n>>turn>>gold>>seconds>>max_layouts>>mode>>samples>>growth_mode>>profile>>tiebreak>>max_purchases>>trace)) return 2;
     // Keep the wire slot for already-running Python agents; it no longer affects scoring.
@@ -155,6 +158,19 @@ int main() {
     for(auto& x:future_pool)std::cin>>x;
     for(auto& c:board)std::cin>>c.id>>c.entered>>c.bonus;
     if(!std::cin) return 2;
+    // Optional trailing context preserves the input layout of already-running agents.
+    std::vector<std::vector<int>> sampled_combos;
+    if(mode!=0)for(int j=0;j<samples;++j) {
+        int k;std::cin>>k;if(!std::cin || k<0 || k>9)return 2;
+        sampled_combos.emplace_back(k);for(auto& id:sampled_combos.back())std::cin>>id;
+    }
+    if(!std::cin)return 2;
+    std::string context_tag;
+    if(std::cin>>context_tag) {
+        if(context_tag!="progress_context")return 2;
+        std::cin>>reference_refreshes>>reference_shop_slots;
+        if(!std::cin || reference_refreshes<0 || reference_shop_slots<0 || reference_shop_slots>5)return 2;
+    } else std::cin.clear();
     auto started=Clock::now();
     auto original=board;
     auto baseline=evaluate(0);
@@ -268,8 +284,8 @@ int main() {
         };visit(visit,0,0,1);
     } else {
         for(int j=0;j<samples && !stopped;++j) {
-            int k,spent=0;std::cin>>k;combo.resize(k);
-            for(auto& id:combo){std::cin>>id;spent+=cards[id].cost;}
+            int spent=0;combo=sampled_combos[j];
+            for(auto id:combo)spent+=cards[id].cost;
             run_combo(spent,1);
         }
     }
@@ -313,7 +329,9 @@ int main() {
             std::cout<<"{\"cell\":"<<i<<",\"value\":"<<c.potential.by_cell[i]
               <<",\"progress\":"<<c.potential.progress[i]<<",\"threshold\":"<<c.potential.threshold[i]
               <<",\"activation_round\":"<<c.potential.activation[i]<<",\"confidence\":"<<c.potential.confidence[i]
-              <<",\"reason\":"<<c.potential.reason[i]<<"}";
+              <<",\"reason\":"<<c.potential.reason[i]<<",\"completion_by_round\":[";
+            for(int r=0;r<5;++r){if(r)std::cout<<',';std::cout<<c.potential.completion[i][r];}
+            std::cout<<"]}";
         }
         std::cout<<"]}";
     }

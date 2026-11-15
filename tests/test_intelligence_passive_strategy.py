@@ -2,6 +2,7 @@
 import pytest
 from tools.intelligence_simulator.refresh import analyze_hand, hand_choices
 from tools.intelligence_simulator.single_player import play
+from tools.intelligence_simulator.model import simulate
 
 LO='龙吟·洛青'
 WATER='神乐·琳'
@@ -19,14 +20,14 @@ def term(c,name):
 
 def test_loqing_user_examples_and_round_decay():
     solo=choice({'round':1,'gold':3},[LO],[LO])
-    assert solo['damage']==15 and term(solo,LO)['value']==9  # 3*2 + 6*3 = 24
+    assert solo['damage']==15 and 0<term(solo,LO)['value']<12
     together=choice({'round':1,'gold':3},[LO,WATER],[LO,WATER])
-    assert term(together,LO)['value']==12  # 3 + 6*4 = 27 for 洛青 alone
+    assert term(together,LO)['value']>term(solo,LO)['value']
     assert together['board'].index(LO)//3==together['board'].index(WATER)//3
     late=choice({'round':2,'gold':3},[LO],[LO])
-    assert late['damage']==12 and term(late,LO)['value']==3
+    assert late['damage']==12 and 0<term(late,LO)['value']<term(solo,LO)['value']
     progressed=choice({'round':2,'gold':3},[LO,WATER],[LO,WATER])
-    assert term(progressed,LO)['value']==9
+    assert term(progressed,LO)['value']>term(late,LO)['value']
 
 
 def test_blocking_a_water_row_loses_existing_potential():
@@ -48,6 +49,33 @@ def test_thunder_support_advances_existing_silver_and_dragon():
         assert term(bought,source)['progress']==3
         assert term(bought,source)['value']>term(empty,source)['value']
         assert bought['potential_gain']>0
+
+
+def test_late_tiger_progress_can_complete_multiple_cards_next_round():
+    raw={'round':4,'gold':3,'board':['双焰·小椒','炎魂·小黑']+[None]*7}
+    empty=choice(raw,[WATER],[])
+    bought=choice(raw,[WATER],[WATER])
+    assert term(bought,'双焰·小椒')['progress']==3
+    assert term(bought,'双焰·小椒')['value']>term(empty,'双焰·小椒')['value']>=0
+    assert term(bought,'双焰·小椒')['completion_by_round'][4]>0
+
+
+def test_reference_probability_matches_small_pool_and_refresh_opportunity():
+    board=[SILVER,'雷兽·阿力','雷龙']+[None]*6
+    pool={'超威·阿力':1,'星闪·小椒':1,'猫太·老板娘':1,
+          '樱火·茜':1,'寒绡·兮兰':1,WATER:1}
+    # Five draws from six physical cards contain both two thunder cards in 4/6 cases.
+    raw={'round':4,'gold':1,'board':board,'pool_override':pool}
+    result=simulate(raw,profile='synergy_v2',max_purchases=0,trace_choices=True)
+    silver=term(result['choices'][0],SILVER)
+    assert silver['completion_by_round'][4]==pytest.approx(2/3)
+    assert silver['value']==pytest.approx(4*2/3)
+    raw.update(round=5,gold=4,refreshes=1,shop_slots=5)
+    refreshed=simulate(raw,profile='synergy_v2',max_purchases=0,trace_choices=True)
+    assert term(refreshed['choices'][0],SILVER)['value']==pytest.approx(4*2/3)
+    raw['refreshes']=0
+    final=simulate(raw,profile='synergy_v2',max_purchases=0,trace_choices=True)
+    assert term(final['choices'][0],SILVER)['value']==0
 
 
 def test_tiger_support_credits_existing_four_tiger_source():

@@ -1,0 +1,126 @@
+{
+  "version": "current-hand-v6",
+  "first_seed": 190000,
+  "games_per_strategy": 1000,
+  "elapsed_s": 60.66650918099913,
+  "profile": "refresh_v1",
+  "evaluation": "首次累计100记录击杀回合；mean_damage始终为提前结束实际伤害，full_five_rounds额外提供固定五回合总伤害；不混用两种均值。",
+  "reference": null,
+  "policy": {
+    "gold_before_refresh": [
+      12,
+      9.6,
+      7.2,
+      4.8,
+      2.4
+    ],
+    "gold_after_refresh": [
+      8,
+      6,
+      4,
+      2,
+      0
+    ],
+    "heuristics": {
+      "aura_weight": 1,
+      "role_position_bias": 1
+    },
+    "prioritize_finish": true,
+    "refresh_slot_budget": 3
+  },
+  "full_five_rounds": true,
+  "target_five_round_mean": 150.0,
+  "finish_score_note": "独立等级评分：四回合击杀200..299，五回合击杀100..199；不是实际伤害。",
+  "limitations": [
+    "单边牌库，不扣对手牌；无锁牌/撤回；synergy_v2/tuned含启发式被动潜力；tuned含空格buff潜力，产币效果评分为0、不额外扣占位成本；模拟仍发放实际产币。",
+    "游戏规则未实测部分沿用模型假设，结果不是实机胜率。",
+    "白名单为原名单/顺序买入/首空格的离线对照，全部策略使用相同白板规则。",
+    "每个策略用相同种子区间；后续发牌随购买/刷新分岔，不能视作逐手完全相同。",
+    "fixed7和synergy_v2金币系数固定7；tuned区分刷新阶段并经过离线调参；v1沿用旧表。"
+  ],
+  "source_base_commit": "00147bb98c92235317068156f31f5fe4999cce69",
+  "source_sha256": {
+    "agent/intelligence_strategy/__init__.py": "c424a9491d562298c22e3b45c4a6a4059f12f0492c9fb80e5a6724614220ac73",
+    "agent/intelligence_strategy/cards.json": "79c98a89b720efff393820eef9fb154fc3210413d5157d031fc8e9c31f7af991",
+    "agent/intelligence_strategy/effects.hpp": "fbef33a06b19c0bb92db166154e2b41aeeec00d66b068291e11129b65dd8abc9",
+    "agent/intelligence_strategy/engine.cpp": "00c6abac749ac56ddc7b1dcc59e22465b973d09be4a251349995ffcecb5bc6b8",
+    "agent/intelligence_strategy/gold_value.py": "0f9039a96d957e8e5e7bea1b6a8c54ce8725131076a77280327ddf381cfa7587",
+    "agent/intelligence_strategy/model.py": "b18e549bb4dc615311f712c35b7a4b2525a622a74b4d773f873c12f8a8e0bb24",
+    "agent/intelligence_strategy/refresh.py": "6319dff28666f6d2601970fa2f45da8f6fb2c4d9efcdb291a92274c8cdd78d93",
+    "agent/intelligence_strategy/single_player.py": "447d34bab30fcb58e64ff29494a9fcdfee50f0017dd4c7ed426e0490a93be36c",
+    "agent/intelligence_strategy/synergy.hpp": "3a2fb1b8ed1b0ffb109fa4c48b8b9aae2d5f9b76107cb27d7965084197e0a834",
+    "agent/intelligence_strategy/tuned.py": "7d4f96f74237836dd40b8acb5277d54b32323df180137b0245efafe10d39d769"
+  },
+  "summary": {
+    "games": 1000,
+    "mean_finish_score": 144.648,
+    "four_round_kill_rate": 0.245,
+    "mean_five_round_damage": 129.576,
+    "reach_100_rate": 0.993,
+    "hit_round_counts": {
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 245,
+      "5": 748
+    },
+    "mean_hit_round_among_successes": 4.753272910372608,
+    "mean_damage": 120.148,
+    "median_damage": 120.0,
+    "min_damage": 82,
+    "max_damage": 168,
+    "decision_median_ms": 3.7875534981139936,
+    "decision_p95_ms": 12.137596000684425,
+    "decision_max_ms": 101.6536899987841,
+    "partial_purchase_refreshes": 1801,
+    "zero_purchase_refreshes": 1559
+  },
+  "baseline_summary": {
+    "games": 1000,
+    "mean_finish_score": 144.634,
+    "four_round_kill_rate": 0.237,
+    "mean_five_round_damage": 130.403,
+    "reach_100_rate": 0.987,
+    "hit_round_counts": {
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 237,
+      "5": 750
+    },
+    "mean_hit_round_among_successes": 4.759878419452887,
+    "mean_damage": 120.934,
+    "median_damage": 121.0,
+    "min_damage": 86,
+    "max_damage": 179,
+    "decision_median_ms": 3.3120629959739745,
+    "decision_p95_ms": 9.781155007658526,
+    "decision_max_ms": 91.1837149906205,
+    "partial_purchase_refreshes": 1882,
+    "zero_purchase_refreshes": 1365
+  },
+  "baseline_reference": "2026-11-15-intelligence-zero-income-v6.json",
+  "acceptance_five_rounds": {
+    "mean_150": false,
+    "five_round_100_rate_99pct": true,
+    "four_round_kill_rate_20pct": true,
+    "all_met": false
+  },
+  "acceptance_actual_stop": {
+    "mean_130": false,
+    "five_round_100_rate_99pct": true,
+    "four_round_kill_rate_20pct": true,
+    "all_met": false
+  },
+  "failed_seeds": [
+    190090,
+    190100,
+    190287,
+    190301,
+    190387,
+    190771,
+    190983
+  ],
+  "raw_sha256": "166a7b60e511bd4bba95e9b7a433681e8102374beee87c7327cf589e9d9253bb",
+  "note": "同一190000..190999种子及参数，仅阈值被动潜力从turn+missing改为数量参考概率，包含当前刷新和多张补齐；无随机续局，无产币额外分或占位罚分。源码相对base有当前工作区修改，以SHA256为准。未根据结果调参。"
+}

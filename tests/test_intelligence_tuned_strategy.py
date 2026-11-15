@@ -87,6 +87,8 @@ def test_running_agent_old_wire_slot_is_read_but_never_scored(monkeypatch):
         lines=kwargs['input'].splitlines();header=lines[0].split()
         assert header[14]=='0'
         header[14]='3'  # A Python Agent that started before removal still sends this.
+        assert lines[-1].startswith('progress_context ')
+        lines.pop()  # Old agents have no trailing progress-reference context.
         lines[0]=' '.join(header);kwargs['input']='\n'.join(lines)+'\n'
         return run(*args,**kwargs)
     monkeypatch.setattr(model.subprocess,'run',old_wire)
