@@ -412,6 +412,15 @@ class Perception:
                 name='rope_down';self.jump_count=0
             elif current and can_air_down(current):
                 name='air_down';self.jump_count=current.get('jumps',self.jump_count)
+            elif (primitive=='air_down'and current and source_observation
+                    and can_reverse_rope_up(source_observation)):
+                # A submitted left during original state4 remains a down
+                # reversal even if its finite pixel rope ends before ACK.
+                surface=rope_reference_height(source_observation,stamp,current['player'].center[0])
+                current=dict(current,phase='flip_up',rope=surface,rope_segment=None,rope_segments=[],
+                             terrain=None,motion=source_observation['motion'])
+                name='air_down';support_unconfirmed=True
+                self.jump_count=source_observation.get('jumps',self.jump_count)
         elif action=='slide':
             name='slide'
         if name and current and current['player']:
@@ -772,7 +781,7 @@ class Perception:
                         self.active_motion=None;self.jump_count=0
                     else:
                         self.active_motion=dict(self.active_motion,contact_pending=True)
-                        phase='flip_up'if name=='air_up'else'flip_down'
+                        phase='flip_up'if name in ('air_up','rope_up')else'flip_down'
                 elif name.startswith('jump')and 'falling' in phase and support is not None:
                     available=on_rope or bool(terrain and terrain['at_player'])
                     landing=support-.75*self.motion_origin['scale']
@@ -870,6 +879,7 @@ def constrain_ground_motion(before,after):
 
 
 def can_air_down(observation):
+    if can_reverse_rope_up(observation):return True
     if (observation.get('player')is not None and observation.get('rope')is None
             and(observation.get('terrain')or{}).get('source')=='neural_segments'):
         return (observation['phase'].startswith(('jump','air_'))
@@ -883,6 +893,23 @@ def can_air_down(observation):
         future,_=down_surface(observation,motion.duration('air_down',active))
         return future is not None
     return allowed
+
+
+def can_reverse_rope_up(observation):
+    """Restrict the newly calibrated state4 reversal to confirmed flat rope."""
+    active=observation.get('motion')
+    # Native IsInAir uses GroundCollider.PointStart.y, which a cropped slope
+    # cannot supply. Check all visible pieces as well as the selected segment:
+    # a flat local piece must not hide a slope in the same rope observation.
+    # One pixel / 1% only tolerates endpoint measurement noise, not game slope.
+    segments=list(observation.get('rope_segments')or[])
+    if observation.get('rope_segment')is not None:segments.append(observation['rope_segment'])
+    flat=all(s['b'][0]-s['a'][0]>=4 and abs(s['b'][1]-s['a'][1])<=1.
+             and abs(s['b'][1]-s['a'][1])<=.01*(s['b'][0]-s['a'][0])for s in segments)
+    return bool(observation.get('player')is not None and observation.get('rope')is not None
+                and observation.get('terrain')is None and observation.get('phase')=='flip_up'
+                and active and active['name']in ('air_up','rope_up')
+                and active.get('destination','rope')=='rope'and flat and rope_height(observation)is not None)
 
 
 def can_air_up(observation):
@@ -908,7 +935,7 @@ def transition_speed(active):
     if active['name']=='air_up':return active['speed']
     if active['name']=='rope_up':return -motion.DATA['air_up']['up_speed']
     if active['name']=='rope_down':return motion.DATA['air_up']['up_speed']
-    return motion.DATA['air_down']['speed']
+    return active.get('speed',motion.DATA['air_down']['speed'])
 
 
 def rope_reference_height(observation,stamp,x):
@@ -946,11 +973,14 @@ def down_contact(observation,active):
     return p.h>=.85*observation.get('stand_h',motion.DATA['stand_height']*scale)and abs(offset)<=tolerance
 
 
-def air_down_lead(observation):
-    delay=motion.DATA['air_down']['input_delay'];previous=observation.get('motion')
-    if previous and previous['name'].startswith('jump'):
+def air_down_lead(observation,delay=None):
+    delay=motion.DATA['air_down']['input_delay']if delay is None else delay
+    previous=observation.get('motion')
+    if previous and (previous['name'].startswith('jump')or motion.is_rope_transition(previous['name'])):
         elapsed=max(0,observation['time']-previous['started'])
-        return motion.point(previous['name'],elapsed+delay)[1]-motion.point(previous['name'],elapsed)[1]
+        if previous.get('contact_pending'):
+            return -transition_speed(previous)*delay
+        return motion.point(previous['name'],elapsed+delay,previous)[1]-motion.point(previous['name'],elapsed,previous)[1]
     return -observation.get('vy',0.)*delay/observation.get('scale_px',41.)
 
 
@@ -1020,7 +1050,17 @@ def create_motion(observation,name,stamp=None):
             if target is None:raise ValueError('No visible ground intersects the native down trajectory')
             return dict(active,**target,offset_x=ox,offset_y=oy,width=p.w/scale,height_box=p.h/scale)
         surface,destination=down_surface(observation);future,_=down_surface(observation,.04)
-        lead=air_down_lead(observation)
+        reversing=can_reverse_rope_up(observation)
+        delay=motion.DATA['air_down'].get('reverse_input_delay',motion.DATA['air_down']['input_delay'])if reversing else motion.DATA['air_down']['input_delay']
+        lead=air_down_lead(observation,delay)
+        if reversing:
+            # IsInAirWhenEnterRollToLineDown compares original root height to
+            # rope+foot+InAirOffsetWhenEnterRollToLineDown at action entry.
+            # The offset is supplied by the original static-field probe.
+            root_height=(surface-p.center[1])/scale-oy+lead
+            prior=motion.DATA['air_down']
+            active.update(speed=prior['speed']if root_height>.75+prior['reverse_air_offset']
+                          else motion.DATA['air_up']['up_speed'],input_delay=delay,redirected_from=previous['name'])
         active.update(height=max(0,(surface-p.center[1])/scale+(.75 if destination=='rope'else -.75)-oy),lead=lead,
                       destination=destination,surface_velocity=(future-surface)/(.04*scale)if future is not None else 0.,
                       offset_x=ox,offset_y=oy,width=p.w/scale,height_box=p.h/scale)

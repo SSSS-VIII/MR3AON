@@ -1495,13 +1495,32 @@
     "stand_width": 0.4,
     "source": "Original UI down at four airborne starting poses; additionally confirmed during fall2",
     "source_sha256": "c630061899c7b4dc0c8e4804e1b9ca81a01ab985fde890f672c2e0a1e03d580b",
-    "validation_sha256": "ea1caa15d8396b9b8cdeb1c85f2b5e33417e160d37a180b10d3fb3a2265d07b5"
+    "validation_sha256": "ea1caa15d8396b9b8cdeb1c85f2b5e33417e160d37a180b10d3fb3a2265d07b5",
+    "reverse_input_delay": 0.035,
+    "reverse_input_delay_range": [
+      0.025,
+      0.045
+    ],
+    "reverse_air_offset": 5.0,
+    "reverse_source": "Original state4 -> EnterRollToLineDown defaults to8; native IsInAirWhenEnterRollToLineDown selects28 only above GroundCollider.PointStart.y+foot+static InAirOffsetWhenEnterRollToLineDown=5, flag true, both original hotfix slots empty. Prediction restricts this new reversal to visually flat rope because slope-local height cannot supply native PointStart.y. Four original UI reversals calibrate 50Hz physics/60Hz rendered delay. Ordinary jump down directly selects28 through its separate native state branch and is unchanged.",
+    "reverse_source_sha256": {
+      "rope_low_reverse": "f1a1217749184a4db2fc38172f35db852e4696c0efff2bd80c169d6f7bdbe488",
+      "rope_mid_reverse": "c7739aeedfb8833605b43e7ebb5a50228de74917d100acd76262144c06c52a8a",
+      "rope_top_reverse": "4c5920c520a0fcb9aa7229445a8aa1a1d826a8feae68fbadac91c6e79c50a448",
+      "double_roundtrip": "b5ca5c7b9bcbd595d8d09117e70e5819938e843855bc0735592075369115ce33",
+      "single_roundtrip": "bc4f41daef887794b1ea6b9fb3cca46ce072d4c4e771890564ef7985c091b8d1",
+      "reverse-source-fields": "a60838efc50cb6ebce0a656465e6cd52af95f02dfd19636600637d260b565273",
+      "reverse-hotfix-fields": "61dff06897331f35eb52184678985d575470609f0044d728445452230d0331d3"
+    }
   },
   "air_up": {
     "down_speed": 28.0,
     "up_speed": 8.0,
     "input_delay": 0.025,
-    "input_delay_range": [0.016666666666666666, 0.03333333333333333],
+    "input_delay_range": [
+      0.016666666666666666,
+      0.03333333333333333
+    ],
     "collider_restore_lead": 0.02,
     "source": "Original EnterRollToLineOn 0x49d477c chooses -rollAirDownUpSpeed above rope+foot or +rollDownUpSpeed below; original UI down/right sequences calibrate rendered reversal delay and early collider restoration",
     "source_sha256": {

@@ -39,18 +39,23 @@ def is_rope_transition(name):
     return name.startswith('rope') or name in ('air_down','air_up')
 
 
+def transfer_delay(name,parameters=None):
+    return (parameters or{}).get('input_delay',DATA['air_up'if name=='air_up'else'air_down']['input_delay'])
+
+
 def duration(name,parameters=None):
     if name=='ground_recovery':return 5.
     if name=='air_up':
         # EnterRollToLineOn descends at 28 above the upper rope contact,
         # but ascends at 8 when entered below it. This is not a fixed flip.
         speed=parameters['speed']-parameters.get('surface_velocity',0.)
-        distance=parameters['height']+parameters['lead']+parameters['speed']*DATA['air_up']['input_delay']
+        distance=parameters['height']+parameters['lead']+parameters['speed']*transfer_delay(name,parameters)
         return max(0,distance/speed)+DATA['air_down']['settle_seconds'] if abs(speed)>1e-6 else float('inf')
     if name=='air_down':
         prior=DATA['air_down']
-        speed=prior['speed']-parameters.get('surface_velocity',0.)
-        return max(0,parameters['height']+parameters['lead']+prior['speed']*prior['input_delay'])/max(.001,speed)+prior['settle_seconds']
+        speed=parameters.get('speed',prior['speed'])
+        relative=speed-parameters.get('surface_velocity',0.)
+        return max(0,parameters['height']+parameters['lead']+speed*transfer_delay(name,parameters))/max(.001,relative)+prior['settle_seconds']
     profile=DATA['profiles'][name]
     return profile.get('duration',profile['points'][-1][0])
 
@@ -61,10 +66,10 @@ def point(name,t,parameters=None):
     if name=='ground_recovery':
         return [DATA['stand_offset_x']+parameters['offset_carry_x']*recovery_factor(t),0.,0.,.4,DATA['stand_height']]
     if name in ('air_down','air_up'):
-        prior=DATA['air_down'];delay=DATA['air_up']['input_delay']if name=='air_up'else prior['input_delay']
+        prior=DATA['air_down'];delay=transfer_delay(name,parameters)
         if t<=0:
             return [parameters['offset_x'],0.,parameters['offset_y'],parameters['width'],parameters['height_box']]
-        speed=parameters['speed']if name=='air_up'else prior['speed']
+        speed=parameters.get('speed',prior['speed'])
         delta=parameters['lead']*min(1,t/delay)-speed*max(0,t-delay)
         target=-parameters['height']-parameters.get('surface_velocity',0.)*t
         arrived=t>=delay and (delta<=target if speed>0 else delta>=target)
