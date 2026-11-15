@@ -1,6 +1,7 @@
 """Standard YOLO OBB pixels -> collider quads and visible support segments."""
 import hashlib
 import json
+import math
 from pathlib import Path
 import time
 import cv2
@@ -38,6 +39,37 @@ def physical_quad(quad,meta):
     return np.array([a-normal,b-normal,b+normal,a+normal])
 
 
+def quad_intersects_frame(quad,image_shape=(360,640)):
+    """Closed convex OBB/frame intersection, retaining point/edge contact.
+
+    AABB or center tests miss rotated separation and very large enclosing
+    rectangles. Separating axes use all OBB edges plus both image axes. Scale
+    coordinates together before projection so large envelopes remain finite.
+    """
+    q=np.asarray(quad,float)
+    if q.shape!=(4,2):return False
+    values=q.ravel().tolist()
+    if not all(map(math.isfinite,values)):return False
+    height,width=map(float,image_shape[:2])
+    if not math.isfinite(height)or not math.isfinite(width)or min(height,width)<=0:
+        raise ValueError('Expected a positive original image height and width')
+    for i in range(0,8,2):
+        if 0<=values[i]<=width and 0<=values[i+1]<=height:return True
+    xs=values[::2];ys=values[1::2]
+    if max(xs)<0 or max(ys)<0 or min(xs)>width or min(ys)>height:return False
+    scale=max(float(np.abs(q).max()),height,width,1.)
+    q=q/scale;frame=np.array([[0,0],[width,0],[width,height],[0,height]])/scale
+    edges=np.roll(q,-1,axis=0)-q
+    axes=[np.array([1.,0.]),np.array([0.,1.])]
+    for edge in edges:
+        length=float(np.abs(edge).max())
+        if length:axes.append(np.array([-edge[1],edge[0]])/length)
+    for axis in axes:
+        a=q@axis;b=frame@axis
+        if a.max()<b.min()or b.max()<a.min():return False
+    return True
+
+
 def missing_role_prediction(observation,stamp,age):
     if not observation or observation.get('player')is None:return None,None
     predicted=player_future(observation,stamp-observation['time'])
@@ -51,17 +83,17 @@ def missing_role_prediction(observation,stamp,age):
     return None,None
 
 
-def decode(quads,ids,scores,profile,player_x=180.):
+def decode(quads,ids,scores,profile,player_x=180.,image_shape=(360,640)):
     hazards=[];supports=[];cues=[];player=None;best=0
     for quad,cls,confidence in zip(quads,ids,scores):
         q=np.asarray(quad,float);meta=profile['classes'][int(cls)]
         if q.shape!=(4,2)or not np.isfinite(q).all():continue
         q=physical_quad(q,meta)
+        if not quad_intersects_frame(q,image_shape):continue
         cx,cy=q.mean(0)
         if cy<55 or(cy>275 and(cx<135 or cx>515)):continue
         kind=meta['kind'];box=Box(*bounds(q));confidence=float(confidence)
         if kind=='player':
-            if box.x>=640 or box.x+box.w<=0 or box.y>=360 or box.y+box.h<=0:continue
             dx=abs(cx-player_x);score=confidence*float(np.exp(-dx/80))
             if dx<80 and score>best:player=box;best=score
         elif kind in('rope','platform','floating_platform'):
@@ -106,7 +138,9 @@ def decode(quads,ids,scores,profile,player_x=180.):
 
 
 class ObbDetector:
-    def __init__(self,weights,confidence=.25,phase_refiner=None):
+    def __init__(self,weights,confidence=.25,phase_refiner=None,*,rect=None):
+        if rect is not None and type(rect)is not bool:
+            raise ValueError('OBB rect must be a boolean or None')
         weights=Path(weights);self.profile=json.loads(profile_path(weights).read_text());self.confidence=confidence
         if self.profile.get('task')!='obb'or self.profile.get('geometry')!='gameplay_plane':
             raise ValueError('Expected a native gameplay-plane OBB profile')
@@ -117,6 +151,7 @@ class ObbDetector:
             raise ValueError('OBB checkpoint and resource profile differ')
         self.sha256=hashlib.sha256(weights.read_bytes()).hexdigest()
         self.options=dict(device=0,imgsz=640,conf=confidence,verbose=False,quantize=16,max_det=150)
+        if rect is not None:self.options['rect']=rect
         for _ in range(6):self.model.predict(np.zeros((360,640,3),np.uint8),**self.options)
         self.player_x=180.;self.player_box=None;self.last_ms=0.;self.phase_refiner=phase_refiner
         self.last_player_roi_ms=0.;self.last_player_source='missing'
@@ -132,9 +167,11 @@ class ObbDetector:
         crop=bgr[y:y+240,x:x+240]
         result=self.model.predict(crop,**dict(self.options,imgsz=320))[0].obb
         ids=result.cls.cpu().numpy();scores=result.conf.cpu().numpy();quads=result.xyxyxyxy.cpu().numpy()
-        indices=[i for i,c in enumerate(ids)if self.profile['classes'][int(c)]['kind']=='player']
+        indices=[i for i,c in enumerate(ids)if self.profile['classes'][int(c)]['kind']=='player'
+                 and quad_intersects_frame(quads[i],crop.shape[:2])]
         translated=[quads[i]+np.array([x,y])for i in indices]
-        player=decode(translated,[ids[i]for i in indices],[scores[i]for i in indices],self.profile,self.player_x)[0]
+        player=decode(translated,[ids[i]for i in indices],[scores[i]for i in indices],self.profile,
+                      self.player_x,image_shape=bgr.shape[:2])[0]
         self.last_player_roi_ms=(time.perf_counter()-start)*1000
         return player
 
@@ -144,7 +181,8 @@ class ObbDetector:
         bgr=cv2.cvtColor(rgb[:,:,:3],cv2.COLOR_RGB2BGR)
         result=self.model.predict(bgr,**self.options)[0]
         obb=result.obb
-        decoded=decode(obb.xyxyxyxy.cpu().numpy(),obb.cls.cpu().numpy(),obb.conf.cpu().numpy(),self.profile,self.player_x)
+        decoded=decode(obb.xyxyxyxy.cpu().numpy(),obb.cls.cpu().numpy(),obb.conf.cpu().numpy(),self.profile,
+                       self.player_x,image_shape=bgr.shape[:2])
         player,hazards,supports,cues=decoded
         if player is not None:self.last_player_source='full_frame'
         else:

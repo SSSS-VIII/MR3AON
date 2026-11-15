@@ -17,7 +17,7 @@ PROFILE=json.loads((ROOT/'arena/vision-detector.json').read_text())
 DEFAULT_WEIGHTS=ROOT/PROFILE['weights']
 
 
-def make_perception(weights):
+def make_perception(weights,*,obb_rect=None):
     from arena_obb_detector import profile_path
     path=profile_path(weights)
     reviewed=Path(weights).resolve()==DEFAULT_WEIGHTS.resolve()
@@ -38,7 +38,10 @@ def make_perception(weights):
                 raise ValueError('Bamboo phase checkpoint or metadata differs from the reviewed profile')
             from arena_bamboo_phase import BambooPhaseRefiner
             refiner=BambooPhaseRefiner(checkpoint,config['threshold'])
-        return ObbPerception(ObbDetector(weights,phase_refiner=refiner))
+        options={}if obb_rect is None else dict(rect=obb_rect)
+        return ObbPerception(ObbDetector(weights,phase_refiner=refiner,**options))
+    if obb_rect is not None:
+        raise ValueError('obb_rect requires a native OBB checkpoint')
     return YoloPerception(YoloDetector(weights))
 
 
