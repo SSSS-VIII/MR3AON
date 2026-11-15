@@ -52,7 +52,7 @@ def cell_index(box):
 
 
 def observation(items,empty_boxes):
-    hand={};visible=set();gold=[];refreshes=[];health=[]
+    hand={};visible=set();gold=[];unlabelled_gold=[];refreshes=[];health=[]
     for text,box in items:
         x,y,w,h=box_xywh(box);cx,cy=x+w/2,y+h/2
         slot=shop_slot(box)
@@ -62,8 +62,13 @@ def observation(items,empty_boxes):
             if name:
                 if slot in hand and hand[slot]!=name:hand[slot]=None
                 else:hand.setdefault(slot,name)
-        number=re.findall(r'\d+',unicodedata.normalize('NFKC',text))
-        if 1100<=cx<=1260 and 145<=cy<=200 and number:gold.append(int(number[-1]))
+        normalized=unicodedata.normalize('NFKC',text)
+        if 1100<=cx<=1260 and 145<=cy<=200:
+            # Purchase animations such as -2 are not wallet balances. Prefer
+            # the labelled balance, including when OCR merges it with -2.
+            balance=re.search(r'金币\s*:?\s*(\d+)',normalized)
+            if balance:gold.append(int(balance[1]))
+            elif re.fullmatch(r'\s*\d+\s*',normalized):unlabelled_gold.append(int(normalized))
         if 1040<=cx<=1250 and 500<=cy<=565 and '已刷新' in text:refreshes.append(0)
         if 1040<=cx<=1250 and 570<=cy<=615 and '刷新' in text:
             remaining=re.findall(r'\d+',text.translate(str.maketrans({'O':'0','o':'0','I':'1','l':'1'})))
@@ -73,7 +78,7 @@ def observation(items,empty_boxes):
             if value and int(value)<=100:health.append(int(value))
     unique=lambda values:next(iter(set(values))) if len(set(values))==1 else None
     return {'hand':{slot:name for slot,name in hand.items() if name},'visible_slots':visible,
-            'gold':unique([n for n in gold if 0<=n<=100]),
+            'gold':unique([n for n in (gold or unlabelled_gold) if 0<=n<=100]),
             'refreshes':0 if 0 in refreshes else unique([n for n in refreshes if 0<=n<=9]),'health':unique(health),
             'empty':{i for box in empty_boxes if (i:=cell_index(box)) is not None}}
 

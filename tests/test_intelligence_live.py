@@ -25,6 +25,21 @@ def test_catalog_variants_and_ambiguous_suffix():
     assert card_name('琳') is None
 
 
+def test_purchase_cost_animation_does_not_invalidate_receipt():
+    for balance,cost in [(3,2),(1,3)]:
+        parsed=observation([(f'金币：{balance}',[1112,160,99,28]),
+                            (f'-{cost}',[1211,160,45,23])],[])
+        assert parsed['gold']==balance
+        assert observation([(f'金币：{balance} -{cost}',[1112,160,144,28])],[])['gold']==balance
+    assert observation([('-2',[1211,160,45,23])],[])['gold'] is None
+    assert observation([('3',[1150,160,30,28])],[])['gold']==3
+    state=IntelligenceSession();state.reset()
+    state.pending={'round':1,'gold':5,'actions':[{'card':'剑心·卫鲤','shop_slot':0,'cell':1}]}
+    receipt=observation([('金币：3',[1112,160,99,28]),('-2',[1211,160,45,23])],[])
+    assert state.confirm(receipt,1)
+    assert state.valid and state.board[1]['name']=='剑心·卫鲤'
+
+
 def test_payment_and_placement_are_confirmed_before_board_changes(tmp_path):
     state=IntelligenceSession(tmp_path/'state.json');state.reset()
     def plan(raw,hand,refreshes,**kw):
