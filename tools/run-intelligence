@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# 复用所选实例，仅在内存中选择本次任务；不复制程序、配置或状态。
+set -euo pipefail
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+exec "${ROOT}/run" "$@" --task '情报模拟战'
