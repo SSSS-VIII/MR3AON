@@ -36,11 +36,17 @@ def root_extra_velocity(name,t,parameters=None):
 
 
 def is_rope_transition(name):
-    return name.startswith('rope') or name=='air_down'
+    return name.startswith('rope') or name in ('air_down','air_up')
 
 
 def duration(name,parameters=None):
     if name=='ground_recovery':return 5.
+    if name=='air_up':
+        # EnterRollToLineOn descends at 28 above the upper rope contact,
+        # but ascends at 8 when entered below it. This is not a fixed flip.
+        speed=parameters['speed']-parameters.get('surface_velocity',0.)
+        distance=parameters['height']+parameters['lead']+parameters['speed']*DATA['air_up']['input_delay']
+        return max(0,distance/speed)+DATA['air_down']['settle_seconds'] if abs(speed)>1e-6 else float('inf')
     if name=='air_down':
         prior=DATA['air_down']
         speed=prior['speed']-parameters.get('surface_velocity',0.)
@@ -54,16 +60,21 @@ def point(name,t,parameters=None):
     parameters=parameters or{}
     if name=='ground_recovery':
         return [DATA['stand_offset_x']+parameters['offset_carry_x']*recovery_factor(t),0.,0.,.4,DATA['stand_height']]
-    if name=='air_down':
-        prior=DATA['air_down'];delay=prior['input_delay']
+    if name in ('air_down','air_up'):
+        prior=DATA['air_down'];delay=DATA['air_up']['input_delay']if name=='air_up'else prior['input_delay']
         if t<=0:
             return [parameters['offset_x'],0.,parameters['offset_y'],parameters['width'],parameters['height_box']]
-        delta=parameters['lead']*min(1,t/delay)-prior['speed']*max(0,t-delay)
+        speed=parameters['speed']if name=='air_up'else prior['speed']
+        delta=parameters['lead']*min(1,t/delay)-speed*max(0,t-delay)
         target=-parameters['height']-parameters.get('surface_velocity',0.)*t
-        arrived=delta<=target
-        return [DATA['stand_offset_x']if arrived else 0.,max(target,delta),0.,
-                prior['stand_width']if arrived else prior['width'],
-                DATA['stand_height']if arrived else prior['height']]
+        arrived=t>=delay and (delta<=target if speed>0 else delta>=target)
+        # The original physics collider is restored before the rendered root
+        # finishes interpolating to the rope. Preserve that larger hurt body.
+        restored=arrived or (name=='air_up'and t>=delay and
+                            abs(delta-target)<=abs(speed)*DATA['air_up']['collider_restore_lead'])
+        return [DATA['stand_offset_x']if restored else 0.,target if arrived else delta,0.,
+                prior['stand_width']if restored else prior['width'],
+                DATA['stand_height']if restored else prior['height']]
     profile=DATA['profiles'][name]
     points=profile['points']
     if t<=0:
@@ -93,7 +104,8 @@ def point(name,t,parameters=None):
 def phase(name,t,parameters=None):
     if is_ground_transition(name):
         return 'slide'if name=='slide'and t<duration(name)else'ground'
-    if name=='air_down'and parameters.get('contact_pending'):return 'flip_down'
+    if is_rope_transition(name)and (parameters or{}).get('contact_pending'):
+        return 'flip_up'if name in ('air_up','rope_up')else'flip_down'
     if is_rope_transition(name):
         below=name in ('rope_down','air_down')
         if t<duration(name,parameters):

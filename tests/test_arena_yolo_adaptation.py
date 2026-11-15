@@ -337,14 +337,14 @@ def test_air_down_keeps_projected_state_and_retimed_geometry_consistent():
     rolling=start_action(obs,'air_down')
     assert rolling['player'].center==pytest.approx(obs['player'].center)
     assert (rolling['player'].w,rolling['player'].h)==pytest.approx((16,36))
-    assert rolling['jumps']==0
+    assert rolling['jumps']==2
     direct=advance_player(rolling,.3)
     retimed=advance_player(advance_player(rolling,.09),.21)
     assert retimed['player'].center==pytest.approx(direct['player'].center)
     assert direct['player'].center[1]==pytest.approx(290.)
     assert direct['phase']=='rope_below'and direct['motion']is None
     p=Perception();p.jump_count=2;p.action('down',1.,obs)
-    assert p.active_motion['name']=='air_down'and p.jump_count==0
+    assert p.active_motion['name']=='air_down'and p.jump_count==2
 
 
 def test_axis_uncertainty_preserves_measured_safe_under_rope_clearance():

@@ -1,7 +1,7 @@
 """Receding-horizon search over original actions and visual hazard trajectories."""
 from dataclasses import dataclass
 import numpy as np
-from arena_vision import advance_player,native_motion_box,create_motion,can_air_down,root_foot_box
+from arena_vision import advance_player,native_motion_box,create_motion,can_air_down,can_air_up,root_foot_box
 from arena_policy import VisualAvoider,collision_weight
 import arena_motion as motion
 from arena_object_motion import PRIORS
@@ -19,14 +19,15 @@ class Node:
 
 
 def advance(state,seconds):
-    return advance_player(state,seconds)
+    return advance_player(state,seconds,predict_contact=True)
 
 
 def start_action(state,name):
     active=create_motion(state,name)
     return dict(state,player=native_motion_box(state,name,0),
                 motion=active,phase=motion.phase(name,0,active),
-                jumps=1 if name=='jump1'else 2 if name=='jump2'else 0)
+                jumps=1 if name=='jump1'else 2 if name=='jump2'else state.get('jumps',0),
+                last_input_time=state['time'])
 
 
 def player_array(states):
@@ -136,11 +137,30 @@ class MpcAvoider(VisualAvoider):
         return (relative<0 and not segment.get('right_clipped',segment['b'][0]>=637)
                 and 0<=segment['b'][0]-obs['player'].center[0]<=-relative*self.STEP*self.STEPS)
 
+    @staticmethod
+    def recovery_needed(obs):
+        # A visible rope gives a route back to renewable jump actions. This
+        # enables planning even when no currently observed hazard intersects.
+        return bool(obs.get('rope')is not None and not obs.get('terrain')and
+                    obs.get('jumps',0)>0 and
+                    obs.get('phase','').startswith(('jump','air_','flip_')))
+
+    @staticmethod
+    def reserve_cost(state):
+        if state.get('rope')is None or state.get('terrain'):return 0.
+        phase=state.get('phase','')
+        if phase=='rope_above':return 0.
+        if phase=='rope_below':return .06
+        # Lost maneuvering time, not a reward per button press or per landing.
+        # Two spent jumps matter more; contact restores the reserve only in
+        # the predicted branch, never as a claimed visual acknowledgement.
+        return .09*min(2,max(0,state.get('jumps',0)))
+
     def uses_search(self,obs):
         airborne_ground=bool(obs.get('terrain')and obs['terrain'].get('source')=='neural_segments'
                              and obs.get('phase','').startswith(('jump','air_')))
         return bool(obs.get('player')and (obs.get('rope')is not None and not obs.get('terrain')or airborne_ground)
-                    and (self.rope_exit(obs)or self._targets(obs)or any(t.kind in ('pinball','trap','arrow','mace','terrain_wall')or t.attack_phase is not None for t in self._objects(obs))))
+                    and (self.recovery_needed(obs)or self.rope_exit(obs)or self._targets(obs)or any(t.kind in ('pinball','trap','arrow','mace','terrain_wall')or t.attack_phase is not None for t in self._objects(obs))))
 
     def _options(self,state,stamp):
         names=[None]
@@ -152,16 +172,20 @@ class MpcAvoider(VisualAvoider):
             active=state.get('motion')
             if active and stamp-active['started']>=.17:names+=['jump2']
         if can_air_down(state):names+=['air_down']
-        return names
+        if can_air_up(state):names+=['air_up']
+        previous=state.get('last_input_time',self.last_action)
+        return [name for name in names if name is None or
+                stamp-previous>=(.1 if name in('air_down','air_up')else .17)]
 
     def choose(self,obs):
         if obs['player']is None:return None,'unknown_player'
         if not self.uses_search(obs):
             return super().choose(obs)
         tracks=self._objects(obs);targets=self._targets(obs)
+        recovering=self.recovery_needed(obs)and not targets
         obs=dict(obs,blocking_faces=[dict(x=t.box.x,y=t.box.y,vx=t.vx,vy=t.vy,stamp=obs['time'])
                                     for t in tracks if t.kind=='terrain_wall'])
-        if not tracks and not targets and not self.rope_exit(obs):return super().choose(obs)
+        if not tracks and not targets and not self.rope_exit(obs)and not self.recovery_needed(obs):return super().choose(obs)
         # The reactive native-action controller is cheaper and currently better
         # on unmodelled entry/dash hazards. Search uses bouncing crossings and
         # learned native attack phases, never stage or elapsed board time.
@@ -178,8 +202,6 @@ class MpcAvoider(VisualAvoider):
             branches=[]
             for node in beam:
                 options=self._options(node.state,node.state['time'])
-                if step==0 and now-self.last_action<.17:
-                    options=[name for name in options if name is None or name=='air_down'and now-self.last_action>=.1]
                 for name in options:
                     state=start_action(node.state,name)if name else node.state
                     half=advance(state,self.STEP/2);end=advance(state,self.STEP)
@@ -235,10 +257,12 @@ class MpcAvoider(VisualAvoider):
                 if ('below_rope_exit'not in hits and
                         (crosses_rope_end_below(state,half)or crosses_rope_end_below(half,end))):
                     cost+=10000;hits.add('below_rope_exit')
+                if recovering:cost+=self.STEP/2*(self.reserve_cost(half)+self.reserve_cost(end))
                 if name:cost+=.05 if name.startswith('jump')else .03
                 first=name if step==0 else node.first
                 active=end.get('motion');age=0 if not active else round(end['time']-active['started'],3)
-                key=(end['phase'],age,round(end['player'].center[1]/3),end['jumps'])
+                key=(end['phase'],age,round(end['player'].center[1]/3),end['jumps'],
+                     round(end['time']-end.get('last_input_time',self.last_action),2))
                 candidate=Node(end,cost,first,frozenset(hits),count,frozenset(target_hits))
                 if key not in pool or candidate.cost<pool[key].cost:
                     pool[key]=candidate

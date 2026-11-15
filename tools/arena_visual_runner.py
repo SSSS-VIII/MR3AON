@@ -29,7 +29,7 @@ from arena_capture import FastCapture, percentile
 from arena_vision import Perception, serializable, overlay,extrapolate
 from arena_policy import Avoider
 from arena_mpc import MpcAvoider
-from arena_action_timing import commit_action
+from arena_action_timing import commit_action,selected_primitive
 from runtime import InstanceSession
 import cv2
 import numpy as np
@@ -287,7 +287,8 @@ def run(args):
                     committed=None
                     if action and not args.observe_only:
                         ack = cap.tap(action)
-                        committed=commit_action(perception,latest,action,ack)
+                        committed=commit_action(perception,latest,action,ack,
+                                                primitive=selected_primitive(action,reason),planned=obs)
                         policy.last_action=committed['committed_time']
                         action_times.append(ack.request_ms)
                         key='down'if action in ('slide','down')else'jump'

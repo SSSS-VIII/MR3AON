@@ -1497,6 +1497,23 @@
     "source_sha256": "c630061899c7b4dc0c8e4804e1b9ca81a01ab985fde890f672c2e0a1e03d580b",
     "validation_sha256": "ea1caa15d8396b9b8cdeb1c85f2b5e33417e160d37a180b10d3fb3a2265d07b5"
   },
+  "air_up": {
+    "down_speed": 28.0,
+    "up_speed": 8.0,
+    "input_delay": 0.025,
+    "input_delay_range": [0.016666666666666666, 0.03333333333333333],
+    "collider_restore_lead": 0.02,
+    "source": "Original EnterRollToLineOn 0x49d477c chooses -rollAirDownUpSpeed above rope+foot or +rollDownUpSpeed below; original UI down/right sequences calibrate rendered reversal delay and early collider restoration",
+    "source_sha256": {
+      "single_up_early": "4c8733b0cbb96e3a5683815a207f40194ca4cf42c3c1757a1cfb74c4ee879d80",
+      "single_up_late": "006254899ec3a0e28178b4ea1f12917fd784a65af7670b601f0d83169de54fac",
+      "single_up_mid": "bb306a5a605c9e97a7982bd261271c197d1a1255b71bfbb0ce528770a7087030",
+      "double_up": "db6102a37f3dc24283d162c95fb7c16d27c747f2c55432cbfdd31b7461230cc0",
+      "double_up_late": "d0b17df52b4d4fd876542c1a2a719a479bbb201d39ddc1f66cd5540c5464085e",
+      "rope_down_up": "6fc2440e7750d13e6a96f8205be216f6a390a651867bb8366804e7146d3f4602",
+      "double_up_reset": "7e5eb889337a79cc8353788cbe9b4d63861d6dffd54ce0dde7b26735545d92a4"
+    }
+  },
   "blocking": {
     "climb_distance": 0.800000011920929,
     "foot_point": 0.75,
