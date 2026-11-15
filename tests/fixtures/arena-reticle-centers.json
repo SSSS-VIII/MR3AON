@@ -1,0 +1,263 @@
+{
+  "scope": "Frozen pixel-only prototype outputs, no native IDs or phase labels. Original full screenshots remain local/ignored; tests skip these cases if unavailable.",
+  "prototype_sha256": "9696a7685b3c1402ba442a6b3c9796b37a4c3a44d1bc5a401e28c689cd681bcf",
+  "cases": [
+    {
+      "name": "isolated_aim",
+      "image": "debug/arena-client/yolo/finetune/bamboo-dense-v18/val-s38601/000000.png",
+      "sha256": "f44c96c4784da016fcb2f0bd6da9c4fbdef368b3eae8d8d47d440d7f72fc4c7c",
+      "boxes": [
+        {
+          "x": 445.2156982421875,
+          "y": 173.28994750976562,
+          "w": 57.068603515625,
+          "h": 53.92010498046875
+        }
+      ],
+      "expected": [
+        {
+          "center": [
+            477.5,
+            200.5
+          ],
+          "reason": null
+        }
+      ]
+    },
+    {
+      "name": "nearby_proposals",
+      "image": "debug/arena-client/yolo/finetune/bamboo-dense-v18/val-s38601/000075.png",
+      "sha256": "57332f35c2fecac4a37c18d68f373c72c6e4f9bd3428dd97800969b9d79e000b",
+      "boxes": [
+        {
+          "x": 255.7058563232422,
+          "y": 79.89280700683594,
+          "w": 55.08827209472656,
+          "h": 52.839385986328125
+        },
+        {
+          "x": 148.04953002929688,
+          "y": 177.66929626464844,
+          "w": 45.15093994140625,
+          "h": 40.411407470703125
+        },
+        {
+          "x": 198.4653778076172,
+          "y": 164.38717651367188,
+          "w": 56.569244384765625,
+          "h": 55.22564697265625
+        },
+        {
+          "x": 184.05874633789062,
+          "y": 218.0293731689453,
+          "w": 54.38250732421875,
+          "h": 57.44123840332031
+        },
+        {
+          "x": 221.07687377929688,
+          "y": 120.46704864501953,
+          "w": 56.84625244140625,
+          "h": 55.31591033935547
+        },
+        {
+          "x": 143.68991088867188,
+          "y": 137.20359802246094,
+          "w": 56.12017822265625,
+          "h": 52.592803955078125
+        },
+        {
+          "x": 142.61758422851562,
+          "y": 138.1331329345703,
+          "w": 41.51483154296875,
+          "h": 41.483734130859375
+        }
+      ],
+      "expected": [
+        {
+          "center": null,
+          "reason": "neighboring_proposal"
+        },
+        {
+          "center": null,
+          "reason": "neighboring_proposal"
+        },
+        {
+          "center": null,
+          "reason": "neighboring_proposal"
+        },
+        {
+          "center": [
+            208.5,
+            245.5
+          ],
+          "reason": null
+        },
+        {
+          "center": null,
+          "reason": "neighboring_proposal"
+        },
+        {
+          "center": null,
+          "reason": "neighboring_proposal"
+        },
+        {
+          "center": null,
+          "reason": "neighboring_proposal"
+        }
+      ]
+    },
+    {
+      "name": "hidden_red_white_pair",
+      "image": "debug/arena-client/yolo/finetune/bamboo-dense-v18/val-s38605/000065.png",
+      "sha256": "c351083dcc36a4aab91fa5f1e4bea92d25b031e0bafb186bf9826fd7da55d253",
+      "boxes": [
+        {
+          "x": 251.25936889648438,
+          "y": 283.8999328613281,
+          "w": 34.48126220703125,
+          "h": 34.20013427734375
+        }
+      ],
+      "expected": [
+        {
+          "center": null,
+          "reason": "secondary_red_white_ring"
+        }
+      ]
+    },
+    {
+      "name": "clipped_hud_circle",
+      "image": "debug/arena-client/yolo/finetune/bamboo-dense-v18/val-s38601/000240.png",
+      "sha256": "cf85e242a6bdc1e73079d419de1e318de2d93109869474cf414ec7dd62b15b9e",
+      "boxes": [
+        {
+          "x": 152.34141540527344,
+          "y": 172.23171997070312,
+          "w": 43.567169189453125,
+          "h": 38.28656005859375
+        },
+        {
+          "x": 152.21133422851562,
+          "y": 111.00741577148438,
+          "w": 44.82733154296875,
+          "h": 40.48516845703125
+        },
+        {
+          "x": 269.4313049316406,
+          "y": 101.69670104980469,
+          "w": 52.63739013671875,
+          "h": 50.856597900390625
+        },
+        {
+          "x": 215.4967498779297,
+          "y": 274.65301513671875,
+          "w": 52.75648498535156,
+          "h": 53.1939697265625
+        },
+        {
+          "x": 156.19131469726562,
+          "y": 249.9886932373047,
+          "w": 49.11737060546875,
+          "h": 50.02259826660156
+        },
+        {
+          "x": 269.496826171875,
+          "y": 226.12173461914062,
+          "w": 53.50634765625,
+          "h": 52.25653076171875
+        },
+        {
+          "x": 337.5971374511719,
+          "y": 153.9256134033203,
+          "w": 56.80572509765625,
+          "h": 57.148773193359375
+        },
+        {
+          "x": 187.32598876953125,
+          "y": 330.28485107421875,
+          "w": 50.3480224609375,
+          "h": 32.4302978515625
+        },
+        {
+          "x": 155.90625,
+          "y": 69.703125,
+          "w": 54.1875,
+          "h": 53.21875
+        },
+        {
+          "x": 150.2241668701172,
+          "y": 78.06536102294922,
+          "w": 52.301666259765625,
+          "h": 41.86927795410156
+        },
+        {
+          "x": 153.630615234375,
+          "y": 52.583900451660156,
+          "w": 41.23876953125,
+          "h": 7.9571990966796875
+        }
+      ],
+      "expected": [
+        {
+          "center": null,
+          "reason": "no_single_confirmed_peak"
+        },
+        {
+          "center": null,
+          "reason": "neighboring_proposal"
+        },
+        {
+          "center": [
+            293.5,
+            123.5
+          ],
+          "reason": null
+        },
+        {
+          "center": null,
+          "reason": "secondary_red_white_ring"
+        },
+        {
+          "center": [
+            182.5,
+            277.5
+          ],
+          "reason": null
+        },
+        {
+          "center": [
+            293.5,
+            247.5
+          ],
+          "reason": null
+        },
+        {
+          "center": [
+            364.5,
+            184.5
+          ],
+          "reason": null
+        },
+        {
+          "center": null,
+          "reason": "no_single_confirmed_peak"
+        },
+        {
+          "center": null,
+          "reason": "neighboring_proposal"
+        },
+        {
+          "center": null,
+          "reason": "neighboring_proposal"
+        },
+        {
+          "center": [
+            173.5,
+            37.5
+          ],
+          "reason": null
+        }
+      ]
+    }
+  ]
+}
