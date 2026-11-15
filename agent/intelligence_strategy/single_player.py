@@ -130,13 +130,13 @@ def run_regression(count,first_seed,reference=None,strategies=None, *, policy=No
         summary=aggregate(games)
         report[strategy]={'summary':summary,'acceptance_actual_stop':target_checks(summary),
                           'acceptance_five_rounds':target_checks(summary,five_rounds=True,mean_target=target_five_mean),'games':games}
-    return {'version':'current-hand-v5','first_seed':first_seed,'games_per_strategy':count,
+    return {'version':'current-hand-v6','first_seed':first_seed,'games_per_strategy':count,
             'elapsed_s':time.perf_counter()-started,'profile':'refresh_v1',
             'evaluation':'首次累计100记录击杀回合；mean_damage始终为提前结束实际伤害，full_five_rounds额外提供固定五回合总伤害；不混用两种均值。',
             'reference':reference,'policy':resolve_policy(policy),
             'full_five_rounds':full_five_rounds,'target_five_round_mean':target_five_mean,
             'finish_score_note':'独立等级评分：四回合击杀200..299，五回合击杀100..199；不是实际伤害。','strategies':report,
-            'limitations':['单边牌库，不扣对手牌；无锁牌/撤回；synergy_v2/tuned含启发式被动潜力；tuned含空格buff/经济潜力，不额外扣占位成本。',
+            'limitations':['单边牌库，不扣对手牌；无锁牌/撤回；synergy_v2/tuned含启发式被动潜力；tuned含空格buff潜力，产币效果评分为0、不额外扣占位成本；模拟仍发放实际产币。',
                            '游戏规则未实测部分沿用模型假设，结果不是实机胜率。',
                            '白名单为原名单/顺序买入/首空格的离线对照，全部策略使用相同白板规则。',
                            '每个策略用相同种子区间；后续发牌随购买/刷新分岔，不能视作逐手完全相同。',

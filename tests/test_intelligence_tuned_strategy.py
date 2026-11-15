@@ -42,7 +42,7 @@ def test_policy_validation_and_no_mutation():
     p=policy();raw={'round':5,'gold':2};saved=deepcopy(p)
     analyze_tuned(raw,['猫太·老板娘'],0,policy=p)
     assert p==saved and raw=={'round':5,'gold':2}
-    for bad in [policy(gold_after_refresh=[1]*5),policy(income_weight=float('nan'))]:
+    for bad in [policy(gold_after_refresh=[1]*5),policy(refresh_slot_budget=float('nan'))]:
         with pytest.raises(ValueError):analyze_tuned(raw,[],policy=bad)
 
 
@@ -65,6 +65,17 @@ def test_buying_a_card_has_no_separate_slot_charge():
         assert choice['adjusted_damage']==pytest.approx(choice['damage']+choice['synergy_potential'])
     with pytest.raises(ValueError):
         analyze_tuned({'round':1,'gold':5},[],policy={'heuristics':{'vacancy_weight':3}})
+
+
+def test_amulet_receives_no_future_coin_bonus():
+    raw={'round':1,'gold':3,'shop_slots':4,
+         'board':[None,{'name':'龙吟·洛青','entered_round':1}]+[None]*7}
+    result=analyze_tuned(raw,['金刚覆面','龙焰·小黑','惠比寿御守'],0)
+    assert result['chosen']['cards']==['金刚覆面']
+    assert result['chosen']['income_potential']==0
+    assert result['score']==pytest.approx(result['chosen']['adjusted_damage']+result['chosen']['gold_value'])
+    with pytest.raises(ValueError):
+        analyze_tuned(raw,[],0,policy={'income_weight':2})
 
 
 def test_running_agent_old_wire_slot_is_read_but_never_scored(monkeypatch):
