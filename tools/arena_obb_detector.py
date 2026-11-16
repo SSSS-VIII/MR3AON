@@ -175,17 +175,22 @@ class ObbDetector:
         self.support_refiner=support_refiner
         self.point_refiner=point_refiner
         self.player_roi_hint=None;self.last_player_roi_window=None;self.last_player_roi_hint_used=False
+        self.player_roi_hint_provider=None
         self.last_player_roi_ms=0.;self.last_player_source='missing'
         for _ in range(3):self.model.predict(np.zeros((240,240,3),np.uint8),**dict(self.options,imgsz=320))
 
     def reset_tracking(self):
         self.player_x=180.;self.player_box=None
         self.player_roi_hint=None;self.last_player_roi_window=None;self.last_player_roi_hint_used=False
+        self.player_roi_hint_provider=None
 
     def recover_player(self,bgr):
         if self.player_box is None:return None
         start=time.perf_counter()
-        window=player_recovery_window(self.player_box,bgr.shape,getattr(self,'player_roi_hint',None))
+        hint=getattr(self,'player_roi_hint',None)
+        provider=getattr(self,'player_roi_hint_provider',None)
+        if hint is None and provider is not None:hint=provider()
+        window=player_recovery_window(self.player_box,bgr.shape,hint)
         self.last_player_roi_window=window
         self.last_player_roi_hint_used=window!=player_recovery_window(self.player_box,bgr.shape)
         x,y,_,_=window
@@ -247,7 +252,11 @@ class ObbPerception(Perception):
 
     def prepare_player_roi(self,stamp):
         self.detector.player_roi_hint=None
+        self.detector.player_roi_hint_provider=None
         if not getattr(self,'predictive_player_roi',False) or self.last_seen_player is None:return
+        self.detector.player_roi_hint_provider=lambda:self.motion_player_roi_hint(stamp)
+
+    def motion_player_roi_hint(self,stamp):
         context=self.last_observation
         timeline=getattr(self,'input_timeline',None)
         if timeline is not None:
@@ -258,11 +267,13 @@ class ObbPerception(Perception):
         if not active or active['name']not in('jump1','jump2'):return
         duration=motion.duration(active['name'],active)
         if not 0<=stamp-self.last_seen_player<=duration or not 0<=stamp-active['started']<=duration:return
-        self.detector.player_roi_hint=player_future(context,stamp-context['time'])
+        return player_future(context,stamp-context['time'])
 
     def observe(self,rgba,stamp):
         self.prepare_player_roi(stamp)
-        rgb=rgba[:,:,:3];player,detections,segments,cues=self.detector.detect(rgb)
+        rgb=rgba[:,:,:3]
+        try:player,detections,segments,cues=self.detector.detect(rgb)
+        finally:self.detector.player_roi_hint_provider=None
         predicted=False;prediction_reason=None
         if player is not None:self.last_seen_player=stamp
         elif self.last_seen_player is not None:

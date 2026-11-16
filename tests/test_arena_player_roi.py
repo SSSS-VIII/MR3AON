@@ -87,7 +87,8 @@ def perception_for_query():
 def test_timeline_motion_guides_crop_without_promoting_predicted_body_to_pixels():
     p,context=perception_for_query();before=dict(p.last_observation)
     p.prepare_player_roi(1.)
-    assert p.detector.player_roi_hint.center==context['player'].center
+    assert p.detector.player_roi_hint is None
+    assert p.detector.player_roi_hint_provider().center==context['player'].center
     assert p.last_observation==before and p.last_seen_player==.7
 
 
@@ -101,3 +102,39 @@ def test_query_requires_current_own_jump_and_clears_stale_hints(condition):
     elif condition=='expired':context['motion']['started']=-10.
     p.prepare_player_roi(1.)
     assert p.detector.player_roi_hint is None
+    provider=p.detector.player_roi_hint_provider
+    assert provider is None or provider()is None
+
+
+def test_full_frame_role_skips_motion_context_and_extra_roi_inference():
+    d=detector();d.phase_refiner=None
+    def forbidden():
+        raise AssertionError('A full-frame role must not request a motion hint')
+    d.player_roi_hint_provider=forbidden
+    d.model.predict=lambda image,**options:[SimpleNamespace(obb=SimpleNamespace(
+        cls=Tensor([0]),conf=Tensor([.8]),
+        xyxyxyxy=Tensor([[[188,210],[204,210],[204,250],[188,250]]])))]
+    player,_,_,_=d.detect(np.zeros((360,640,3),np.uint8))
+    assert player==Box(188,210,16,40)
+    assert d.last_player_source=='full_frame'and d.last_player_roi_window is None
+
+
+def test_missing_role_requests_one_hint_but_still_requires_network_confirmation():
+    d=detector(cls=1);requests=[]
+    def hint():
+        requests.append(True)
+        return Box(188,90,16,40)
+    d.player_roi_hint_provider=hint
+    assert d.recover_player(np.zeros((360,640,3),np.uint8))is None
+    assert requests==[True]and d.last_player_roi_hint_used is True
+    assert d.player_box==Box(188,210,16,40)
+
+
+def test_failed_detection_clears_the_observation_scoped_motion_callback():
+    p,_=perception_for_query()
+    def fail(_):
+        raise RuntimeError('model unavailable')
+    p.detector.detect=fail
+    with pytest.raises(RuntimeError,match='model unavailable'):
+        p.observe(np.zeros((360,640,3),np.uint8),1.)
+    assert p.detector.player_roi_hint_provider is None
