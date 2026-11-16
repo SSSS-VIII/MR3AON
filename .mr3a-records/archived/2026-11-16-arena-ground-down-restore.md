@@ -25,3 +25,11 @@ v125在两次完整因果估计器回放上固定原未来时间，丢弃跨越�
 尚未完成新的原生闭环配对，默认维持关闭；下一轮冻结全部源码，以同模型/相机/规划参数只对照该开关，先两组坡面再五关/六关三板及飞竹。无伤目标未达，不以本校准代替跑图验收。
 
 ignored证据在render-readback-probe/{down-slope-capture-v116,down-slope-capture-v119,down-slope-v117-*,down-slope-v124-*,ground-restore-v125.json,jump-clock-v118.json,early-raw-v122.json}及相应脚本。错误根X地面评分与更正版本同时保留。
+
+## v126原生配对：不晋升
+
+九回合全部结束，源码冻结到最后恢复完成后审计，9×38个setup源SHA与snapshot和当时工作区全部一致。固定main76/phase18、图块/自有跳跃相机、二跳延续、绳地交接、地面连续搜索/跳跃余量；仅改变ground_down_collider_restore。61071/41002伤600→1650，61071/41003为0→1350；61011→21→31/41010为2940→2070，53031→41→51/53061为4060→4043.75；独立飞竹61081/40207开启伤960。全部穿越，一次关闭组无伤不足以证明稳定无伤；总体混合且两组坡面明显退步，不启用默认。
+
+开启组实际地面air_down携带新参数61/59/67/50/5帧，关闭组为0，非空开关对照。70次原血降17673.75伤、未见证/归属歧义差额均0，保留全部原事件；结束1101/5000、fixedDelta=.02、暂停、菜单/键盘开启、评估关闭，捕获清理无错。捕获max551.56/505.62ms长尾仍存在（分别六关/五关关闭三板组），不能宣称链路始终低于200ms；未关闭原GC或改变游戏物理。
+
+证据在ignored native-ground-restore-v126/{summary,source-verification,active-usage,failure-audit,restored}.json和完整分回合文件、launch-script.py，冻结源码ground-restore-v126-sources。下一步扩大尚未测试的5/6关板；首次刀阵漏看前两帧另做因果研究，不把两帧速度当作已确认的精准轨迹。
