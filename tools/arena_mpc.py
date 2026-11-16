@@ -226,7 +226,8 @@ class MpcAvoider(VisualAvoider):
                     d[:,walls]=swept_distances(feet[sample],feet[sample+1],boxes[index,walls],boxes[index+1,walls],
                         motion.DATA['blocking']['climb_distance']*obs.get('scale_px',41.)+8,
                         box_hazards=np.ones(int(walls.sum()),bool),box_vertical_margin=2.)
-                distances.append(d);near.append(np.maximum(0,1.4-d).sum(axis=1)*.002)
+                # Keep the original proximity cost per unit of simulated time.
+                distances.append(d);near.append(np.maximum(0,1.4-d).sum(axis=1)*.002*(self.STEP/.08))
                 if targets:
                     contact=swept_distances(positions[sample],positions[sample+1],
                         target_boxes[index],target_boxes[index+1],0,box_hazards=target_shapes)<1
