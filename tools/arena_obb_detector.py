@@ -83,6 +83,24 @@ def missing_role_prediction(observation,stamp,age):
     return None,None
 
 
+def player_recovery_window(last_box,image_shape,hint=None):
+    """Search the swept location; a motion hint never becomes an observed body."""
+    if last_box is None:return None
+    height,width=image_shape[:2]
+    if min(height,width)<240:raise ValueError('Role recovery needs a 240px image')
+    cx,cy=last_box.center
+    if hint is not None:
+        try:
+            hx,hy=hint.center
+            valid=(all(math.isfinite(v)for v in(hx,hy,hint.w,hint.h))and min(hint.w,hint.h)>0
+                   and 0<=hx<=width and 0<=hy<=height
+                   and abs(hx-cx)+max(last_box.w,hint.w)<=240
+                   and abs(hy-cy)+max(last_box.h,hint.h)<=240)
+        except (AttributeError,TypeError,ValueError,OverflowError):valid=False
+        if valid:cx,cy=(cx+hx)/2,(cy+hy)/2
+    return max(0,min(width-240,int(cx)-120)),max(0,min(height-240,int(cy)-120)),240,240
+
+
 def decode(quads,ids,scores,profile,player_x=180.,image_shape=(360,640)):
     hazards=[];supports=[];cues=[];player=None;best=0
     for quad,cls,confidence in zip(quads,ids,scores):
@@ -156,16 +174,21 @@ class ObbDetector:
         self.player_x=180.;self.player_box=None;self.last_ms=0.;self.phase_refiner=phase_refiner
         self.support_refiner=support_refiner
         self.point_refiner=point_refiner
+        self.player_roi_hint=None;self.last_player_roi_window=None;self.last_player_roi_hint_used=False
         self.last_player_roi_ms=0.;self.last_player_source='missing'
         for _ in range(3):self.model.predict(np.zeros((240,240,3),np.uint8),**dict(self.options,imgsz=320))
 
     def reset_tracking(self):
         self.player_x=180.;self.player_box=None
+        self.player_roi_hint=None;self.last_player_roi_window=None;self.last_player_roi_hint_used=False
 
     def recover_player(self,bgr):
         if self.player_box is None:return None
-        start=time.perf_counter();cx,cy=self.player_box.center
-        x=max(0,min(bgr.shape[1]-240,int(cx)-120));y=max(0,min(bgr.shape[0]-240,int(cy)-120))
+        start=time.perf_counter()
+        window=player_recovery_window(self.player_box,bgr.shape,getattr(self,'player_roi_hint',None))
+        self.last_player_roi_window=window
+        self.last_player_roi_hint_used=window!=player_recovery_window(self.player_box,bgr.shape)
+        x,y,_,_=window
         crop=bgr[y:y+240,x:x+240]
         result=self.model.predict(crop,**dict(self.options,imgsz=320))[0].obb
         ids=result.cls.cpu().numpy();scores=result.conf.cpu().numpy();quads=result.xyxyxyxy.cpu().numpy()
@@ -180,6 +203,7 @@ class ObbDetector:
     def detect(self,rgb):
         begin=time.perf_counter()
         self.last_player_roi_ms=0.;self.last_player_source='missing'
+        self.last_player_roi_window=None;self.last_player_roi_hint_used=False
         bgr=cv2.cvtColor(rgb[:,:,:3],cv2.COLOR_RGB2BGR)
         result=self.model.predict(bgr,**self.options)[0]
         obb=result.obb
@@ -215,12 +239,29 @@ class ObbPerception(Perception):
         from arena_scene_motion import GroundTextureMotion
         self.ground_texture=GroundTextureMotion()
         self.jump_camera_recovery=False
+        self.predictive_player_roi=False
         if any(c.get('motion_kind')=='bamboo'for c in getattr(detector,'profile',{}).get('classes',[])):
             from arena_bamboo_motion import BambooClocks
             self.bamboo_clocks=BambooClocks()
             self.bamboo_clocks.point_uncertainty=getattr(detector,'point_refiner',None)is not None
 
+    def prepare_player_roi(self,stamp):
+        self.detector.player_roi_hint=None
+        if not getattr(self,'predictive_player_roi',False) or self.last_seen_player is None:return
+        context=self.last_observation
+        timeline=getattr(self,'input_timeline',None)
+        if timeline is not None:
+            if timeline.prepared_stamp!=stamp:return
+            context,_=timeline.missing_role_context()
+        if not context or context.get('player')is None or context['time']>stamp:return
+        active=context.get('motion')
+        if not active or active['name']not in('jump1','jump2'):return
+        duration=motion.duration(active['name'],active)
+        if not 0<=stamp-self.last_seen_player<=duration or not 0<=stamp-active['started']<=duration:return
+        self.detector.player_roi_hint=player_future(context,stamp-context['time'])
+
     def observe(self,rgba,stamp):
+        self.prepare_player_roi(stamp)
         rgb=rgba[:,:,:3];player,detections,segments,cues=self.detector.detect(rgb)
         predicted=False;prediction_reason=None
         if player is not None:self.last_seen_player=stamp
@@ -332,4 +373,7 @@ class ObbPerception(Perception):
         result['bamboo_point_uncertainty']=bool(self.bamboo_clocks and self.bamboo_clocks.point_uncertainty)
         result['player_detection_source']=getattr(self.detector,'last_player_source',None)
         result['player_roi_ms']=getattr(self.detector,'last_player_roi_ms',0.)
+        result['player_roi_window']=getattr(self.detector,'last_player_roi_window',None)
+        result['player_roi_hint_used']=getattr(self.detector,'last_player_roi_hint_used',False)
+        result['predictive_player_roi']=self.predictive_player_roi
         return result

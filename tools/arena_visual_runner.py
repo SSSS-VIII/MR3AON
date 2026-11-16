@@ -206,6 +206,7 @@ def run(args):
         if support_refiner is not None:detector_info['support_type']=support_refiner.info
         point=getattr(perception.detector,'point_refiner',None)
         if point is not None:detector_info['reticle_point']=dict(point.info)
+        detector_info['predictive_player_roi']=bool(getattr(perception,'predictive_player_roi',False))
     else:
         perception=Perception();detector_info=None
     policy=MpcAvoider() if detector_weights else Avoider()
