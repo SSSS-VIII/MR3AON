@@ -171,7 +171,12 @@ class MpcAvoider(VisualAvoider):
                            and obs['terrain'].get('source')=='neural_segments'
                            and obs.get('phase')in('ground','slide')
                            and any(t.kind in('trap','mace','terrain_wall')for t in self._objects(obs)))
-        return bool(obs.get('player')and (obs.get('rope')is not None and not obs.get('terrain')or airborne_ground or ground_static)
+        # A committed slide can briefly lose the floor pixels. Keep its
+        # original jump-out option available while a visible ball approaches;
+        # the reactive fallback otherwise locks all keys for 320 ms.
+        ground_pinball=bool(self.ground_static_search and obs.get('phase')in('ground','slide')
+                            and any(t.kind=='pinball'for t in self._objects(obs)))
+        return bool(obs.get('player')and (obs.get('rope')is not None and not obs.get('terrain')or airborne_ground or ground_static or ground_pinball)
                     and (self.recovery_needed(obs)or self.rope_exit(obs)or self._targets(obs)or any(t.kind in ('pinball','trap','arrow','mace','terrain_wall')or t.attack_phase is not None for t in self._objects(obs))))
 
     def _options(self,state,stamp):

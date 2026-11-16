@@ -1,0 +1,826 @@
+{
+  "scope": "Actual pre-hit pixel states and own acknowledged inputs only; no native geometry/phase parameters in planner input.",
+  "source": "debug/arena-client/yolo/finetune/rope-recovery-v37/native-air-down-ack-v216/l5-map42-start4-s54424-ground-search-retained-down",
+  "vision_sha256": "93cdc2165af11d40c2791db81de30a2e8ba2670a1d9a1ad7a7c78b2c454930a4",
+  "cases": [
+    {
+      "frame": 115,
+      "input": {
+        "time": 216636.16388887225,
+        "player": {
+          "x": 180.15910956449838,
+          "y": 210.7610219290297,
+          "w": 15.4698486328125,
+          "h": 36.4412841796875
+        },
+        "silhouette": null,
+        "rope": null,
+        "phase": "ground",
+        "vy": 10.360598300741906,
+        "jumps": 0,
+        "tracks": [
+          {
+            "id": 11,
+            "box": {
+              "x": 534.0184995151419,
+              "y": 176.885581947126,
+              "w": 34.390626873592524,
+              "h": 34.390626873592524
+            },
+            "kind": "pinball",
+            "confidence": 0.97216796875,
+            "seen": 216636.129195,
+            "history": [
+              [
+                216636.0628158,
+                629.5,
+                176.02644329888724
+              ],
+              [
+                216636.099213,
+                608.0,
+                177.77644329888724
+              ],
+              [
+                216636.129195,
+                578.5,
+                180.15144329888724
+              ]
+            ],
+            "vx": -786.4843347436832,
+            "vy": 63.58170016508437,
+            "ax": 0,
+            "ay": 0,
+            "residual": 2.209950997492372,
+            "observations": 3,
+            "active": false,
+            "arming": false,
+            "reference": [
+              0.0,
+              11.72355670111276
+            ],
+            "curve_count": 0,
+            "sine_frequency": 0,
+            "sine_a": 0,
+            "sine_b": 0,
+            "sine_count": 0,
+            "adaptive_velocity": true,
+            "ballistic": false,
+            "gravity_up": 0,
+            "gravity_down": 0,
+            "floor_y": null,
+            "floor_vy": 0.0,
+            "floor_segment": null,
+            "rebound_speed": 0,
+            "attack_phase": null,
+            "ready_started": null,
+            "ready_remaining": 0,
+            "rush_scale_remaining": 0,
+            "rush_target_w": 0,
+            "rush_target_h": 0,
+            "horizontal_stopped": false,
+            "resource": null,
+            "collider_shape": "SphereCollider",
+            "quad": [
+              [
+                568.2297431277194,
+                211.4547814923207
+              ],
+              [
+                568.3227607058444,
+                176.7986535626332
+              ],
+              [
+                534.1978827761569,
+                176.70700927552383
+              ],
+              [
+                534.1048651980319,
+                211.36313720521133
+              ]
+            ],
+            "angular_velocity": 0.0,
+            "angular_history": [],
+            "adaptive_rush_speed": true,
+            "rush_history": [],
+            "rush_fit_velocity": null,
+            "rush_velocity": null,
+            "confidence_history": [
+              0.92431640625,
+              0.9697265625,
+              0.97216796875
+            ],
+            "source_pinball_prior": true,
+            "pinball_rebound_carry": true,
+            "pinball_fit": null,
+            "pinball_carry_active": false
+          }
+        ],
+        "detections": [
+          {
+            "box": {
+              "x": 561.3046865632037,
+              "y": 174.67968656320375,
+              "w": 34.390626873592524,
+              "h": 34.390626873592524
+            },
+            "kind": "pinball",
+            "confidence": 0.97216796875,
+            "active": false,
+            "arming": false,
+            "attack_phase": null,
+            "resource": null,
+            "collider_shape": "SphereCollider",
+            "quad": [
+              [
+                595.5159301757812,
+                209.24888610839844
+              ],
+              [
+                595.6089477539062,
+                174.59275817871094
+              ],
+              [
+                561.4840698242188,
+                174.50111389160156
+              ],
+              [
+                561.3910522460938,
+                209.15724182128906
+              ]
+            ],
+            "velocity_prior": null,
+            "scene_velocity_x": null,
+            "geometry_restored": false,
+            "pivot_offset_ratio": null
+          }
+        ],
+        "terrain": {
+          "y": 246.8534755831994,
+          "at_player": true,
+          "edge": null,
+          "landing": null,
+          "speed": 592.7356302825561,
+          "samples": [],
+          "segments": [
+            {
+              "kind": "platform",
+              "a": [
+                3.9358278263443793,
+                254.0089111328125
+              ],
+              "b": [
+                609.9355836857194,
+                253.4910888671875
+              ],
+              "confidence": 0.48046875,
+              "left_clipped": false,
+              "right_clipped": true,
+              "stamp": 216636.129195,
+              "observations": 8,
+              "vx": -592.7356302825561,
+              "vy": 0.0,
+              "id": 36
+            }
+          ],
+          "selected_id": 36,
+          "source": "neural_segments"
+        },
+        "motion_reference": "support",
+        "pending_rope_clamp": false,
+        "scale_px": 39.50531027533791,
+        "stand_w": 14.221911699121648,
+        "stand_h": 36.97697041771629,
+        "motion": null,
+        "vx": 25.76921578757349,
+        "ground_contact_observed": false,
+        "down_action_end_observed": false,
+        "rope_contact_observed": false,
+        "rope_segment": null,
+        "rope_segments": [],
+        "geometry": "gameplay_plane",
+        "detector": "standard_yolo26n_obb",
+        "detector_ms": 7.978549023391679,
+        "cues": [],
+        "observed_rush_velocity": null,
+        "hazard_confidence": 0.25,
+        "visible_supports": [
+          {
+            "kind": "platform",
+            "a": [
+              24.5001220703125,
+              254.0089111328125
+            ],
+            "b": [
+              630.4998779296875,
+              253.4910888671875
+            ],
+            "confidence": 0.48046875,
+            "left_clipped": false,
+            "right_clipped": true,
+            "stamp": 216636.129195,
+            "observations": 8,
+            "vx": -592.7356302825561,
+            "vy": 0.0,
+            "id": 36
+          }
+        ],
+        "player_predicted": false,
+        "player_prediction_reason": null,
+        "camera_reference_y": 11.72355670111276,
+        "camera_velocity_y": 0.0,
+        "camera_motion_source": null,
+        "jump_camera_prior": null,
+        "incoming_jump2": true,
+        "ground_down_collider_restore": false,
+        "scene_velocity_x": -592.7356302825561,
+        "scene_velocity_x_raw": -592.7356302825561,
+        "scene_motion_observed": false,
+        "scene_motion_source": "support_endpoint",
+        "scene_texture": null,
+        "scene_motion_ms": 6.0035340138711035,
+        "observed_player_velocity_x": 25.76921578757349,
+        "player_seen_age": 0.0,
+        "bamboo_phase_ms": 0.0,
+        "support_type_ms": 0.0,
+        "support_type_votes": [],
+        "player_detection_source": "full_frame",
+        "player_roi_ms": 0.0,
+        "capture_return_stamp": 216636.129195,
+        "image_stamp": 216636.129195,
+        "observation_age_ms": 34.69387226505205,
+        "source_image_stamp": 216636.129195,
+        "replayed_event_ids": [],
+        "replayed_events": []
+      },
+      "previous_action_time": 216635.39737716466,
+      "saved": [
+        "slide",
+        "slide:11"
+      ]
+    },
+    {
+      "frame": 118,
+      "input": {
+        "time": 216636.26650864727,
+        "player": {
+          "x": 198.74615121065182,
+          "y": 236.58592362123156,
+          "w": 15.803088039705884,
+          "h": 15.802523113768945
+        },
+        "silhouette": null,
+        "rope": null,
+        "phase": "slide",
+        "vy": 178.03190851640437,
+        "jumps": 0,
+        "tracks": [
+          {
+            "id": 11,
+            "box": {
+              "x": 441.7396020584438,
+              "y": 187.72547731443706,
+              "w": 34.26564361427472,
+              "h": 34.26564361427472
+            },
+            "kind": "pinball",
+            "confidence": 0.96728515625,
+            "seen": 216636.2292737,
+            "history": [
+              [
+                216636.0628158,
+                629.5,
+                176.02644329888724
+              ],
+              [
+                216636.099213,
+                608.0,
+                177.77644329888724
+              ],
+              [
+                216636.129195,
+                578.5,
+                180.15144329888724
+              ],
+              [
+                216636.1632583,
+                549.5,
+                182.52644329888724
+              ],
+              [
+                216636.1976542,
+                520.5,
+                185.77167172973677
+              ],
+              [
+                216636.2292737,
+                491.0,
+                189.26728531650616
+              ]
+            ],
+            "vx": -862.8339368947935,
+            "vy": 108.03330737623783,
+            "ax": 0,
+            "ay": 0,
+            "residual": 2.1863954739336036,
+            "observations": 6,
+            "active": false,
+            "arming": false,
+            "reference": [
+              0.0,
+              11.732714683493834
+            ],
+            "curve_count": 0,
+            "sine_frequency": 0,
+            "sine_a": 0,
+            "sine_b": 0,
+            "sine_count": 0,
+            "adaptive_velocity": true,
+            "ballistic": true,
+            "gravity_up": 395.0531027533791,
+            "gravity_down": 237.0318616520275,
+            "floor_y": null,
+            "floor_vy": 0.0,
+            "floor_segment": null,
+            "rebound_speed": 197.52655137668955,
+            "attack_phase": null,
+            "ready_started": null,
+            "ready_remaining": 0,
+            "rush_scale_remaining": 0,
+            "rush_target_w": 0,
+            "rush_target_h": 0,
+            "horizontal_stopped": false,
+            "resource": null,
+            "collider_shape": "SphereCollider",
+            "quad": [
+              [
+                475.77138016440927,
+                222.22339616747286
+              ],
+              [
+                475.910723426128,
+                187.62992082567598
+              ],
+              [
+                441.973467566753,
+                187.49320207567598
+              ],
+              [
+                441.83412430503427,
+                222.08667741747286
+              ]
+            ],
+            "angular_velocity": 0.0,
+            "angular_history": [],
+            "adaptive_rush_speed": true,
+            "rush_history": [],
+            "rush_fit_velocity": null,
+            "rush_velocity": null,
+            "confidence_history": [
+              0.92431640625,
+              0.9697265625,
+              0.97216796875,
+              0.97265625,
+              0.97216796875,
+              0.96728515625
+            ],
+            "source_pinball_prior": true,
+            "pinball_rebound_carry": true,
+            "pinball_fit": {
+              "box": {
+                "x": 473.86717819286264,
+                "y": 183.86717819286264,
+                "w": 34.26564361427472,
+                "h": 34.26564361427472
+              },
+              "seen": 216636.2292737,
+              "reference": [
+                0.0,
+                11.732714683493834
+              ],
+              "vx": -862.8339368947935,
+              "vy": 99.20743850868413,
+              "floor_y": null,
+              "floor_vy": 0.0,
+              "floor_segment": null,
+              "gravity_up": 395.0531027533791,
+              "gravity_down": 237.0318616520275,
+              "rebound_speed": 197.52655137668955
+            },
+            "pinball_carry_active": false
+          }
+        ],
+        "detections": [
+          {
+            "box": {
+              "x": 473.86717819286264,
+              "y": 183.86717819286264,
+              "w": 34.26564361427472,
+              "h": 34.26564361427472
+            },
+            "kind": "pinball",
+            "confidence": 0.96728515625,
+            "active": false,
+            "arming": false,
+            "attack_phase": null,
+            "resource": null,
+            "collider_shape": "SphereCollider",
+            "quad": [
+              [
+                507.8989562988281,
+                218.36509704589844
+              ],
+              [
+                508.0382995605469,
+                183.77162170410156
+              ],
+              [
+                474.1010437011719,
+                183.63490295410156
+              ],
+              [
+                473.9617004394531,
+                218.22837829589844
+              ]
+            ],
+            "velocity_prior": null,
+            "scene_velocity_x": null,
+            "geometry_restored": false,
+            "pivot_offset_ratio": null
+          }
+        ],
+        "terrain": {
+          "y": 246.56091250519572,
+          "at_player": true,
+          "edge": null,
+          "landing": null,
+          "speed": 725.9368264274838,
+          "samples": [],
+          "segments": [
+            {
+              "kind": "platform",
+              "a": [
+                -3.7801889285435735,
+                253.6495361328125
+              ],
+              "b": [
+                608.7197805538783,
+                253.3504638671875
+              ],
+              "confidence": 0.4951171875,
+              "left_clipped": false,
+              "right_clipped": true,
+              "stamp": 216636.2292737,
+              "observations": 11,
+              "vx": -725.9368264274838,
+              "vy": 0.0,
+              "id": 36
+            }
+          ],
+          "selected_id": 36,
+          "source": "neural_segments"
+        },
+        "motion_reference": "support",
+        "pending_rope_clamp": false,
+        "scale_px": 39.50531027533791,
+        "stand_w": 14.221911699121648,
+        "stand_h": 36.97697041771629,
+        "motion": {
+          "name": "slide",
+          "started": 216636.16493150065,
+          "base_speed": 16.0
+        },
+        "vx": -9.065072164635435,
+        "ground_contact_observed": false,
+        "down_action_end_observed": false,
+        "rope_contact_observed": false,
+        "rope_segment": null,
+        "rope_segments": [],
+        "geometry": "gameplay_plane",
+        "detector": "standard_yolo26n_obb",
+        "detector_ms": 9.636827016947791,
+        "cues": [],
+        "observed_rush_velocity": null,
+        "hazard_confidence": 0.25,
+        "visible_supports": [
+          {
+            "kind": "platform",
+            "a": [
+              23.250030517578125,
+              253.6495361328125
+            ],
+            "b": [
+              635.75,
+              253.3504638671875
+            ],
+            "confidence": 0.4951171875,
+            "left_clipped": false,
+            "right_clipped": true,
+            "stamp": 216636.2292737,
+            "observations": 11,
+            "vx": -725.9368264274838,
+            "vy": 0.0,
+            "id": 36
+          }
+        ],
+        "player_predicted": false,
+        "player_prediction_reason": null,
+        "camera_reference_y": 11.732714683493834,
+        "camera_velocity_y": 0.13872493960625343,
+        "camera_motion_source": "ground_patch_prediction",
+        "jump_camera_prior": null,
+        "incoming_jump2": true,
+        "ground_down_collider_restore": false,
+        "scene_velocity_x": -725.9368264274838,
+        "scene_velocity_x_raw": -725.9368264274838,
+        "scene_motion_observed": true,
+        "scene_motion_source": "ground_texture",
+        "scene_texture": null,
+        "scene_motion_ms": 6.35378499282524,
+        "observed_player_velocity_x": -30.27377702405625,
+        "player_seen_age": 0.0,
+        "bamboo_phase_ms": 0.0,
+        "support_type_ms": 0.0,
+        "support_type_votes": [],
+        "player_detection_source": "full_frame",
+        "player_roi_ms": 0.0,
+        "capture_return_stamp": 216636.2292737,
+        "image_stamp": 216636.2292737,
+        "observation_age_ms": 37.23494726000354,
+        "source_image_stamp": 216636.2292737,
+        "replayed_event_ids": [],
+        "replayed_events": []
+      },
+      "previous_action_time": 216636.16493150065,
+      "saved": [
+        null,
+        "action_transition"
+      ]
+    },
+    {
+      "frame": 121,
+      "input": {
+        "time": 216636.36086559098,
+        "player": {
+          "x": 222.8670857768047,
+          "y": 237.84873844311554,
+          "w": 15.803088039705884,
+          "h": 15.802523113768945
+        },
+        "silhouette": null,
+        "rope": null,
+        "phase": "slide",
+        "vy": 47.71098659695293,
+        "jumps": 0,
+        "tracks": [
+          {
+            "id": 11,
+            "box": {
+              "x": 357.5621807895348,
+              "y": 200.0081872843996,
+              "w": 34.45311617668089,
+              "h": 34.45311617668089
+            },
+            "kind": "pinball",
+            "confidence": 0.97216796875,
+            "seen": 216636.3313089,
+            "history": [
+              [
+                216636.0628158,
+                629.5,
+                176.02644329888724
+              ],
+              [
+                216636.099213,
+                608.0,
+                177.77644329888724
+              ],
+              [
+                216636.129195,
+                578.5,
+                180.15144329888724
+              ],
+              [
+                216636.1632583,
+                549.5,
+                182.52644329888724
+              ],
+              [
+                216636.1976542,
+                520.5,
+                185.77167172973677
+              ],
+              [
+                216636.2292737,
+                491.0,
+                189.26728531650616
+              ],
+              [
+                216636.2638143,
+                461.25,
+                192.5124936738575
+              ],
+              [
+                216636.2989601,
+                431.0,
+                197.00761807487805
+              ],
+              [
+                216636.3313089,
+                400.75,
+                201.63261807487805
+              ]
+            ],
+            "vx": -878.3547908716156,
+            "vy": 134.0908105628826,
+            "ax": 0,
+            "ay": 0,
+            "residual": 2.303639487578913,
+            "observations": 9,
+            "active": false,
+            "arming": false,
+            "reference": [
+              0.0,
+              11.742381925121949
+            ],
+            "curve_count": 0,
+            "sine_frequency": 0,
+            "sine_a": 0,
+            "sine_b": 0,
+            "sine_count": 0,
+            "adaptive_velocity": true,
+            "ballistic": true,
+            "gravity_up": 395.0531027533791,
+            "gravity_down": 237.0318616520275,
+            "floor_y": null,
+            "floor_vy": 0.0,
+            "floor_segment": null,
+            "rebound_speed": 197.52655137668955,
+            "attack_phase": null,
+            "ready_started": null,
+            "ready_remaining": 0,
+            "rush_scale_remaining": 0,
+            "rush_target_w": 0,
+            "rush_target_h": 0,
+            "horizontal_stopped": false,
+            "resource": null,
+            "collider_shape": "SphereCollider",
+            "quad": [
+              [
+                392.029156358344,
+                234.44751392742756
+              ],
+              [
+                392.07951036225023,
+                200.0725444450057
+              ],
+              [
+                357.5483213974065,
+                200.02197681805256
+              ],
+              [
+                357.49796739350023,
+                234.39694630047444
+              ]
+            ],
+            "angular_velocity": 0.0,
+            "angular_history": [],
+            "adaptive_rush_speed": true,
+            "rush_history": [],
+            "rush_fit_velocity": null,
+            "rush_velocity": null,
+            "confidence_history": [
+              0.9697265625,
+              0.97216796875,
+              0.97265625,
+              0.97216796875,
+              0.96728515625,
+              0.9697265625,
+              0.9697265625,
+              0.97216796875
+            ],
+            "source_pinball_prior": true,
+            "pinball_rebound_carry": true,
+            "pinball_fit": {
+              "box": {
+                "x": 383.5234419116596,
+                "y": 196.14844191165955,
+                "w": 34.45311617668089,
+                "h": 34.45311617668089
+              },
+              "seen": 216636.3313089,
+              "reference": [
+                0.0,
+                11.742381925121949
+              ],
+              "vx": -878.3547908716156,
+              "vy": 127.08493307628609,
+              "floor_y": null,
+              "floor_vy": 0.0,
+              "floor_segment": null,
+              "gravity_up": 395.0531027533791,
+              "gravity_down": 237.0318616520275,
+              "rebound_speed": 197.52655137668955
+            },
+            "pinball_carry_active": false
+          }
+        ],
+        "detections": [
+          {
+            "box": {
+              "x": 383.5234419116596,
+              "y": 196.14844191165955,
+              "w": 34.45311617668089,
+              "h": 34.45311617668089
+            },
+            "kind": "pinball",
+            "confidence": 0.97216796875,
+            "active": false,
+            "arming": false,
+            "attack_phase": null,
+            "resource": null,
+            "collider_shape": "SphereCollider",
+            "quad": [
+              [
+                417.99041748046875,
+                230.5877685546875
+              ],
+              [
+                418.040771484375,
+                196.21279907226562
+              ],
+              [
+                383.50958251953125,
+                196.1622314453125
+              ],
+              [
+                383.459228515625,
+                230.53720092773438
+              ]
+            ],
+            "velocity_prior": null,
+            "scene_velocity_x": null,
+            "geometry_restored": false,
+            "pivot_offset_ratio": null
+          }
+        ],
+        "terrain": null,
+        "motion_reference": "player",
+        "pending_rope_clamp": false,
+        "scale_px": 39.50531027533791,
+        "stand_w": 14.221911699121648,
+        "stand_h": 36.97697041771629,
+        "motion": {
+          "name": "slide",
+          "started": 216636.16493150065,
+          "base_speed": 16.0
+        },
+        "vx": -4.54897632181607,
+        "ground_contact_observed": false,
+        "down_action_end_observed": false,
+        "rope_contact_observed": false,
+        "rope_segment": null,
+        "rope_segments": [],
+        "geometry": "gameplay_plane",
+        "detector": "standard_yolo26n_obb",
+        "detector_ms": 9.212876990204677,
+        "cues": [],
+        "observed_rush_velocity": null,
+        "hazard_confidence": 0.25,
+        "visible_supports": [],
+        "player_predicted": false,
+        "player_prediction_reason": null,
+        "camera_reference_y": 11.742381925121949,
+        "camera_velocity_y": 0.0,
+        "camera_motion_source": null,
+        "jump_camera_prior": null,
+        "incoming_jump2": true,
+        "ground_down_collider_restore": false,
+        "scene_velocity_x": -725.9368264274838,
+        "scene_velocity_x_raw": -725.9368264274838,
+        "scene_motion_observed": true,
+        "scene_motion_source": "ground_texture",
+        "scene_texture": null,
+        "scene_motion_ms": 0.8553939987905324,
+        "observed_player_velocity_x": -14.682896391381398,
+        "player_seen_age": 0.0,
+        "bamboo_phase_ms": 0.0,
+        "support_type_ms": 0.0,
+        "support_type_votes": [],
+        "player_detection_source": "full_frame",
+        "player_roi_ms": 0.0,
+        "capture_return_stamp": 216636.3313089,
+        "image_stamp": 216636.3313089,
+        "observation_age_ms": 29.556690977187827,
+        "source_image_stamp": 216636.3313089,
+        "replayed_event_ids": [],
+        "replayed_events": []
+      },
+      "previous_action_time": 216636.16493150065,
+      "saved": [
+        null,
+        "action_transition"
+      ]
+    }
+  ]
+}
