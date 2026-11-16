@@ -138,7 +138,7 @@ def decode(quads,ids,scores,profile,player_x=180.,image_shape=(360,640)):
 
 
 class ObbDetector:
-    def __init__(self,weights,confidence=.25,phase_refiner=None,*,rect=None):
+    def __init__(self,weights,confidence=.25,phase_refiner=None,*,rect=None,support_refiner=None):
         if rect is not None and type(rect)is not bool:
             raise ValueError('OBB rect must be a boolean or None')
         weights=Path(weights);self.profile=json.loads(profile_path(weights).read_text());self.confidence=confidence
@@ -154,6 +154,7 @@ class ObbDetector:
         if rect is not None:self.options['rect']=rect
         for _ in range(6):self.model.predict(np.zeros((360,640,3),np.uint8),**self.options)
         self.player_x=180.;self.player_box=None;self.last_ms=0.;self.phase_refiner=phase_refiner
+        self.support_refiner=support_refiner
         self.last_player_roi_ms=0.;self.last_player_source='missing'
         for _ in range(3):self.model.predict(np.zeros((240,240,3),np.uint8),**dict(self.options,imgsz=320))
 
@@ -189,6 +190,8 @@ class ObbDetector:
             player=self.recover_player(bgr)
             if player is not None:self.last_player_source='local_roi'
         decoded=player,hazards,supports,cues
+        if getattr(self,'support_refiner',None)is not None:
+            decoded=player,hazards,self.support_refiner.refine(bgr,supports),cues
         if self.phase_refiner is not None:
             player,hazards,supports,cues=decoded
             decoded=player,hazards,supports,self.phase_refiner.refine(bgr,cues)
@@ -313,6 +316,10 @@ class ObbPerception(Perception):
                       player_seen_age=None if self.last_seen_player is None else stamp-self.last_seen_player)
         refiner=getattr(self.detector,'phase_refiner',None)
         if refiner is not None:result['bamboo_phase_ms']=refiner.last_ms
+        support_refiner=getattr(self.detector,'support_refiner',None)
+        if support_refiner is not None:
+            result['support_type_ms']=support_refiner.last_ms
+            result['support_type_votes']=support_refiner.last_votes
         result['player_detection_source']=getattr(self.detector,'last_player_source',None)
         result['player_roi_ms']=getattr(self.detector,'last_player_roi_ms',0.)
         return result

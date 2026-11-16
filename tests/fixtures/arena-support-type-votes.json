@@ -1,0 +1,75 @@
+{
+  "scope": "Real classifier votes from cached main76 proposal pixels; independent original4px support matches supply test expectations only. Runtime does not receive these labels.",
+  "weights_sha256": "444bcbf60bbc1c4519e8a1a0d588b7c9ef22a41237498b12d5f6a6d9d1f12290",
+  "cases": [
+    {
+      "episode": "board5004-block1-s54110",
+      "image": "000000.png",
+      "native_labels_sha256": "4c0a1ca9133616bfce8069af811aee43c3ef01940c056a11e8bde121e9996147",
+      "segment": {
+        "kind": "rope",
+        "a": [
+          169.75135803222656,
+          249.0472412109375
+        ],
+        "b": [
+          636.2486572265625,
+          247.4527587890625
+        ],
+        "confidence": 0.269775390625
+      },
+      "probabilities": [
+        0.0003613168955780566,
+        0.9995131492614746,
+        0.00012550075189210474
+      ],
+      "expected_kind": "platform"
+    },
+    {
+      "episode": "board5004-block1-s54110",
+      "image": "000023.png",
+      "native_labels_sha256": "4c0a1ca9133616bfce8069af811aee43c3ef01940c056a11e8bde121e9996147",
+      "segment": {
+        "kind": "floating_platform",
+        "a": [
+          409.50006103515625,
+          136.12359619140625
+        ],
+        "b": [
+          634.4999389648438,
+          135.87640380859375
+        ],
+        "confidence": 0.291015625
+      },
+      "probabilities": [
+        0.0008817214402370155,
+        0.9990928173065186,
+        2.549374221416656e-05
+      ],
+      "expected_kind": "platform"
+    },
+    {
+      "episode": "board50043-block4-s54112",
+      "image": "000026.png",
+      "native_labels_sha256": "78f49360e2f0779afd2dedfec3b318ecf8d18993bbeee2a81bba6f72a0526b8d",
+      "segment": {
+        "kind": "platform",
+        "a": [
+          281.75018310546875,
+          114.55487060546875
+        ],
+        "b": [
+          642.7498168945312,
+          114.07012939453125
+        ],
+        "confidence": 0.70654296875
+      },
+      "probabilities": [
+        0.999992847442627,
+        1.4344698229251662e-06,
+        5.720558874600101e-06
+      ],
+      "expected_kind": "floating_platform"
+    }
+  ]
+}
