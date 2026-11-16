@@ -138,7 +138,7 @@ def decode(quads,ids,scores,profile,player_x=180.,image_shape=(360,640)):
 
 
 class ObbDetector:
-    def __init__(self,weights,confidence=.25,phase_refiner=None,*,rect=None,support_refiner=None):
+    def __init__(self,weights,confidence=.25,phase_refiner=None,*,rect=None,support_refiner=None,point_refiner=None):
         if rect is not None and type(rect)is not bool:
             raise ValueError('OBB rect must be a boolean or None')
         weights=Path(weights);self.profile=json.loads(profile_path(weights).read_text());self.confidence=confidence
@@ -155,6 +155,7 @@ class ObbDetector:
         for _ in range(6):self.model.predict(np.zeros((360,640,3),np.uint8),**self.options)
         self.player_x=180.;self.player_box=None;self.last_ms=0.;self.phase_refiner=phase_refiner
         self.support_refiner=support_refiner
+        self.point_refiner=point_refiner
         self.last_player_roi_ms=0.;self.last_player_source='missing'
         for _ in range(3):self.model.predict(np.zeros((240,240,3),np.uint8),**dict(self.options,imgsz=320))
 
@@ -195,6 +196,9 @@ class ObbDetector:
         if self.phase_refiner is not None:
             player,hazards,supports,cues=decoded
             decoded=player,hazards,supports,self.phase_refiner.refine(bgr,cues)
+        if getattr(self,'point_refiner',None) is not None:
+            player,hazards,supports,cues=decoded
+            decoded=player,hazards,supports,self.point_refiner.refine(bgr,cues)
         if decoded[0]is not None:self.player_x=decoded[0].center[0];self.player_box=decoded[0]
         self.last_ms=(time.perf_counter()-begin)*1000
         return decoded
@@ -214,6 +218,7 @@ class ObbPerception(Perception):
         if any(c.get('motion_kind')=='bamboo'for c in getattr(detector,'profile',{}).get('classes',[])):
             from arena_bamboo_motion import BambooClocks
             self.bamboo_clocks=BambooClocks()
+            self.bamboo_clocks.point_uncertainty=getattr(detector,'point_refiner',None)is not None
 
     def observe(self,rgba,stamp):
         rgb=rgba[:,:,:3];player,detections,segments,cues=self.detector.detect(rgb)
@@ -320,6 +325,11 @@ class ObbPerception(Perception):
         if support_refiner is not None:
             result['support_type_ms']=support_refiner.last_ms
             result['support_type_votes']=support_refiner.last_votes
+        point=getattr(self.detector,'point_refiner',None)
+        if point is not None:
+            result['reticle_point_stats']=dict(point.last_stats)
+            result['reticle_point_ms']=point.last_ms
+        result['bamboo_point_uncertainty']=bool(self.bamboo_clocks and self.bamboo_clocks.point_uncertainty)
         result['player_detection_source']=getattr(self.detector,'last_player_source',None)
         result['player_roi_ms']=getattr(self.detector,'last_player_roi_ms',0.)
         return result

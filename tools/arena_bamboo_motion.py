@@ -9,6 +9,7 @@ from dataclasses import dataclass,replace
 from statistics import median
 from arena_vision import Box,Detection,Track,Tracker
 from arena_projection import SCALE
+from arena_bamboo_point import point_y, remember_point_interval, target_envelope
 
 
 @dataclass
@@ -39,6 +40,7 @@ class BambooClocks:
     """Associate only visual reticles; native object IDs/states are not inputs."""
     def __init__(self):
         self.tracker=Tracker();self.clocks={}
+        self.point_uncertainty=False
 
     def observe(self,cues,stamp,camera_y=0.):
         # Two phase logits can survive class-wise NMS at the same reticle.
@@ -62,6 +64,8 @@ class BambooClocks:
             if cue['phase']=='locked':
                 clock['target_samples']=(clock['target_samples']+[track.box.center[1]-camera_y])[-3:]
                 clock['target_y']=median(clock['target_samples'])
+                if self.point_uncertainty:
+                    remember_point_interval(clock,track.box.center[1]-camera_y,point_y(cue,camera_y))
             if clock['fire']is not None:continue
             if cue['phase']=='aim':
                 clock.update(last_aim=stamp,first_lock=None,lock_count=0,
@@ -93,16 +97,18 @@ class BambooClocks:
             if clock['fire']is None:continue
             lo,hi=clock['fire']
             if stamp>hi+.35:continue
-            y=clock['target_y']+camera_y
+            target,height=(target_envelope(clock,.2*SCALE) if self.point_uncertainty
+                           else (clock['target_y'],.2*SCALE))
+            y=target+camera_y
             # A full-width rope has no uncropped material endpoint. Missing
             # scroll evidence is not evidence that the camera stopped. Original
             # Gale positive block speeds are 9..20; include blocked motion 0.
             fast=-80*SCALE if scene_vx is None else -60*SCALE+scene_vx
             slow=-60*SCALE if scene_vx is None else fast
-            t=BambooForecast(-2000000-identity,Box(700,y-.1*SCALE,3*SCALE,.2*SCALE),
+            t=BambooForecast(-2000000-identity,Box(700,y-height/2,3*SCALE,height),
                 'bamboo_forecast',median(clock['confidence']),stamp,observations=3,
                 vx=(fast+slow)/2,attack_phase='bamboo_locked',collider_shape='BoxCollider',
-                fire_earliest=lo,fire_latest=hi,spawn_left=640+(2-.85)*SCALE,
+                projectile_height=height,fire_earliest=lo,fire_latest=hi,spawn_left=640+(2-.85)*SCALE,
                 spawn_right=640+(2-.0677337646484375)*SCALE,velocity_fast=fast,velocity_slow=slow)
             t.box=t.future(0);result.append(t)
         return result
