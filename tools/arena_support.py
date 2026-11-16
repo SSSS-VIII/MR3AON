@@ -206,7 +206,11 @@ class VisualSupports:
             self.instant_vx=float(np.median(translations,axis=0)[0])if translations else texture['vx']
             self.translation_source='support_endpoint'if translations else'ground_texture'
             previous_stamp=self.tracks[0]['stamp']
-            if previous_stamp-self.last_translation>.15:
+            # Displacement is measured only over the preceding image pair.
+            # A missing interval breaks the integral: retaining older samples
+            # would silently count that unmeasured motion as zero and halve
+            # the fitted speed after intermittent texture/endpoint failures.
+            if abs(previous_stamp-self.last_translation)>1e-6:
                 self.scroll_samples.clear();self.scroll_position=0.
             if not self.scroll_samples:self.scroll_samples.append((previous_stamp,self.scroll_position))
             self.scroll_position+=self.instant_vx*(stamp-previous_stamp)

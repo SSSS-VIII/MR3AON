@@ -1,0 +1,2858 @@
+{
+  "scope": "Original v130 5004 pixel-derived support/texture intervals, no native state; expected old/fixed numerical integration only, not physical speed ground truth",
+  "source": "native-expanded-v130/l5-map42-start4-s54004-ground-search-legacy-collider",
+  "source_sha256": "8e66415673911dbc36e2767747a465bf31a265e982b48aba9841fb0f70c523ab",
+  "rows": [
+    {
+      "time": 196458.8879941,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            16.250335693359375,
+            248.960693359375
+          ],
+          "b": [
+            645.2496337890625,
+            248.039306640625
+          ],
+          "confidence": 0.9365234375,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "rope",
+          "a": [
+            -0.9373703002929688,
+            249.89305114746094
+          ],
+          "b": [
+            155.3123779296875,
+            249.60694885253906
+          ],
+          "confidence": 0.303955078125,
+          "left_clipped": true,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": 0.0,
+      "legacy_velocity": 0.0,
+      "fixed_velocity": 0.0,
+      "measured": false
+    },
+    {
+      "time": 196458.9208262,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            157.75030517578125,
+            246.880859375
+          ],
+          "b": [
+            637.7496948242188,
+            246.119140625
+          ],
+          "confidence": 0.95263671875,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "rope",
+          "a": [
+            0.37509918212890625,
+            248.62139892578125
+          ],
+          "b": [
+            153.37490844726562,
+            248.37860107421875
+          ],
+          "confidence": 0.94873046875,
+          "left_clipped": true,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": 0.0,
+      "legacy_velocity": 0.0,
+      "fixed_velocity": 0.0,
+      "measured": false
+    },
+    {
+      "time": 196458.9362568,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            -0.24970245361328125,
+            247.95986938476562
+          ],
+          "b": [
+            149.24969482421875,
+            247.54013061523438
+          ],
+          "confidence": 0.9541015625,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "rope",
+          "a": [
+            152.75120544433594,
+            246.7633056640625
+          ],
+          "b": [
+            633.748779296875,
+            245.2366943359375
+          ],
+          "confidence": 0.9501953125,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -295.65646676423984,
+      "legacy_velocity": -295.65646676423984,
+      "fixed_velocity": -295.65646676423984,
+      "measured": true
+    },
+    {
+      "time": 196458.9703261,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            -0.562286376953125,
+            249.42364501953125
+          ],
+          "b": [
+            141.68728637695312,
+            249.07635498046875
+          ],
+          "confidence": 0.95458984375,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "rope",
+          "a": [
+            143.6259765625,
+            248.4417266845703
+          ],
+          "b": [
+            636.3740234375,
+            247.0582733154297
+          ],
+          "confidence": 0.9482421875,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -244.90725257454702,
+      "legacy_velocity": -244.90725257454702,
+      "fixed_velocity": -244.90725257454702,
+      "measured": true
+    },
+    {
+      "time": 196458.9896118,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            0.4377899169921875,
+            250.4473876953125
+          ],
+          "b": [
+            135.1872100830078,
+            250.0526123046875
+          ],
+          "confidence": 0.95751953125,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "rope",
+          "a": [
+            136.50067138671875,
+            249.07809448242188
+          ],
+          "b": [
+            634.9993286132812,
+            247.92190551757812
+          ],
+          "confidence": 0.9482421875,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -278.82643569440074,
+      "legacy_velocity": -278.82643569440074,
+      "fixed_velocity": -278.82643569440074,
+      "measured": true
+    },
+    {
+      "time": 196459.0215543,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            0.18769073486328125,
+            252.14778900146484
+          ],
+          "b": [
+            115.49980926513672,
+            251.8521957397461
+          ],
+          "confidence": 0.958984375,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "rope",
+          "a": [
+            116.00018310546875,
+            250.81982421875
+          ],
+          "b": [
+            639.9998168945312,
+            250.18017578125
+          ],
+          "confidence": 0.955078125,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -375.0777882388603,
+      "legacy_velocity": -375.0777882388603,
+      "fixed_velocity": -375.0777882388603,
+      "measured": true
+    },
+    {
+      "time": 196459.055312,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            100.00006103515625,
+            252.1629638671875
+          ],
+          "b": [
+            633.9999389648438,
+            251.8370361328125
+          ],
+          "confidence": 0.95947265625,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "rope",
+          "a": [
+            -0.12493515014648438,
+            253.579833984375
+          ],
+          "b": [
+            100.49993896484375,
+            253.420166015625
+          ],
+          "confidence": 0.95703125,
+          "left_clipped": true,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -414.8038084083092,
+      "legacy_velocity": -414.8038084083092,
+      "fixed_velocity": -414.8038084083092,
+      "measured": true
+    },
+    {
+      "time": 196459.071383,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            -0.3124237060546875,
+            254.33348083496094
+          ],
+          "b": [
+            90.87492370605469,
+            254.16651916503906
+          ],
+          "confidence": 0.9541015625,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "rope",
+          "a": [
+            91.50003051757812,
+            252.84915161132812
+          ],
+          "b": [
+            633.0,
+            252.65084838867188
+          ],
+          "confidence": 0.953125,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -435.5712738122969,
+      "legacy_velocity": -435.5712738122969,
+      "fixed_velocity": -435.5712738122969,
+      "measured": true
+    },
+    {
+      "time": 196459.1073002,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            0.375030517578125,
+            256.047119140625
+          ],
+          "b": [
+            70.56246948242188,
+            255.952880859375
+          ],
+          "confidence": 0.95361328125,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "rope",
+          "a": [
+            73.75003051757812,
+            254.6029052734375
+          ],
+          "b": [
+            635.75,
+            254.3970947265625
+          ],
+          "confidence": 0.9501953125,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -480.1075693506055,
+      "legacy_velocity": -480.1075693506055,
+      "fixed_velocity": -480.1075693506055,
+      "measured": true
+    },
+    {
+      "time": 196459.1369889,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            0.03125,
+            257.5061950683594
+          ],
+          "b": [
+            50.8125,
+            257.4938049316406
+          ],
+          "confidence": 0.958984375,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "rope",
+          "a": [
+            51.0,
+            256.178466796875
+          ],
+          "b": [
+            637.0,
+            256.321533203125
+          ],
+          "confidence": 0.955078125,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -545.0824844115974,
+      "legacy_velocity": -545.0824844115974,
+      "fixed_velocity": -545.0824844115974,
+      "measured": true
+    },
+    {
+      "time": 196459.1564945,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            -0.10937118530273438,
+            258.2623291015625
+          ],
+          "b": [
+            40.296871185302734,
+            258.2376708984375
+          ],
+          "confidence": 0.95703125,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "rope",
+          "a": [
+            40.25,
+            256.92718505859375
+          ],
+          "b": [
+            636.75,
+            257.07281494140625
+          ],
+          "confidence": 0.955078125,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": true
+    },
+    {
+      "time": 196459.1893357,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            21.25,
+            257.9248046875
+          ],
+          "b": [
+            637.25,
+            258.0751953125
+          ],
+          "confidence": 0.958984375,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "rope",
+          "a": [
+            0.2656259536743164,
+            259.49664306640625
+          ],
+          "b": [
+            18.546875,
+            259.50335693359375
+          ],
+          "confidence": 0.9150390625,
+          "left_clipped": true,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": false
+    },
+    {
+      "time": 196459.2215014,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            6.0,
+            259.53857421875
+          ],
+          "b": [
+            638.0,
+            259.46142578125
+          ],
+          "confidence": 0.96484375,
+          "left_clipped": true,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": false
+    },
+    {
+      "time": 196459.256122,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            2.75,
+            260.5
+          ],
+          "b": [
+            635.75,
+            260.5
+          ],
+          "confidence": 0.96044921875,
+          "left_clipped": true,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": false
+    },
+    {
+      "time": 196459.2871466,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            2.75,
+            261.4614562988281
+          ],
+          "b": [
+            634.25,
+            261.5385437011719
+          ],
+          "confidence": 0.95703125,
+          "left_clipped": true,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": false
+    },
+    {
+      "time": 196459.3043068,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            4.25,
+            261.96142578125
+          ],
+          "b": [
+            636.25,
+            262.03857421875
+          ],
+          "confidence": 0.955078125,
+          "left_clipped": true,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": false
+    },
+    {
+      "time": 196459.3355958,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            6.25,
+            262.9615173339844
+          ],
+          "b": [
+            636.75,
+            263.0384826660156
+          ],
+          "confidence": 0.953125,
+          "left_clipped": true,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": false
+    },
+    {
+      "time": 196459.3566809,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            2.75,
+            263.672607421875
+          ],
+          "b": [
+            636.75,
+            263.827392578125
+          ],
+          "confidence": 0.9541015625,
+          "left_clipped": true,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": false
+    },
+    {
+      "time": 196459.3890361,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            5.5,
+            263.4613037109375
+          ],
+          "b": [
+            639.5,
+            263.5386962890625
+          ],
+          "confidence": 0.955078125,
+          "left_clipped": true,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": false
+    },
+    {
+      "time": 196459.4216531,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            6.0,
+            263.5
+          ],
+          "b": [
+            639.0,
+            263.5
+          ],
+          "confidence": 0.955078125,
+          "left_clipped": true,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": false
+    },
+    {
+      "time": 196459.4545602,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            5.0,
+            263.5
+          ],
+          "b": [
+            637.0,
+            263.5
+          ],
+          "confidence": 0.95166015625,
+          "left_clipped": true,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": false
+    },
+    {
+      "time": 196459.4736208,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            6.0,
+            263.25
+          ],
+          "b": [
+            637.0,
+            263.25
+          ],
+          "confidence": 0.95556640625,
+          "left_clipped": true,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": false
+    },
+    {
+      "time": 196459.5062018,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            4.0,
+            263.25
+          ],
+          "b": [
+            637.0,
+            263.25
+          ],
+          "confidence": 0.95703125,
+          "left_clipped": true,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": false
+    },
+    {
+      "time": 196459.5364396,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            4.0,
+            263.2113037109375
+          ],
+          "b": [
+            638.0,
+            263.2886962890625
+          ],
+          "confidence": 0.95703125,
+          "left_clipped": true,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": false
+    },
+    {
+      "time": 196459.5709933,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            7.0,
+            262.9615173339844
+          ],
+          "b": [
+            637.5,
+            263.0384826660156
+          ],
+          "confidence": 0.9541015625,
+          "left_clipped": true,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": false
+    },
+    {
+      "time": 196459.6040933,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            4.75,
+            261.4614562988281
+          ],
+          "b": [
+            636.25,
+            261.5385437011719
+          ],
+          "confidence": 0.96142578125,
+          "left_clipped": true,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": false
+    },
+    {
+      "time": 196459.6376458,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            0.0,
+            260.25
+          ],
+          "b": [
+            630.0,
+            260.25
+          ],
+          "confidence": 0.9609375,
+          "left_clipped": true,
+          "right_clipped": true
+        },
+        {
+          "kind": "rope",
+          "a": [
+            623.80078125,
+            258.0052795410156
+          ],
+          "b": [
+            638.19921875,
+            257.9947204589844
+          ],
+          "confidence": 0.39599609375,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": false
+    },
+    {
+      "time": 196459.6711139,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            3.25,
+            258.5371398925781
+          ],
+          "b": [
+            611.75,
+            258.4628601074219
+          ],
+          "confidence": 0.958984375,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            613.1563110351562,
+            256.7970275878906
+          ],
+          "b": [
+            638.8436889648438,
+            256.7029724121094
+          ],
+          "confidence": 0.6142578125,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "platform",
+          "a": [
+            614.9696655273438,
+            268.5970458984375
+          ],
+          "b": [
+            640.0303344726562,
+            268.9029541015625
+          ],
+          "confidence": 0.3720703125,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": false
+    },
+    {
+      "time": 196459.7042893,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            0.5,
+            257.285888671875
+          ],
+          "b": [
+            588.5,
+            257.214111328125
+          ],
+          "confidence": 0.958984375,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            593.0443115234375,
+            265.4680480957031
+          ],
+          "b": [
+            639.9556884765625,
+            267.0319519042969
+          ],
+          "confidence": 0.4970703125,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "platform",
+          "a": [
+            593.2611694335938,
+            255.5363998413086
+          ],
+          "b": [
+            638.7388305664062,
+            256.96358489990234
+          ],
+          "confidence": 0.462890625,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "platform",
+          "a": [
+            592.8438720703125,
+            250.916259765625
+          ],
+          "b": [
+            640.1561279296875,
+            251.083740234375
+          ],
+          "confidence": 0.39501953125,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -567.0544119015599,
+      "legacy_velocity": -567.0544119015599,
+      "fixed_velocity": -567.0544119015599,
+      "measured": false
+    },
+    {
+      "time": 196459.7563002,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            0.5,
+            255.28350830078125
+          ],
+          "b": [
+            549.5,
+            255.21649169921875
+          ],
+          "confidence": 0.953125,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            555.59375,
+            248.23953247070312
+          ],
+          "b": [
+            641.40625,
+            248.26046752929688
+          ],
+          "confidence": 0.55810546875,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -749.8428211082509,
+      "legacy_velocity": -749.8428211082509,
+      "fixed_velocity": -749.8428211082509,
+      "measured": true
+    },
+    {
+      "time": 196459.804787,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            1.5,
+            254.68841552734375
+          ],
+          "b": [
+            506.0,
+            254.81158447265625
+          ],
+          "confidence": 0.95556640625,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            515.84375,
+            248.3035430908203
+          ],
+          "b": [
+            641.15625,
+            248.1964569091797
+          ],
+          "confidence": 0.66796875,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -897.1513898189494,
+      "legacy_velocity": -897.1513898189494,
+      "fixed_velocity": -897.1513898189494,
+      "measured": true
+    },
+    {
+      "time": 196459.8567095,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            -2.875,
+            254.97064208984375
+          ],
+          "b": [
+            478.125,
+            255.02935791015625
+          ],
+          "confidence": 0.95654296875,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            477.2503662109375,
+            248.74948120117188
+          ],
+          "b": [
+            640.7496337890625,
+            248.25051879882812
+          ],
+          "confidence": 0.513671875,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -740.066752570886,
+      "legacy_velocity": -740.066752570886,
+      "fixed_velocity": -740.066752570886,
+      "measured": true
+    },
+    {
+      "time": 196459.9049714,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            2.5000152587890625,
+            255.33111572265625
+          ],
+          "b": [
+            445.5,
+            255.16888427734375
+          ],
+          "confidence": 0.9501953125,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            443.68798828125,
+            248.56678771972656
+          ],
+          "b": [
+            643.31201171875,
+            247.93321228027344
+          ],
+          "confidence": 0.64501953125,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -712.1143949718397,
+      "legacy_velocity": -712.1143949718397,
+      "fixed_velocity": -712.1143949718397,
+      "measured": true
+    },
+    {
+      "time": 196459.9550788,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            -1.375,
+            255.22515106201172
+          ],
+          "b": [
+            405.875,
+            255.27484893798828
+          ],
+          "confidence": 0.94677734375,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            409.75042724609375,
+            248.81219482421875
+          ],
+          "b": [
+            642.2495727539062,
+            248.18780517578125
+          ],
+          "confidence": 0.66455078125,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": {
+        "dy": 0.21495280287722096,
+        "dt": 0.0501073999912478
+      },
+      "saved_velocity": -715.1571792878265,
+      "legacy_velocity": -715.1571792878265,
+      "fixed_velocity": -715.1571792878265,
+      "measured": true
+    },
+    {
+      "time": 196460.0043395,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            1.000030517578125,
+            255.60894775390625
+          ],
+          "b": [
+            357.9999694824219,
+            255.39105224609375
+          ],
+          "confidence": 0.94482421875,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            368.000732421875,
+            249.44906616210938
+          ],
+          "b": [
+            640.499267578125,
+            248.55093383789062
+          ],
+          "confidence": 0.80615234375,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": {
+        "dy": 1.761570272838675,
+        "dt": 0.04926070000510663
+      },
+      "saved_velocity": -743.2712962557412,
+      "legacy_velocity": -743.2712962557412,
+      "fixed_velocity": -743.2712962557412,
+      "measured": true
+    },
+    {
+      "time": 196460.0355438,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            -0.25,
+            256.5
+          ],
+          "b": [
+            346.75,
+            256.5
+          ],
+          "confidence": 0.947265625,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            348.0005187988281,
+            250.64275360107422
+          ],
+          "b": [
+            640.49951171875,
+            249.85723876953125
+          ],
+          "confidence": 0.64501953125,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": {
+        "dy": 0.6677706178479301,
+        "dt": 0.03120430000126362
+      },
+      "saved_velocity": -731.9248561018089,
+      "legacy_velocity": -731.9248561018089,
+      "fixed_velocity": -731.9248561018089,
+      "measured": true
+    },
+    {
+      "time": 196460.0719869,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            -0.75,
+            257.23077392578125
+          ],
+          "b": [
+            314.5,
+            257.26922607421875
+          ],
+          "confidence": 0.9365234375,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            323.6253662109375,
+            251.35184478759766
+          ],
+          "b": [
+            643.8746337890625,
+            250.6481704711914
+          ],
+          "confidence": 0.4580078125,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": {
+        "dx": -24.52275584434483,
+        "dt": 0.03644309999071993,
+        "vx": -672.905319541681,
+        "camera_dy": 0.8949410890006675,
+        "response": 1.0,
+        "points": 5,
+        "span": 207.0,
+        "source": "ground_unique_template"
+      },
+      "camera_prior": {
+        "dy": 2.0987376386313397,
+        "dt": 0.03644309999071993
+      },
+      "saved_velocity": -734.5668378513144,
+      "legacy_velocity": -734.5668378513144,
+      "fixed_velocity": -734.5668378513144,
+      "measured": true
+    },
+    {
+      "time": 196460.1218372,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            -1.5,
+            258.75
+          ],
+          "b": [
+            284.75,
+            258.75
+          ],
+          "confidence": 0.953125,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "rope",
+          "a": [
+            292.875244140625,
+            252.7984390258789
+          ],
+          "b": [
+            642.124755859375,
+            252.20157623291016
+          ],
+          "confidence": 0.392333984375,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "platform",
+          "a": [
+            286.7503356933594,
+            252.59815216064453
+          ],
+          "b": [
+            643.2496337890625,
+            251.90186309814453
+          ],
+          "confidence": 0.282958984375,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": {
+        "dy": 2.51993017011584,
+        "dt": 0.0498502999835182
+      },
+      "saved_velocity": -746.7276273915797,
+      "legacy_velocity": -746.7276273915797,
+      "fixed_velocity": -746.7276273915797,
+      "measured": true
+    },
+    {
+      "time": 196460.153685,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            -1.5,
+            259.51556396484375
+          ],
+          "b": [
+            253.375,
+            259.48443603515625
+          ],
+          "confidence": 0.95751953125,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            257.6254577636719,
+            253.42215728759766
+          ],
+          "b": [
+            641.87451171875,
+            252.5778579711914
+          ],
+          "confidence": 0.447509765625,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "rope",
+          "a": [
+            268.5003662109375,
+            253.86035919189453
+          ],
+          "b": [
+            637.4996337890625,
+            253.13965606689453
+          ],
+          "confidence": 0.30078125,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": {
+        "dy": 4.263668644958098,
+        "dt": 0.031847800011746585
+      },
+      "saved_velocity": -752.9892999029437,
+      "legacy_velocity": -752.9892999029437,
+      "fixed_velocity": -752.9892999029437,
+      "measured": true
+    },
+    {
+      "time": 196460.187352,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            -2.75,
+            260.5283203125
+          ],
+          "b": [
+            229.125,
+            260.4716796875
+          ],
+          "confidence": 0.96044921875,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "rope",
+          "a": [
+            236.50079345703125,
+            254.81783294677734
+          ],
+          "b": [
+            640.9992065429688,
+            253.6821517944336
+          ],
+          "confidence": 0.2861328125,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "platform",
+          "a": [
+            234.5005340576172,
+            254.46735382080078
+          ],
+          "b": [
+            637.4994506835938,
+            253.53266143798828
+          ],
+          "confidence": 0.269775390625,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": {
+        "dy": -1.4936237184455745,
+        "dt": 0.03366700001060963
+      },
+      "saved_velocity": -741.282651815473,
+      "legacy_velocity": -741.282651815473,
+      "fixed_velocity": -741.282651815473,
+      "measured": true
+    },
+    {
+      "time": 196460.2204271,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            -3.9374923706054688,
+            260.0387878417969
+          ],
+          "b": [
+            207.9375,
+            259.9612121582031
+          ],
+          "confidence": 0.958984375,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            217.25039672851562,
+            253.90869903564453
+          ],
+          "b": [
+            635.7496337890625,
+            253.09131622314453
+          ],
+          "confidence": 0.2958984375,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": {
+        "dy": -0.3768415703854364,
+        "dt": 0.03307509998558089
+      },
+      "saved_velocity": -722.0628677439221,
+      "legacy_velocity": -722.0628677439221,
+      "fixed_velocity": -722.0628677439221,
+      "measured": true
+    },
+    {
+      "time": 196460.2544258,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            -1.3124542236328125,
+            258.591064453125
+          ],
+          "b": [
+            185.1874542236328,
+            258.408935546875
+          ],
+          "confidence": 0.958984375,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            194.250732421875,
+            253.0697250366211
+          ],
+          "b": [
+            638.749267578125,
+            251.93025970458984
+          ],
+          "confidence": 0.38671875,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "rope",
+          "a": [
+            195.00059509277344,
+            253.00850677490234
+          ],
+          "b": [
+            633.4993896484375,
+            251.9914779663086
+          ],
+          "confidence": 0.31494140625,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": {
+        "dy": -1.2841273431558768,
+        "dt": 0.03399870000430383
+      },
+      "saved_velocity": -739.1567143214272,
+      "legacy_velocity": -739.1567143214272,
+      "fixed_velocity": -739.1567143214272,
+      "measured": true
+    },
+    {
+      "time": 196460.2872013,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            0.6251068115234375,
+            257.3809585571289
+          ],
+          "b": [
+            153.87489318847656,
+            257.11905670166016
+          ],
+          "confidence": 0.96142578125,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "rope",
+          "a": [
+            169.12582397460938,
+            251.6240463256836
+          ],
+          "b": [
+            633.8741455078125,
+            250.37594604492188
+          ],
+          "confidence": 0.33447265625,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": {
+        "dy": -0.8817514712724197,
+        "dt": 0.032775500003481284
+      },
+      "saved_velocity": -741.8096968372606,
+      "legacy_velocity": -741.8096968372606,
+      "fixed_velocity": -741.8096968372606,
+      "measured": true
+    },
+    {
+      "time": 196460.3355363,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            -0.12491608038544655,
+            255.10163116455078
+          ],
+          "b": [
+            118.81241607666016,
+            254.89838409423828
+          ],
+          "confidence": 0.955078125,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            127.127197265625,
+            249.81198120117188
+          ],
+          "b": [
+            638.872802734375,
+            247.68801879882812
+          ],
+          "confidence": 0.56787109375,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": {
+        "dy": -1.214493909518616,
+        "dt": 0.048334999999497086
+      },
+      "saved_velocity": -759.5477860282613,
+      "legacy_velocity": -759.5477860282613,
+      "fixed_velocity": -759.5477860282613,
+      "measured": true
+    },
+    {
+      "time": 196460.3886945,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            -0.3124580383300781,
+            253.0591812133789
+          ],
+          "b": [
+            80.49995422363281,
+            252.94080352783203
+          ],
+          "confidence": 0.951171875,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "rope",
+          "a": [
+            88.50079345703125,
+            248.16162109375
+          ],
+          "b": [
+            630.4992065429688,
+            246.83837890625
+          ],
+          "confidence": 0.455078125,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "platform",
+          "a": [
+            92.25088500976562,
+            248.19342041015625
+          ],
+          "b": [
+            633.2491455078125,
+            246.80657958984375
+          ],
+          "confidence": 0.3720703125,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": {
+        "dy": -2.897832230179624,
+        "dt": 0.05315819999668747
+      },
+      "saved_velocity": -743.3391456174967,
+      "legacy_velocity": -743.3391456174967,
+      "fixed_velocity": -743.3391456174967,
+      "measured": true
+    },
+    {
+      "time": 196460.4370734,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            -0.5312366485595703,
+            251.97500610351562
+          ],
+          "b": [
+            44.96873474121094,
+            252.02499389648438
+          ],
+          "confidence": 0.94873046875,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "rope",
+          "a": [
+            49.500091552734375,
+            247.501220703125
+          ],
+          "b": [
+            637.4998779296875,
+            246.998779296875
+          ],
+          "confidence": 0.392333984375,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "platform",
+          "a": [
+            53.75006103515625,
+            246.7127685546875
+          ],
+          "b": [
+            634.7499389648438,
+            246.2872314453125
+          ],
+          "confidence": 0.369384765625,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": {
+        "dy": 0.6644271175841538,
+        "dt": 0.04837890001363121
+      },
+      "saved_velocity": -748.5285705051889,
+      "legacy_velocity": -748.5285705051889,
+      "fixed_velocity": -748.5285705051889,
+      "measured": true
+    },
+    {
+      "time": 196460.4896512,
+      "segments": [
+        {
+          "kind": "platform",
+          "a": [
+            16.0,
+            247.325927734375
+          ],
+          "b": [
+            638.0,
+            247.174072265625
+          ],
+          "confidence": 0.6767578125,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": {
+        "dy": 0.40035628967369163,
+        "dt": 0.05257780000101775
+      },
+      "saved_velocity": -748.5285705051889,
+      "legacy_velocity": -748.5285705051889,
+      "fixed_velocity": -748.5285705051889,
+      "measured": false
+    },
+    {
+      "time": 196460.522132,
+      "segments": [
+        {
+          "kind": "platform",
+          "a": [
+            8.5,
+            247.78753662109375
+          ],
+          "b": [
+            623.5,
+            247.71246337890625
+          ],
+          "confidence": 0.556640625,
+          "left_clipped": true,
+          "right_clipped": false
+        }
+      ],
+      "texture": {
+        "dx": -23.54111974064748,
+        "dt": 0.03248080000048503,
+        "vx": -724.7703178584254,
+        "camera_dy": 0.9191288199403402,
+        "response": 1.0,
+        "points": 4,
+        "span": 571.0,
+        "source": "ground_unique_template"
+      },
+      "camera_prior": {
+        "dy": 1.4738494201188068,
+        "dt": 0.03248080000048503
+      },
+      "saved_velocity": -651.0625312083132,
+      "legacy_velocity": -651.0625312083132,
+      "fixed_velocity": -724.7703178584254,
+      "measured": true
+    },
+    {
+      "time": 196460.5535774,
+      "segments": [
+        {
+          "kind": "platform",
+          "a": [
+            598.8258666992188,
+            165.14080810546875
+          ],
+          "b": [
+            639.1741333007812,
+            166.60919189453125
+          ],
+          "confidence": 0.400634765625,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "platform",
+          "a": [
+            15.0,
+            247.28594970703125
+          ],
+          "b": [
+            604.0,
+            247.21405029296875
+          ],
+          "confidence": 0.27197265625,
+          "left_clipped": false,
+          "right_clipped": false
+        },
+        {
+          "kind": "rope",
+          "a": [
+            18.000030517578125,
+            247.60693359375
+          ],
+          "b": [
+            602.0,
+            247.39306640625
+          ],
+          "confidence": 0.2705078125,
+          "left_clipped": false,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            598.4579467773438,
+            181.32212829589844
+          ],
+          "b": [
+            640.5420532226562,
+            183.17787170410156
+          ],
+          "confidence": 0.25537109375,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": {
+        "dy": 0.746491784598696,
+        "dt": 0.03144539997447282
+      },
+      "saved_velocity": -651.0625312083132,
+      "legacy_velocity": -651.0625312083132,
+      "fixed_velocity": -724.7703178584254,
+      "measured": false
+    },
+    {
+      "time": 196460.5903245,
+      "segments": [
+        {
+          "kind": "platform",
+          "a": [
+            573.6896362304688,
+            167.6202850341797
+          ],
+          "b": [
+            641.3103637695312,
+            168.3797149658203
+          ],
+          "confidence": 0.4609375,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "platform",
+          "a": [
+            16.000060558319092,
+            249.92303466796875
+          ],
+          "b": [
+            582.9999389648438,
+            249.57696533203125
+          ],
+          "confidence": 0.33642578125,
+          "left_clipped": false,
+          "right_clipped": false
+        },
+        {
+          "kind": "rope",
+          "a": [
+            24.5001220703125,
+            250.264404296875
+          ],
+          "b": [
+            565.9998779296875,
+            249.735595703125
+          ],
+          "confidence": 0.310791015625,
+          "left_clipped": false,
+          "right_clipped": false
+        }
+      ],
+      "texture": {
+        "dx": -23.53344080604529,
+        "dt": 0.03674710000632331,
+        "vx": -640.4162723587914,
+        "camera_dy": 2.0626806349958997,
+        "response": 0.7777777777777778,
+        "points": 7,
+        "span": 541.0,
+        "source": "ground_unique_template"
+      },
+      "camera_prior": null,
+      "saved_velocity": -554.9910088088707,
+      "legacy_velocity": -554.9910088088707,
+      "fixed_velocity": -640.4162723587914,
+      "measured": true
+    },
+    {
+      "time": 196460.6208421,
+      "segments": [
+        {
+          "kind": "platform",
+          "a": [
+            548.9697265625,
+            168.45101928710938
+          ],
+          "b": [
+            638.0302734375,
+            169.04898071289062
+          ],
+          "confidence": 0.3251953125,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "platform",
+          "a": [
+            8.500030517578125,
+            250.60079956054688
+          ],
+          "b": [
+            559.0,
+            250.39920043945312
+          ],
+          "confidence": 0.279052734375,
+          "left_clipped": true,
+          "right_clipped": false
+        }
+      ],
+      "texture": {
+        "dx": -23.89042194606438,
+        "dt": 0.030517600011080503,
+        "vx": -782.8407849041245,
+        "camera_dy": 0.8540672638188198,
+        "response": 0.7777777777777778,
+        "points": 7,
+        "span": 509.0,
+        "source": "ground_unique_template"
+      },
+      "camera_prior": null,
+      "saved_velocity": -504.13337168529176,
+      "legacy_velocity": -504.13337168529176,
+      "fixed_velocity": -782.8407849041245,
+      "measured": true
+    },
+    {
+      "time": 196460.6722005,
+      "segments": [
+        {
+          "kind": "platform",
+          "a": [
+            -7.49993896484375,
+            247.9605712890625
+          ],
+          "b": [
+            567.4999389648438,
+            247.5394287109375
+          ],
+          "confidence": 0.4873046875,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "floating_platform",
+          "a": [
+            510.0002746582031,
+            167.31689453125
+          ],
+          "b": [
+            640.9996948242188,
+            166.93310546875
+          ],
+          "confidence": 0.455078125,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -504.13337168529176,
+      "legacy_velocity": -504.13337168529176,
+      "fixed_velocity": -782.8407849041245,
+      "measured": false
+    },
+    {
+      "time": 196460.7067386,
+      "segments": [
+        {
+          "kind": "platform",
+          "a": [
+            -4.2499847412109375,
+            247.091552734375
+          ],
+          "b": [
+            495.75,
+            246.908447265625
+          ],
+          "confidence": 0.359375,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "floating_platform",
+          "a": [
+            482.6251220703125,
+            164.63735961914062
+          ],
+          "b": [
+            643.3748779296875,
+            164.36264038085938
+          ],
+          "confidence": 0.33642578125,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": {
+        "dx": -26.89032015167109,
+        "dt": 0.03453810000792146,
+        "vx": -778.5697576156095,
+        "camera_dy": -1.3717825249433417,
+        "response": 0.8,
+        "points": 4,
+        "span": 242.0,
+        "source": "ground_unique_template"
+      },
+      "camera_prior": null,
+      "saved_velocity": -442.8715794329571,
+      "legacy_velocity": -442.8715794329571,
+      "fixed_velocity": -778.5697576156095,
+      "measured": true
+    },
+    {
+      "time": 196460.7352869,
+      "segments": [
+        {
+          "kind": "floating_platform",
+          "a": [
+            453.875,
+            162.86375427246094
+          ],
+          "b": [
+            638.125,
+            162.88624572753906
+          ],
+          "confidence": 0.6318359375,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "rope",
+          "a": [
+            7.000335693359375,
+            246.89498901367188
+          ],
+          "b": [
+            469.2496643066406,
+            246.10501098632812
+          ],
+          "confidence": 0.30322265625,
+          "left_clipped": true,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -442.8715794329571,
+      "legacy_velocity": -442.8715794329571,
+      "fixed_velocity": -778.5697576156095,
+      "measured": false
+    },
+    {
+      "time": 196460.7708638,
+      "segments": [
+        {
+          "kind": "floating_platform",
+          "a": [
+            419.5,
+            161.8609619140625
+          ],
+          "b": [
+            649.5,
+            161.8890380859375
+          ],
+          "confidence": 0.615234375,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "platform",
+          "a": [
+            11.250137329101562,
+            244.11436462402344
+          ],
+          "b": [
+            446.9998779296875,
+            243.63563537597656
+          ],
+          "confidence": 0.2744140625,
+          "left_clipped": true,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -442.8715794329571,
+      "legacy_velocity": -442.8715794329571,
+      "fixed_velocity": -778.5697576156095,
+      "measured": false
+    },
+    {
+      "time": 196460.8048574,
+      "segments": [
+        {
+          "kind": "floating_platform",
+          "a": [
+            393.75,
+            160.95321655273438
+          ],
+          "b": [
+            649.25,
+            161.04678344726562
+          ],
+          "confidence": 0.56982421875,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "platform",
+          "a": [
+            7.750091552734375,
+            243.820556640625
+          ],
+          "b": [
+            408.2499084472656,
+            243.429443359375
+          ],
+          "confidence": 0.3603515625,
+          "left_clipped": true,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -442.8715794329571,
+      "legacy_velocity": -442.8715794329571,
+      "fixed_velocity": -778.5697576156095,
+      "measured": false
+    },
+    {
+      "time": 196460.8360506,
+      "segments": [
+        {
+          "kind": "floating_platform",
+          "a": [
+            371.375,
+            160.125
+          ],
+          "b": [
+            655.625,
+            160.125
+          ],
+          "confidence": 0.77734375,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "platform",
+          "a": [
+            14.75048828125,
+            242.04769897460938
+          ],
+          "b": [
+            379.24951171875,
+            241.20230102539062
+          ],
+          "confidence": 0.4580078125,
+          "left_clipped": false,
+          "right_clipped": false
+        }
+      ],
+      "texture": {
+        "dx": -25.6629706327613,
+        "dt": 0.031193199974950403,
+        "vx": -822.7104193660755,
+        "camera_dy": -1.2665761764765193,
+        "response": 0.7142857142857143,
+        "points": 5,
+        "span": 331.0,
+        "source": "ground_unique_template"
+      },
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": true
+    },
+    {
+      "time": 196460.8711162,
+      "segments": [
+        {
+          "kind": "floating_platform",
+          "a": [
+            338.25,
+            161.25
+          ],
+          "b": [
+            644.25,
+            161.25
+          ],
+          "confidence": 0.62451171875,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "platform",
+          "a": [
+            15.750274658203125,
+            242.67483520507812
+          ],
+          "b": [
+            343.2497253417969,
+            242.07516479492188
+          ],
+          "confidence": 0.332763671875,
+          "left_clipped": false,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196460.923941,
+      "segments": [
+        {
+          "kind": "floating_platform",
+          "a": [
+            304.875,
+            163.75
+          ],
+          "b": [
+            644.125,
+            163.75
+          ],
+          "confidence": 0.85498046875,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "platform",
+          "a": [
+            -19.499801635742188,
+            246.7779541015625
+          ],
+          "b": [
+            359.99981689453125,
+            246.2220458984375
+          ],
+          "confidence": 0.256103515625,
+          "left_clipped": true,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196460.9864853,
+      "segments": [
+        {
+          "kind": "floating_platform",
+          "a": [
+            255.5,
+            165.625
+          ],
+          "b": [
+            633.5,
+            165.625
+          ],
+          "confidence": 0.7294921875,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "platform",
+          "a": [
+            -6.311981201171875,
+            248.62411499023438
+          ],
+          "b": [
+            260.1869812011719,
+            247.87588500976562
+          ],
+          "confidence": 0.63427734375,
+          "left_clipped": true,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196461.0365704,
+      "segments": [
+        {
+          "kind": "floating_platform",
+          "a": [
+            214.75,
+            166.125
+          ],
+          "b": [
+            634.75,
+            166.125
+          ],
+          "confidence": 0.78125,
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        {
+          "kind": "platform",
+          "a": [
+            -6.374855041503906,
+            251.68170166015625
+          ],
+          "b": [
+            222.62484741210938,
+            251.31829833984375
+          ],
+          "confidence": 0.546875,
+          "left_clipped": true,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196461.088556,
+      "segments": [
+        {
+          "kind": "floating_platform",
+          "a": [
+            183.875,
+            166.30422973632812
+          ],
+          "b": [
+            628.125,
+            166.19577026367188
+          ],
+          "confidence": 0.662109375,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196461.138638,
+      "segments": [
+        {
+          "kind": "platform",
+          "a": [
+            -2.2496414184570312,
+            249.73574829101562
+          ],
+          "b": [
+            152.2496337890625,
+            249.26425170898438
+          ],
+          "confidence": 0.47265625,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "floating_platform",
+          "a": [
+            158.25,
+            164.90316772460938
+          ],
+          "b": [
+            619.75,
+            164.84683227539062
+          ],
+          "confidence": 0.3720703125,
+          "left_clipped": false,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196461.2050915,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            93.5,
+            164.1845703125
+          ],
+          "b": [
+            629.5,
+            164.3154296875
+          ],
+          "confidence": 0.384033203125,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196461.2363668,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            90.5,
+            162.940185546875
+          ],
+          "b": [
+            624.5,
+            162.809814453125
+          ],
+          "confidence": 0.55078125,
+          "left_clipped": false,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196461.2716014,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            80.00003051757812,
+            164.34622192382812
+          ],
+          "b": [
+            605.5,
+            164.15377807617188
+          ],
+          "confidence": 0.478515625,
+          "left_clipped": false,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196461.2883094,
+      "segments": [
+        {
+          "kind": "platform",
+          "a": [
+            -0.4687490463256836,
+            244.75497436523438
+          ],
+          "b": [
+            26.71875,
+            244.74502563476562
+          ],
+          "confidence": 0.442626953125,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "rope",
+          "a": [
+            42.0,
+            164.8043212890625
+          ],
+          "b": [
+            621.0,
+            164.9456787109375
+          ],
+          "confidence": 0.294189453125,
+          "left_clipped": false,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            -3.241781234741211,
+            169.2487030029297
+          ],
+          "b": [
+            34.288658142089844,
+            169.0012969970703
+          ],
+          "confidence": 0.260498046875,
+          "left_clipped": true,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196461.3375638,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            19.5,
+            167.28607177734375
+          ],
+          "b": [
+            610.5,
+            167.21392822265625
+          ],
+          "confidence": 0.320068359375,
+          "left_clipped": false,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196461.3745364,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            27.500091552734375,
+            169.1168212890625
+          ],
+          "b": [
+            593.4998779296875,
+            168.6331787109375
+          ],
+          "confidence": 0.367431640625,
+          "left_clipped": false,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196461.4035035,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            30.7501220703125,
+            170.6376953125
+          ],
+          "b": [
+            568.7498779296875,
+            170.1123046875
+          ],
+          "confidence": 0.57958984375,
+          "left_clipped": false,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            589.6099853515625,
+            91.50773620605469
+          ],
+          "b": [
+            640.3900146484375,
+            91.86726379394531
+          ],
+          "confidence": 0.391357421875,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196461.4729948,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            28.75006103515625,
+            173.558837890625
+          ],
+          "b": [
+            530.7499389648438,
+            173.191162109375
+          ],
+          "confidence": 0.33447265625,
+          "left_clipped": false,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196461.5011139,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            15.75006103515625,
+            173.68109130859375
+          ],
+          "b": [
+            510.24993896484375,
+            173.31890869140625
+          ],
+          "confidence": 0.263671875,
+          "left_clipped": false,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196461.5362789,
+      "segments": [],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196461.5686129,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            21.250320434570312,
+            176.75396728515625
+          ],
+          "b": [
+            464.74969482421875,
+            175.99603271484375
+          ],
+          "confidence": 0.333740234375,
+          "left_clipped": false,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196461.6051237,
+      "segments": [],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196461.6371719,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            27.000106811523438,
+            178.70458984375
+          ],
+          "b": [
+            445.9998779296875,
+            178.29541015625
+          ],
+          "confidence": 0.53515625,
+          "left_clipped": false,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    },
+    {
+      "time": 196461.6697793,
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            31.25030517578125,
+            179.4847412109375
+          ],
+          "b": [
+            452.24969482421875,
+            178.7652587890625
+          ],
+          "confidence": 0.26806640625,
+          "left_clipped": false,
+          "right_clipped": false
+        }
+      ],
+      "texture": null,
+      "camera_prior": null,
+      "saved_velocity": -354.58029688570093,
+      "legacy_velocity": -354.58029688570093,
+      "fixed_velocity": -822.7104193660755,
+      "measured": false
+    }
+  ]
+}
