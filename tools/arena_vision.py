@@ -428,11 +428,14 @@ class Perception:
             elif current and can_air_down(current):
                 name='air_down';self.jump_count=current.get('jumps',self.jump_count)
             elif (primitive=='air_down'and current and source_observation
-                    and can_reverse_rope_up(source_observation)):
-                # A submitted left during original state4 remains a down
-                # reversal even if its finite pixel rope ends before ACK.
+                    and (can_reverse_rope_up(source_observation)
+                         or source_observation.get('rope')is not None
+                         and can_air_down(source_observation))):
+                # A sent down input must survive a missing/ended rope between
+                # planning and ACK replay. Retain only the last pixel target;
+                # a fresh observed body/support contact must confirm landing.
                 surface=rope_reference_height(source_observation,stamp,current['player'].center[0])
-                current=dict(current,phase='flip_up',rope=surface,rope_segment=None,rope_segments=[],
+                current=dict(current,phase=source_observation['phase'],rope=surface,rope_segment=None,rope_segments=[],
                              terrain=None,motion=source_observation['motion'])
                 name='air_down';support_unconfirmed=True
                 self.jump_count=source_observation.get('jumps',self.jump_count)
