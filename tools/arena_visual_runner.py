@@ -30,6 +30,7 @@ from arena_vision import Perception, serializable, overlay,extrapolate
 from arena_policy import Avoider
 from arena_mpc import MpcAvoider
 from arena_action_timing import commit_action,selected_primitive
+from arena_key_receipts import KeyReceiptMatcher
 from runtime import InstanceSession
 import cv2
 import numpy as np
@@ -216,7 +217,8 @@ def run(args):
              'arena/vision-object-priors.json','arena/vision-detector.json','tools/arena_oriented.py',
              'tools/arena_obb_detector.py','tools/arena_support.py','tools/arena_object_support.py',
              'tools/arena_bamboo_motion.py','tools/arena_scene_motion.py','tools/arena_arrow_motion.py','tools/arena_mace_motion.py',
-             'tools/arena_bamboo_phase.py','tools/arena_action_timing.py','tools/arena_reactive_sweep.py')
+             'tools/arena_bamboo_phase.py','tools/arena_action_timing.py',
+             'tools/arena_reactive_sweep.py','tools/arena_key_receipts.py')
     source_hashes={name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest()for name in sources}
     (args.output / 'setup.json').write_text(json.dumps(dict(seed=args.seed, level=args.level,
         map=args.map, start=start_board,goal_stage_index=goal,pins=pins, observe=args.observe_only, initial=initial,sources=source_hashes,
@@ -225,7 +227,7 @@ def run(args):
     fresh_vision_times=[]
     first_evaluation=None
     sent_keys={'jump':0,'down':0}
-    receipts=set()
+    receipt_matcher=KeyReceiptMatcher(initial['monotonic']);receipt_matches=[]
     consume_times=[];chain_times=[]
     board_entries=[];had_damage=False
     actions, count, max_stage, status, final = [], 0, -1, 'duration', initial
@@ -316,20 +318,17 @@ def run(args):
                             last_eval=loop
                             evaluations.write(json.dumps(dict(elapsed=time.monotonic()-begin, **current))+'\n')
                             for key,receipt in current.get('keyReceipts',{}).items():
-                                identity=(key,receipt['count'])
-                                if identity in receipts:
-                                    continue
-                                event=next((a for a in actions if a['key']==key and a['key_count']==receipt['count']),None)
+                                event,match=receipt_matcher.match(key,receipt,actions)
+                                if match is not None:receipt_matches.append(match)
                                 if event:
                                     native_host_ns=receipt['time']*1e9+clock['offset_ns']
                                     delay=(native_host_ns-event['request_ns'])/1e6
-                                    if -1<delay<1000:
+                                    if delay>=0:
                                         event['unity_keydown_ms']=delay
                                         event['capture_to_unity_ms']=(native_host_ns-event['capture_request_ns'])/1e6
                                         event['planned_anchor_error_ms']=(event['planned_time']-receipt['time'])*1000
                                         event['committed_anchor_error_ms']=(event['committed_time']-receipt['time'])*1000
                                         consume_times.append(delay);chain_times.append(event['capture_to_unity_ms'])
-                                        receipts.add(identity)
                             max_stage = max(max_stage, current['stageIndex'])
                             candidate=evaluation_status(initial,current,goal)
                             had_damage=had_damage or candidate=='damage'
@@ -370,7 +369,8 @@ def run(args):
                   first_visible_elapsed=initial_pixels.first_visible_elapsed)
     report.update(sent_keys=sent_keys,observed_keys=final.get('keys',{}),
                   unity_keydown_ms=timing(consume_times),capture_to_unity_ms=timing(chain_times),
-                  board_entries=board_entries,had_damage=had_damage)
+                  board_entries=board_entries,had_damage=had_damage,
+                  key_receipt_matching=receipt_matches)
     report['evaluation_error']=evaluator.error
     report['cyclic_gc_deferred']=collections.was_enabled
     report['cycles_collected_after_pause']=collections.collected

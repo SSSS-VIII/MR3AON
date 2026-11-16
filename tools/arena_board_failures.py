@@ -12,6 +12,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+from arena_key_receipts import KeyReceiptMatcher
 
 
 def number(value):
@@ -123,23 +124,27 @@ def visuals_at_hit(stamp, vision, folder):
 
 
 def action_timeline(actions, samples):
+    clocks=[sample['row']['monotonic']for sample in samples if number(sample['row'].get('monotonic'))]
+    clocks += [a['enqueued_time']for a in actions if isinstance(a,dict)and number(a.get('enqueued_time'))]
+    matcher=KeyReceiptMatcher(min(clocks)-1 if clocks else 0)
     receipts = {}
     for sample in samples:
         for key, receipt in (sample['row'].get('keyReceipts') or {}).items():
             if isinstance(receipt, dict) and number(receipt.get('time')):
-                receipts[(key, receipt.get('count'))] = receipt['time']
+                event,_=matcher.match(key,receipt,actions)
+                if event is not None:receipts[id(event)] = receipt['time']
     result, unknown = [], []
     for index, action in enumerate(actions):
         if not isinstance(action, dict):
             raise ValueError('actor actions must be objects')
-        stamp = receipts.get((action.get('key'), action.get('key_count')))
+        stamp = receipts.get(id(action))
         clock = 'native_key_receipt'
         if stamp is None:
             committed, error = action.get('committed_time'), action.get('committed_anchor_error_ms')
-            if number(committed) and number(error):
-                stamp, clock = committed-error/1000, 'native_receipt_from_anchor_error'
-            elif number(action.get('enqueued_time')):
+            if number(action.get('enqueued_time')):
                 stamp, clock = action['enqueued_time'], 'enqueued_time_no_native_receipt'
+            elif number(committed) and number(error):
+                stamp, clock = committed-error/1000, 'native_receipt_from_anchor_error'
             else:
                 # request_ns is a HOST clock; it cannot substitute for native time.
                 unknown.append(index)

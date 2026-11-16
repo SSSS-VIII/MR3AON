@@ -141,11 +141,11 @@ def test_action_clock_prefers_native_receipts_and_preserves_primitive(tmp_path):
                     committed_anchor_error_ms=50, committed_primitive='air_down'),
                dict(action='jump', key='jump', key_count=2, enqueued_time=11.2),
                dict(action='jump', request_ns=10_950_000_000, t=.95)]
-    rows = [sample(10.9, keyReceipts={'jump': dict(count=1, time=10.7)}),
+    rows = [sample(10.9, keyReceipts={'jump': dict(count=1, time=10.85)}),
             sample(11.1, damage=100, drop=drop())]
     result = audit_run(write_run(tmp_path, rows=rows, actions=actions))
     inputs = result['hits'][0]['actions']
-    assert inputs['previous']['monotonic'] == 10.7
+    assert inputs['previous']['monotonic'] == 10.85
     assert inputs['previous']['clock'] == 'native_key_receipt'
     assert inputs['previous']['committed_primitive'] == 'air_up'
     assert inputs['next']['monotonic'] == pytest.approx(11.1)
@@ -203,3 +203,19 @@ def test_cli_refuses_to_overwrite_saved_actor_evidence(tmp_path, monkeypatch):
     with pytest.raises(FileExistsError):
         main()
     assert output.read_bytes() == original
+
+
+def test_dropped_key_cannot_shift_native_clock_or_reuse_legacy_anchor_error():
+    actions=[dict(key='down',key_count=i,enqueued_time=float(i),
+                  committed_time=float(i)+.016,committed_anchor_error_ms=-900)
+             for i in range(1,5)]
+    samples=[{'row':dict(monotonic=t,keyReceipts={'down':dict(count=c,time=t)})}
+             for c,t in [(1,1.02),(2,3.02),(3,4.02)]]
+    timeline,unknown=action_timeline(actions,samples)
+    assert not unknown
+    by_count={a['key_count']:a for a in timeline}
+    assert by_count[1]['monotonic']==1.02
+    assert by_count[2]['clock']=='enqueued_time_no_native_receipt'
+    assert by_count[3]['clock']=='enqueued_time_no_native_receipt'
+    assert by_count[4]['monotonic']==4.02
+    assert by_count[4]['clock']=='native_key_receipt'
