@@ -16,7 +16,7 @@ import numpy as np
 from arena_native_json import normalize_arrays
 from arena_projection import sphere_plane,capsule_plane
 from arena_vision import Box
-from arena_damage_modules import is_damage_collider
+from arena_damage_modules import is_damage_collider,is_attack_module_collider
 
 SHAPES=('BoxCollider','SphereCollider','CapsuleCollider')
 INTERACTIONS=Path(__file__).resolve().parents[1]/'arena/vision-interactions.json'
@@ -287,7 +287,7 @@ def targets(raw,profile):
             if collider.get('owner_id')!=obj['id']:raise ValueError('Native collider ownership mismatch')
             if is_damage_collider(obj,collider,profile.get('source_damage_modules',())):
                 physical.append(collider)
-                if collider.get('tag')!='Enemy':
+                if is_attack_module_collider(obj,collider,profile.get('source_damage_modules',())):
                     counts['damage_module_colliders']+=1
                     if visible_quad(collider_quad(collider))is not None:counts['damage_module_visible_targets']+=1
             else:counts['auxiliary_colliders']+=1
@@ -319,7 +319,10 @@ def targets(raw,profile):
             phase={'ready':'ready','rushToNinja':'rush'}.get(state.split(':')[0],'normal')
         if physical:
             for collider in physical:
-                key=(resource,collider['type'],phase)
+                module_phase=profile['families'][resource].get('damage_module_phases',{}).get(collider['type'])
+                collider_phase=(module_phase if module_phase and is_attack_module_collider(
+                    obj,collider,profile.get('source_damage_modules',())) else phase)
+                key=(resource,collider['type'],collider_phase)
                 if key not in keys:
                     counts['unconfigured_shape']+=1
                     if visible_quad(collider_quad(collider))is not None:counts['unconfigured_visible_targets']+=1

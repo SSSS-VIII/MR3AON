@@ -116,6 +116,49 @@ def attach_damage_modules(profile,registry):
     return result
 
 
+def separate_damage_modules(profile,registry):
+    """Give verified weapons their own stock-YOLO classes, retaining old IDs.
+
+    A weapon and its enemy body may share the Enemy tag taxonomy but have very
+    different motion. This is an explicit new profile, never an old-profile
+    reinterpretation. Unreachable prefab bindings remain recorded as skipped.
+    """
+    if profile.get('taxonomy')!='physics':raise ValueError('Expected a physics profile')
+    if profile.get('separate_damage_modules'):raise ValueError('Damage modules already separated')
+    result=attach_damage_modules(profile,registry);native=result['native_targets']
+    if len(result['class_mapping'])!=len(native['classes']):
+        raise ValueError('Native class mapping is inconsistent')
+    grouped={};skipped=[]
+    for binding in registry['bindings']:
+        resource=binding['owner_name'];shape=binding['collider_type']
+        if resource not in native['families']:
+            skipped.append(dict(resource=resource,reason='not_in_frozen_profile'));continue
+        key=(binding['owner_class'],shape)
+        grouped.setdefault(key,set()).add(resource)
+    additions=[]
+    for (owner_class,shape),resources in sorted(grouped.items()):
+        class_id=len(result['classes']);members=[]
+        for resource in sorted(resources):
+            original=[c for c in native['classes']if c.get('resource')==resource
+                      and c['shape']==shape and c.get('phase','normal')=='normal']
+            if len(original)!=1:raise ValueError('Missing or ambiguous source body class: '+resource)
+            name=resource+'__'+shape+'__attack_module'
+            native['classes'].append(dict(deepcopy(original[0]),name=name,
+                phase='attack_module',source_damage_callback='EnemyAttackModule'))
+            native['families'][resource].setdefault('damage_module_phases',{})[shape]='attack_module'
+            result['class_mapping'].append(class_id);members.append(name)
+        entry=dict(name=owner_class+'__attack_module__'+shape,kind='hazard',shape=shape,
+                   motion_kind='trap',phase=None,members=members,source_owner_class=owner_class,
+                   source_damage_callback='EnemyAttackModule')
+        if len(resources)==1:entry['resource']=next(iter(resources))
+        result['classes'].append(entry);additions.append(dict(class_id=class_id,**entry))
+    if not additions:raise ValueError('No source damage modules reachable in this profile')
+    result['families']=deepcopy(native['families'])
+    result['separate_damage_modules']=dict(classes=additions,skipped=skipped,
+        scope='Explicit stock head class extension; old class IDs and all physical geometry retained')
+    return result
+
+
 def _same_geometry(observed,expected):
     if isinstance(expected,dict):
         return isinstance(observed,dict)and all(k in observed and _same_geometry(observed[k],v)
@@ -126,15 +169,14 @@ def _same_geometry(observed,expected):
     return observed==expected
 
 
-def is_damage_collider(obj,collider,bindings=()):
-    """Accept Enemy tag, a verified runtime handler, or an exact source binding."""
+def is_attack_module_collider(obj,collider,bindings=()):
+    """Identify the original module independently of its object's tag."""
     if collider.get('owner_id')!=obj.get('id'):raise ValueError('Native collider ownership mismatch')
     callback=collider.get('damage_callback')
     if callback is not None and not isinstance(callback,dict):raise ValueError('Invalid damage callback metadata')
     if callback and callback.get('kind')=='EnemyAttackModule':
         if callback.get('owner_id')!=obj['id']:raise ValueError('Damage callback ownership mismatch')
         return True
-    if collider.get('tag')=='Enemy':return True
     # Old frames have no callback field. Require the whole source signature,
     # including the native owner and collider object name; no shape guessing.
     name=obj.get('name','').replace('(Clone)','')
@@ -151,6 +193,11 @@ def is_damage_collider(obj,collider,bindings=()):
                         for key,value in binding['signature'].items())):
             return True
     return False
+
+
+def is_damage_collider(obj,collider,bindings=()):
+    """Accept Enemy tag, a verified runtime handler, or an exact source binding."""
+    return is_attack_module_collider(obj,collider,bindings)or collider.get('tag')=='Enemy'
 
 
 def main():

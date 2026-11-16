@@ -5,7 +5,8 @@ import json
 import sys
 import pytest
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
-from arena_damage_modules import build_registry,is_damage_collider,attach_damage_modules
+from arena_damage_modules import (build_registry,is_damage_collider,attach_damage_modules,
+                                  separate_damage_modules)
 
 SOURCE=json.loads((Path(__file__).parent/'fixtures/arena-attack-module-source.json').read_text())
 
@@ -120,3 +121,45 @@ def test_native_target_preparation_adds_the_weapon_and_keeps_unrelated_auxiliary
     raw['label_schema']=5
     native,_=targets(raw,profile)
     assert len(native)==2
+
+
+@pytest.mark.parametrize('tag',['Untagged','Enemy'])
+def test_explicit_stock_head_extension_separates_original_weapon_from_body(tmp_path,tag):
+    pytest.importorskip('cv2')
+    from arena_yolo_obb_data import targets,physics_profile
+    result=registry(tmp_path);binding=result['bindings'][0];resource=binding['owner_name']
+    native=dict(classes=[dict(name='player',kind='player',shape='CapsuleCollider'),
+                        dict(name=resource+'__BoxCollider__normal',kind='hazard',resource=resource,
+                             shape='BoxCollider',phase='normal',type_ids=[256])],
+                families={resource:dict(straight_bat=False)},type_bindings={'256':resource})
+    original=attach_damage_modules(physics_profile(native),result);before=deepcopy(original)
+    updated=separate_damage_modules(original,result)
+    assert original==before
+    assert updated['classes'][:len(original['classes'])]==original['classes']
+    assert updated['class_mapping'][:len(original['class_mapping'])]==original['class_mapping']
+    weapon_id=len(original['classes'])
+    obj=owner(binding);obj.update(family_type_id=256,renderers=[dict(box=[100,100,300,250])])
+    body=dict(owner_id=12,name='Warrior',type='BoxCollider',tag='Enemy',
+              plane_quad=[dict(x=x,y=y)for x,y in [(250,200),(300,200),(300,225),(250,225)]])
+    axe=native_collider(binding,tag=tag,
+        damage_callback=dict(kind='EnemyAttackModule',owner_id=12),
+        plane_quad=[dict(x=x,y=y)for x,y in [(150,150),(180,150),(180,210),(150,210)]])
+    obj['colliders']=[body,axe];row=dict(label_schema=5,role=dict(colliders=[]),objects=[obj],supports=[])
+    old,_=targets(row,original);new,stats=targets(row,updated)
+    assert [c for c,q in old]==[4,4]
+    assert [c for c,q in new]==[4,weapon_id]
+    assert [q for c,q in new]==[q for c,q in old]
+    assert stats['damage_module_visible_targets']==1
+    with pytest.raises(ValueError,match='already separated'):
+        separate_damage_modules(updated,result)
+
+
+def test_separation_rejects_missing_body_and_unreachable_only_profiles(tmp_path):
+    from arena_yolo_obb_data import physics_profile
+    result=registry(tmp_path);binding=result['bindings'][0];resource=binding['owner_name']
+    native=dict(classes=[],families={resource:dict(straight_bat=False)},type_bindings={})
+    with pytest.raises(ValueError,match='body class'):
+        separate_damage_modules(physics_profile(native),result)
+    native['families']={}
+    with pytest.raises(ValueError,match='No source damage modules'):
+        separate_damage_modules(physics_profile(native),result)
