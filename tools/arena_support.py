@@ -1,5 +1,6 @@
 """Visible line association and support state; no native state or color rules."""
 from collections import deque
+import math
 import numpy as np
 
 
@@ -97,10 +98,26 @@ def connected_height(segments,selected_id,x,seconds=0):
         previous=pending.pop()
         for s in segments:
             if s['id']in reachable or s['kind']!=previous['kind']:continue
-            if joined_endpoints(previous,s):
+            if joined_endpoints(previous,s)or overlapping_static_supports(previous,s):
                 reachable.add(s['id']);pending.append(s)
     values=[y for s in segments if s['id']in reachable for y in[height(s,x,seconds)]if y is not None]
     return min(values)if values else None
+
+
+def overlapping_static_supports(previous,current):
+    """A detector split can overlap along one continuous static surface.
+
+    Compare both ends of the shared material with the existing six-pixel join
+    tolerance. A gap, different level or diverging tangent cannot connect this
+    way; independent moving platforms retain the endpoint-only rule.
+    """
+    if previous['kind']!=current['kind']or previous['kind']not in('rope','platform'):return False
+    a,b=previous['a'],previous['b'];c,d=current['a'],current['b']
+    left=max(a[0],c[0]);right=min(b[0],d[0])
+    if right<=left or b[0]-a[0]<4 or d[0]-c[0]<4:return False
+    slope=(b[1]-a[1])/(b[0]-a[0]);other=(d[1]-c[1])/(d[0]-c[0])
+    deltas=[a[1]+slope*(x-a[0])-c[1]-other*(x-c[0])for x in(left,right)]
+    return all(math.isfinite(delta)and abs(delta)<=6 for delta in deltas)
 
 
 def overlapping_static_camera_shift(current,previous,dx=None):

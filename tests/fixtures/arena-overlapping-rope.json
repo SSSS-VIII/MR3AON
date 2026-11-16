@@ -1,0 +1,724 @@
+{
+  "scope": "Real pixel-derived continuous rope split with overlapping endpoints. Native supports are posthoc expected evidence only; not passed to planning.",
+  "source": "debug/arena-client/yolo/finetune/rope-recovery-v37/native-support-roi-v214/l5-map42-start4-s54422-ground-search-solid-refiner",
+  "vision_sha256": "eb316e006e1736d29d17d4a1cff47a5d1210ea8aeeb78bff76b9ae1657150cb7",
+  "source_sha256": {
+    "tools/arena_vision.py": "8662a7196b470747bd45dc28f4b26840e60106c13291138b65d56e91971e0aab",
+    "tools/arena_policy.py": "5683a1ef5e7da58a3bd8a07d54c1e666a3fb805cea8b453792344a3384a9e1fe",
+    "tools/arena_terrain.py": "63820e67f046502ae012b5a584bd9c3bc4afad8b37c54ac3062497e067f1ceeb",
+    "tools/arena_motion.py": "717ae0afe4f3f8de43a395403fa101413eaf2f6495e8577a482977c8d32b1039",
+    "arena/vision-motion-priors.json": "a2c6e84ceeac8bd2ba794e9d99cc0a393e596961ba3370e6794cc2cf096b7df7",
+    "arena/Local/vision_eval.lua": "b16e187c68cb262e48c04afd564e50735f3026b20e7516b5745d7859368662e6",
+    "tools/arena_capture.py": "17ef45aaacd9064bafc80606a39806f0d2c5668ea7f7b564fc304714ee365a02",
+    "arena/Capture/FrameServer.java": "44011915df3c46361fdb4e6674058f797789024814e8ebc745d5a26ab01e1082",
+    "tools/arena_yolo_detector.py": "bbf9cfd769a97dbbc16caebf614b884c9c66b96ce305c9d9db54496595b629f5",
+    "tools/arena_yolo_data.py": "ac51866942f27b61ed9c088de9aef6bdcd51e06585639a596c0399705380069f",
+    "tools/arena_visual_runner.py": "58ccfc17c301bc9ad456a564460f632adebe4d8ce87475c36ccbb7a59a1e4d12",
+    "tools/arena_projection.py": "55ea7ded41db6b953cc8012a73401eb11a2e9f91034041a87615339849732342",
+    "arena/vision-camera.json": "96d7933a7e00cf06357169c9c88d51944be039e8617cf071725ef514285f5cb2",
+    "tools/arena_mpc.py": "f4c1762046d81860c8bc5d935dc284574d619ebf828e1801df530ac5d4ea291b",
+    "tools/arena_object_motion.py": "4cb48f3931f98dcb1a5febbe4be4d2c2a1336fd93e4707e380a973833b82177e",
+    "arena/vision-object-priors.json": "c26c7acdd50bbea119f40f6c922a4020455c7ca36d2317b0ab67bfecc83c3ba4",
+    "arena/vision-detector.json": "59631964417626150a4c44466357d740b7ba36d3a92a7e0e9af2f73995a6867b",
+    "tools/arena_oriented.py": "c1cce0dad44ec65227b532c30909fdc988ba190c9eb95dce47b097a5498c24c2",
+    "tools/arena_obb_detector.py": "7898c8ae4c05291f7797fa47c2a797f30daafba314f8d1c1c7e8d207506ed78a",
+    "tools/arena_support.py": "04b1b064b133d274339f8a49e106bfa2a45055053abf79f3b936a14166a3b631",
+    "tools/arena_object_support.py": "8efe32a77d12fd00ba1b1fe5c60a61ed747d58ffcec3aebdcdaff994434f6703",
+    "tools/arena_support_refiner.py": "558f69b4f83ab3d0457c48a4b69cfbb37d1c9801e6d1332541606ba89f04ee9c",
+    "tools/arena_bamboo_motion.py": "1bc5cd1f7a132292b0096728a43050701640ea68f53ea61950fd4282736013d8",
+    "tools/arena_scene_motion.py": "2b15a53464777b7f0f8519f5bcc4aa47931016659dff53d8433771764586dbd7",
+    "tools/arena_arrow_motion.py": "d1661ac1a6882bba1861d8f01706389233e449cd7d5a30a10c53e361f732cc50",
+    "tools/arena_mace_motion.py": "7435a02191cfb0ebe89a6cd9763bffe5a3819e90cdbc093dd4a6849ba713573e",
+    "tools/arena_bamboo_phase.py": "b05e1c40744f9d24fdaf1bb3375859f1fa954b1ea8e4e8678d67fa549147fae8",
+    "tools/arena_action_timing.py": "d2b53b417c4bb999954bc0a77a7c5dceb437790dd7f46a084cb7b924b67009b1",
+    "tools/arena_reticle_center.py": "f27890be77427d050e86211ef02b5c7e4219f16b7f3273d91acf191ba36da109",
+    "arena/vision-reticle-center.json": "e220ad9f2ab75dd0919afd8a1ab5fb618abbfb92ba602485fd485169826cc9f7",
+    "tools/arena_reactive_sweep.py": "2e4a11cb8b4d0a7c1562c87d2b8e1c97e68c5c54ed0796f8814a4e4362e093ec",
+    "tools/arena_key_receipts.py": "f36b945a92dfcfd3fa6d1d96661a6ff109bc90ce2838d5641c11f6f2061cc035",
+    "tools/arena_input_timeline.py": "7e3f66746a51cd3697f87e6952ae099e13de70c104a71464bc3bd7e9e5e5f737",
+    "arena/Local/environment.lua": "6b7aa1fd2596a8c350ff4607eb8d76b37a02a3621a909e821799efb7ddfc0742",
+    "arena/Local/native_selection.lua": "63f2d81d3ed683074e896178d389428a433e32c58550b061e0b60e7b8a3ead7a",
+    "tools/arena_local.py": "e0f5e79046d39a12e75cc1faa22a2ea9393c2fb587ea217607fbb9fa278db1f9",
+    "tools/arena_render_capture.py": "13d65ebeda9840d9c4dff8a920e62ee9d8bb2e7b5ff9814ebd524f1fb80177b3",
+    "arena/Local/render_capture.lua": "586089f6dcfabffb000c5762349b95e7566fe30822bbbd0ba946c1c339d4aeba",
+    "arena/Capture/RenderRelay.java": "0264745d152a28441762a9241a3d679c05b04a85f22f6c12fa1b082662b6c5b4"
+  },
+  "input": {
+    "time": 215467.37006776617,
+    "player": {
+      "x": 179.18670239500537,
+      "y": 230.6524200439453,
+      "w": 15.705413818359375,
+      "h": 36.69514465332031
+    },
+    "silhouette": null,
+    "rope": 219.625,
+    "phase": "rope_below",
+    "vy": -0.8353032449342619,
+    "jumps": 0,
+    "tracks": [
+      {
+        "id": 35,
+        "box": {
+          "x": 233.17640056771623,
+          "y": 128.5614769870827,
+          "w": 14.044308954985524,
+          "h": 89.3770460258346
+        },
+        "kind": "trap",
+        "confidence": 0.94189453125,
+        "seen": 215467.3150577,
+        "history": [
+          [
+            215466.8284247,
+            628.5,
+            198.52245055172466
+          ],
+          [
+            215466.8793443,
+            607.0,
+            181.6518265134986
+          ],
+          [
+            215466.9124177,
+            582.0,
+            181.41770375708404
+          ],
+          [
+            215466.9678537,
+            544.0,
+            179.87463361003114
+          ],
+          [
+            215467.0123456,
+            506.75,
+            181.50444496896054
+          ],
+          [
+            215467.0624982,
+            469.5,
+            180.87944496896054
+          ],
+          [
+            215467.1131765,
+            431.5,
+            180.50644503724988
+          ],
+          [
+            215467.1638746,
+            394.0,
+            179.88347409848916
+          ],
+          [
+            215467.212016,
+            356.5,
+            180.69269345884072
+          ],
+          [
+            215467.2628466,
+            319.25,
+            180.75654004744115
+          ],
+          [
+            215467.3150577,
+            281.25,
+            180.5657327047605
+          ]
+        ],
+        "vx": -746.2533281170042,
+        "vy": 0.0,
+        "ax": 0,
+        "ay": 0,
+        "residual": 1.101009293081976,
+        "observations": 11,
+        "active": false,
+        "arming": false,
+        "reference": [
+          0.0,
+          -7.315732704760515
+        ],
+        "curve_count": 0,
+        "sine_frequency": 0,
+        "sine_a": 0,
+        "sine_b": 0,
+        "sine_count": 0,
+        "adaptive_velocity": true,
+        "ballistic": false,
+        "gravity_up": 0,
+        "gravity_down": 0,
+        "floor_y": 174.9349365234375,
+        "floor_vy": 0.0,
+        "floor_segment": {
+          "a": [
+            -2.5,
+            219.625
+          ],
+          "b": [
+            306.5,
+            219.625
+          ],
+          "vx": -735.1067187360557,
+          "vy": 0.0,
+          "kind": "rope",
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        "rebound_speed": 0,
+        "attack_phase": null,
+        "ready_started": null,
+        "ready_remaining": 0,
+        "rush_scale_remaining": 0,
+        "rush_target_w": 0,
+        "rush_target_h": 0,
+        "horizontal_stopped": false,
+        "resource": null,
+        "collider_shape": "BoxCollider",
+        "quad": [
+          [
+            247.2076513559567,
+            217.9385230129173
+          ],
+          [
+            247.22070952270175,
+            128.56351797937742
+          ],
+          [
+            233.18945873446128,
+            128.5614769870827
+          ],
+          [
+            233.17640056771623,
+            217.93648202062258
+          ]
+        ],
+        "angular_velocity": -0.003998083548429331,
+        "angular_history": [
+          [
+            215466.8793443,
+            -1.5732373743561114
+          ],
+          [
+            215466.9124177,
+            -1.5709636149521942
+          ],
+          [
+            215466.9678537,
+            -1.5690873416293574
+          ],
+          [
+            215467.0123456,
+            -1.5707963267948966
+          ],
+          [
+            215467.0624982,
+            -1.569453905006937
+          ],
+          [
+            215467.1131765,
+            -1.5681111292090233
+          ],
+          [
+            215467.1638746,
+            -1.56884320088698
+          ],
+          [
+            215467.212016,
+            -1.5694537293984958
+          ],
+          [
+            215467.2628466,
+            -1.569087684155639
+          ],
+          [
+            215467.3150577,
+            -1.5704302866014543
+          ]
+        ],
+        "adaptive_rush_speed": true,
+        "rush_history": [],
+        "rush_fit_velocity": null,
+        "rush_velocity": null,
+        "confidence_history": [
+          0.9208984375,
+          0.93408203125,
+          0.94287109375,
+          0.93505859375,
+          0.93798828125,
+          0.94677734375,
+          0.94482421875,
+          0.94189453125
+        ],
+        "source_pinball_prior": false,
+        "pinball_rebound_carry": false,
+        "pinball_fit": null,
+        "pinball_carry_active": false
+      },
+      {
+        "id": 36,
+        "box": {
+          "x": 382.0708332772254,
+          "y": 220.92894241151095,
+          "w": 14.730384647445817,
+          "h": 89.64211517697811
+        },
+        "kind": "trap",
+        "confidence": 0.962890625,
+        "seen": 215467.3150577,
+        "history": [
+          [
+            215467.0624982,
+            618.0,
+            273.504437339566
+          ],
+          [
+            215467.1131765,
+            580.5,
+            272.0064526666444
+          ],
+          [
+            215467.1638746,
+            543.0,
+            274.25847409848916
+          ],
+          [
+            215467.212016,
+            505.0,
+            272.6926934588407
+          ],
+          [
+            215467.2628466,
+            467.75,
+            271.25654004744115
+          ],
+          [
+            215467.3150577,
+            430.25,
+            273.06573270476053
+          ]
+        ],
+        "vx": -741.9364717250936,
+        "vy": 0.0,
+        "ax": 0,
+        "ay": 0,
+        "residual": 0.938945274944934,
+        "observations": 6,
+        "active": false,
+        "arming": false,
+        "reference": [
+          0.0,
+          -7.315732704760515
+        ],
+        "curve_count": 0,
+        "sine_frequency": 0,
+        "sine_a": 0,
+        "sine_b": 0,
+        "sine_count": 0,
+        "adaptive_velocity": true,
+        "ballistic": false,
+        "gravity_up": 0,
+        "gravity_down": 0,
+        "floor_y": null,
+        "floor_vy": 0.0,
+        "floor_segment": null,
+        "rebound_speed": 0,
+        "attack_phase": null,
+        "ready_started": null,
+        "ready_remaining": 0,
+        "rush_scale_remaining": 0,
+        "rush_target_w": 0,
+        "rush_target_h": 0,
+        "horizontal_stopped": false,
+        "resource": null,
+        "collider_shape": "BoxCollider",
+        "quad": [
+          [
+            396.6958319911167,
+            310.57105758848905
+          ],
+          [
+            396.8012179246712,
+            220.94612651123919
+          ],
+          [
+            382.17621921077995,
+            220.92894241151095
+          ],
+          [
+            382.0708332772254,
+            310.5538734887608
+          ]
+        ],
+        "angular_velocity": 0.0014068644207039197,
+        "angular_history": [
+          [
+            215467.0624982,
+            -1.575664280902646
+          ],
+          [
+            215467.1131765,
+            -1.567134210026051
+          ],
+          [
+            215467.1638746,
+            -1.568721212359452
+          ],
+          [
+            215467.212016,
+            -1.569697526699803
+          ],
+          [
+            215467.2628466,
+            -1.569575966814036
+          ],
+          [
+            215467.3150577,
+            -1.569697863927628
+          ]
+        ],
+        "adaptive_rush_speed": true,
+        "rush_history": [],
+        "rush_fit_velocity": null,
+        "rush_velocity": null,
+        "confidence_history": [
+          0.87939453125,
+          0.9326171875,
+          0.95068359375,
+          0.927734375,
+          0.94580078125,
+          0.962890625
+        ],
+        "source_pinball_prior": false,
+        "pinball_rebound_carry": false,
+        "pinball_fit": null,
+        "pinball_carry_active": false
+      }
+    ],
+    "detections": [
+      {
+        "box": {
+          "x": 422.8882751464844,
+          "y": 220.92950439453125,
+          "w": 14.72344970703125,
+          "h": 89.6409912109375
+        },
+        "kind": "trap",
+        "confidence": 0.962890625,
+        "active": false,
+        "arming": false,
+        "attack_phase": null,
+        "resource": null,
+        "collider_shape": "BoxCollider",
+        "quad": [
+          [
+            437.5132751464844,
+            310.57049560546875
+          ],
+          [
+            437.6117248535156,
+            220.945556640625
+          ],
+          [
+            422.9867248535156,
+            220.92950439453125
+          ],
+          [
+            422.8882751464844,
+            310.554443359375
+          ]
+        ],
+        "velocity_prior": null,
+        "scene_velocity_x": -735.1067187360557,
+        "geometry_restored": false,
+        "pivot_offset_ratio": null
+      },
+      {
+        "box": {
+          "x": 274.218017578125,
+          "y": 128.5599365234375,
+          "w": 14.06396484375,
+          "h": 89.380126953125
+        },
+        "kind": "trap",
+        "confidence": 0.94189453125,
+        "active": false,
+        "arming": false,
+        "attack_phase": null,
+        "resource": null,
+        "collider_shape": "BoxCollider",
+        "quad": [
+          [
+            288.249267578125,
+            217.9400634765625
+          ],
+          [
+            288.281982421875,
+            128.5650634765625
+          ],
+          [
+            274.250732421875,
+            128.5599365234375
+          ],
+          [
+            274.218017578125,
+            217.9349365234375
+          ]
+        ],
+        "velocity_prior": null,
+        "scene_velocity_x": -735.1067187360557,
+        "geometry_restored": false,
+        "pivot_offset_ratio": null
+      }
+    ],
+    "terrain": null,
+    "motion_reference": "support",
+    "pending_rope_clamp": false,
+    "scale_px": 39.50531027533791,
+    "stand_w": 14.221911699121648,
+    "stand_h": 36.97697041771629,
+    "motion": null,
+    "vx": 0.7164016866951098,
+    "ground_contact_observed": false,
+    "down_action_end_observed": false,
+    "rope_contact_observed": false,
+    "rope_segment": {
+      "kind": "rope",
+      "a": [
+        -42.93826923524121,
+        219.625
+      ],
+      "b": [
+        266.0617307647588,
+        219.625
+      ],
+      "confidence": 0.96142578125,
+      "left_clipped": true,
+      "right_clipped": false,
+      "stamp": 215467.3150577,
+      "observations": 49,
+      "vx": -735.1067187360557,
+      "vy": 0.0,
+      "id": 58
+    },
+    "rope_segments": [
+      {
+        "kind": "rope",
+        "a": [
+          259.3117307647588,
+          219.375
+        ],
+        "b": [
+          599.8117307647587,
+          219.375
+        ],
+        "confidence": 0.96630859375,
+        "left_clipped": false,
+        "right_clipped": true,
+        "stamp": 215467.3150577,
+        "observations": 10,
+        "vx": -735.1067187360557,
+        "vy": 0.0,
+        "id": 59
+      },
+      {
+        "kind": "rope",
+        "a": [
+          -42.93826923524121,
+          219.625
+        ],
+        "b": [
+          266.0617307647588,
+          219.625
+        ],
+        "confidence": 0.96142578125,
+        "left_clipped": true,
+        "right_clipped": false,
+        "stamp": 215467.3150577,
+        "observations": 49,
+        "vx": -735.1067187360557,
+        "vy": 0.0,
+        "id": 58
+      }
+    ],
+    "geometry": "gameplay_plane",
+    "detector": "standard_yolo26n_obb",
+    "detector_ms": 10.787256993353367,
+    "cues": [],
+    "observed_rush_velocity": null,
+    "hazard_confidence": 0.25,
+    "visible_supports": [
+      {
+        "kind": "rope",
+        "a": [
+          299.75,
+          219.375
+        ],
+        "b": [
+          640.25,
+          219.375
+        ],
+        "confidence": 0.96630859375,
+        "left_clipped": false,
+        "right_clipped": true,
+        "stamp": 215467.3150577,
+        "observations": 10,
+        "vx": -735.1067187360557,
+        "vy": 0.0,
+        "id": 59
+      },
+      {
+        "kind": "rope",
+        "a": [
+          -2.5,
+          219.625
+        ],
+        "b": [
+          306.5,
+          219.625
+        ],
+        "confidence": 0.96142578125,
+        "left_clipped": true,
+        "right_clipped": false,
+        "stamp": 215467.3150577,
+        "observations": 49,
+        "vx": -735.1067187360557,
+        "vy": 0.0,
+        "id": 58
+      }
+    ],
+    "player_predicted": false,
+    "player_prediction_reason": null,
+    "camera_reference_y": -7.315732704760515,
+    "camera_velocity_y": 3.654535964010888,
+    "camera_motion_source": "support_track",
+    "jump_camera_prior": null,
+    "incoming_jump2": true,
+    "ground_down_collider_restore": false,
+    "scene_velocity_x": -735.1067187360557,
+    "scene_velocity_x_raw": -654.7937124136213,
+    "scene_motion_observed": true,
+    "scene_motion_source": "support_endpoint",
+    "scene_texture": null,
+    "scene_motion_ms": 1.182650012196973,
+    "observed_player_velocity_x": 0.7164016866951098,
+    "player_seen_age": 0.0,
+    "bamboo_phase_ms": 0.0,
+    "support_type_ms": 2.6065769779961556,
+    "support_type_votes": [
+      {
+        "index": 0,
+        "kind": "rope",
+        "confidence": 1.0,
+        "changed": false,
+        "center": [
+          347.75,
+          251.375
+        ]
+      }
+    ],
+    "player_detection_source": "full_frame",
+    "player_roi_ms": 0.0,
+    "capture_return_stamp": 215467.3150577,
+    "image_stamp": 215467.3150577,
+    "observation_age_ms": 55.01006616395898,
+    "source_image_stamp": 215467.3150577,
+    "replayed_event_ids": [],
+    "replayed_events": []
+  },
+  "previous_action_time": 215466.54539459466,
+  "saved_decision": [
+    "jump",
+    "mpc_rope_up"
+  ],
+  "native_evidence": [
+    {
+      "monotonic": 215467.1957684,
+      "physics": "runOnLineDown: 2",
+      "x": 912.97277832031,
+      "y": 1.25,
+      "interactions": {
+        "dragged_underground": false,
+        "support": {
+          "is_ground": false,
+          "slope_offset": {
+            "z": 0.0,
+            "y": 0.0,
+            "x": 0.0
+          },
+          "slope_speed_ratio": 1.0,
+          "id": -2058708,
+          "slope_state": "0",
+          "is_line": true,
+          "start": {
+            "x": 886.0,
+            "y": 2.0
+          },
+          "finish": {
+            "x": 918.0,
+            "y": 2.0
+          }
+        },
+        "stuck_by_block_flag": true
+      }
+    },
+    {
+      "monotonic": 215467.2958457,
+      "physics": "runOnLineDown: 2",
+      "x": 914.87164306641,
+      "y": 1.25,
+      "interactions": {
+        "dragged_underground": false,
+        "support": {
+          "is_ground": false,
+          "slope_offset": {
+            "z": 0.0,
+            "y": 0.0,
+            "x": 0.0
+          },
+          "slope_speed_ratio": 1.0,
+          "id": -2058708,
+          "slope_state": "0",
+          "is_line": true,
+          "start": {
+            "x": 886.0,
+            "y": 2.0
+          },
+          "finish": {
+            "x": 918.0,
+            "y": 2.0
+          }
+        },
+        "stuck_by_block_flag": true
+      }
+    },
+    {
+      "monotonic": 215467.5131977,
+      "physics": "rollToLineOn: 4",
+      "x": 918.98907470703,
+      "y": 2.3875777721405,
+      "interactions": {
+        "dragged_underground": false,
+        "support": {
+          "is_ground": false,
+          "slope_offset": {
+            "z": 0.0,
+            "y": 0.0,
+            "x": 0.0
+          },
+          "slope_speed_ratio": 1.0,
+          "id": -2058722,
+          "slope_state": "0",
+          "is_line": true,
+          "start": {
+            "x": 918.0,
+            "y": 2.0
+          },
+          "finish": {
+            "x": 950.0,
+            "y": 2.0
+          }
+        },
+        "stuck_by_block_flag": true
+      }
+    }
+  ]
+}
