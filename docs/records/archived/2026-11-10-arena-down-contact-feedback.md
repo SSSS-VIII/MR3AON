@@ -43,3 +43,11 @@ v214飞竹61081/40214在frame708发down，提交air_down；原键时间215600.41
 修复复用已有反向下翻的未知目标机制：仅当明确已发primitive=air_down、计划画面本来允许向绳下翻，才在ACK回放丢失当前绳时保留最近像素目标；设置support_unconfirmed/requires_contact，清除目标作为真实支撑的资格，不补跳数。新的真实身体与可见绳接触后才清空动作/重置跳跃。保留原下翻速度28、原反向状态4速度8及原目标判定；未扩大地面目标兜底，也不新增用户配置。
 
 新fixture保存真实计划/ACK前图/6个后续像素几何及源SHA，原回执/状态仅作结果核对，不进入输入函数。旧实现3失败/1通过（复现动作丢失、无法确认绳下、预测不能正确等待），修复后4项通过；全arena777通过/2依赖跳过，包括此前反向下翻和air_up/输入延迟保护。仍需原生旧/新配对；单测不能证明该飞竹已无伤。ignored源证据native-support-roi-v214与air-down-ack-tests-v215.log。
+
+## v216八回合：五回合无伤，但新兜底现场未触发
+
+固定main76/phase18/support209及其余研究参数，仅恢复v214保存的旧Perception.action方法（SHA=c7991771040eabd914fd82bade5616f80a6de2c7c2ebe522cbc12f8301f4efc0）或使用新方法。真实旧片段接线再核对：旧回放为jump2，新为air_down且support_unconfirmed，预算仍2。
+
+原失败飞竹61081/40214旧/新都0伤，新增六关40215和五关50013/40216也0；平绳51013/54324旧250（Dart）→新0；屋顶5004/54424旧600（Pinball250/HideBlade350）→新1725（Pinball1375/HideBlade350）。八回合全穿越、5无伤/3有伤。逐次检查显示本批正常air_down未知支撑兜底实际触发0次，旧/新也均无air_down丢失；不能把平绳无伤、屋顶差异或飞竹重跑通过直接归因该修复，未声称消灭了随机失误。五关一次未知air_up来自已有分支，与本次修复不同。
+
+8×39源与开跑快照及结束工作区完全相符，旧方法全文另存并校验，逐回合effective-action明确覆盖方法SHA；10事件2575伤、未见证/未归属差额0、god全false。恢复1101/5000/.02/暂停菜单键盘/eval关闭，无并行图像或GPU作业。证据native-air-down-ack-v216、air-down-ack-v216-sources及air-down-legacy-connection-v216.json。继续研究屋顶Pinball长尾和HideBlade碰撞；已发现v214自有按键计划锚点与原消费有−22..+24ms误差，尚未据此更改动作延迟或增加安全补丁。
