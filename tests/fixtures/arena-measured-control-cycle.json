@@ -1,0 +1,1239 @@
+{
+  "scope": "Pixel-derived planning state and preceding decision timestamps only. Original report/physics/evaluation excluded. Diagnostic, not held-out acceptance.",
+  "source_run": "debug/arena-client/yolo/finetune/rope-recovery-v37/native-bamboo-instances-v306/l6-map52-start8-s40234-instance1",
+  "frame": 526,
+  "history": [
+    237713.86978778138,
+    237713.94458912537,
+    237714.02894476897,
+    237714.10765173996,
+    237714.17170517627,
+    237714.23776848026,
+    237714.30694354326,
+    237714.37085207328,
+    237714.43790717726,
+    237714.51258286525,
+    237714.58662412054,
+    237714.67443808806,
+    237714.74881871007,
+    237714.80790953306,
+    237714.87414617406,
+    237714.94415792506,
+    237715.0213405706,
+    237715.09388385658,
+    237715.1581001166,
+    237715.22406303158,
+    237715.28978396958,
+    237715.3616774396,
+    237715.4399682966,
+    237715.51546733757,
+    237715.57504104156,
+    237715.66072603458,
+    237715.74442369217,
+    237715.8329283232,
+    237715.90712199218,
+    237715.98519988716,
+    237716.04482446905,
+    237716.12594035218,
+    237716.20169956607,
+    237716.28107872506
+  ],
+  "observation": {
+    "time": 237716.28107872506,
+    "player": {
+      "x": 179.88993394007412,
+      "y": 230.4355671063642,
+      "w": 15.7406005859375,
+      "h": 37.11289978027344
+    },
+    "rope": 219.63339730655952,
+    "phase": "rope_below",
+    "vy": 0.3410475321141263,
+    "jumps": 0,
+    "tracks": [
+      {
+        "id": 42,
+        "box": {
+          "x": 534.9201167082964,
+          "y": 199.74183916468422,
+          "w": 104.69263055990791,
+          "h": 5.268502855016834
+        },
+        "kind": "trap",
+        "confidence": 0.880859375,
+        "seen": 237716.1984517,
+        "history": [
+          [
+            237714.5987687,
+            590.0,
+            401.56760659030135
+          ],
+          [
+            237714.6645918,
+            586.0,
+            391.4474217378492
+          ],
+          [
+            237714.7296021,
+            586.0,
+            383.57399339312263
+          ],
+          [
+            237714.7972175,
+            587.5,
+            378.56614410064867
+          ],
+          [
+            237714.865148,
+            586.5,
+            376.9347687789373
+          ],
+          [
+            237714.9455009,
+            587.0,
+            379.5598603316717
+          ],
+          [
+            237715.0146953,
+            587.0,
+            386.0533969097031
+          ],
+          [
+            237715.0799047,
+            587.5,
+            391.42261265836254
+          ],
+          [
+            237715.1475676,
+            587.5,
+            396.78475965591815
+          ],
+          [
+            237715.2135263,
+            587.0,
+            402.0282947307214
+          ],
+          [
+            237715.2769975,
+            588.0,
+            408.8998708762084
+          ],
+          [
+            237715.3630175,
+            585.0,
+            419.6988516386315
+          ],
+          [
+            237715.4298616,
+            585.5,
+            429.42969958708807
+          ],
+          [
+            237715.5713403,
+            586.5,
+            444.0869871456541
+          ],
+          [
+            237715.6629777,
+            587.0,
+            447.52224410366193
+          ],
+          [
+            237715.7476271,
+            586.5,
+            447.0333601272931
+          ],
+          [
+            237715.8164143,
+            585.5,
+            447.1379409754653
+          ],
+          [
+            237715.8996278,
+            585.5,
+            447.6928192103286
+          ],
+          [
+            237715.9657569,
+            585.5,
+            448.5053192103286
+          ],
+          [
+            237716.0465309,
+            585.5,
+            447.5053192103286
+          ],
+          [
+            237716.1233868,
+            587.0,
+            447.5053192103286
+          ],
+          [
+            237716.1984517,
+            587.0,
+            447.38065490368797
+          ]
+        ],
+        "vx": 3.491187986393289,
+        "vy": -43.10739538255172,
+        "ax": 6.454888509515942,
+        "ay": -128.28826154826785,
+        "residual": 4.468102304960148,
+        "observations": 22,
+        "active": false,
+        "arming": false,
+        "reference": [
+          0.0,
+          -241.88065490368794
+        ],
+        "curve_count": 6,
+        "sine_frequency": 0,
+        "sine_a": 0,
+        "sine_b": 0,
+        "sine_count": 0,
+        "adaptive_velocity": true,
+        "ballistic": false,
+        "gravity_up": 0,
+        "gravity_down": 0,
+        "floor_y": 216.9722900390625,
+        "floor_vy": 0.0,
+        "floor_segment": {
+          "a": [
+            7.0,
+            219.6634521484375
+          ],
+          "b": [
+            637.0,
+            219.5865478515625
+          ],
+          "vx": -792.1019834400422,
+          "vy": 0.0,
+          "kind": "rope",
+          "left_clipped": true,
+          "right_clipped": true
+        },
+        "rebound_speed": 0,
+        "attack_phase": null,
+        "ready_started": null,
+        "ready_remaining": 0,
+        "rush_scale_remaining": 0,
+        "rush_target_w": 0,
+        "rush_target_h": 0,
+        "horizontal_stopped": false,
+        "resource": null,
+        "collider_shape": "BoxCollider",
+        "quad": [
+          [
+            639.6127472682043,
+            204.9059004786237
+          ],
+          [
+            639.6075926784146,
+            199.74183916468422
+          ],
+          [
+            534.9201167082964,
+            199.8462807057616
+          ],
+          [
+            534.9252712980862,
+            205.01034201970106
+          ]
+        ],
+        "angular_velocity": -0.003211714943817314,
+        "angular_history": [
+          [
+            237715.4298616,
+            -3.1415926535897927
+          ],
+          [
+            237715.5713403,
+            -3.141714796779484
+          ],
+          [
+            237715.6629777,
+            -3.141836646514473
+          ],
+          [
+            237715.7476271,
+            -3.141470436382219
+          ],
+          [
+            237715.8164143,
+            -3.1408602318457604
+          ],
+          [
+            237715.8996278,
+            -3.141592653589793
+          ],
+          [
+            237715.9657569,
+            -3.141836655256835
+          ],
+          [
+            237716.0465309,
+            -3.1414705832778997
+          ],
+          [
+            237716.1233868,
+            -3.1418367942099428
+          ],
+          [
+            237716.1984517,
+            -3.142324929578307
+          ]
+        ],
+        "adaptive_rush_speed": true,
+        "rush_history": [],
+        "rush_fit_velocity": null,
+        "rush_velocity": null,
+        "confidence_history": [
+          0.87060546875,
+          0.88720703125,
+          0.861328125,
+          0.615234375,
+          0.8671875,
+          0.873046875,
+          0.873046875,
+          0.880859375
+        ],
+        "source_pinball_prior": false,
+        "pinball_rebound_carry": false,
+        "pinball_fit": null,
+        "pinball_carry_active": false,
+        "pinball_fast_rebound": false,
+        "pinball_fast_rebound_active": false
+      },
+      {
+        "id": 47,
+        "box": {
+          "x": 532.7153038473178,
+          "y": 214.6944788455767,
+          "w": 106.12648459209277,
+          "h": 4.860370922127856
+        },
+        "kind": "trap",
+        "confidence": 0.6859180912433658,
+        "seen": 237716.1233868,
+        "history": [
+          [
+            237715.4298616,
+            586.0,
+            364.55469958708807
+          ],
+          [
+            237715.4967178,
+            585.0,
+            380.40084899257795
+          ],
+          [
+            237715.5713403,
+            585.0,
+            394.8369871456541
+          ],
+          [
+            237715.6629777,
+            586.0,
+            412.52224410366193
+          ],
+          [
+            237715.7476271,
+            586.5,
+            424.6583601272931
+          ],
+          [
+            237715.8164143,
+            586.0,
+            433.0129409754653
+          ],
+          [
+            237715.8996278,
+            587.0,
+            442.1928192103286
+          ],
+          [
+            237716.0465309,
+            586.0,
+            455.3803192103286
+          ],
+          [
+            237716.1233868,
+            586.0,
+            459.0053192103286
+          ]
+        ],
+        "vx": -1.4043449374064039,
+        "vy": 0.0,
+        "ax": -8.459849262943662,
+        "ay": -274.27260928513294,
+        "residual": 11.55254403329028,
+        "observations": 9,
+        "active": false,
+        "arming": false,
+        "reference": [
+          0.0,
+          -241.88065490368794
+        ],
+        "curve_count": 2,
+        "sine_frequency": 0,
+        "sine_a": 0,
+        "sine_b": 0,
+        "sine_count": 0,
+        "adaptive_velocity": true,
+        "ballistic": false,
+        "gravity_up": 0,
+        "gravity_down": 0,
+        "floor_y": 217.20413208007812,
+        "floor_vy": 0.0,
+        "floor_segment": {
+          "a": [
+            12.5,
+            219.62466430664062
+          ],
+          "b": [
+            643.5,
+            219.62466430664062
+          ],
+          "vx": -792.1019834400422,
+          "vy": 0.0,
+          "kind": "rope",
+          "left_clipped": false,
+          "right_clipped": true
+        },
+        "rebound_speed": 0,
+        "attack_phase": null,
+        "ready_started": null,
+        "ready_remaining": 0,
+        "rush_scale_remaining": 0,
+        "rush_target_w": 0,
+        "rush_target_h": 0,
+        "horizontal_stopped": false,
+        "resource": null,
+        "collider_shape": "BoxCollider",
+        "quad": [
+          [
+            638.8402997371535,
+            219.55484976770455
+          ],
+          [
+            638.8417884394106,
+            214.72672495863844
+          ],
+          [
+            532.716792549575,
+            214.6944788455767
+          ],
+          [
+            532.7153038473178,
+            219.5226036546428
+          ]
+        ],
+        "angular_velocity": 0.0011536657409027663,
+        "angular_history": [
+          [
+            237715.4298616,
+            -3.1411043723785985
+          ],
+          [
+            237715.4967178,
+            -3.141470721210454
+          ],
+          [
+            237715.5713403,
+            -3.1418369389287397
+          ],
+          [
+            237715.6629777,
+            -3.1417147239016865
+          ],
+          [
+            237715.7476271,
+            -3.142203005076502
+          ],
+          [
+            237715.8164143,
+            -3.141592653589793
+          ],
+          [
+            237715.8996278,
+            -3.141958793663391
+          ],
+          [
+            237716.0465309,
+            -3.141470514194532
+          ],
+          [
+            237716.1233868,
+            -3.1414707270591844
+          ]
+        ],
+        "adaptive_rush_speed": true,
+        "rush_history": [],
+        "rush_fit_velocity": null,
+        "rush_velocity": null,
+        "confidence_history": [
+          0.9189453125,
+          0.93212890625,
+          0.9091796875,
+          0.89892578125,
+          0.89404296875,
+          0.81640625,
+          0.4833984375,
+          0.73095703125
+        ],
+        "source_pinball_prior": false,
+        "pinball_rebound_carry": false,
+        "pinball_fit": null,
+        "pinball_carry_active": false,
+        "pinball_fast_rebound": false,
+        "pinball_fast_rebound_active": false
+      },
+      {
+        "id": 50,
+        "box": {
+          "x": 531.6227230836043,
+          "y": 262.1547150328685,
+          "w": 105.25435782370892,
+          "h": 5.190569934262953
+        },
+        "kind": "trap",
+        "confidence": 0.9208984375,
+        "seen": 237716.1984517,
+        "history": [
+          [
+            237715.8164143,
+            583.0,
+            515.2629409754653
+          ],
+          [
+            237715.8996278,
+            584.0,
+            511.1928192103286
+          ],
+          [
+            237715.9657569,
+            582.0,
+            509.0053192103286
+          ],
+          [
+            237716.0465309,
+            590.5,
+            507.2553192103286
+          ],
+          [
+            237716.1233868,
+            591.5,
+            506.7553192103286
+          ],
+          [
+            237716.1984517,
+            585.0,
+            506.63065490368797
+          ]
+        ],
+        "vx": -9.078119465708488,
+        "vy": 0.0,
+        "ax": 0,
+        "ay": 0,
+        "residual": 3.784812365542622,
+        "observations": 6,
+        "active": false,
+        "arming": false,
+        "reference": [
+          0.0,
+          -241.88065490368794
+        ],
+        "curve_count": 0,
+        "sine_frequency": 0,
+        "sine_a": 0,
+        "sine_b": 0,
+        "sine_count": 0,
+        "adaptive_velocity": true,
+        "ballistic": false,
+        "gravity_up": 0,
+        "gravity_down": 0,
+        "floor_y": null,
+        "floor_vy": 0.0,
+        "floor_segment": null,
+        "rebound_speed": 0,
+        "attack_phase": null,
+        "ready_started": null,
+        "ready_remaining": 0,
+        "rush_scale_remaining": 0,
+        "rush_target_w": 0,
+        "rush_target_h": 0,
+        "horizontal_stopped": false,
+        "resource": null,
+        "collider_shape": "BoxCollider",
+        "quad": [
+          [
+            636.8770809073133,
+            267.256276643426
+          ],
+          [
+            636.8727050328284,
+            262.1547150328685
+          ],
+          [
+            531.6227230836043,
+            262.243723356574
+          ],
+          [
+            531.6270989580892,
+            267.3452849671315
+          ]
+        ],
+        "angular_velocity": -0.0028516480594088425,
+        "angular_history": [
+          [
+            237715.8164143,
+            3.140982167516241
+          ],
+          [
+            237715.8996278,
+            3.1409824369873576
+          ],
+          [
+            237715.9657569,
+            3.141836794209942
+          ],
+          [
+            237716.0465309,
+            3.141836794209942
+          ],
+          [
+            237716.1233868,
+            3.1414704273771195
+          ],
+          [
+            237716.1984517,
+            3.140982592056213
+          ]
+        ],
+        "adaptive_rush_speed": true,
+        "rush_history": [],
+        "rush_fit_velocity": null,
+        "rush_velocity": null,
+        "confidence_history": [
+          0.896484375,
+          0.8896484375,
+          0.908203125,
+          0.90869140625,
+          0.9033203125,
+          0.9208984375
+        ],
+        "source_pinball_prior": false,
+        "pinball_rebound_carry": false,
+        "pinball_fit": null,
+        "pinball_carry_active": false,
+        "pinball_fast_rebound": false,
+        "pinball_fast_rebound_active": false
+      },
+      {
+        "id": 52,
+        "box": {
+          "x": 534.316064412411,
+          "y": 182.15038392518892,
+          "w": 103.06409517971042,
+          "h": 4.978111771863837
+        },
+        "kind": "trap",
+        "confidence": 0.93017578125,
+        "seen": 237716.1984517,
+        "history": [
+          [
+            237716.0465309,
+            586.0,
+            381.7553192103286
+          ],
+          [
+            237716.1233868,
+            586.5,
+            395.7553192103286
+          ],
+          [
+            237716.1984517,
+            586.0,
+            410.63065490368797
+          ]
+        ],
+        "vx": -1.8382363111037803,
+        "vy": 192.3031816846076,
+        "ax": 0,
+        "ay": 0,
+        "residual": 0.2952081034248945,
+        "observations": 3,
+        "active": false,
+        "arming": false,
+        "reference": [
+          0.0,
+          -241.88065490368794
+        ],
+        "curve_count": 0,
+        "sine_frequency": 0,
+        "sine_a": 0,
+        "sine_b": 0,
+        "sine_count": 0,
+        "adaptive_velocity": true,
+        "ballistic": false,
+        "gravity_up": 0,
+        "gravity_down": 0,
+        "floor_y": 217.1012420654297,
+        "floor_vy": 0.0,
+        "floor_segment": {
+          "a": [
+            7.0,
+            219.6634521484375
+          ],
+          "b": [
+            637.0,
+            219.5865478515625
+          ],
+          "vx": -792.1019834400422,
+          "vy": 0.0,
+          "kind": "rope",
+          "left_clipped": true,
+          "right_clipped": true
+        },
+        "rebound_speed": 0,
+        "attack_phase": null,
+        "ready_started": null,
+        "ready_remaining": 0,
+        "rush_scale_remaining": 0,
+        "rush_target_w": 0,
+        "rush_target_h": 0,
+        "horizontal_stopped": false,
+        "resource": null,
+        "collider_shape": "BoxCollider",
+        "quad": [
+          [
+            637.3801595921215,
+            187.0956965074452
+          ],
+          [
+            637.3785661069852,
+            182.15038392518892
+          ],
+          [
+            534.316064412411,
+            182.18318311479646
+          ],
+          [
+            534.3176578975473,
+            187.12849569705276
+          ]
+        ],
+        "angular_velocity": 0.000581399851819758,
+        "angular_history": [
+          [
+            237716.0465309,
+            3.1411043723785985
+          ],
+          [
+            237716.1233868,
+            3.1412263717387994
+          ],
+          [
+            237716.1984517,
+            3.141226368641801
+          ]
+        ],
+        "adaptive_rush_speed": true,
+        "rush_history": [],
+        "rush_fit_velocity": null,
+        "rush_velocity": null,
+        "confidence_history": [
+          0.9189453125,
+          0.91162109375,
+          0.93017578125
+        ],
+        "source_pinball_prior": false,
+        "pinball_rebound_carry": false,
+        "pinball_fit": null,
+        "pinball_carry_active": false,
+        "pinball_fast_rebound": false,
+        "pinball_fast_rebound_active": false
+      },
+      {
+        "id": 53,
+        "box": {
+          "x": 533.5302734375,
+          "y": 218.60560607910156,
+          "w": 105.939453125,
+          "h": 5.538787841796875
+        },
+        "kind": "trap",
+        "confidence": 0.83740234375,
+        "seen": 237716.1984517,
+        "history": [
+          [
+            237716.1233868,
+            589.0,
+            461.6303192103286
+          ],
+          [
+            237716.1984517,
+            586.5,
+            463.25565490368797
+          ]
+        ],
+        "vx": 0,
+        "vy": 0,
+        "ax": 0,
+        "ay": 0,
+        "residual": 0,
+        "observations": 2,
+        "active": false,
+        "arming": false,
+        "reference": [
+          0.0,
+          -241.88065490368794
+        ],
+        "curve_count": 0,
+        "sine_frequency": 0,
+        "sine_a": 0,
+        "sine_b": 0,
+        "sine_count": 0,
+        "adaptive_velocity": true,
+        "ballistic": false,
+        "gravity_up": 0,
+        "gravity_down": 0,
+        "floor_y": 216.8233184814453,
+        "floor_vy": 0.0,
+        "floor_segment": {
+          "a": [
+            7.0,
+            219.6634521484375
+          ],
+          "b": [
+            637.0,
+            219.5865478515625
+          ],
+          "vx": -792.1019834400422,
+          "vy": 0.0,
+          "kind": "rope",
+          "left_clipped": true,
+          "right_clipped": true
+        },
+        "rebound_speed": 0,
+        "attack_phase": null,
+        "ready_started": null,
+        "ready_remaining": 0,
+        "rush_scale_remaining": 0,
+        "rush_target_w": 0,
+        "rush_target_h": 0,
+        "horizontal_stopped": false,
+        "resource": null,
+        "collider_shape": "BoxCollider",
+        "quad": [
+          [
+            639.4677734375,
+            224.14439392089844
+          ],
+          [
+            639.4697265625,
+            218.64439392089844
+          ],
+          [
+            533.5322265625,
+            218.60560607910156
+          ],
+          [
+            533.5302734375,
+            224.10560607910156
+          ]
+        ],
+        "angular_velocity": 0.0,
+        "angular_history": [
+          [
+            237716.1233868,
+            -3.1409824486460223
+          ],
+          [
+            237716.1984517,
+            -3.141226514686538
+          ]
+        ],
+        "adaptive_rush_speed": true,
+        "rush_history": [],
+        "rush_fit_velocity": null,
+        "rush_velocity": null,
+        "confidence_history": [
+          0.74169921875,
+          0.83740234375
+        ],
+        "source_pinball_prior": false,
+        "pinball_rebound_carry": false,
+        "pinball_fit": null,
+        "pinball_carry_active": false,
+        "pinball_fast_rebound": false,
+        "pinball_fast_rebound_active": false
+      },
+      {
+        "id": -2000041,
+        "box": {
+          "x": 598.3218976595184,
+          "y": 200.4960063652559,
+          "w": 195.04823453951315,
+          "h": 10.271380671587849
+        },
+        "kind": "bamboo_forecast",
+        "confidence": 0.9923355281352997,
+        "seen": 237716.28107872506,
+        "history": [],
+        "vx": -2839.388067726305,
+        "vy": 0,
+        "ax": 0,
+        "ay": 0,
+        "residual": 0,
+        "observations": 3,
+        "active": false,
+        "arming": false,
+        "reference": [
+          0.0,
+          0.0
+        ],
+        "curve_count": 0,
+        "sine_frequency": 0,
+        "sine_a": 0,
+        "sine_b": 0,
+        "sine_count": 0,
+        "adaptive_velocity": false,
+        "ballistic": false,
+        "gravity_up": 0,
+        "gravity_down": 0,
+        "floor_y": 0,
+        "floor_vy": 0.0,
+        "floor_segment": null,
+        "rebound_speed": 0,
+        "attack_phase": "bamboo_locked",
+        "ready_started": null,
+        "ready_remaining": 0,
+        "rush_scale_remaining": 0,
+        "rush_target_w": 0,
+        "rush_target_h": 0,
+        "horizontal_stopped": false,
+        "resource": null,
+        "collider_shape": "BoxCollider",
+        "quad": null,
+        "angular_velocity": 0.0,
+        "angular_history": [],
+        "adaptive_rush_speed": false,
+        "rush_history": [],
+        "rush_fit_velocity": null,
+        "rush_velocity": null,
+        "confidence_history": [],
+        "source_pinball_prior": false,
+        "pinball_rebound_carry": false,
+        "pinball_fit": null,
+        "pinball_carry_active": false,
+        "pinball_fast_rebound": false,
+        "pinball_fast_rebound_active": false,
+        "fire_earliest": 237716.5113403,
+        "fire_latest": 237716.7029777,
+        "spawn_left": 675.3572526964274,
+        "spawn_right": 716.3347771621226,
+        "projectile_width": 154.07071007381788,
+        "projectile_height": 10.271380671587849,
+        "velocity_fast": -3160.424822027033,
+        "velocity_slow": -2518.351313425577,
+        "lock_confirmations": 1,
+        "onset_evidence": "dual_lock",
+        "risk_weight": 1.0
+      },
+      {
+        "id": -2000043,
+        "box": {
+          "x": 598.3218976595184,
+          "y": 259.9815696434541,
+          "w": 195.04823453951315,
+          "h": 10.271380671587849
+        },
+        "kind": "bamboo_forecast",
+        "confidence": 0.9942367970943451,
+        "seen": 237716.28107872506,
+        "history": [],
+        "vx": -2839.388067726305,
+        "vy": 0,
+        "ax": 0,
+        "ay": 0,
+        "residual": 0,
+        "observations": 3,
+        "active": false,
+        "arming": false,
+        "reference": [
+          0.0,
+          0.0
+        ],
+        "curve_count": 0,
+        "sine_frequency": 0,
+        "sine_a": 0,
+        "sine_b": 0,
+        "sine_count": 0,
+        "adaptive_velocity": false,
+        "ballistic": false,
+        "gravity_up": 0,
+        "gravity_down": 0,
+        "floor_y": 0,
+        "floor_vy": 0.0,
+        "floor_segment": null,
+        "rebound_speed": 0,
+        "attack_phase": "bamboo_locked",
+        "ready_started": null,
+        "ready_remaining": 0,
+        "rush_scale_remaining": 0,
+        "rush_target_w": 0,
+        "rush_target_h": 0,
+        "horizontal_stopped": false,
+        "resource": null,
+        "collider_shape": "BoxCollider",
+        "quad": null,
+        "angular_velocity": 0.0,
+        "angular_history": [],
+        "adaptive_rush_speed": false,
+        "rush_history": [],
+        "rush_fit_velocity": null,
+        "rush_velocity": null,
+        "confidence_history": [],
+        "source_pinball_prior": false,
+        "pinball_rebound_carry": false,
+        "pinball_fit": null,
+        "pinball_carry_active": false,
+        "pinball_fast_rebound": false,
+        "pinball_fast_rebound_active": false,
+        "fire_earliest": 237716.9057569,
+        "fire_latest": 237717.0865309,
+        "spawn_left": 675.3572526964274,
+        "spawn_right": 716.3347771621226,
+        "projectile_width": 154.07071007381788,
+        "projectile_height": 10.271380671587849,
+        "velocity_fast": -3160.424822027033,
+        "velocity_slow": -2518.351313425577,
+        "lock_confirmations": 1,
+        "onset_evidence": "dual_lock",
+        "risk_weight": 1.0
+      },
+      {
+        "id": -2000044,
+        "box": {
+          "x": 598.3218976595184,
+          "y": 216.85919796987017,
+          "w": 195.04823453951315,
+          "h": 10.271380671587849
+        },
+        "kind": "bamboo_forecast",
+        "confidence": 0.9929281175136566,
+        "seen": 237716.28107872506,
+        "history": [],
+        "vx": -2839.388067726305,
+        "vy": 0,
+        "ax": 0,
+        "ay": 0,
+        "residual": 0,
+        "observations": 3,
+        "active": false,
+        "arming": false,
+        "reference": [
+          0.0,
+          0.0
+        ],
+        "curve_count": 0,
+        "sine_frequency": 0,
+        "sine_a": 0,
+        "sine_b": 0,
+        "sine_count": 0,
+        "adaptive_velocity": false,
+        "ballistic": false,
+        "gravity_up": 0,
+        "gravity_down": 0,
+        "floor_y": 0,
+        "floor_vy": 0.0,
+        "floor_segment": null,
+        "rebound_speed": 0,
+        "attack_phase": "bamboo_locked",
+        "ready_started": null,
+        "ready_remaining": 0,
+        "rush_scale_remaining": 0,
+        "rush_target_w": 0,
+        "rush_target_h": 0,
+        "horizontal_stopped": false,
+        "resource": null,
+        "collider_shape": "BoxCollider",
+        "quad": null,
+        "angular_velocity": 0.0,
+        "angular_history": [],
+        "adaptive_rush_speed": false,
+        "rush_history": [],
+        "rush_fit_velocity": null,
+        "rush_velocity": null,
+        "confidence_history": [],
+        "source_pinball_prior": false,
+        "pinball_rebound_carry": false,
+        "pinball_fit": null,
+        "pinball_carry_active": false,
+        "pinball_fast_rebound": false,
+        "pinball_fast_rebound_active": false,
+        "fire_earliest": 237717.0633868,
+        "fire_latest": 237717.23845170002,
+        "spawn_left": 675.3572526964274,
+        "spawn_right": 716.3347771621226,
+        "projectile_width": 154.07071007381788,
+        "projectile_height": 10.271380671587849,
+        "velocity_fast": -3160.424822027033,
+        "velocity_slow": -2518.351313425577,
+        "lock_confirmations": 1,
+        "onset_evidence": "dual_lock",
+        "risk_weight": 1.0
+      },
+      {
+        "id": -2000047,
+        "box": {
+          "x": 598.3218976595184,
+          "y": 200.53141438527544,
+          "w": 195.04823453951315,
+          "h": 10.271380671587849
+        },
+        "kind": "bamboo_forecast",
+        "confidence": 0.9702965021133423,
+        "seen": 237716.28107872506,
+        "history": [],
+        "vx": -2839.388067726305,
+        "vy": 0,
+        "ax": 0,
+        "ay": 0,
+        "residual": 0,
+        "observations": 3,
+        "active": false,
+        "arming": false,
+        "reference": [
+          0.0,
+          0.0
+        ],
+        "curve_count": 0,
+        "sine_frequency": 0,
+        "sine_a": 0,
+        "sine_b": 0,
+        "sine_count": 0,
+        "adaptive_velocity": false,
+        "ballistic": false,
+        "gravity_up": 0,
+        "gravity_down": 0,
+        "floor_y": 0,
+        "floor_vy": 0.0,
+        "floor_segment": null,
+        "rebound_speed": 0,
+        "attack_phase": "bamboo_locked",
+        "ready_started": null,
+        "ready_remaining": 0,
+        "rush_scale_remaining": 0,
+        "rush_target_w": 0,
+        "rush_target_h": 0,
+        "horizontal_stopped": false,
+        "resource": null,
+        "collider_shape": "BoxCollider",
+        "quad": null,
+        "angular_velocity": 0.0,
+        "angular_history": [],
+        "adaptive_rush_speed": false,
+        "rush_history": [],
+        "rush_fit_velocity": null,
+        "rush_velocity": null,
+        "confidence_history": [],
+        "source_pinball_prior": false,
+        "pinball_rebound_carry": false,
+        "pinball_fit": null,
+        "pinball_carry_active": false,
+        "pinball_fast_rebound": false,
+        "pinball_fast_rebound_active": false,
+        "fire_earliest": 237716.83962780001,
+        "fire_latest": 237717.0057569,
+        "spawn_left": 675.3572526964274,
+        "spawn_right": 716.3347771621226,
+        "projectile_width": 154.07071007381788,
+        "projectile_height": 10.271380671587849,
+        "velocity_fast": -3160.424822027033,
+        "velocity_slow": -2518.351313425577,
+        "lock_confirmations": 1,
+        "onset_evidence": "overlap_hypothesis",
+        "risk_weight": 1.0
+      }
+    ],
+    "terrain": null,
+    "motion_reference": "support",
+    "pending_rope_clamp": false,
+    "rope_down_anchor": true,
+    "scale_px": 39.50531027533791,
+    "stand_w": 14.221911699121648,
+    "stand_h": 36.97697041771629,
+    "motion": null,
+    "vx": 0.1238606017353971,
+    "ground_contact_observed": false,
+    "down_action_end_observed": false,
+    "rope_contact_observed": false,
+    "rope_segment": {
+      "kind": "rope",
+      "a": [
+        -58.449030431447156,
+        219.6634521484375
+      ],
+      "b": [
+        571.5509695685529,
+        219.5865478515625
+      ],
+      "confidence": 0.958984375,
+      "left_clipped": true,
+      "right_clipped": true,
+      "stamp": 237716.1984517,
+      "observations": 13,
+      "vx": -792.1019834400422,
+      "vy": 0.0,
+      "id": 18
+    },
+    "rope_segments": [
+      {
+        "kind": "rope",
+        "a": [
+          -58.449030431447156,
+          219.6634521484375
+        ],
+        "b": [
+          571.5509695685529,
+          219.5865478515625
+        ],
+        "confidence": 0.958984375,
+        "left_clipped": true,
+        "right_clipped": true,
+        "stamp": 237716.1984517,
+        "observations": 13,
+        "vx": -792.1019834400422,
+        "vy": 0.0,
+        "id": 18
+      }
+    ],
+    "scene_velocity_x": -792.1019834400422,
+    "scene_motion_observed": false,
+    "visible_supports": [
+      {
+        "kind": "rope",
+        "a": [
+          7.0,
+          219.6634521484375
+        ],
+        "b": [
+          637.0,
+          219.5865478515625
+        ],
+        "confidence": 0.958984375,
+        "left_clipped": true,
+        "right_clipped": true,
+        "stamp": 237716.1984517,
+        "observations": 13,
+        "vx": -792.1019834400422,
+        "vy": 0.0,
+        "id": 18
+      }
+    ]
+  },
+  "old_action": null,
+  "old_reason": "mpc_wait"
+}

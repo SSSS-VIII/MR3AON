@@ -1,4 +1,6 @@
 """Commit own submitted keys using the Android enqueue acknowledgement clock."""
+from collections import deque
+import math
 from arena_vision import extrapolate
 
 
@@ -39,3 +41,23 @@ def commit_action(perception,latest,action,ack,input_delay=1/60,*,primitive=None
                 submitted_primitive=primitive,
                 committed_primitive=(perception.active_motion or{}).get('name'),
                 support_unconfirmed=bool((perception.active_motion or{}).get('support_unconfirmed')))
+
+
+class DecisionCadence:
+    """Past host decision intervals, independent of game state and image labels."""
+    def __init__(self):
+        self.previous=None
+        self.intervals=deque(maxlen=32)
+
+    def observe(self,stamp):
+        if isinstance(stamp,bool) or not math.isfinite(stamp):
+            raise ValueError('Decision timestamp must be finite')
+        if self.previous is not None:
+            interval=stamp-self.previous
+            if interval<=0:raise ValueError('Decision timestamps must increase')
+            self.intervals.append(interval)
+        self.previous=stamp
+        if len(self.intervals)<3:return 0.
+        ordered=sorted(self.intervals)
+        index=.9*(len(ordered)-1);lo=int(index);fraction=index-lo
+        return ordered[lo]+fraction*(ordered[min(lo+1,len(ordered)-1)]-ordered[lo])

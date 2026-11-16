@@ -30,7 +30,7 @@ from arena_vision import Perception, serializable, overlay,extrapolate
 from arena_policy import Avoider
 import arena_motion as motion
 from arena_mpc import MpcAvoider
-from arena_action_timing import commit_action,selected_primitive
+from arena_action_timing import commit_action,selected_primitive,DecisionCadence
 from arena_key_receipts import KeyReceiptMatcher
 from runtime import InstanceSession
 import cv2
@@ -212,6 +212,7 @@ def run(args):
     policy=MpcAvoider() if detector_weights else Avoider()
     policy_samples={False:deque(maxlen=32),True:deque(maxlen=32)}
     policy_times,compute_priors=[],[]
+    decision_cadence=DecisionCadence()
     start_board=getattr(args,'start',1)
     capture_type=FastCapture
     if getattr(args,'render_capture',False):
@@ -249,6 +250,7 @@ def run(args):
         ground_down_collider_restore=bool(getattr(perception,'ground_down_collider_restore',False)),
         planning_step_seconds=getattr(policy,'STEP',None),planning_steps=getattr(policy,'STEPS',None),
         planning_beam=getattr(policy,'BEAM',None),
+        measured_control_step=bool(getattr(policy,'measured_control_step',False)),
         ground_static_search=bool(getattr(policy,'ground_static_search',False)),
         ground_reserve_recovery=bool(getattr(policy,'ground_reserve_recovery',False)),
         ordinary_air_down_gap=getattr(policy,'ordinary_air_down_gap',.1),
@@ -305,6 +307,7 @@ def run(args):
                         capture_request=frame.request_ns
                         previous_crc=crc;fresh+=1
                     now=(time.perf_counter_ns()-clock['offset_ns'])/1e9
+                    cadence=decision_cadence.observe(now)
                     age=(now-latest['time'])*1000
                     ages.append(age)
                     if age>150 and readiness!='waiting':
@@ -319,6 +322,7 @@ def run(args):
                     timeline=getattr(perception,'input_timeline',None)
                     obs=(timeline.project(now+1/60+compute_prior)if timeline is not None
                          else extrapolate(latest,now+1/60+compute_prior))
+                    obs=dict(obs,decision_interval_seconds=cadence)
                     decision_start=time.perf_counter()
                     action, reason = ((None,'waiting_initial_pixels')if readiness=='waiting'else policy.choose(obs))
                     compute_ms=(time.perf_counter()-decision_start)*1000
@@ -341,6 +345,8 @@ def run(args):
                             key=key,key_count=sent_keys[key],request_ns=ack.request_ns,
                             capture_request_ns=capture_request,planned_time=obs['time'],**committed))
                     row = serializable(obs)
+                    row['control_step_seconds']=policy.control_step(obs)if isinstance(policy,MpcAvoider)else None
+                    row['measured_control_step']=bool(getattr(policy,'measured_control_step',False))
                     measured={key:latest.get(key)for key in (
                         'time','phase','jumps','player','player_predicted','motion','rope',
                         'terrain','camera_reference_y','camera_velocity_y','player_detection_source')}
@@ -414,7 +420,8 @@ def run(args):
                   key_enqueue_ms=timing(action_times),loop_interval_ms=timing(intervals),
                   dropped_recording_frames=recorder.dropped,fresh_frames=fresh,
                   fresh_frame_interval_ms=timing(fresh_intervals),observation_age_ms=timing(ages),
-                  input_delay_prior_ms=1000/60)
+                  input_delay_prior_ms=1000/60,
+                  measured_control_step=bool(getattr(policy,'measured_control_step',False)))
     report['action_anchor_error_ms']={name:timing([abs(a[name+'_anchor_error_ms'])for a in actions if name+'_anchor_error_ms'in a])for name in('planned','committed')}
     report.update(initial_black_frames=initial_pixels.black_frames,
                   first_visible_elapsed=initial_pixels.first_visible_elapsed)

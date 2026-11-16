@@ -132,13 +132,21 @@ class MpcAvoider(VisualAvoider):
     ground_static_search=False
     ground_reserve_recovery=False
     ordinary_air_down_gap=.1
+    measured_control_step=False
+
+    def control_step(self,obs):
+        if not self.measured_control_step:return self.STEP
+        measured=obs.get("decision_interval_seconds",0.)
+        if isinstance(measured,bool) or not np.isfinite(measured) or measured<0:
+            raise ValueError("Decision interval must be finite and nonnegative")
+        return max(self.STEP,float(measured))
 
     def rope_exit(self,obs):
         segment=obs.get('rope_segment')
         if segment is None:return False
         relative=segment['vx']-obs.get('vx',0.)
         return (relative<0 and not segment.get('right_clipped',segment['b'][0]>=637)
-                and 0<=segment['b'][0]-obs['player'].center[0]<=-relative*self.STEP*self.STEPS)
+                and 0<=segment['b'][0]-obs['player'].center[0]<=-relative*self.control_step(obs)*self.STEPS)
 
     @classmethod
     def recovery_needed(cls,obs):
@@ -216,9 +224,10 @@ class MpcAvoider(VisualAvoider):
         if not self.uses_search(obs):
             return super().choose(obs)
         # Precompute all object forecasts once, outside the search branches.
-        times=np.arange(self.STEPS*2+1)*self.STEP/2
-        boxes,box_hazards,oriented,quads,sagitta=forecast_geometry(tracks,times,self._hazard,self.STEP/2)
-        target_boxes,target_shapes,target_oriented,target_quads,target_sagitta=forecast_geometry(targets,times,self._hazard,self.STEP/2)
+        control_step=self.control_step(obs)
+        times=np.arange(self.STEPS*2+1)*control_step/2
+        boxes,box_hazards,oriented,quads,sagitta=forecast_geometry(tracks,times,self._hazard,control_step/2)
+        target_boxes,target_shapes,target_oriented,target_quads,target_sagitta=forecast_geometry(targets,times,self._hazard,control_step/2)
         has_oriented=bool(np.any(oriented))
         walls=np.array([t.kind=='terrain_wall'for t in tracks],bool)
         beam=[Node(obs)];now=obs['time']
@@ -228,7 +237,7 @@ class MpcAvoider(VisualAvoider):
                 options=self._options(node.state,node.state['time'])
                 for name in options:
                     state=start_action(node.state,name)if name else node.state
-                    half=advance(state,self.STEP/2);end=advance(state,self.STEP)
+                    half=advance(state,control_step/2);end=advance(state,control_step)
                     branches.append((node,state,half,end,name))
             positions=[player_array([b[index]for b in branches])for index in(1,2,3)]
             feet=[foot_array([b[index]for b in branches])for index in(1,2,3)]if np.any(walls)else None
@@ -251,7 +260,7 @@ class MpcAvoider(VisualAvoider):
                         motion.DATA['blocking']['climb_distance']*obs.get('scale_px',41.)+8,
                         box_hazards=np.ones(int(walls.sum()),bool),box_vertical_margin=2.)
                 # Keep the original proximity cost per unit of simulated time.
-                distances.append(d);near.append(np.maximum(0,1.4-d).sum(axis=1)*.002*(self.STEP/.08))
+                distances.append(d);near.append(np.maximum(0,1.4-d).sum(axis=1)*.002*(control_step/.08))
                 if targets:
                     contact=swept_distances(positions[sample],positions[sample+1],
                         target_boxes[index],target_boxes[index+1],0,box_hazards=target_shapes)<1
@@ -266,7 +275,7 @@ class MpcAvoider(VisualAvoider):
                     for index in np.flatnonzero(distances[sample][i]<1):
                         identity=tracks[index].id
                         if walls[index]:
-                            cost+=1000*collision_weight(tracks[index])*self.STEP/2;hits.add(identity)
+                            cost+=1000*collision_weight(tracks[index])*control_step/2;hits.add(identity)
                         elif identity not in hits:
                             cost+=1000*collision_weight(tracks[index])*(1-.2*(step+1)/self.STEPS);hits.add(identity)
                     cost+=float(near[sample][i])
@@ -282,7 +291,7 @@ class MpcAvoider(VisualAvoider):
                 if ('below_rope_exit'not in hits and
                         (crosses_rope_end_below(state,half)or crosses_rope_end_below(half,end))):
                     cost+=10000;hits.add('below_rope_exit')
-                if recovering:cost+=self.STEP/2*(self.reserve_cost(half)+self.reserve_cost(end))
+                if recovering:cost+=control_step/2*(self.reserve_cost(half)+self.reserve_cost(end))
                 if name:cost+=.05 if name.startswith('jump')else .03
                 first=name if step==0 else node.first
                 active=end.get('motion');age=0 if not active else round(end['time']-active['started'],3)
