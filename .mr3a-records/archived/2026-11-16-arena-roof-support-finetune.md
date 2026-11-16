@@ -27,3 +27,15 @@ v145完成新val135+四套旧8471帧，所有raw预测保留。新val地面141/1
 原val50043的浮台为真实ItemAirGround吊顶（如第70帧top3.85/bottom3.45、下挂刀片、静止且transparent=false），不是同位置双标签。下一轮补原50042的吊顶正例，50043整板保持不入train；因此50042从原先计划的未见原生改为训练采集，不再声称其为未见板测试。v146以另一原板两个区段/新种子采集，后续真实视觉验证仍须新种子及未训练板。
 
 ignored证据roof-support-v138、roof-main76-v139、roof-support-v140、roof-main76-v141及support-confusion/label-overlap-audit/heldout-subset-baseline，data-roof-obb-v142/{manifest,profile,data}.json/yaml，train-roof-v143.py/.log；v136/v137在render-readback-probe。进度未达无伤。
+
+## v146/147/148补吊顶训练与v149离线回归
+
+原50042/block4、block6，种子54130/54131，沿同一明确记录的原标签探索策略，各135帧/8.03秒，最终HP2150/2177.40；仅采集不算视觉策略成绩。含403个地面、240个浮台、1999个物理box_hazard原训练目标。结束原1101/5000、暂停、菜单键盘开启、评估关闭。
+
+v147追加两整回合train、各重复4次，继承v142的val9829完全不变、50043不入train；train21180，115个原回合划分及25657旧唯一图+270新图跨划分像素检查通过，旧标签和profile字节不变。manifest SHA=52f3a1822fa55df9bd4c6c5dff0d97c0ba146a509d89f5ff6e0e688e378d64e8。
+
+v148仍从main76原FP32权重出发（不是从退步v143继续），只改变训练数据组成，官方模型/Trainer和3epochs、lr3e−5、rect/seed54120保持。训练完整结束，126个BN参与、无冻结，全部导出浮点FP32/全有限，标准模型及类别映射校验通过。best epoch1（从0计），SHA=da7673a00f00972f28de9a502f2d3bb358ad61fff6c9c21292595567399c2bca。日志train-balanced-roof-v148.log，frozen-backbone/source-checkpoints/profile-transfer/fp32-final-audit保留。
+
+v149完整复测同一135帧val+四旧8471帧，raw全部保留。新屋顶地面147/177（R=.8305）、浮台63/136（R=.4632）、物理1095/1577（R=.6944），原为106/26/734；但地面一对一P=.4050、物理P=.7690，不能只报召回。v151额外同线诊断显示363个地面预测中239与原地面同线（包括分段）、39与浮台同线误分类、85未达到6px/80%自身覆盖；原183个中为83/44/56。这是诊断分段/误分类，不替代原一对一指标，也不是安全证明。
+
+四旧物理匹配high3459→3477、dense2681→2677、clean1600→1601、legacy14796→14790；legacy地面1795→1789，浮台155→156。当前只允许内部模型新旧原生对照，不晋升默认，不宣称旧集全面改善或稳定无伤。v150已准备固定源与同参数，5004/50042新种子配对、50043未训练布局/50041新种子及六关51/飞竹配对；这些是已知布局新种子的闭环验证，50042已用于train、50043已用于val，均不冒充完全未见测试。
