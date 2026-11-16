@@ -128,7 +128,7 @@ def overlapping_static_camera_shift(current,previous,dx=None):
 
 
 class VisualSupports:
-    def __init__(self,*,line_camera_recovery=False,texture_camera_recovery=False):
+    def __init__(self,*,line_camera_recovery=False,texture_camera_recovery=False,rope_ground_handoff=False):
         self.tracks=[];self.next_id=1;self.mode=None;self.reference_y=None
         self.camera_y=0.;self.camera_vy=0.;self.scroll_vx=0.
         self.last_translation=-1e9
@@ -140,6 +140,7 @@ class VisualSupports:
         self.texture_camera_recovery=texture_camera_recovery
         self.last_texture_camera=None
         self.last_observation_stamp=None
+        self.rope_ground_handoff=rope_ground_handoff
 
     def associate(self,segments,stamp,texture=None,*,camera_prior=None):
         candidates=[]
@@ -282,6 +283,25 @@ class VisualSupports:
             rope=height(selected,min(max(px,selected['a'][0]),selected['b'][0]));self.reference_y=rope
         terrain=None
         ground=[s for s in segments if s['kind']!='rope']
+        if self.rope_ground_handoff and self.mode=='rope'and rope is None and player is not None:
+            ropes=[s for s in segments if s['kind']=='rope']
+            finished=[s for s in ropes if s['confidence']>=.7 and not s['right_clipped']and s['b'][0]<px-10]
+            # Require a visible ground entrance joined to a genuine finite
+            # rope end, already behind the role. A lost/cropped rope or a
+            # floating surface underneath it cannot change the context.
+            if finished and not any(s['b'][0]>=px-10 for s in ropes):
+                joined=[]
+                for g in ground:
+                    if (g['kind']!='platform'or not g['a'][0]<=px<=g['b'][0]
+                            or g['confidence']<.5 and g['observations']<3):continue
+                    for r in finished:
+                        if abs(g['a'][0]-r['b'][0])>24:continue
+                        x=min(max(r['b'][0],g['a'][0]),g['b'][0])
+                        if np.linalg.norm(np.asarray(r['b'])-np.array([x,height(g,x)]))<=16:
+                            joined.append(g);break
+                if joined:
+                    selected=min(joined,key=lambda s:abs(height(s,px)-py))
+                    self.mode='ground';self.reference_y=height(selected,px)
         if self.mode!='rope'and ground:
             expected=self.reference_y if self.reference_y is not None else(py+30 if py is not None else 260)
             selected=foot_support or min(ground,key=lambda s:(

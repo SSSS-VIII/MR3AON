@@ -1,0 +1,84 @@
+{
+  "scope": "Two saved neural body/support observations at actual finite-rope/ground seam; no native stage, physics, health or geometry used",
+  "initial_mode": "rope",
+  "frames": [
+    {
+      "time": 1.0,
+      "player": {
+        "x": 180.234375,
+        "y": 144.78125,
+        "w": 16.03125,
+        "h": 24.9375
+      },
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            -0.7499923706054688,
+            259.0355224609375
+          ],
+          "b": [
+            193.25,
+            258.9644775390625
+          ],
+          "confidence": 0.9609375,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            197.6183319091797,
+            262.40203857421875
+          ],
+          "b": [
+            633.3816528320312,
+            352.59796142578125
+          ],
+          "confidence": 0.66259765625,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ]
+    },
+    {
+      "time": 1.034225699986564,
+      "player": {
+        "x": 179.734375,
+        "y": 126.953125,
+        "w": 16.28125,
+        "h": 25.09375
+      },
+      "segments": [
+        {
+          "kind": "rope",
+          "a": [
+            3.814697265625e-05,
+            259.32879638671875
+          ],
+          "b": [
+            161.37496948242188,
+            259.17120361328125
+          ],
+          "confidence": 0.95654296875,
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        {
+          "kind": "platform",
+          "a": [
+            162.142578125,
+            261.1630859375
+          ],
+          "b": [
+            632.357421875,
+            356.3369140625
+          ],
+          "confidence": 0.63232421875,
+          "left_clipped": false,
+          "right_clipped": true
+        }
+      ]
+    }
+  ]
+}
