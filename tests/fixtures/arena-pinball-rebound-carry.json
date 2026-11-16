@@ -1,0 +1,576 @@
+{
+  "scope": "Frozen pixel motion fits first, original physical world-Y displacement only in separate expected truth; source hashes in v184 forecast/score reports. Not live actor input.",
+  "cases": [
+    {
+      "episode": "board51013-block1-s54300",
+      "index": 48,
+      "future": 50,
+      "native_id": -21640806,
+      "track": {
+        "id": 11,
+        "box": {
+          "x": 211.00781378421152,
+          "y": 213.00781378421152,
+          "w": 34.984372431576986,
+          "h": 34.984372431576986
+        },
+        "kind": "pinball",
+        "confidence": 0.9697265625,
+        "seen": 2.8662109375,
+        "history": [
+          [
+            2.3994140625,
+            618.5,
+            206.04228544902358
+          ],
+          [
+            2.4501953125,
+            577.0,
+            208.22468439090437
+          ],
+          [
+            2.5166015625,
+            521.5,
+            212.01019920104693
+          ],
+          [
+            2.566406249499778,
+            481.0,
+            215.22580580180693
+          ],
+          [
+            2.632812499499778,
+            425.5,
+            221.10098890727568
+          ],
+          [
+            2.7001953125,
+            368.25,
+            228.23833641415183
+          ],
+          [
+            2.749999999499778,
+            326.75,
+            234.24742302658868
+          ],
+          [
+            2.816406249499778,
+            270.24999237060547,
+            240.24309715746432
+          ],
+          [
+            2.8662109375,
+            228.5,
+            233.2405756407091
+          ]
+        ],
+        "vx": -841.4558740815637,
+        "vy": -177.889274277369,
+        "ax": -64.4819522646948,
+        "ay": -49.730807270868134,
+        "residual": 4.328903637599346,
+        "observations": 9,
+        "active": false,
+        "arming": false,
+        "reference": [
+          0.0,
+          -2.7405756407090918
+        ],
+        "curve_count": 0,
+        "sine_frequency": 0,
+        "sine_a": 0,
+        "sine_b": 0,
+        "sine_count": 0,
+        "adaptive_velocity": true,
+        "ballistic": true,
+        "gravity_up": 395.0531027533791,
+        "gravity_down": 237.0318616520275,
+        "floor_y": 237.24951300296152,
+        "floor_vy": -0.015224489148642883,
+        "floor_segment": {
+          "a": [
+            0.0,
+            254.71380615234375
+          ],
+          "b": [
+            593.0,
+            254.78619384765625
+          ],
+          "vx": -716.7368589758812,
+          "vy": 0.0,
+          "kind": "rope",
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        "rebound_speed": 197.52655137668955,
+        "attack_phase": null,
+        "ready_started": null,
+        "ready_remaining": 0,
+        "rush_scale_remaining": 0,
+        "rush_target_w": 0,
+        "rush_target_h": 0,
+        "horizontal_stopped": false,
+        "resource": null,
+        "collider_shape": "SphereCollider",
+        "quad": [
+          [
+            246.1138916015625,
+            247.87118530273438
+          ],
+          [
+            246.198486328125,
+            213.21502685546875
+          ],
+          [
+            210.8861083984375,
+            213.12881469726562
+          ],
+          [
+            210.801513671875,
+            247.78497314453125
+          ]
+        ],
+        "angular_velocity": 0.0,
+        "angular_history": [],
+        "adaptive_rush_speed": true,
+        "rush_history": [],
+        "rush_fit_velocity": null,
+        "rush_velocity": null,
+        "confidence_history": [
+          0.97021484375,
+          0.96630859375,
+          0.97021484375,
+          0.966796875,
+          0.97314453125,
+          0.96923828125,
+          0.96826171875,
+          0.9697265625
+        ],
+        "source_pinball_prior": true,
+        "pinball_rebound_carry": true,
+        "pinball_fit": {
+          "box": {
+            "x": 253.00780926550124,
+            "y": 222.50780926550124,
+            "w": 34.48436621020849,
+            "h": 34.48436621020849
+          },
+          "seen": 2.816406249499778,
+          "reference": [
+            0.0,
+            -0.49310478685884646
+          ],
+          "vx": -841.1691966608962,
+          "vy": 134.19144428958805,
+          "floor_y": 239.76297436653022,
+          "floor_vy": 0.015189494346315308,
+          "floor_segment": {
+            "a": [
+              1.0,
+              257.03802490234375
+            ],
+            "b": [
+              624.0,
+              256.96197509765625
+            ],
+            "vx": -716.7368589758812,
+            "vy": 0.0,
+            "kind": "rope",
+            "left_clipped": true,
+            "right_clipped": false
+          },
+          "gravity_up": 395.0531027533791,
+          "gravity_down": 237.0318616520275,
+          "rebound_speed": 197.52655137668955
+        },
+        "pinball_carry_active": true
+      },
+      "truth": {
+        "horizon": 0.13378906199977791,
+        "native_delta": -20.12425269711436,
+        "error": -0.1397573521817712,
+        "predicted_delta": -20.264010049296132
+      },
+      "old_error": 20.12425269711436
+    },
+    {
+      "episode": "board51013-block2-s54301",
+      "index": 55,
+      "future": 57,
+      "native_id": -21717122,
+      "track": {
+        "id": 19,
+        "box": {
+          "x": 91.62108999595529,
+          "y": 217.6210899959553,
+          "w": 28.007820008089425,
+          "h": 28.007820008089425
+        },
+        "kind": "pinball",
+        "confidence": 0.91796875,
+        "seen": 3.283203124499778,
+        "history": [
+          [
+            2.933593750500222,
+            397.5,
+            208.54898675161576
+          ],
+          [
+            2.9833984375,
+            355.75,
+            214.0166725798677
+          ],
+          [
+            3.0498046875,
+            302.0,
+            221.61003345186012
+          ],
+          [
+            3.1162109375,
+            246.125,
+            230.94627594065818
+          ],
+          [
+            3.1669921875,
+            204.75,
+            239.425131092479
+          ],
+          [
+            3.283203124499778,
+            105.625,
+            222.02795921780321
+          ]
+        ],
+        "vx": -840.48481256977,
+        "vy": -151.61706014104982,
+        "ax": 0,
+        "ay": 0,
+        "residual": 9.431910320911875,
+        "observations": 6,
+        "active": false,
+        "arming": false,
+        "reference": [
+          0.0,
+          9.597040782196773
+        ],
+        "curve_count": 0,
+        "sine_frequency": 0,
+        "sine_a": 0,
+        "sine_b": 0,
+        "sine_count": 0,
+        "adaptive_velocity": true,
+        "ballistic": true,
+        "gravity_up": 395.0531027533791,
+        "gravity_down": 237.0318616520275,
+        "floor_y": 247.54539117360792,
+        "floor_vy": 0.15560421185216874,
+        "floor_segment": {
+          "a": [
+            1.000091552734375,
+            261.66424560546875
+          ],
+          "b": [
+            299.9999084472656,
+            261.33575439453125
+          ],
+          "vx": -698.8504878064556,
+          "vy": 0.0,
+          "kind": "rope",
+          "left_clipped": true,
+          "right_clipped": false
+        },
+        "rebound_speed": 197.52655137668955,
+        "attack_phase": null,
+        "ready_started": null,
+        "ready_remaining": 0,
+        "rush_scale_remaining": 0,
+        "rush_target_w": 0,
+        "rush_target_h": 0,
+        "horizontal_stopped": false,
+        "resource": null,
+        "collider_shape": "SphereCollider",
+        "quad": [
+          [
+            119.03619384765625,
+            246.22076416015625
+          ],
+          [
+            119.05755615234375,
+            217.04888916015625
+          ],
+          [
+            92.21380615234375,
+            217.02923583984375
+          ],
+          [
+            92.19244384765625,
+            246.20111083984375
+          ]
+        ],
+        "angular_velocity": 0.0,
+        "angular_history": [],
+        "adaptive_rush_speed": true,
+        "rush_history": [],
+        "rush_fit_velocity": null,
+        "rush_velocity": null,
+        "confidence_history": [
+          0.93896484375,
+          0.95263671875,
+          0.93017578125,
+          0.93798828125,
+          0.8876953125,
+          0.91796875
+        ],
+        "source_pinball_prior": true,
+        "pinball_rebound_carry": true,
+        "pinball_fit": {
+          "box": {
+            "x": 190.67578083125377,
+            "y": 230.67578083125377,
+            "w": 28.14843833749247,
+            "h": 28.14843833749247
+          },
+          "seen": 3.1669921875,
+          "reference": [
+            0.0,
+            5.3248689075209965
+          ],
+          "vx": -825.5591672452123,
+          "vy": 158.80789770611202,
+          "floor_y": 243.17477375117565,
+          "floor_vy": 0.018836155999246623,
+          "floor_segment": {
+            "a": [
+              -3.75,
+              257.2744445800781
+            ],
+            "b": [
+              396.75,
+              257.2255554199219
+            ],
+            "vx": -671.2533772993839,
+            "vy": 0.0,
+            "kind": "rope",
+            "left_clipped": true,
+            "right_clipped": false
+          },
+          "gravity_up": 395.0531027533791,
+          "gravity_down": 237.0318616520275,
+          "rebound_speed": 197.52655137668955
+        },
+        "pinball_carry_active": true
+      },
+      "truth": {
+        "horizon": 0.13378906300022209,
+        "native_delta": -17.056118645640314,
+        "error": 0.30704338349250193,
+        "predicted_delta": -16.749075262147812
+      },
+      "old_error": 17.056118645640314
+    },
+    {
+      "episode": "board5004-block1-s54110",
+      "index": 113,
+      "future": 115,
+      "native_id": -20225200,
+      "track": {
+        "id": 20,
+        "box": {
+          "x": 209.85156623933088,
+          "y": 205.35156623933088,
+          "w": 35.04686752133824,
+          "h": 35.04686752133824
+        },
+        "kind": "pinball",
+        "confidence": 0.9599609375,
+        "seen": 6.7666015625,
+        "history": [
+          [
+            6.166015624499778,
+            626.5,
+            198.2372226597721
+          ],
+          [
+            6.2333984375,
+            585.5,
+            201.8622226597721
+          ],
+          [
+            6.2998046875,
+            541.0,
+            205.8622226597721
+          ],
+          [
+            6.349609374499778,
+            507.5,
+            209.9872226597721
+          ],
+          [
+            6.416015624499778,
+            463.0,
+            216.6122226597721
+          ],
+          [
+            6.466796874499778,
+            428.75,
+            221.3622226597721
+          ],
+          [
+            6.533203124499778,
+            384.0,
+            229.4872226597721
+          ],
+          [
+            6.599609374499778,
+            339.75,
+            238.8622226597721
+          ],
+          [
+            6.6494140625,
+            305.75,
+            246.3622226597721
+          ],
+          [
+            6.716796874499778,
+            261.50000762939453,
+            248.1122226597721
+          ],
+          [
+            6.7666015625,
+            227.375,
+            233.3622226597721
+          ]
+        ],
+        "vx": -671.2501958167824,
+        "vy": -177.85105485053782,
+        "ax": 3.254127351497392,
+        "ay": -217.7810851410817,
+        "residual": 11.936300253555684,
+        "observations": 11,
+        "active": false,
+        "arming": false,
+        "reference": [
+          0.0,
+          -10.487222659772096
+        ],
+        "curve_count": 0,
+        "sine_frequency": 0,
+        "sine_a": 0,
+        "sine_b": 0,
+        "sine_count": 0,
+        "adaptive_velocity": true,
+        "ballistic": true,
+        "gravity_up": 395.0531027533791,
+        "gravity_down": 237.0318616520275,
+        "floor_y": 237.22656623933088,
+        "floor_vy": 0.0,
+        "floor_segment": {
+          "a": [
+            10.25,
+            254.75
+          ],
+          "b": [
+            632.25,
+            254.75
+          ],
+          "vx": -739.7354613988871,
+          "vy": 0.0,
+          "kind": "platform",
+          "left_clipped": true,
+          "right_clipped": true
+        },
+        "rebound_speed": 197.52655137668955,
+        "attack_phase": null,
+        "ready_started": null,
+        "ready_remaining": 0,
+        "rush_scale_remaining": 0,
+        "rush_target_w": 0,
+        "rush_target_h": 0,
+        "horizontal_stopped": false,
+        "resource": null,
+        "collider_shape": "SphereCollider",
+        "quad": [
+          [
+            245.0484161376953,
+            240.25099182128906
+          ],
+          [
+            245.2633819580078,
+            205.7204132080078
+          ],
+          [
+            209.7015838623047,
+            205.49900817871094
+          ],
+          [
+            209.4866180419922,
+            240.0295867919922
+          ]
+        ],
+        "angular_velocity": 0.0,
+        "angular_history": [],
+        "adaptive_rush_speed": true,
+        "rush_history": [],
+        "rush_fit_velocity": null,
+        "rush_velocity": null,
+        "confidence_history": [
+          0.97021484375,
+          0.970703125,
+          0.9716796875,
+          0.9765625,
+          0.96875,
+          0.9638671875,
+          0.970703125,
+          0.9599609375
+        ],
+        "source_pinball_prior": true,
+        "pinball_rebound_carry": true,
+        "pinball_fit": {
+          "box": {
+            "x": 244.054687025083,
+            "y": 220.17967939568848,
+            "w": 34.89064120862305,
+            "h": 34.89064120862305
+          },
+          "seen": 6.716796874499778,
+          "reference": [
+            0.0,
+            -10.487222659772096
+          ],
+          "vx": -668.6461164263089,
+          "vy": 164.10167250695085,
+          "floor_y": 237.05467939568848,
+          "floor_vy": 0.0,
+          "floor_segment": {
+            "a": [
+              8.25,
+              254.5
+            ],
+            "b": [
+              638.25,
+              254.5
+            ],
+            "vx": -739.7354613988871,
+            "vy": 0.0,
+            "kind": "platform",
+            "left_clipped": true,
+            "right_clipped": true
+          },
+          "gravity_up": 395.0531027533791,
+          "gravity_down": 237.0318616520275,
+          "rebound_speed": 197.52655137668955
+        },
+        "pinball_carry_active": true
+      },
+      "truth": {
+        "horizon": 0.1328125,
+        "native_delta": -37.219329854016195,
+        "error": 17.082689106524327,
+        "predicted_delta": -20.136640747491867
+      },
+      "old_error": 37.219329854016195
+    }
+  ],
+  "forecast_sha256": "5f02361590006c772cec63bc03108f8357bf6a95ce9710857f5430fa5260f9f3",
+  "score_sha256": "1fe6808a81c17ed9a7426ed9dfd6a4cfb6d19540726d1276c4a5cce757ed6877"
+}

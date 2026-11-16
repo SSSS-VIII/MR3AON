@@ -3,6 +3,8 @@ import math
 import json
 from pathlib import Path
 import numpy as np
+from copy import deepcopy
+from types import SimpleNamespace
 
 PRIORS=json.loads((Path(__file__).resolve().parents[1]/'arena/vision-object-priors.json').read_text())
 DATA=PRIORS['pinball']
@@ -59,6 +61,7 @@ def crow_geometry(track,seconds,scale):
 
 
 def fit_ballistic(track,scale):
+    track.pinball_carry_active=False
     # Missing serialized fields retain original constructor values. The
     # complete-source median is optional until its closed-loop evaluation;
     # it never selects parameters from the current board or native object.
@@ -75,6 +78,8 @@ def fit_ballistic(track,scale):
     if start:
         t=t[start:];ys=ys[start:]
     if len(t)<3 or t[-1]-t[0]<.035:
+        if track.pinball_rebound_carry and start and len(t)<3 and slopes[-1]<-40:
+            carry_rebound(track)
         return
     acceleration=prior['accelerated_up'if slopes[-1]<0 else'accelerated_down']*scale
     design=np.column_stack((np.ones(len(t)),t))
@@ -113,6 +118,40 @@ def fit_ballistic(track,scale):
         # privileged parameter query or needing to have seen the floor contact.
         energy=math.sqrt(track.vy**2+2*track.gravity_up*height)
         track.rebound_speed=.7*track.rebound_speed+.3*energy
+    if track.pinball_rebound_carry:
+        # Save only the last measured mature fit. A carried prediction cannot
+        # recursively count itself as another independent measurement.
+        names=('box','seen','reference','vx','vy','floor_y','floor_vy','floor_segment',
+               'gravity_up','gravity_down','rebound_speed')
+        track.pinball_fit={key:deepcopy(getattr(track,key))for key in names}
+
+
+def carry_rebound(track):
+    """Continue a measured physical state across at most two post-bounce images.
+
+    The visual reversal has too few points to refit. Keep the existing finite
+    visible floor, require agreement with the previous measured fit, and allow
+    one original 20ms physics update of impact timing uncertainty. This never
+    seeds a new unseen ball or extends a stale fit indefinitely.
+    """
+    if track.pinball_fit is None or track.floor_y is None:return
+    from arena_vision import Box
+    saved=dict(track.pinball_fit)
+    if isinstance(saved['box'],dict):saved['box']=Box(**saved['box'])
+    previous=SimpleNamespace(**saved)
+    if previous.floor_y is None:return
+    dt=track.seen-previous.seen
+    if not 0<dt<=.15:return
+    y,velocity=pinball_state(previous,dt)
+    innovation=track.box.center[1]-y-(track.reference[1]-previous.reference[1])
+    tolerance=4+max(abs(previous.vy),abs(velocity),previous.rebound_speed)*.02
+    if abs(innovation)>tolerance or velocity>=-40:return
+    track.vy=velocity;track.gravity_up=previous.gravity_up;track.gravity_down=previous.gravity_down
+    track.rebound_speed=previous.rebound_speed;track.floor_vy=0.
+    if track.floor_segment:
+        a,b=track.floor_segment['a'],track.floor_segment['b'];slope=(b[1]-a[1])/(b[0]-a[0])
+        track.floor_vy=track.floor_segment['vy']+slope*(track.vx-track.floor_segment['vx'])
+    track.ballistic=True;track.pinball_carry_active=True
 
 
 def floor_horizon(track):

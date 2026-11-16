@@ -244,6 +244,7 @@ def run(args):
         ground_static_search=bool(getattr(policy,'ground_static_search',False)),
         ground_reserve_recovery=bool(getattr(policy,'ground_reserve_recovery',False)),
         source_pinball_prior=bool(getattr(getattr(perception,'tracker',None),'source_pinball_prior',False)),
+        pinball_rebound_carry=bool(getattr(getattr(perception,'tracker',None),'pinball_rebound_carry',False)),
         pending_rope_clamp=bool(getattr(perception,'pending_rope_clamp',False)),
         support_fall_gravity=motion.DATA['fall_from_run']['gravity'],
         uncommanded_air_accelerations=motion.air_accelerations(0),
