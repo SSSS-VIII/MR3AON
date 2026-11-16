@@ -139,8 +139,9 @@ class VisualSupports:
         self.camera_motion_source=None
         self.texture_camera_recovery=texture_camera_recovery
         self.last_texture_camera=None
+        self.last_observation_stamp=None
 
-    def associate(self,segments,stamp,texture=None):
+    def associate(self,segments,stamp,texture=None,*,camera_prior=None):
         candidates=[]
         for i,s in enumerate(segments):
             for j,old in enumerate(self.tracks):
@@ -246,13 +247,20 @@ class VisualSupports:
                 velocity=self.last_texture_camera[1]
                 shifts=[velocity*dt];velocities=[velocity]
                 self.camera_motion_source='ground_patch_prediction'
+        if not shifts and camera_prior is not None and self.last_observation_stamp is not None:
+            dt=stamp-self.last_observation_stamp;dy=camera_prior.get('dy')
+            if (dy is not None and np.isfinite(dy)and abs(dy)<=35 and .006<=dt<=.16
+                    and abs(camera_prior.get('dt',0)-dt)<1e-6):
+                shifts=[dy];velocities=[dy/dt]
+                self.camera_motion_source='own_jump_prior'
         self.camera_vy=float(np.median(velocities))if velocities else 0.
         if shifts:self.camera_y+=float(np.median(shifts))
         self.tracks=current
+        self.last_observation_stamp=stamp
         return [{k:v for k,v in s.items()if k!='history'}for s in current]
 
-    def observe(self,segments,player,stamp,texture=None):
-        segments=self.associate(segments,stamp,texture)
+    def observe(self,segments,player,stamp,texture=None,*,camera_prior=None):
+        segments=self.associate(segments,stamp,texture,camera_prior=camera_prior)
         px,py=player.center if player else(180.,None)
         choices=[]
         for s in segments:
@@ -285,6 +293,8 @@ class VisualSupports:
         # own vertical motion after the common camera translation is removed.
         static=[s['vy']for s in segments if s['kind']!='floating_platform']
         camera_velocity=float(np.median(static))if static else self.camera_vy
+        if self.camera_motion_source in('ground_patch','ground_patch_prediction','own_jump_prior'):
+            camera_velocity=self.camera_vy
         forecast=[dict(s,vy=s['vy']-camera_velocity if s['kind']=='floating_platform'else 0.,
                        vx=s['vx']if s['kind']=='floating_platform'else self.scroll_vx)for s in segments]
         if terrain:

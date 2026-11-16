@@ -207,6 +207,7 @@ class ObbPerception(Perception):
         self.bamboo_clocks=None
         from arena_scene_motion import GroundTextureMotion
         self.ground_texture=GroundTextureMotion()
+        self.jump_camera_recovery=False
         if any(c.get('motion_kind')=='bamboo'for c in getattr(detector,'profile',{}).get('classes',[])):
             from arena_bamboo_motion import BambooClocks
             self.bamboo_clocks=BambooClocks()
@@ -233,7 +234,30 @@ class ObbPerception(Perception):
             support_player=Box(player.x-offset[0]*SCALE,player.y,player.w,player.h)
         scene_begin=time.perf_counter()
         texture=self.ground_texture.observe(rgb,segments,stamp,player)
-        support=self.supports.observe(segments,support_player,stamp,texture)
+        camera_prior=None
+        timeline=getattr(self,'input_timeline',None)
+        if (self.jump_camera_recovery and not predicted and player is not None
+                and self.last_observation is not None and timeline is not None
+                and timeline.prepared_stamp==stamp and self.active_motion
+                and self.active_motion['name']in('jump1','jump2')):
+            from arena_scene_motion import own_jump_camera_shift
+            from arena_support import height
+            # An actual capsule at a visible contact is not evidence that the
+            # camera moved to satisfy an old jump. Leave contact to _finish.
+            contact=False
+            if player.h>=.85*motion.DATA['stand_height']*SCALE:
+                for segment in segments:
+                    surface=height(segment,player.center[0])
+                    if surface is None:continue
+                    targets=[surface-.75*SCALE]
+                    if segment['kind']=='rope':targets.append(surface+.75*SCALE)
+                    if any(abs(player.center[1]-target)<=8 for target in targets):contact=True;break
+            if not contact:
+                current=dict(time=stamp,player=player,motion=self.active_motion,
+                    phase=motion.phase(self.active_motion['name'],stamp-self.active_motion['started'],self.active_motion))
+                dy=own_jump_camera_shift(self.last_observation,current,SCALE)
+                if dy is not None:camera_prior=dict(dy=dy,dt=stamp-self.last_observation['time'])
+        support=self.supports.observe(segments,support_player,stamp,texture,camera_prior=camera_prior)
         scene_ms=(time.perf_counter()-scene_begin)*1000
         if predicted:
             dy=support['tracking_reference'][1]-self.last_observation.get('camera_reference_y',0.)
@@ -279,6 +303,7 @@ class ObbPerception(Perception):
                       player_prediction_reason=prediction_reason,
                       camera_reference_y=support['tracking_reference'][1],camera_velocity_y=support['camera_vy'],
                       camera_motion_source=self.supports.camera_motion_source,
+                      jump_camera_prior=camera_prior,
                       incoming_jump2=bool(getattr(self,'incoming_jump2',False)),
                       scene_velocity_x=support['scene_vx'],scene_velocity_x_raw=support['scene_vx_raw'],
                       scene_motion_observed=support['scene_motion_observed'],

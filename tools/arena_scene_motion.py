@@ -163,3 +163,42 @@ class GroundPatchMotion:
         dx,dy=map(float,np.median(delta[inlier],axis=0))
         return dict(dx=dx,dt=dt,vx=dx/dt,camera_dy=dy,response=float(inlier.mean()),
                     points=int(inlier.sum()),span=span,source='ground_unique_template')
+
+
+def own_jump_camera_shift(previous,current,scale):
+    """Camera prior from two real capsules and the acknowledged jump profile.
+
+    This is not a new scene measurement or evidence of landing. Predicted
+    bodies, future keys, unrelated primitives and inconsistent body signatures
+    remain unknown. The caller must install its image-time own-input cursor.
+    """
+    import arena_motion as motion
+    a,b=previous.get('motion'),current.get('motion')
+    if (not a or not b or a['name']not in('jump1','jump2')
+            or b['name']not in('jump1','jump2')):return None
+    dt=current['time']-previous['time']
+    if (not .006<=dt<=.16 or not np.isfinite(scale)or scale<=0
+            or not previous.get('phase','').startswith('jump')
+            or not current.get('phase','').startswith('jump')):return None
+    ta=previous['time']-a['started'];tb=current['time']-b['started']
+    if not np.isfinite([ta,tb]).all()or min(ta,tb)<0:return None
+    if ta>motion.duration(a['name'],a)+.2 or tb>motion.duration(b['name'],b)+.2:return None
+    pa=motion.point(a['name'],ta,a);pb=motion.point(b['name'],tb,b)
+    for observation,point in((previous,pa),(current,pb)):
+        box=observation.get('player')
+        if box is None or observation.get('player_predicted'):return None
+        if not np.isfinite([box.x,box.y,box.w,box.h]).all()or min(box.w,box.h)<=0:return None
+        if abs(box.h-point[4]*scale)>max(3.,.2*point[4]*scale):return None
+        if abs(box.w-point[3]*scale)>max(2.,.2*point[3]*scale):return None
+    if a['started']==b['started']and a['name']==b['name']:
+        root_delta=pb[1]-pa[1]
+    elif (a['name']=='jump1'and b['name']=='jump2'and b.get('jump_entry')
+          and previous['time']<=b['started']<=current['time']
+          and b['jump_entry']['parent']['name']==a['name']
+          and b['jump_entry']['parent']['started']==a['started']):
+        before=motion.point(a['name'],b['started']-a['started'],a)
+        root_delta=before[1]-pa[1]+pb[1]
+    else:return None
+    dy=(current['player'].center[1]-previous['player'].center[1]
+        +(root_delta+pb[2]-pa[2])*scale)
+    return float(dy)if np.isfinite(dy)and abs(dy)<=35 else None

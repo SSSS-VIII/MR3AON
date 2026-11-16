@@ -234,6 +234,7 @@ def run(args):
         line_camera_recovery=getattr(getattr(perception,'supports',None),'line_camera_recovery',False),
         texture_camera_recovery=getattr(getattr(perception,'supports',None),'texture_camera_recovery',False),
         ground_texture_type=type(getattr(perception,'ground_texture',None)).__name__,
+        jump_camera_recovery=bool(getattr(perception,'jump_camera_recovery',False)),
         incoming_jump2=bool(getattr(perception,'incoming_jump2',False)),
         planning_step_seconds=getattr(policy,'STEP',None),planning_steps=getattr(policy,'STEPS',None),
         planning_beam=getattr(policy,'BEAM',None),
