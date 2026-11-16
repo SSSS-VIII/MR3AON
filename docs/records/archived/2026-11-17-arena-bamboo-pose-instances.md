@@ -42,3 +42,14 @@
 不能把单对改善归因逐点图：此前同一名义种子也出现不同随机阶段/操作轨迹，仍需独立复现。40234首对事件审计：合并52次首事件，dual_lock29/overlap_hypothesis12/multi_exposure11；逐点54次，43/6/5，初始发射窗中位均约0.1695秒，宽窗>=0.8秒由3到4，均无角色漏检。锁定归属更集中，仍未消除时钟长尾。
 
 合并回合命中在32.545秒、原rollToLineDown/视觉flip_down，前253/71ms发rope_up/air_down；逐点回合26.718秒命中时原jump1、视觉jump1_rising，最后jump1仅早21ms。下一步测原Android K传输、E.poll_keys、原输入队列消费及碰撞体变化的实际关系；现有评估GetKeyDown时间只是按键可见，不能当起跳生效时间。原动作先验已含平均起步延迟，不能直接叠加一个任意20ms补丁。材料在native-bamboo-instances-v306的failure-audit、first-pair-clock-summary和source-verification。
+
+
+## 310原K键时序测量，313决策周期诊断
+
+安全1101开头重置16次，使用与actor相同RenderCapture.tap('jump')，每次预先安排不同捕获帧数；未使用advance直调UI作为按键。临时wrapper始终调用原E.poll_keys，仅Kdown前后采样，并独立EOF采样450ms；缓存原状态/Role局部capsule/输入队列字段，不读bounds或同步物理。原输入和物理未更改，wrapper自动恢复且超时退出；全部16次pollRestored=true、无采样异常，最后恢复1101/5000/.02/原菜单键盘/eval关闭。单次采样P95中位346微秒，最慢回合P95约1304微秒，测量本身有小开销。
+
+原binary08cc44d9…的OnRightDown只调用RecordUIControlPressed入singleInputList；MyFixedUpdate→ProcessUIAction→UIControlPressed再写原上键标志，由原Ninja状态更新生效。原方法反汇编和现场字段表在jump-activation-source-v309。不能把验收GetKeyDown当物理消费。
+
+16次Android ACK→K可见中位12.30ms，范围10.05–66.76；K可见→首个非runOnLine EOF中位21.14、17.22–35.88；ACK→首个capsule变化中位33.63、27.42–98.74。EOF仅给离散曝光上界，并非精确的原调用时间。将现有jump1全曲线直接对齐前250ms身体中心/高度，额外时间原点最佳偏移中位19ms、范围9–53；旧16.7ms的各回合像素RMSE中位3.69，允许逐回合后验拟合为0.99。现有曲线已包含入跳的平均迟滞，不能将33.6ms再次全加进去，故没有改输入默认先验。首键长尾也保留，不能只报后15次。
+
+313冻结原MPC纯CPU回放40234逐点失败前525–531帧，全部7帧旧决策复现。526原wait计划80ms后上翻；此前20次像素规划时刻差的P90约83.7ms，将搜索机会周期改为该实测值会当前即上翻，比实际旧动作早一轮；528后已经flip_up不能直接起跳，故只把延迟加在最后jump没有解决前置错误。尚是诊断，不等同无伤改善。拟做仅使用自身决策时钟的内部搜索步长候选，并在原生冻结对照；无关模型/输入/物理不动。材料input-latency-v310、input-latency-summary-v311、mpc-cadence-v312/313；没有读原状态作在线输入。
