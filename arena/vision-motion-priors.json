@@ -1488,6 +1488,8 @@
   },
   "air_down": {
     "speed": 28.0,
+    "ground_collider_restore_lead": 0.02,
+    "ground_collider_restore_source": "Optional conservative collision envelope: original 20ms physics-step ground-down calibrations v116/v119 restore full collider before rendered root contact; root/duration unchanged, independent run includes overestimates",
     "input_delay": 0.016666666666666666,
     "settle_seconds": 0.016666666666666666,
     "width": 0.2,

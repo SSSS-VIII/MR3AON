@@ -1056,6 +1056,8 @@ def create_motion(observation,name,stamp=None):
                       offset_x=ox,offset_y=oy,width=p.w/scale,height_box=p.h/scale)
     if name=='air_down':
         scale=observation.get('scale_px',41.);p=observation['player'];ox,oy=current_offsets(observation)
+        if observation.get('ground_down_collider_restore'):
+            active['collider_restore_lead']=motion.DATA['air_down']['ground_collider_restore_lead']
         if (observation.get('rope')is None and(observation.get('terrain')or{}).get('source')=='neural_segments'):
             target=ground_down_target(observation)
             if target is None:raise ValueError('No visible ground intersects the native down trajectory')

@@ -237,6 +237,7 @@ def run(args):
         jump_camera_recovery=bool(getattr(perception,'jump_camera_recovery',False)),
         rope_ground_handoff=bool(getattr(getattr(perception,'supports',None),'rope_ground_handoff',False)),
         incoming_jump2=bool(getattr(perception,'incoming_jump2',False)),
+        ground_down_collider_restore=bool(getattr(perception,'ground_down_collider_restore',False)),
         planning_step_seconds=getattr(policy,'STEP',None),planning_steps=getattr(policy,'STEPS',None),
         planning_beam=getattr(policy,'BEAM',None),
         ground_static_search=bool(getattr(policy,'ground_static_search',False)),

@@ -97,6 +97,12 @@ def point(name,t,parameters=None):
         # finishes interpolating to the rope. Preserve that larger hurt body.
         restored=arrived or (name=='air_up'and t>=delay and
                             abs(delta-target)<=abs(speed)*DATA['air_up']['collider_restore_lead'])
+        if (name=='air_down'and parameters.get('destination')=='ground'and t>=delay
+                and speed>parameters.get('surface_velocity',0.)):
+            # Ground contact can restore the physics body one fixed update
+            # before the rendered root arrives. This changes geometry only;
+            # contact/jump reset still need their usual observed evidence.
+            restored=restored or 0<delta-target<=(speed-parameters.get('surface_velocity',0.))*parameters.get('collider_restore_lead',0.)
         return [DATA['stand_offset_x']if restored else 0.,target if arrived else delta,0.,
                 prior['stand_width']if restored else prior['width'],
                 DATA['stand_height']if restored else prior['height']]

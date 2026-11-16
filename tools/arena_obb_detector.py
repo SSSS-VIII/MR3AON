@@ -305,6 +305,7 @@ class ObbPerception(Perception):
                       camera_motion_source=self.supports.camera_motion_source,
                       jump_camera_prior=camera_prior,
                       incoming_jump2=bool(getattr(self,'incoming_jump2',False)),
+                      ground_down_collider_restore=bool(getattr(self,'ground_down_collider_restore',False)),
                       scene_velocity_x=support['scene_vx'],scene_velocity_x_raw=support['scene_vx_raw'],
                       scene_motion_observed=support['scene_motion_observed'],
                       scene_motion_source=support['scene_motion_source'],scene_texture=texture,scene_motion_ms=scene_ms,
