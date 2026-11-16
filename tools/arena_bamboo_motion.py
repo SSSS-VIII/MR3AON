@@ -10,6 +10,7 @@ from statistics import median
 from arena_vision import Box,Detection,Track,Tracker
 from arena_projection import SCALE
 from arena_bamboo_point import point_bounds, remember_point_interval, target_envelope
+from arena_bamboo_instances import pose_phase_agreement
 
 
 @dataclass
@@ -46,10 +47,12 @@ class BambooClocks:
         # Two phase logits can survive class-wise NMS at the same reticle.
         # Retain the strongest spatial prediction before temporal association.
         selected=[]
-        for cue in sorted(cues,key=lambda c:(c['phase']in('aim','locked'),c['confidence']),reverse=True):
+        for cue in sorted(cues,key=lambda c:(c.get('pose_instance',False),c['phase']in('aim','locked'),c['confidence']),reverse=True):
             if cue['phase']not in('aim','locked','uncertain')or cue['confidence']<.25:continue
-            if any(abs(cue['box'].center[0]-s['box'].center[0])<8 and
-                   abs(cue['box'].center[1]-s['box'].center[1])<8 for s in selected):continue
+            if any(abs(cue['box'].center[0]-s['box'].center[0])<(3 if cue.get('pose_instance')and s.get('pose_instance')else 8) and
+                   abs(cue['box'].center[1]-s['box'].center[1])<(3 if cue.get('pose_instance')and s.get('pose_instance')else 8)
+                   and not(cue['phase']!=s['phase']and pose_phase_agreement(cue)and pose_phase_agreement(s))
+                   for s in selected):continue
             selected.append(cue)
         tracks=self.tracker.update([Detection(c['box'],'bamboo_reticle',c['confidence'])for c in selected],
                                    stamp,(0.,camera_y))
@@ -74,7 +77,8 @@ class BambooClocks:
             elif cue['phase']=='locked':
                 if clock['first_lock']is None:clock['first_lock']=stamp
                 clock['lock_count']+=1
-                if clock['lock_count']>=2 and track.observations>=3:
+                strong_pose_onset=pose_phase_agreement(cue)and clock['last_aim']is not None
+                if (clock['lock_count']>=2 or strong_pose_onset)and track.observations>=3:
                     first=clock['first_lock'];aim=clock['last_aim']
                     # A first sighting already locked cannot supply its onset.
                     # Keep that uncertainty instead of restarting a full timer.

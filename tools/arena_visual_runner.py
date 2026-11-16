@@ -229,7 +229,7 @@ def run(args):
              'arena/vision-object-priors.json','arena/vision-detector.json','tools/arena_oriented.py',
              'tools/arena_obb_detector.py','tools/arena_support.py','tools/arena_object_support.py',
              'tools/arena_support_refiner.py',
-             'tools/arena_bamboo_motion.py','tools/arena_bamboo_point.py','tools/arena_scene_motion.py','tools/arena_arrow_motion.py','tools/arena_mace_motion.py',
+             'tools/arena_bamboo_motion.py','tools/arena_bamboo_point.py','tools/arena_bamboo_instances.py','tools/arena_scene_motion.py','tools/arena_arrow_motion.py','tools/arena_mace_motion.py',
              'tools/arena_bamboo_phase.py','tools/arena_action_timing.py',
              'tools/arena_reactive_sweep.py','tools/arena_key_receipts.py','tools/arena_input_timeline.py')
     sources+=('arena/Local/environment.lua','arena/Local/native_selection.lua','tools/arena_local.py')

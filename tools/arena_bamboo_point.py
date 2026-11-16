@@ -108,11 +108,13 @@ def target_envelope(clock,base_height):
 
 class BambooPointRefiner:
     """Explicit optional model, warmed before capture; pixels and cues only."""
-    def __init__(self,weights):
+    def __init__(self,weights,*,instances=False):
         import cv2
         import numpy as np
         import torch
         from arena_yolo import offline_sdk
+        if type(instances)is not bool:raise ValueError('Pose instances must be a boolean')
+        self.instances=instances
         weights=Path(weights);profile_path=weights.parent.parent/'profile.json'
         profile=json.loads(profile_path.read_text())
         if (profile.get('task')!='pose'or profile.get('crop_px')!=64
@@ -130,8 +132,10 @@ class BambooPointRefiner:
         for count in(1,2,4,8,16,32):self.model.predict([self.dummy]*count,**self.options)
         self.info=dict(weights=str(weights),sha256=hashlib.sha256(weights.read_bytes()).hexdigest(),
             profile_sha256=hashlib.sha256(profile_path.read_bytes()).hexdigest(),crop_px=64,
-            imgsz=profile['imgsz'],batch_chunk=32,quantize=32,nms_iou=.95,point_selection='phase_agreement_and_unique_nearby_point',
-            geometry='Parallel target interval must retain the original bbox target; not a phase override')
+            imgsz=profile['imgsz'],batch_chunk=32,quantize=32,nms_iou=.95,pose_instances=instances,
+            point_selection='two_head_pose_instances'if instances else'phase_agreement_and_unique_nearby_point',
+            geometry=('Per-point proposal graph with two visual phase heads; original bbox-target containment is not guaranteed'
+                      if instances else'Parallel target interval must retain the original bbox target; not a phase override'))
         self.last_ms=0.;self.last_stats={}
 
     def refine(self,bgr,cues):
@@ -158,7 +162,12 @@ class BambooPointRefiner:
                         phase=self.model.names[int(cls)],confidence=float(conf),
                         point=[float(point[0,0]+origin[0]),float(point[0,1]+origin[1]),float(point[0,2])]))
         output=[refine_point_cue(cue,predictions[i])if i in predictions else cue for i,cue in enumerate(cues)]
+        accepted=sum(c['center_refinement']['reason']is None for i,c in enumerate(output)if i in predictions)
+        if getattr(self,'instances',False):
+            from arena_bamboo_instances import expand_bamboo_instances
+            expanded=expand_bamboo_instances([output[i]for i in predictions],[predictions[i]for i in predictions])
+            output=[c for i,c in enumerate(output)if i not in predictions]+expanded
         self.last_ms=(time.perf_counter()-begin)*1000
-        self.last_stats=dict(rois=len(crops),accepted=sum(c['center_refinement']['reason']is None
-            for i,c in enumerate(output)if i in predictions),wall_ms=self.last_ms)
+        self.last_stats=dict(rois=len(crops),accepted=accepted,wall_ms=self.last_ms,
+            pose_instances=sum(bool(c.get('pose_instance'))for c in output))
         return output
