@@ -31,3 +31,11 @@ v157–161加原5004不同配置屋顶作未用于上述校准的运动验证，
 新增内部source_pinball_prior默认False：Tracker只给新Pinball轨迹设置该标记，拟合读取完整来源中位；保持原可见地面、直线反证、速度拟合和能量校正，不按当前板号/原对象选参数。runner setup与Track记录开关，无用户菜单/CLI选项。6项新保护涵盖原默认下落速度、长窗直线、无地面不反弹、轨迹复制及Tracker仅作用于Pinball；全741通过/2依赖跳过。接线后v162关闭与旧v157的1750个预测/原生评分逐项相同，v163开启与研究v158的1756项逐项相同。等待固定模型/源码的原生配对，不晋升默认，不宣称无伤。
 
 证据在ignored rope-recovery-v37/{pinball-motion-v152,pinball-main76-v153,pinball-motion-v154*,pinball-motion-v155*,pinball-*v156.json,pinball-motion-v157*至v163*}及相应脚本；来源统计/现场默认对象SHA写入vision-object-priors.json的complete_gale_prior，仅含总体汇总，没有运行时板号或对象查表。
+
+## v164：固定模型的十回合原生对照
+
+全批次固定main76 FP32/phase18、自有输入时钟、图块相机及此前研究策略，只切内部来源先验。三组同种子单板总伤：51013/54310为750→250；5004/54311为1950→1225；53042/54314为1587.5→1275。独立开启组51013/54312仍250、5004/54313仍850。六关6007/64004回归300伤，61081/40210整板0伤；后两组没有同种子关闭对照，不能当作先验收益。十回合均穿越，九有伤，尚未满足无伤目标，默认仍关。
+
+伤害来源必须分开：51013配对的差别全部是EnemyDart（750→250），双方Pinball均0，不能归功于弹球模型直接减少碰撞；独立51013仍被Pinball打250。5004配对Pinball1250→875、HideBlade700→350，独立Pinball500/HideBlade350；53042配对Pinball937.5→875、PoleaxeWarrior双方400，旧组另MuppetBomb250。以上为原伤害事件保留引用及同帧几何的后验分类，未进入控制输入。
+
+十份setup各38项源码均与开跑前快照及整批结束工作区相同，核验在后续源码编辑之前完成。33个原伤害事件合计8437.5，未见证与未归属损失均0；结束已恢复1101/5000、暂停菜单/键盘、eval关闭，原fixedDeltaTime=.02。证据：ignored rope-recovery-v37/{native-pinball-prior-v164,pinball-prior-v164-sources}，含完整plan、summary、failure-audit、source-verification与restored。仍需处理反弹后冷轨迹、跳跃可用性和地形感知，不把这轮整体降低伤害写成稳定无伤。
