@@ -77,3 +77,89 @@ class GroundTextureMotion:
         if max(abs(r[0]-dx)for r in rows)>4:return None
         return dict(dx=dx,dt=dt,vx=dx/dt,response=float(np.median([r[2]for r in rows])),
                     windows=len(rows),source='ground_texture')
+
+
+class GroundPatchMotion:
+    """Research candidate: unique 2D texture matches inside neural ground.
+
+    A weak platform proposal only selects pixels; it does not supply motion.
+    Independent, spatially separated patches must agree on one translation.
+    Grid sampling keeps bright foreground blades from taking every corner.
+    """
+    def __init__(self):
+        self.previous=None
+        self.x=np.arange(640)[None,:]
+        self.y=np.arange(360)[:,None]
+
+    def mask(self,segments,player):
+        x,y=self.x,self.y
+        mask=np.zeros((360,640),bool)
+        for s in segments:
+            if (s['kind']!='platform'or s['confidence']<.25
+                    or s['b'][0]-s['a'][0]<96):continue
+            a,b=s['a'],s['b']
+            line=a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0])
+            mask|=(x>a[0]+8)&(x<b[0]-8)&(y>=line+4)&(y<=line+32)
+        mask&=(y>60)&(y<356)&~((y>270)&((x<140)|(x>510)))
+        if player is not None:
+            mask&=~((x>player.x-20)&(x<player.x+player.w+20)
+                    &(y>player.y-20)&(y<player.y+player.h+20))
+        return mask.astype(np.uint8)*255
+
+    @staticmethod
+    def peak_offset(a,b,c):
+        denominator=float(a)-2*float(b)+float(c)
+        return .5*(float(a)-float(c))/denominator if denominator<-.001 else 0.
+
+    def observe(self,rgb,segments,stamp,player=None):
+        if rgb.shape[:2]!=(360,640):
+            self.previous=None
+            return None
+        gray=cv2.cvtColor(rgb[:,:,:3],cv2.COLOR_RGB2GRAY)
+        mask=self.mask(segments,player)
+        old=self.previous;self.previous=(gray,mask,stamp)
+        if old is None:return None
+        first,oldmask,oldstamp=old;dt=stamp-oldstamp
+        if not .006<=dt<=.16 or not mask.any()or not oldmask.any():return None
+        cells=[]
+        # Crop empty rows, retaining the same per-cell feature population.
+        rows=np.flatnonzero(oldmask.any(axis=1));top=max(0,int(rows[0])-3)
+        bottom=min(360,int(rows[-1])+4)
+        for left in range(0,640,64):
+            cellmask=oldmask[top:bottom,left:left+64]
+            if not cellmask.any():continue
+            cell=cv2.goodFeaturesToTrack(first[top:bottom,left:left+64],maxCorners=4,
+                qualityLevel=.02,minDistance=10,mask=cellmask,blockSize=5)
+            if cell is not None:
+                cell[:,:,0]+=left;cell[:,:,1]+=top;cells.append(cell)
+        if not cells:return None
+        matches=[]
+        for x,y in np.concatenate(cells)[:,0].astype(int):
+            half=7
+            if min(x,y)<half or x+half>=640 or y+half>=360:continue
+            template=first[y-half:y+half+1,x-half:x+half+1]
+            if template.std()<3:continue
+            left=max(half,x-110);right=min(639-half,x+1)
+            top=max(half,y-35);bottom=min(359-half,y+35)
+            if right<=left or bottom<=top:continue
+            search=gray[top-half:bottom+half+1,left-half:right+half+1]
+            scores=cv2.matchTemplate(search,template,cv2.TM_CCOEFF_NORMED)
+            scores[mask[top:bottom+1,left:right+1]==0]=-1
+            _,score,_,(px,py)=cv2.minMaxLoc(scores)
+            if not np.isfinite(score)or score<.85:continue
+            others=scores.copy()
+            others[max(0,py-3):py+4,max(0,px-3):px+4]=-1
+            if score-float(others.max())<.06:continue
+            sx=self.peak_offset(scores[py,px-1],scores[py,px],scores[py,px+1])if 0<px<scores.shape[1]-1 else 0.
+            sy=self.peak_offset(scores[py-1,px],scores[py,px],scores[py+1,px])if 0<py<scores.shape[0]-1 else 0.
+            matches.append((x,left+px+sx-x,top+py+sy-y))
+        if len(matches)<4:return None
+        values=np.asarray(matches);delta=values[:,1:]
+        median=np.median(delta,axis=0)
+        inlier=np.linalg.norm(delta-median,axis=1)<1.5
+        if inlier.sum()<4 or inlier.mean()<.7:return None
+        span=float(np.ptp(values[inlier,0]))
+        if span<96:return None
+        dx,dy=map(float,np.median(delta[inlier],axis=0))
+        return dict(dx=dx,dt=dt,vx=dx/dt,camera_dy=dy,response=float(inlier.mean()),
+                    points=int(inlier.sum()),span=span,source='ground_unique_template')

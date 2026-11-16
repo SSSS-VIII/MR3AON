@@ -128,7 +128,7 @@ def overlapping_static_camera_shift(current,previous,dx=None):
 
 
 class VisualSupports:
-    def __init__(self,*,line_camera_recovery=False):
+    def __init__(self,*,line_camera_recovery=False,texture_camera_recovery=False):
         self.tracks=[];self.next_id=1;self.mode=None;self.reference_y=None
         self.camera_y=0.;self.camera_vy=0.;self.scroll_vx=0.
         self.last_translation=-1e9
@@ -137,6 +137,8 @@ class VisualSupports:
         self.translation_source=None
         self.line_camera_recovery=line_camera_recovery
         self.camera_motion_source=None
+        self.texture_camera_recovery=texture_camera_recovery
+        self.last_texture_camera=None
 
     def associate(self,segments,stamp,texture=None):
         candidates=[]
@@ -225,6 +227,25 @@ class VisualSupports:
             if recovered is not None:
                 shifts.append(recovered);velocities.append(recovered/dt)
                 self.camera_motion_source='support_line_overlap'
+        if self.texture_camera_recovery and self.tracks:
+            dt=stamp-self.tracks[0]['stamp']
+            dy=texture.get('camera_dy')if texture else None
+            # A measured displacement belongs to this exact image interval.
+            # A stale/invalid texture result cannot become camera evidence.
+            measured=(dy is not None and np.isfinite(dy)and .006<=dt<=.16
+                      and abs(texture.get('dt',0)-dt)<1e-6)
+            if measured:
+                shifts=[dy];velocities=[dy/dt]
+                self.last_texture_camera=(stamp,dy/dt)
+                self.camera_motion_source='ground_patch'
+            elif (not shifts and self.last_texture_camera is not None
+                  and .006<=dt<=.16 and 0<stamp-self.last_texture_camera[0]<.12
+                  and any(s['kind']=='platform'for s in current)):
+                # Brief measurement gaps use only the recent pixel velocity.
+                # Mark the extrapolation explicitly and expire it after 120ms.
+                velocity=self.last_texture_camera[1]
+                shifts=[velocity*dt];velocities=[velocity]
+                self.camera_motion_source='ground_patch_prediction'
         self.camera_vy=float(np.median(velocities))if velocities else 0.
         if shifts:self.camera_y+=float(np.median(shifts))
         self.tracks=current
