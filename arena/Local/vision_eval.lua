@@ -129,7 +129,7 @@ function E.vision_evaluation()
         damage=E.visionEvalDamage or 0,minHealth=E.visionEvalMinHealth or n.CurrentHp,
         keys=E.visionEvalKeys or {},lastKeyTime=E.visionEvalLastKeyTime,
         keyReceipts=E.visionEvalReceipts or {},monotonic=monotonic(),
-        last_health_drop=E.visionEvalLastHealthDrop}
+        last_health_drop=E.visionEvalLastHealthDrop,health_drops=E.visionEvalHealthDrops or {}}
     local ok,value=pcall(E.vision_interactions)
     if ok then result.interactions=value else result.interactions_error=tostring(value) end
     return result
@@ -150,6 +150,9 @@ function E.sample_vision_health()
         local geometry_ok,geometry=pcall(E.vision_hit_geometry,n)
         if geometry_ok then event.geometry=geometry else event.geometry_error=tostring(geometry)end
         E.visionEvalLastHealthDrop=event
+        local events=E.visionEvalHealthDrops or {}
+        if #events>=16 then table.remove(events,1) end
+        events[#events+1]=event;E.visionEvalHealthDrops=events
     end
     for _,pair in ipairs({{'jump',U.KeyCode.K},{'down',U.KeyCode.S}}) do
         if U.Input.GetKeyDown(pair[2]) then
@@ -167,6 +170,7 @@ function E.start_vision_evaluation()
     local hp=CS.NinjaController.Instance.NinjaScript.CurrentHp
     E.visionEvalPreviousHealth=hp;E.visionEvalMinHealth=hp;E.visionEvalDamage=0
     E.visionEvalLastHealthDrop=nil
+    E.visionEvalHealthDrops={}
     E.visionEvalKeys={jump=0,down=0}
     E.visionEvalReceipts={}
     if E.visionEvalRunner then

@@ -23,6 +23,19 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def health_events(row,origin):
+    """Read bounded native event history and the legacy sticky witness."""
+    result=[];invalid=[];ring=row.get('health_drops')
+    if isinstance(ring,dict)and set(ring)=={str(i+1)for i in range(len(ring))}:
+        ring=[ring[str(i+1)]for i in range(len(ring))]
+    if ring is not None:
+        if isinstance(ring,list):
+            result.extend((event,f'{origin}.health_drops[{i}]')for i,event in enumerate(ring,1))
+        else:invalid.append(origin+'.health_drops')
+    if row.get('last_health_drop')is not None:result.append((row['last_health_drop'],origin))
+    return result,invalid
+
+
 def read_rows(path):
     rows = []
     for line, text in enumerate(path.read_text().splitlines(), 1):
@@ -195,18 +208,17 @@ def audit_run(folder):
 
     unique, invalid_events = {}, []
     for sample in samples:
-        event = sample['row'].get('last_health_drop')
-        if event is None:
-            continue
-        if not isinstance(event, dict) or not all(number(event.get(key)) for key in ('monotonic', 'before', 'after')):
-            invalid_events.append(sample['origin'])
-            continue
-        if event['before'] <= event['after']:
-            invalid_events.append(sample['origin'])
-            continue
-        identity = (event['monotonic'], event.get('frame'), event['before'], event['after'])
-        entry = unique.setdefault(identity, dict(native=event, references=[]))
-        entry['references'].append(sample['origin'])
+        events,invalid=health_events(sample['row'],sample['origin']);invalid_events.extend(invalid)
+        for event,origin in events:
+            if not isinstance(event, dict) or not all(number(event.get(key)) for key in ('monotonic', 'before', 'after')):
+                invalid_events.append(origin)
+                continue
+            if event['before'] <= event['after']:
+                invalid_events.append(origin)
+                continue
+            identity = (event['monotonic'], event.get('frame'), event['before'], event['after'])
+            entry = unique.setdefault(identity, dict(native=event, references=[]))
+            entry['references'].append(origin)
     excluded, hits = [], []
     timeline, unknown_actions = action_timeline(report['actions'], samples)
     for identity, entry in sorted(unique.items(), key=lambda item: item[0][0]):

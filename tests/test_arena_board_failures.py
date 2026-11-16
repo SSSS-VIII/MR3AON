@@ -219,3 +219,22 @@ def test_dropped_key_cannot_shift_native_clock_or_reuse_legacy_anchor_error():
     assert by_count[3]['clock']=='enqueued_time_no_native_receipt'
     assert by_count[4]['monotonic']==4.02
     assert by_count[4]['clock']=='native_key_receipt'
+
+
+@pytest.mark.parametrize('as_object',[False,True])
+def test_native_event_history_recovers_multiple_hits_between_polls(tmp_path,as_object):
+    a,b=drop(10.95,5000,4800),drop(11.,4800,4700)
+    ring={'1':a,'2':b}if as_object else[a,b]
+    after=sample(11.1,damage=300,drop=b,health_drops=ring)
+    result=audit_run(write_run(tmp_path,rows=[sample(10.9),after],final=dict(after,monotonic=12)))
+    assert [hit['health_loss']for hit in result['hits']]==[200,100]
+    assert result['damage']['unwitnessed_loss']==0
+    assert result['damage']['witnessed_event_loss']==300  # Sticky+ring are never counted twice.
+    assert result['evidence']['invalid_event_origins']==[]
+
+
+def test_malformed_native_history_does_not_hide_the_legacy_event(tmp_path):
+    after=sample(11.1,damage=100,drop=drop(),health_drops={'wrong':drop()})
+    result=audit_run(write_run(tmp_path,rows=[sample(10.9),after],final=dict(after,monotonic=12)))
+    assert len(result['hits'])==1
+    assert result['evidence']['invalid_event_origins']==['evaluation.jsonl:2.health_drops','report.final.health_drops']
