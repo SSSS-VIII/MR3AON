@@ -223,6 +223,7 @@ def run(args):
              'tools/arena_bamboo_motion.py','tools/arena_scene_motion.py','tools/arena_arrow_motion.py','tools/arena_mace_motion.py',
              'tools/arena_bamboo_phase.py','tools/arena_action_timing.py',
              'tools/arena_reactive_sweep.py','tools/arena_key_receipts.py','tools/arena_input_timeline.py')
+    sources+=('arena/Local/environment.lua','arena/Local/native_selection.lua','tools/arena_local.py')
     if capture_type is not FastCapture:
         sources+=('tools/arena_render_capture.py','arena/Local/render_capture.lua','arena/Capture/RenderRelay.java')
     source_hashes={name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest()for name in sources}

@@ -125,7 +125,7 @@ function E.vision_evaluation()
         time=U.Time.realtimeSinceStartup,health=n.CurrentHp,maxHealth=n.MaxHp,
         physics=tostring(get(n,'__ninjaPhysicsState')),stageIndex=index,stageID=id,stageCount=stages.Count,
         x=n.transform.position.x,y=n.transform.position.y,god=n:IsGodMode(),
-        scale=U.Time.timeScale,map=get(level,'_levelBaseInfo')._levelID,
+        scale=U.Time.timeScale,fixedDeltaTime=U.Time.fixedDeltaTime,map=get(level,'_levelBaseInfo')._levelID,
         damage=E.visionEvalDamage or 0,minHealth=E.visionEvalMinHealth or n.CurrentHp,
         keys=E.visionEvalKeys or {},lastKeyTime=E.visionEvalLastKeyTime,
         keyReceipts=E.visionEvalReceipts or {},monotonic=monotonic(),

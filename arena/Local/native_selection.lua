@@ -315,6 +315,9 @@ function E.native_select(spec,seed)
             end
             local wanted=s.pins[tostring(s.start)]
             assert(not wanted or E.travel.targetStage==wanted,'Selected variant did not become active')
+            -- Native boss travel can leave its slow-motion factor behind.
+            -- Recover through the client API before handing over a new board.
+            CS.NinjaController.Instance:RecoverGameTimeScale()
             E.travel.phase='ready'
         end)
         if held then CS.NinjaController.Instance:SetStopRun(false,false,0) end

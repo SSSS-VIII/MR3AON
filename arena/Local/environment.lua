@@ -23,7 +23,7 @@ local function vector(v) return {x=v.x,y=v.y,z=v.z} end
 function E.state()
     local gm = CS.GameManager.Instance
     local out = {state=tostring(gm:GetCurFSMStateID()),content=tostring(gm.CurrContentState),
-        frame=U.Time.frameCount,time=U.Time.time,timeScale=U.Time.timeScale,
+        frame=U.Time.frameCount,time=U.Time.time,timeScale=U.Time.timeScale,fixedDeltaTime=U.Time.fixedDeltaTime,
         only=gm._isOnlyGame,offline=gm.GameInfo.OfflineGame,
         mode=gm.GameInfo:GetRealCombatType(),combatFamily=gm.GameInfo._combatType,chapter=gm.GameInfo._chapterID,level=gm.GameInfo._levelID,seed=E.seed,
         episodeFrame=gm.GameInfo._totalFrameCount,episodeTime=gm.GameInfo._totalTime,healthMultiplier=E.healthMultiplier}
@@ -303,6 +303,8 @@ function E.reset(seed, chapter, level)
     assert(type(seed)=='number' and seed%1==0 and seed>=0 and seed<=2147483647,'Invalid seed')
     assert(not E.busy,'An advance is active')
     E.seed=seed
+    -- A new round must not inherit a previous boss's slow-motion physics step.
+    gm:SetTimeScale(1)
     U.Time.captureFramerate=60
     U.Time.timeScale=1
     gm:PauseGameContent()

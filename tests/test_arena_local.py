@@ -206,7 +206,11 @@ MR3A={seedHook=true}
 local old={OfflineGame=true}
 local attract,blocks,items,enemies,effects,platforms,pools,scene=false,false,false,false,false,false,false,false
 local frameworkPool=false
-local gm={_isOnlyGame=true,GameInfo=old}
+local gm={_isOnlyGame=true,GameInfo=old,_timeScale=.5}
+function gm:SetTimeScale(value)
+ assert(value==1 and self.GameInfo==old and not scene)
+ self._timeScale=value;CS.UnityEngine.Time.fixedDeltaTime=.02*value
+end
 function gm:PauseGameContent()assert(self.GameInfo==old)end
 function gm:ClearAllObjectsInScene()assert(blocks and items and enemies and effects and platforms and pools);scene=true end
 function gm:InitGameData()assert(items and enemies and scene and self.GameInfo~=old)end
@@ -230,6 +234,7 @@ MR3A.role_defaults=function()end
 MR3A.wait_ready=function()end
 local r=MR3A.reset(42,1,1)
 assert(r.resetting and items and enemies and scene)
+assert(gm._timeScale==1 and CS.UnityEngine.Time.fixedDeltaTime==.02)
 io.write('ok')
 ''')
     assert subprocess.check_output([lua, str(script)], text=True) == 'ok'

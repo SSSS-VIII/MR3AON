@@ -162,3 +162,5 @@ main保存计划已加入工坊挑战，单次入口为 `./run [名字] --once -
 2026-11-15：新策略已接入，日常预设及main保存队列排在3v3前；不启动实例，用历史5图验证实际动作类、原生点击、扣币落位回执。决策源码在`agent/intelligence_strategy`，匹配前预热C++17核，状态在同实例data/intelligence-battle-state.json，日志沿用同实例debug。运行中的Agent需下次启动才加载新Python；未强停main或xiaoli。
 
 竞技场内部研究可使用`tools/arena_render_capture.py`的RenderCapture：要求arena已暂停，复用同一InstanceSession与原Android按键/时钟，原Unity EOF读回完整渲染后缩至640×360；无桌面截图依赖，不改游戏UID禁止联网路由。默认视觉入口仍为FastCapture。协议/同帧像素码/活动负载及时间定义见[渲染读回](archived/2026-11-16-arena-render-readback.md)，不能把读回开始时刻称曝光时间。
+
+2026-11-16修复竞技场新回合及选板边界的慢动作残留：通过原GameManager/NinjaController时间恢复接口同步内部倍率与Unity/Lua固定步；v56重开及跨Boss定位后正常1倍/.02，日志新增fixedDeltaTime。旧直接恢复Unity.timeScale可能保留.01；校准/验收必须记录实际步长，详见[时钟恢复](archived/2026-11-16-arena-round-clock-recovery.md)。
