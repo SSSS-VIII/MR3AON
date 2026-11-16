@@ -19,6 +19,17 @@ local function register_parameters(kind,value,updates)
  local entry={id=id,type=value:GetType().FullName}
  local ok,data=pcall(function()return json.parse(U.JsonUtility.ToJson(value))end)
  if ok then entry.initial_parameters=data else entry.error=tostring(data)end
+ if kind=='enemy_infos' then
+  -- JsonUtility serializes a nested custom object through its declared base
+  -- fields. Export its runtime type separately so per-instance movement
+  -- parameters remain available to offline annotation/calibration only.
+  local success,custom=pcall(function()return value._enemyInfoCustom end)
+  if success and custom then
+   entry.custom_type=custom:GetType().FullName
+   local encoded,parameters=pcall(function()return json.parse(U.JsonUtility.ToJson(custom))end)
+   if encoded then entry.custom_parameters=parameters else entry.custom_error=tostring(parameters)end
+  end
+ end
  updates[kind][#updates[kind]+1]=entry
  return id
 end

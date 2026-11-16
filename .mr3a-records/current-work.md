@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-16补原标注派生参数导出：旧EnemyInfo嵌套仅基类，新增custom_type/custom_parameters只用于离线。v152平绳336帧/66引用无错，47 Pinball真实10/6/5（当前汇总8/8/7），god全false并恢复；735通过/2跳过，继续独立运动真值，不向actor注入参数，见[派生参数](archived/2026-11-16-arena-derived-parameter-export.md)。
+
 2026-11-16将上游专题分支后续294个提交完整快进回main，保留原上游合并/功能提交及选择性移植记录，删除已合入integrate/upstream-v162；未提交文件与暂存索引切换前后逐字节一致，未推送。日常开发固定main，专题收口后及时切回，见[分支收口](archived/2026-11-16-return-development-to-main.md)。
 
 2026-11-16屋顶新YOLO v150十回合拒绝替换：两屋顶2525→3125、500→1918.75，六关三板1860→3120，飞竹480→480，均有伤。10×38源相符/89事件17846.25伤、跨板歧义125保留，已恢复；历史穿越52/138并非当前无伤，转原Pinball逐实例运动校准，见[原生退步](archived/2026-11-16-arena-roof-support-finetune.md)。

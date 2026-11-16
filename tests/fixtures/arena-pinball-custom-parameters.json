@@ -1,0 +1,62 @@
+{
+  "scope": "Original paired v152 runtime parameter export; annotation only, never actor observations",
+  "source": {
+    "episode": "board51013-block1-s54300",
+    "frames": 168,
+    "god_true": 0,
+    "missing_god": 0,
+    "typed_parameters": 32,
+    "pinball_parameters": 24,
+    "labels_sha256": "a57581272f60f0966738f8de8c6ff969c426002c63b4594045ad2f4eee603e9d",
+    "pinball_values": [
+      [
+        10,
+        6,
+        5
+      ]
+    ]
+  },
+  "entry": {
+    "type": "EnemyInfo",
+    "custom_type": "EnemyPinballDataStruct",
+    "initial_parameters": {
+      "baseID": 0,
+      "_localScale": {
+        "y": 1,
+        "x": 1,
+        "z": 1
+      },
+      "_localEulerAngles": {
+        "y": 0,
+        "x": 0,
+        "z": 0
+      },
+      "_overAutoDiffCtrl": false,
+      "_enemyInfoCustom": {
+        "_render": -1
+      },
+      "_level": 50,
+      "generateDistanceY": 20,
+      "generateDistance": 15,
+      "_enemyType": 202,
+      "_localPosition": {
+        "y": 1.3599853515625,
+        "x": 7.3599853515625,
+        "z": 0
+      }
+    },
+    "id": 1,
+    "custom_parameters": {
+      "_renderType": 0,
+      "_render": -1,
+      "_acceleratedDown": 6,
+      "_initialSpeedY": 0,
+      "_isRotate": true,
+      "_reboundSpeedY": 5,
+      "_extraParam": 0,
+      "_isShowShadow": false,
+      "_speedX": 3,
+      "_acceleratedUp": 10
+    }
+  }
+}

@@ -1,5 +1,6 @@
 """Native JSON and pooled-identity regressions from paired arena collection."""
 import sys
+import json
 from pathlib import Path
 import pytest
 
@@ -12,6 +13,24 @@ def test_direct_native_arrays_and_rpc_arrays_decode_identically():
     rpc={'objects':[{'colliders':[{'box':[10,20,30,40]}]}]}
     assert normalize_arrays(direct)==normalize_arrays(rpc)==rpc
     assert isinstance(direct['objects'],dict)  # Raw evidence remains unchanged.
+
+
+def test_derived_movement_parameters_survive_both_native_array_encodings():
+    fixture=json.loads((Path(__file__).parent/'fixtures/arena-pinball-custom-parameters.json').read_text())
+    entry=fixture['entry']
+    rpc={'parameter_updates':{'enemy_infos':[entry]}}
+    direct={'parameter_updates':{'enemy_infos':{'1':entry}}}
+    assert normalize_arrays(direct)==normalize_arrays(rpc)==rpc
+    saved=normalize_arrays(direct)['parameter_updates']['enemy_infos'][0]
+    assert saved['custom_type']=='EnemyPinballDataStruct'
+    assert saved['custom_parameters']['_acceleratedUp']==10
+    assert saved['custom_parameters']['_acceleratedDown']==6
+    assert saved['custom_parameters']['_reboundSpeedY']==5
+    assert saved['custom_parameters']['_initialSpeedY']==0
+    assert saved['custom_parameters']['_render']==-1
+    # Legacy nested serialization remains intact, but lacks these derived
+    # fields. Existing consumers need not change their old entry handling.
+    assert '_acceleratedUp'not in saved['initial_parameters']['_enemyInfoCustom']
 
 
 @pytest.mark.parametrize('value',[{}, {'2':'x'}, {'1':'a','3':'b'}, {'1':'a','name':'x'}, {'0':'a'}])
