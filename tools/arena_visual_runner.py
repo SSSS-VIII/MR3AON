@@ -222,6 +222,7 @@ def run(args):
              'tools/arena_yolo_data.py','tools/arena_visual_runner.py','tools/arena_projection.py',
              'arena/vision-camera.json','tools/arena_mpc.py','tools/arena_object_motion.py',
              'tools/arena_pinball_impulse.py',
+             'tools/arena_rope_transfer.py',
              'arena/vision-object-priors.json','arena/vision-detector.json','tools/arena_oriented.py',
              'tools/arena_obb_detector.py','tools/arena_support.py','tools/arena_object_support.py',
              'tools/arena_support_refiner.py',
@@ -252,6 +253,7 @@ def run(args):
         pinball_rebound_carry=bool(getattr(getattr(perception,'tracker',None),'pinball_rebound_carry',False)),
         pinball_fast_rebound=bool(getattr(getattr(perception,'tracker',None),'pinball_fast_rebound',False)),
         pending_rope_clamp=bool(getattr(perception,'pending_rope_clamp',False)),
+        rope_down_anchor=bool(getattr(perception,'rope_down_anchor',False)),
         support_fall_gravity=motion.DATA['fall_from_run']['gravity'],
         uncommanded_air_accelerations=motion.air_accelerations(0),
         own_input_timeline=getattr(perception,'input_timeline',None)is not None)), indent=2))

@@ -1,0 +1,336 @@
+{
+  "scope": "Screenshot-only stock main76 observations and own original UI pulse history, original future collider truth isolated in expected_native_only. Known safe1101 calibration, not policy no-hit result.",
+  "source": "air-transfer-native-v240/v240b; frozen air-transfer-pixel-v242/forecasts.json and absolute-score-v243.json",
+  "cases": [
+    {
+      "name": "jump4-reverseNone-s55020",
+      "input": {
+        "time": 1.1599994897842,
+        "player": {
+          "x": 175.6693878173828,
+          "y": 174.0481414794922,
+          "w": 8.661224365234375,
+          "h": 8.153717041015625
+        },
+        "rope": 259.03753663090555,
+        "phase": "flip_down",
+        "vy": -102.19579140994782,
+        "jumps": 1,
+        "terrain": null,
+        "pending_rope_clamp": false,
+        "scale_px": 39.50531027533791,
+        "stand_w": 14.221911699121648,
+        "stand_h": 36.97697041771629,
+        "motion": {
+          "name": "air_down",
+          "started": 1.1199995279312,
+          "height": 2.565691510163044,
+          "lead": 0.282514886725052,
+          "destination": "rope",
+          "surface_velocity": -0.03207909712971673,
+          "offset_x": 0.0519981,
+          "offset_y": 0.1559999,
+          "width": 0.39289460661528713,
+          "height_box": 0.602467339550187,
+          "requires_contact": true
+        },
+        "vx": 32.61144130585862,
+        "ground_contact_observed": false,
+        "rope_contact_observed": false,
+        "rope_segment": {
+          "kind": "rope",
+          "a": [
+            -2.24993896484375,
+            259.1710205078125
+          ],
+          "b": [
+            464.74993896484375,
+            258.8289794921875
+          ],
+          "confidence": 0.95849609375,
+          "left_clipped": true,
+          "right_clipped": false,
+          "stamp": 1.1599994897842,
+          "observations": 4,
+          "vx": -541.8392890642144,
+          "vy": 0.0,
+          "id": 1
+        },
+        "rope_segments": [
+          {
+            "kind": "rope",
+            "a": [
+              462.5001220703125,
+              259.40125274658203
+            ],
+            "b": [
+              639.4998779296875,
+              259.09876251220703
+            ],
+            "confidence": 0.962890625,
+            "left_clipped": false,
+            "right_clipped": true,
+            "stamp": 1.1599994897842,
+            "observations": 4,
+            "vx": -541.8392890642144,
+            "vy": 0.0,
+            "id": 2
+          },
+          {
+            "kind": "rope",
+            "a": [
+              -2.24993896484375,
+              259.1710205078125
+            ],
+            "b": [
+              464.74993896484375,
+              258.8289794921875
+            ],
+            "confidence": 0.95849609375,
+            "left_clipped": true,
+            "right_clipped": false,
+            "stamp": 1.1599994897842,
+            "observations": 4,
+            "vx": -541.8392890642144,
+            "vy": 0.0,
+            "id": 1
+          }
+        ],
+        "player_predicted": false,
+        "tracks": []
+      },
+      "horizon": 0.15999984741219997,
+      "expected_native_only": {
+        "center_y": 288.6395907947271,
+        "physics": "runOnLineDown: 2"
+      },
+      "old_center_y": 264.5807248915911,
+      "prototype": {
+        "x": 180.16114591758605,
+        "y": 270.11071573018893,
+        "w": 14.221911699121648,
+        "h": 36.97697041771629
+      }
+    },
+    {
+      "name": "jump12-reverseNone-s55021",
+      "input": {
+        "time": 1.3799992799759,
+        "player": {
+          "x": 173.20530947668314,
+          "y": 180.68806438133797,
+          "w": 7.901062055067584,
+          "h": 7.901062055067583
+        },
+        "rope": 258.9967005362171,
+        "phase": "flip_down",
+        "vy": 871.1707921455796,
+        "jumps": 1,
+        "terrain": null,
+        "pending_rope_clamp": false,
+        "scale_px": 39.50531027533791,
+        "stand_w": 14.221911699121648,
+        "stand_h": 36.97697041771629,
+        "motion": {
+          "name": "air_down",
+          "started": 1.2799993753433,
+          "height": 4.3282035552803375,
+          "lead": 0.052021934279177895,
+          "destination": "rope",
+          "surface_velocity": -0.010925184334709879,
+          "offset_x": 0.0519981,
+          "offset_y": 0.1560001,
+          "width": 0.4036106303801803,
+          "height_box": 0.6259530598869925,
+          "requires_contact": true
+        },
+        "vx": 4.0025877247259185,
+        "ground_contact_observed": false,
+        "rope_contact_observed": false,
+        "rope_segment": {
+          "kind": "rope",
+          "a": [
+            -0.499969482421875,
+            259.1051330566406
+          ],
+          "b": [
+            343.9999694824219,
+            258.8948669433594
+          ],
+          "confidence": 0.9501953125,
+          "left_clipped": true,
+          "right_clipped": false,
+          "stamp": 1.3799992799759,
+          "observations": 8,
+          "vx": -527.6208218568547,
+          "vy": 0.0,
+          "id": 1
+        },
+        "rope_segments": [
+          {
+            "kind": "rope",
+            "a": [
+              343.2501525878906,
+              259.2149658203125
+            ],
+            "b": [
+              636.7498779296875,
+              258.7850341796875
+            ],
+            "confidence": 0.96484375,
+            "left_clipped": false,
+            "right_clipped": true,
+            "stamp": 1.3799992799759,
+            "observations": 8,
+            "vx": -527.6208218568547,
+            "vy": 0.0,
+            "id": 2
+          },
+          {
+            "kind": "rope",
+            "a": [
+              -0.499969482421875,
+              259.1051330566406
+            ],
+            "b": [
+              343.9999694824219,
+              258.8948669433594
+            ],
+            "confidence": 0.9501953125,
+            "left_clipped": true,
+            "right_clipped": false,
+            "stamp": 1.3799992799759,
+            "observations": 8,
+            "vx": -527.6208218568547,
+            "vy": 0.0,
+            "id": 1
+          }
+        ],
+        "player_predicted": true,
+        "tracks": []
+      },
+      "horizon": 0.15999984741210005,
+      "expected_native_only": {
+        "center_y": 288.6396051795249,
+        "physics": "runOnLineDown: 2"
+      },
+      "old_center_y": 265.38959401107616,
+      "prototype": {
+        "x": 172.7395742141834,
+        "y": 270.0852817255837,
+        "w": 14.221911699121648,
+        "h": 36.97697041771629
+      }
+    },
+    {
+      "name": "jump20-reverseNone-s55022",
+      "input": {
+        "time": 1.4799991846085,
+        "player": {
+          "x": 173.9814910888672,
+          "y": 130.56736755371094,
+          "w": 8.037017822265625,
+          "h": 7.865264892578125
+        },
+        "rope": 258.97286985677067,
+        "phase": "flip_down",
+        "vy": 158.1415807942443,
+        "jumps": 1,
+        "terrain": null,
+        "pending_rope_clamp": false,
+        "scale_px": 39.50531027533791,
+        "stand_w": 14.221911699121648,
+        "stand_h": 36.97697041771629,
+        "motion": {
+          "name": "air_down",
+          "started": 1.4399992227554,
+          "height": 4.160308183982603,
+          "lead": -0.07676915990497823,
+          "destination": "rope",
+          "surface_velocity": -0.014803059746237555,
+          "offset_x": 0.052002,
+          "offset_y": 0.0,
+          "width": 0.39651837157211484,
+          "height_box": 0.9416667258746755,
+          "requires_contact": true
+        },
+        "vx": 4.252264456141974,
+        "ground_contact_observed": false,
+        "rope_contact_observed": false,
+        "rope_segment": {
+          "kind": "rope",
+          "a": [
+            -2.2499542236328125,
+            259.12689208984375
+          ],
+          "b": [
+            294.74993896484375,
+            258.87310791015625
+          ],
+          "confidence": 0.94921875,
+          "left_clipped": true,
+          "right_clipped": false,
+          "stamp": 1.4799991846085,
+          "observations": 5,
+          "vx": -535.7056631157708,
+          "vy": 0.0,
+          "id": 1
+        },
+        "rope_segments": [
+          {
+            "kind": "rope",
+            "a": [
+              292.5,
+              259.083984375
+            ],
+            "b": [
+              636.5,
+              258.916015625
+            ],
+            "confidence": 0.96337890625,
+            "left_clipped": false,
+            "right_clipped": true,
+            "stamp": 1.4799991846085,
+            "observations": 5,
+            "vx": -535.7056631157708,
+            "vy": 0.0,
+            "id": 2
+          },
+          {
+            "kind": "rope",
+            "a": [
+              -2.2499542236328125,
+              259.12689208984375
+            ],
+            "b": [
+              294.74993896484375,
+              258.87310791015625
+            ],
+            "confidence": 0.94921875,
+            "left_clipped": true,
+            "right_clipped": false,
+            "stamp": 1.4799991846085,
+            "observations": 5,
+            "vx": -535.7056631157708,
+            "vy": 0.0,
+            "id": 1
+          }
+        ],
+        "player_predicted": false,
+        "tracks": []
+      },
+      "horizon": 0.15999984741209983,
+      "expected_native_only": {
+        "center_y": 288.6396049606848,
+        "physics": "runOnLineDown: 2"
+      },
+      "old_center_y": 269.89442253510794,
+      "prototype": {
+        "x": 173.62368194889535,
+        "y": 270.0395450253592,
+        "w": 14.221911699121648,
+        "h": 36.97697041771629
+      }
+    }
+  ]
+}

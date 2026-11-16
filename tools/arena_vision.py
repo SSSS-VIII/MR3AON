@@ -398,6 +398,7 @@ class Perception:
         self.horizontal_history=deque(maxlen=6)
         self.player_horizontal_velocity=0.
         self.pending_rope_clamp=False
+        self.rope_down_anchor=False
 
     def action(self, action, stamp, observation=None,*,primitive=None,source_observation=None):
         self.last_action = stamp
@@ -838,6 +839,7 @@ class Perception:
                     tracks=tracks, detections=detections,terrain=terrain,
                     motion_reference='support' if support is not None else 'player',
                     pending_rope_clamp=self.pending_rope_clamp,
+                    rope_down_anchor=self.rope_down_anchor,
                     scale_px=self.body_height*.73/.936,stand_w=self.body_height*.36,
                     stand_h=self.body_height*.73,motion=self.active_motion,vx=self.player_horizontal_velocity)
         result['ground_contact_observed']=bool(self.visual_role and player_observed and player
@@ -1218,6 +1220,10 @@ def player_future(observation,seconds):
     p=observation['player']
     active=observation.get('motion')
     if active:
+        if observation.get('rope_down_anchor',False):
+            from arena_rope_transfer import anchored_down_future
+            anchored=anchored_down_future(observation,seconds)
+            if anchored is not None:return anchored
         if motion.is_ground_transition(active['name']):return ground_primitive_future(observation,seconds)
         if active.get('contact_pending'):
             scale=observation.get('scale_px',41.)
