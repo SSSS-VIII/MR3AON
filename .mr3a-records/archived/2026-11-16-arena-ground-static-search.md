@@ -1,0 +1,21 @@
+# 地面高陷阱的连续动作搜索候选
+
+## 现象与原因
+
+v70的61011/41000在24.60秒开始撞EnemyHideBlade。实拍对应刀阵OBB已识别；原地面reactive只比较单次动作，627帧选择slide:49，随后到638帧均action_transition，639才跳，已晚于首伤。轨迹里原滑铲向前偏移也已存在，不是仅换怪物标签能修复。MPC虽会在空中搜索后续二跳，地面ground/slide却仅有既有飞竹WIP触发，所以普通刀阵未进入连续动作比较。
+
+## 候选实现
+
+内部ground_static_search默认False，不增加CLI/菜单；仅已识别neural_segments地面、ground/slide阶段及可用trap/mace/terrain_wall触发。复用同一MPC和原动作先验，允许地面jump1/slide以及滑铲开始至少.17秒后jump1；原输入间隔不缩短。setup记录候选状态，原80ms/12/24网格不变。uses_search提前拒绝缺失角色，避免预算预判在_objects访问None.x。
+
+## 当前验证边界
+
+两份真实像素估计与已发输入时钟固定为tests/fixtures/arena-ground-static-search.json，不包含地图、原敌人身份或原物理状态。627旧选滑铲、候选等待；633旧锁在action_transition，候选可提前jump1。反事实未改变保存的后续图像，不能当作新的闭环跑法。3项测试包含实际动作差异、缺角色/未知地面/无静态陷阱边界、滑铲原输入间隔。全arena653通过/2可选依赖跳过，首次缺角色测试暴露旧None.x并已补守卫。当前是待原生验证候选，未默认启用。
+
+计划v72冻结38源，以原main21/phase18、缓冲复用和相同其它候选跑61011同41000旧/新，再独立41006；GPU微调窗口结束后执行，不与训练抢资源。
+
+## v72实机退步与撤回
+
+session66342三回合正常完成并恢复1101/5000血/暂停/菜单键盘/评估关闭；每回合38源与ground-v72-sources及撤回前工作区全部相符。61011同41000：reactive1891.5伤、连续搜索3645伤；独立41006候选2169伤。全部穿越，但没有无伤或稳定改善。41血降7705.5伤、未见证/未归属差额0，截图请求→Unity键候选P95 150.14/155.74ms，对照74.70ms。
+
+离线单点能提前跳跃不等于闭环改善；候选已完全从actor/runner撤回，不累积新的默认关闭选项。完整候选源码、3项测试和两帧fixture保留在ignored render-readback-probe/ground-search-v72/rejected-source，原生报告保留native-ground-v72。原有地面飞竹WIP/动作分支未一并回退；只保留另行记录的缺角色uses_search守卫。下一步先查评估记录序列化对Unity主线程的影响，避免把评估负载误当决策模型成本。
