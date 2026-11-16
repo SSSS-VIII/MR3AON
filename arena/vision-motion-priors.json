@@ -1538,5 +1538,17 @@
     "foot_point": 0.75,
     "source": "Original NinjaData; ProcessMovementOnLine/Ground stop at next.PointStart.x - climbDistance; root-foot checks, independent of Role hurt capsule",
     "source_sha256": "9f6d4ea6fc98fa35124cdd395ad4c2187e5456f0e8bf662850846f3432194f49"
+  },
+  "jump2_entry": {
+    "speed": 12.5,
+    "gravity": 34.3,
+    "max_fall_speed": 40.0,
+    "fixed_step_seconds": 0.02,
+    "lag_seconds": 0.03,
+    "lag_range_seconds": [
+      0.02,
+      0.04
+    ],
+    "source": "Original NinjaData jumpForce2/upGravity2/downGravity2; movement before state update and BaseObject render interpolation; v57/v59 UI calibration. Nominal trajectory only; range is not a statistical confidence interval."
   }
 }

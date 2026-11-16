@@ -60,6 +60,26 @@ def duration(name,parameters=None):
     return profile.get('duration',profile['points'][-1][0])
 
 
+def jump_entry_root(t,entry,*,lag=None):
+    """Original second jump after the preceding rendered motion has finished.
+
+    The parent and its elapsed time come from our own submitted action history.
+    Native constants are calibrated offline; no live physics state is consumed.
+    """
+    prior=DATA['jump2_entry'];lag=prior['lag_seconds']if lag is None else lag
+    t=max(0.,t);age=entry['age'];parent=entry['parent']
+    lead=point(parent['name'],age+min(t,lag),parent)[1]-point(parent['name'],age,parent)[1]
+    moving=max(0.,t-lag);speed=prior['speed'];gravity=prior['gravity']
+    capped=min(moving,(speed+prior['max_fall_speed'])/gravity)
+    return lead+speed*capped-.5*gravity*capped*capped-prior['max_fall_speed']*(moving-capped)
+
+
+def apex(name,parameters=None):
+    if name=='jump2'and (parameters or{}).get('jump_entry'):
+        prior=DATA['jump2_entry'];return prior['lag_seconds']+prior['speed']/prior['gravity']
+    return DATA['profiles'][name]['apex']
+
+
 def point(name,t,parameters=None):
     """Return collider offsetX, root displacementY, offsetY, width, height."""
     parameters=parameters or{}
@@ -82,6 +102,8 @@ def point(name,t,parameters=None):
                 DATA['stand_height']if restored else prior['height']]
     profile=DATA['profiles'][name]
     points=profile['points']
+    entry=parameters.get('jump_entry')if name=='jump2'else None
+    if entry and t<=0:return entry['initial_point'].copy()
     if t<=0:
         value=points[0][1:].copy();value[0]+=parameters.get('offset_carry_x',0.)
         return value
@@ -103,6 +125,13 @@ def point(name,t,parameters=None):
         end=points[-1][0]
         value[0]+=carry*profile['slide_multiplier']**(min(t,end)/.01)*recovery_factor(max(0,t-end))
     else:value[0]+=carry  # The original parent offset freezes while airborne.
+    if entry:
+        if t<points[1][0]:
+            fraction=t/points[1][0];target=points[1][1:]
+            for index in(0,2,3,4):
+                end=target[index]+(carry if index==0 else 0.)
+                value[index]=entry['initial_point'][index]+(end-entry['initial_point'][index])*fraction
+        value[1]=jump_entry_root(t,entry)
     return value
 
 
@@ -117,4 +146,4 @@ def phase(name,t,parameters=None):
             return 'flip_down' if below else 'flip_up'
         if name=='air_down'and parameters.get('destination')=='ground':return 'ground'
         return 'rope_below' if below else 'rope_above'
-    return name+('_rising' if t<DATA['profiles'][name]['apex'] else '_falling')
+    return name+('_rising' if t<apex(name,parameters) else '_falling')

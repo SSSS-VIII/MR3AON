@@ -232,6 +232,7 @@ def run(args):
         capture_source=getattr(capture_type,'source_name','android_display'),
         detector=detector_info,policy=dict(continuous_collision=getattr(policy,'continuous_collision',False),
         line_camera_recovery=getattr(getattr(perception,'supports',None),'line_camera_recovery',False),
+        incoming_jump2=bool(getattr(perception,'incoming_jump2',False)),
         own_input_timeline=getattr(perception,'input_timeline',None)is not None)), indent=2))
     capture_times, vision_times, action_times, intervals, fresh_intervals,ages = [], [], [], [], [], []
     fresh_vision_times=[]

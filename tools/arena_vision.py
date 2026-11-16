@@ -1017,6 +1017,11 @@ def ground_down_target(observation):
 def create_motion(observation,name,stamp=None):
     active=dict(name=name,started=observation['time']if stamp is None else stamp)
     previous=observation.get('motion')
+    if (name=='jump2'and observation.get('incoming_jump2')and previous
+            and previous['name']=='jump1'):
+        scale=observation.get('scale_px',41.);p=observation['player'];ox,oy=current_offsets(observation)
+        active['jump_entry']=dict(parent=dict(previous),age=max(0.,observation['time']-previous['started']),
+            initial_point=[ox,0.,oy,p.w/scale,p.h/scale])
     if previous and (motion.is_ground_transition(previous['name'])or previous.get('offset_carry_x')):
         elapsed=max(0,observation['time']-previous['started'])
         if previous['name']=='slide'and motion.phase('slide',elapsed)=='slide':
@@ -1085,7 +1090,7 @@ def native_motion_box(observation,name,seconds):
     h=observation.get('stand_h',p.h)*h/motion.DATA['stand_height']
     result=Box(cx-w/2,cy-h/2,w,h)
     if name.startswith('jump'):
-        result=cap_landing(observation,result,seconds,name)
+        result=cap_landing(observation,result,seconds,name,parameters=parameters)
     return result
 
 
@@ -1123,8 +1128,8 @@ def ground_primitive_future(observation,seconds):
     return Box(cx-w/2,cy-h/2,w,h)
 
 
-def cap_landing(observation,box,seconds,name,forecast_seconds=None):
-    if seconds<motion.DATA['profiles'][name]['apex']:
+def cap_landing(observation,box,seconds,name,forecast_seconds=None,parameters=None):
+    if seconds<motion.apex(name,parameters):
         return box
     support=None
     terrain=observation.get('terrain')
@@ -1206,7 +1211,7 @@ def player_future(observation,seconds):
         h=observation.get('stand_h',p.h)*b[4]/motion.DATA['stand_height']
         result=Box(cx-w/2,cy-h/2,w,h)
         if active['name'].startswith('jump'):
-            result=cap_landing(observation,result,elapsed+seconds,active['name'],forecast_seconds=seconds)
+            result=cap_landing(observation,result,elapsed+seconds,active['name'],forecast_seconds=seconds,parameters=active)
         return result
     phase=observation['phase']
     if phase in ('ground','slide','rope_above','rope_below','unknown'):
