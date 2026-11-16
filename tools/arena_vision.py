@@ -384,6 +384,7 @@ class Perception:
         self.motion_origin=None
         self.horizontal_history=deque(maxlen=6)
         self.player_horizontal_velocity=0.
+        self.pending_rope_clamp=False
 
     def action(self, action, stamp, observation=None,*,primitive=None,source_observation=None):
         self.last_action = stamp
@@ -820,6 +821,7 @@ class Perception:
                     rope=self.rope, phase=phase, vy=self.player_velocity, jumps=self.jump_count,
                     tracks=tracks, detections=detections,terrain=terrain,
                     motion_reference='support' if support is not None else 'player',
+                    pending_rope_clamp=self.pending_rope_clamp,
                     scale_px=self.body_height*.73/.936,stand_w=self.body_height*.36,
                     stand_h=self.body_height*.73,motion=self.active_motion,vx=self.player_horizontal_velocity)
         result['ground_contact_observed']=bool(self.visual_role and player_observed and player
@@ -1215,7 +1217,8 @@ def player_future(observation,seconds):
                 # slightly overshot compact pixel body must not make waiting
                 # for contact extrapolate through the rope indefinitely.
                 # Keep the phase/jump ledger pending until observed contact.
-                past_rope=(destination=='rope'and active.get('destination','rope')=='rope'
+                past_rope=(observation.get('pending_rope_clamp',False)and destination=='rope'
+                           and active.get('destination','rope')=='rope'
                            and not active.get('support_unconfirmed')and (cy-target)*speed>=0)
                 if crosses or past_rope:
                     cy=target;w=observation.get('stand_w',w);h=observation.get('stand_h',h)

@@ -16,7 +16,7 @@ import arena_motion as motion
 PIXEL_FIELDS=frozenset(('time','player','phase','jumps','motion','rope','rope_segment','rope_segments',
     'terrain','scale_px','stand_w','stand_h','vy','vx','scene_velocity_x','scene_motion_observed',
     'visible_supports','blocking_faces','ground_contact_observed','rope_contact_observed',
-    'down_action_end_observed','player_predicted','ground_down_collider_restore'))
+    'down_action_end_observed','player_predicted','ground_down_collider_restore','pending_rope_clamp'))
 ACTION_FIELDS=('jump_count','last_action','last_flip','active_motion','motion_origin')
 KEY_FOR_PRIMITIVE={'jump1':'jump','jump2':'jump','rope_up':'jump','air_up':'jump',
                    'rope_down':'down','air_down':'down','slide':'slide'}

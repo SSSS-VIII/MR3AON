@@ -10,7 +10,7 @@ FIXTURE=json.loads((Path(__file__).parent/'fixtures/arena-pending-rope-contact.j
 
 
 def frozen_state():
-    state=json.loads(json.dumps(FIXTURE['state']));state['player']=Box(**state['player']);state['tracks']=[]
+    state=json.loads(json.dumps(FIXTURE['state']));state['player']=Box(**state['player']);state['tracks']=[];state['pending_rope_clamp']=True
     return state
 
 
@@ -36,7 +36,7 @@ def test_native_collision_body_is_not_extrapolated_forty_nine_pixels_below_upper
 ])
 def test_each_original_rope_side_clamps_after_pixel_overshoot_without_resetting_jumps(name,speed,target,center):
     state=dict(time=1.,player=Box(176,center-4,8,8),phase='flip_up'if 'up'in name else'flip_down',
-               jumps=2,tracks=[],rope=260.,terrain=None,scale_px=40.,stand_w=16.,stand_h=37.44,
+               jumps=2,tracks=[],pending_rope_clamp=True,rope=260.,terrain=None,scale_px=40.,stand_w=16.,stand_h=37.44,
                motion=dict(name=name,started=0.,contact_pending=True,requires_contact=True,destination='rope',speed=speed,
                            height=0.,lead=0.,offset_x=0.,offset_y=0.,width=.2,height_box=.2))
     after=advance_player(state,.08)
@@ -57,3 +57,14 @@ def test_missing_finite_rope_or_unconfirmed_target_cannot_snap_body_back(unknown
     after=player_future(state,.04)
     assert after.h==8.
     assert after.center[1]>state['player'].center[1]+40.
+
+
+def test_unverified_candidate_stays_disabled_and_input_history_keeps_its_value():
+    from arena_vision import Perception
+    from arena_input_timeline import freeze_pixels,thaw_pixels
+    assert not Perception().pending_rope_clamp
+    state=frozen_state();old=dict(state,pending_rope_clamp=False)
+    future=player_future(old,.04)
+    assert future.center[1]-FIXTURE['expected']['native_body_center_y']>48.
+    assert thaw_pixels(freeze_pixels(state))['pending_rope_clamp']is True
+    assert thaw_pixels(freeze_pixels(old))['pending_rope_clamp']is False
