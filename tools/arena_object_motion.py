@@ -59,6 +59,10 @@ def crow_geometry(track,seconds,scale):
 
 
 def fit_ballistic(track,scale):
+    # Missing serialized fields retain original constructor values. The
+    # complete-source median is optional until its closed-loop evaluation;
+    # it never selects parameters from the current board or native object.
+    prior=DATA['complete_gale_prior']if track.source_pinball_prior else DATA
     samples=np.asarray(track.history)[-10:]
     if len(samples)<4:
         return
@@ -72,7 +76,7 @@ def fit_ballistic(track,scale):
         t=t[start:];ys=ys[start:]
     if len(t)<3 or t[-1]-t[0]<.035:
         return
-    acceleration=DATA['accelerated_up'if slopes[-1]<0 else'accelerated_down']*scale
+    acceleration=prior['accelerated_up'if slopes[-1]<0 else'accelerated_down']*scale
     design=np.column_stack((np.ones(len(t)),t))
     fit,_,_,_=np.linalg.lstsq(design,ys-.5*acceleration*t*t,rcond=None)
     error=float(np.sqrt(np.mean((design@fit+.5*acceleration*t*t-ys)**2)))
@@ -94,15 +98,15 @@ def fit_ballistic(track,scale):
     if error>4 or contradicted:
         return
     track.vy=float(fit[1]);track.ballistic=True
-    track.gravity_up=DATA['accelerated_up']*scale
-    track.gravity_down=DATA['accelerated_down']*scale
+    track.gravity_up=prior['accelerated_up']*scale
+    track.gravity_down=prior['accelerated_down']*scale
     segment=track.floor_segment
     track.floor_vy=0.
     if segment:
         a,b=segment['a'],segment['b'];slope=(b[1]-a[1])/(b[0]-a[0])
         track.floor_vy=segment['vy']+slope*(track.vx-segment['vx'])
     if not track.rebound_speed:
-        track.rebound_speed=DATA['rebound_speed']*scale
+        track.rebound_speed=prior['rebound_speed']*scale
     if track.vy<-60 and track.floor_y is not None and abs(track.floor_vy)<1:
         height=max(0,track.floor_y-track.box.center[1])
         # Ascent energy estimates the individual rebound impulse without a

@@ -31,7 +31,37 @@
         1,
         32
       ]
-    ]
+    ],
+    "complete_gale_prior": {
+      "accelerated_up": 10,
+      "accelerated_down": 6,
+      "rebound_speed": 5,
+      "source": "Unique reachable original Gale stages levels1..6; serialized missing fields use verified original PinballBaseDataStruct constructor defaults; aggregate only, no live board or per-object lookup",
+      "placements": 697,
+      "stages": 27,
+      "omitted_fields": [
+        332,
+        364,
+        485
+      ],
+      "explicit_zero_per_field": 59,
+      "configured_ranges_including_zero": [
+        [
+          0,
+          12
+        ],
+        [
+          0,
+          10
+        ],
+        [
+          0,
+          10
+        ]
+      ],
+      "parameter_scan_sha256": "52c0010aade07b313ec5aab43dc4b49280ec06f99d63e5e78dc2055748bdc9b4",
+      "live_default_check_sha256": "456ab33a20f064fa37857d092fc91f2f176721981268fbb41bd15bae7f9c7907"
+    }
   },
   "trap_prediction": {
     "vertical_margin_px": 2,

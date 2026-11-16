@@ -4,7 +4,7 @@
 
 2026-11-16修复main推送分歧：上次分支收口漏fetch，远端实际有3条自动兑换码提交；已正常merge origin/main并采用远端较新兑换码，全部双方提交保留，远端独有数归零，未强推/未推送，原工作草稿保留。见[远端分歧](archived/2026-11-16-origin-main-divergence.md)。
 
-2026-11-16补原标注派生参数导出：旧EnemyInfo嵌套仅基类，新增custom_type/custom_parameters只用于离线。v152平绳336帧/66引用无错，47 Pinball真实10/6/5（当前汇总8/8/7），god全false并恢复；735通过/2跳过，继续独立运动真值，不向actor注入参数，见[派生参数](archived/2026-11-16-arena-derived-parameter-export.md)。
+2026-11-16弹跳独立真值已采336帧并恢复，派生参数导出补齐：完整697处预置含构造默认，中位10/6/5，旧显式正值8/8/7漏算。内部source_pinball_prior默认关，原图成熟240ms中位改善但部分尾差退步；关闭1750/开启1756项接线逐项相同，741通过/2跳过，待原生配对，无伤未达。见[运动与先验](archived/2026-11-10-arena-pinball-own-ground.md)、[派生参数](archived/2026-11-16-arena-derived-parameter-export.md)。
 
 2026-11-16将上游专题分支后续294个提交完整快进回main，保留原上游合并/功能提交及选择性移植记录，删除已合入integrate/upstream-v162；未提交文件与暂存索引切换前后逐字节一致，未推送。日常开发固定main，专题收口后及时切回，见[分支收口](archived/2026-11-16-return-development-to-main.md)。
 

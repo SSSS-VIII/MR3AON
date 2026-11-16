@@ -95,6 +95,7 @@ class Track:
     rush_fit_velocity: float | None = None
     rush_velocity: float | None = None
     confidence_history: deque = field(default_factory=lambda:deque(maxlen=8))
+    source_pinball_prior: bool = False
 
     def update(self, detection, stamp, player, support_y=None):
         if self.quad is not None or detection.quad is not None:
@@ -282,6 +283,7 @@ def track_confidence(track,stamp):
 class Tracker:
     def __init__(self,adaptive=False,adaptive_rush_speed=False):
         self.adaptive=adaptive;self.adaptive_rush_speed=adaptive_rush_speed
+        self.source_pinball_prior=False
         self.tracks = []
         self.next_id = 1
 
@@ -323,6 +325,7 @@ class Tracker:
                     from arena_mace_motion import MaceTrack
                     track_type=MaceTrack
                 t = track_type(self.next_id, d.box, d.kind, d.confidence, stamp)
+                t.source_pinball_prior=self.source_pinball_prior and d.kind=='pinball'
                 t.adaptive_rush_speed=self.adaptive_rush_speed
                 if self.adaptive:
                     t.adaptive_velocity=True;t.history=deque(maxlen=64)
