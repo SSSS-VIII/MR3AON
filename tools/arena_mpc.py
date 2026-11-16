@@ -130,6 +130,7 @@ class MpcAvoider(VisualAvoider):
     STEPS=12
     BEAM=24
     ground_static_search=False
+    ground_reserve_recovery=False
 
     def rope_exit(self,obs):
         segment=obs.get('rope_segment')
@@ -138,16 +139,21 @@ class MpcAvoider(VisualAvoider):
         return (relative<0 and not segment.get('right_clipped',segment['b'][0]>=637)
                 and 0<=segment['b'][0]-obs['player'].center[0]<=-relative*self.STEP*self.STEPS)
 
-    @staticmethod
-    def recovery_needed(obs):
+    @classmethod
+    def recovery_needed(cls,obs):
         # A visible rope gives a route back to renewable jump actions. This
         # enables planning even when no currently observed hazard intersects.
-        return bool(obs.get('rope')is not None and not obs.get('terrain')and
-                    obs.get('jumps',0)>0 and
-                    obs.get('phase','').startswith(('jump','air_','flip_')))
+        spent=obs.get('jumps',0)>0 and obs.get('phase','').startswith(('jump','air_','flip_'))
+        if not spent:return False
+        if obs.get('rope')is not None and not obs.get('terrain'):return True
+        return bool(cls.ground_reserve_recovery and
+                    (obs.get('terrain')or{}).get('source')=='neural_segments'and can_air_down(obs))
 
-    @staticmethod
-    def reserve_cost(state):
+    @classmethod
+    def reserve_cost(cls,state):
+        if cls.ground_reserve_recovery and (state.get('terrain')or{}).get('source')=='neural_segments':
+            return (0. if state.get('phase')in('ground','slide')else
+                    .09*min(2,max(0,state.get('jumps',0))))
         if state.get('rope')is None or state.get('terrain'):return 0.
         phase=state.get('phase','')
         if phase=='rope_above':return 0.

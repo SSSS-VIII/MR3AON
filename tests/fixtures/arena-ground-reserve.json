@@ -1,0 +1,98 @@
+{
+  "scope": "Saved pixel-derived floor/body/own motion ledger in a clear interval; no native identifiers or colliders",
+  "observation": {
+    "time": 182242.55567262985,
+    "player": {
+      "x": 178.70673808441703,
+      "y": 48.704721347948876,
+      "w": 15.802183368100579,
+      "h": 36.97696646718526
+    },
+    "phase": "jump2_falling",
+    "jumps": 2,
+    "rope": null,
+    "terrain": {
+      "y": 251.73973856943468,
+      "at_player": true,
+      "edge": null,
+      "landing": null,
+      "speed": 755.20736578062,
+      "samples": [],
+      "segments": [
+        {
+          "kind": "platform",
+          "a": [
+            -43.63473211474615,
+            258.7118835449219
+          ],
+          "b": [
+            580.8652678852538,
+            258.7881164550781
+          ],
+          "confidence": 0.9033203125,
+          "left_clipped": true,
+          "right_clipped": true,
+          "stamp": 182242.48697,
+          "observations": 14,
+          "vx": -755.20736578062,
+          "vy": 0.0,
+          "id": 23
+        }
+      ],
+      "selected_id": 23,
+      "source": "neural_segments"
+    },
+    "motion": {
+      "name": "jump2",
+      "started": 182242.06237775367,
+      "jump_entry": {
+        "parent": {
+          "name": "jump1",
+          "started": 182241.63918573165
+        },
+        "age": 0.4231920220190659,
+        "initial_point": [
+          0.052002,
+          0.0,
+          0.0,
+          0.39999390000000007,
+          0.9359999
+        ]
+      }
+    },
+    "scale_px": 39.50531027533791,
+    "stand_w": 14.221911699121648,
+    "stand_h": 36.97697041771629,
+    "vx": 1.5695144231802884,
+    "vy": 20.02582181668268,
+    "scene_velocity_x": -755.20736578062,
+    "scene_motion_observed": true,
+    "hazard_confidence": 0.25,
+    "visible_supports": [
+      {
+        "kind": "platform",
+        "a": [
+          8.25,
+          258.7118835449219
+        ],
+        "b": [
+          632.75,
+          258.7881164550781
+        ],
+        "confidence": 0.9033203125,
+        "left_clipped": true,
+        "right_clipped": true,
+        "stamp": 182242.48697,
+        "observations": 14,
+        "vx": -755.20736578062,
+        "vy": 0.0,
+        "id": 23
+      }
+    ],
+    "incoming_jump2": true,
+    "ground_contact_observed": false,
+    "down_action_end_observed": false,
+    "rope_contact_observed": false,
+    "tracks": []
+  }
+}

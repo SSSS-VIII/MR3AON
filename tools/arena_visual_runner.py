@@ -236,6 +236,7 @@ def run(args):
         planning_step_seconds=getattr(policy,'STEP',None),planning_steps=getattr(policy,'STEPS',None),
         planning_beam=getattr(policy,'BEAM',None),
         ground_static_search=bool(getattr(policy,'ground_static_search',False)),
+        ground_reserve_recovery=bool(getattr(policy,'ground_reserve_recovery',False)),
         own_input_timeline=getattr(perception,'input_timeline',None)is not None)), indent=2))
     capture_times, vision_times, action_times, intervals, fresh_intervals,ages = [], [], [], [], [], []
     fresh_vision_times=[]
