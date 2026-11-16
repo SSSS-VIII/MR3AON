@@ -207,6 +207,10 @@ def run(args):
     policy_samples={False:deque(maxlen=32),True:deque(maxlen=32)}
     policy_times,compute_priors=[],[]
     start_board=getattr(args,'start',1)
+    capture_type=FastCapture
+    if getattr(args,'render_capture',False):
+        from arena_render_capture import RenderCapture
+        capture_type=RenderCapture
     goal=start_board-1+args.boards
     initial = prepare(client, args.seed, args.level, args.map, pins,start=start_board)
     sources=('tools/arena_vision.py','tools/arena_policy.py','tools/arena_terrain.py',
@@ -219,9 +223,12 @@ def run(args):
              'tools/arena_bamboo_motion.py','tools/arena_scene_motion.py','tools/arena_arrow_motion.py','tools/arena_mace_motion.py',
              'tools/arena_bamboo_phase.py','tools/arena_action_timing.py',
              'tools/arena_reactive_sweep.py','tools/arena_key_receipts.py','tools/arena_input_timeline.py')
+    if capture_type is not FastCapture:
+        sources+=('tools/arena_render_capture.py','arena/Local/render_capture.lua','arena/Capture/RenderRelay.java')
     source_hashes={name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest()for name in sources}
     (args.output / 'setup.json').write_text(json.dumps(dict(seed=args.seed, level=args.level,
         map=args.map, start=start_board,goal_stage_index=goal,pins=pins, observe=args.observe_only, initial=initial,sources=source_hashes,
+        capture_source=getattr(capture_type,'source_name','android_display'),
         detector=detector_info,policy=dict(continuous_collision=getattr(policy,'continuous_collision',False),
         own_input_timeline=getattr(perception,'input_timeline',None)is not None)), indent=2))
     capture_times, vision_times, action_times, intervals, fresh_intervals,ages = [], [], [], [], [], []
@@ -235,7 +242,7 @@ def run(args):
     initial_pixels=InitialPixels()
     begin = time.monotonic()
     with PausedCollections()as collections,(args.output / 'vision.jsonl').open('w') as estimates, (args.output / 'evaluation.jsonl').open('w') as evaluations:
-        with FastCapture(session, width=640, height=360) as cap:
+        with capture_type(session, width=640, height=360) as cap:
             clock=cap.calibrate_clock()
             resumed = False
             recorder=Recorder(args.output)
@@ -316,6 +323,9 @@ def run(args):
                                reason=reason, capture_ms=frame.request_ms, vision_ms=vision_times[-1],
                                policy_compute_ms=compute_ms,policy_compute_prior_ms=compute_prior*1000,
                                action_commit=committed)
+                    if getattr(cap,'source_name',None)=='unity_render_readback':
+                        row['render_capture']=dict(cap.last_render_header,
+                            received=(frame.received_ns-clock['offset_ns'])/1e9)
                     estimates.write(json.dumps(row) + '\n')
                     if loop >= next_image:
                         recorder.submit(count,cv2.cvtColor(frame.array(),cv2.COLOR_RGBA2BGR),
@@ -384,6 +394,10 @@ def run(args):
                   board_entries=board_entries,had_damage=had_damage,
                   key_receipt_matching=receipt_matches)
     report['evaluation_error']=evaluator.error
+    report['capture_source']=getattr(capture_type,'source_name','android_display')
+    if report['capture_source']=='unity_render_readback':
+        report['capture_cleanup']=cap.render_cleanup
+        report['capture_cleanup_error']=cap.render_cleanup_error
     report['cyclic_gc_deferred']=collections.was_enabled
     report['cycles_collected_after_pause']=collections.collected
     report['policy_compute_ms']=timing(policy_times)

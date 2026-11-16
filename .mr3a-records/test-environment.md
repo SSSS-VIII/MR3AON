@@ -160,3 +160,5 @@ main保存计划已加入工坊挑战，单次入口为 `./run [名字] --once -
 2026-11-13按用户要求仅离线开发，不启动或操作任何实例。限时活动预设默认关闭，后续由用户提供实机环境再验收。可通过原命名入口选择任务「情报模拟战」；开放时段、单次退出和任务页/拖放校准边界见`docs/develop/情报模拟战.md`。纯内存原生回放不算游戏内实机。
 
 2026-11-15：新策略已接入，日常预设及main保存队列排在3v3前；不启动实例，用历史5图验证实际动作类、原生点击、扣币落位回执。决策源码在`agent/intelligence_strategy`，匹配前预热C++17核，状态在同实例data/intelligence-battle-state.json，日志沿用同实例debug。运行中的Agent需下次启动才加载新Python；未强停main或xiaoli。
+
+竞技场内部研究可使用`tools/arena_render_capture.py`的RenderCapture：要求arena已暂停，复用同一InstanceSession与原Android按键/时钟，原Unity EOF读回完整渲染后缩至640×360；无桌面截图依赖，不改游戏UID禁止联网路由。默认视觉入口仍为FastCapture。协议/同帧像素码/活动负载及时间定义见[渲染读回](archived/2026-11-16-arena-render-readback.md)，不能把读回开始时刻称曝光时间。
