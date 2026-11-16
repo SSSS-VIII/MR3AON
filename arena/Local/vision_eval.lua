@@ -9,6 +9,40 @@ local enemyInfoField=typeof(CS.EnemyBase):GetField('_enemyInfo',flags)
 local file=U.Application.persistentDataPath..'/arena-control/vision-eval.json'
 local watch=CS.System.Diagnostics.Stopwatch
 local function monotonic() return watch.GetTimestamp()/watch.Frequency end
+local health_event_json={}
+
+-- Completed health-drop witnesses are immutable. Serialize each once instead
+-- of walking up to sixteen collider snapshots on every evaluation poll.
+function E.encode_vision_evaluation(result)
+    local used={}
+    local function event_json(event)
+        assert(type(event)=='table','Invalid evaluation health event')
+        used[event]=true
+        if not health_event_json[event] then health_event_json[event]=json.stringify(event) end
+        return health_event_json[event]
+    end
+    local light={}
+    for key,value in pairs(result)do
+        if key~='health_drops'and key~='last_health_drop'then light[key]=value end
+    end
+    local extra={}
+    if result.health_drops~=nil then
+        local parts={}
+        for index,event in pairs(result.health_drops)do
+            parts[#parts+1]=json.stringify(index,true)..':'..event_json(event)
+        end
+        extra[#extra+1]='"health_drops":{'..table.concat(parts,',')..'}'
+    end
+    if result.last_health_drop~=nil then
+        extra[#extra+1]='"last_health_drop":'..event_json(result.last_health_drop)
+    end
+    for event in pairs(health_event_json)do
+        if not used[event]then health_event_json[event]=nil end
+    end
+    local text=json.stringify(light)
+    if #extra==0 then return text end
+    return string.sub(text,1,-2)..(text=='{}'and''or',')..table.concat(extra,',')..'}'
+end
 
 local function last_hurt_reference(n)
     local enemy=lastHurtField:GetValue(n)
@@ -129,7 +163,8 @@ function E.vision_evaluation()
         damage=E.visionEvalDamage or 0,minHealth=E.visionEvalMinHealth or n.CurrentHp,
         keys=E.visionEvalKeys or {},lastKeyTime=E.visionEvalLastKeyTime,
         keyReceipts=E.visionEvalReceipts or {},monotonic=monotonic(),
-        last_health_drop=E.visionEvalLastHealthDrop,health_drops=E.visionEvalHealthDrops or {}}
+        last_health_drop=E.visionEvalLastHealthDrop,health_drops=E.visionEvalHealthDrops or {},
+        writer_timing=E.visionEvalWriterTiming}
     local ok,value=pcall(E.vision_interactions)
     if ok then result.interactions=value else result.interactions_error=tostring(value) end
     return result
@@ -165,6 +200,7 @@ end
 
 function E.start_vision_evaluation()
     E.visionEvalEnabled=true
+    health_event_json={};E.visionEvalWriterTiming=nil;E.visionEvalError=nil
     E.visionTaskManager=U.Object.FindObjectOfType(typeof(CS.GameTaskManager))
     E.visionLastSpecialTask=nil
     local hp=CS.NinjaController.Instance.NinjaScript.CurrentHp
@@ -188,9 +224,15 @@ function E.start_vision_evaluation()
             if E.visionEvalEnabled then pcall(E.sample_vision_health) end
             if E.visionEvalEnabled and U.Time.realtimeSinceStartup-last>=.1 then
                 last=U.Time.realtimeSinceStartup
-                local ok,result=pcall(E.vision_evaluation)
-                if ok then CS.System.IO.File.WriteAllText(file,json.stringify(result))
-                else E.visionEvalError=tostring(result) end
+                local ok,error=pcall(function()
+                    local begin=monotonic()
+                    local result=E.vision_evaluation();local sampled=monotonic()
+                    local text=E.encode_vision_evaluation(result);local encoded=monotonic()
+                    CS.System.IO.File.WriteAllText(file,text)
+                    E.visionEvalWriterTiming={sample_ms=(sampled-begin)*1000,
+                        serialize_ms=(encoded-sampled)*1000,write_ms=(monotonic()-encoded)*1000,bytes=#text}
+                end)
+                if not ok then E.visionEvalError=tostring(error) end
             end
             coroutine.step()
         end
