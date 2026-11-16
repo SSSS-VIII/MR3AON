@@ -276,6 +276,7 @@ class ObbPerception(Perception):
                       visible_supports=support['segments'],player_predicted=predicted,
                       player_prediction_reason=prediction_reason,
                       camera_reference_y=support['tracking_reference'][1],camera_velocity_y=support['camera_vy'],
+                      camera_motion_source=self.supports.camera_motion_source,
                       scene_velocity_x=support['scene_vx'],scene_velocity_x_raw=support['scene_vx_raw'],
                       scene_motion_observed=support['scene_motion_observed'],
                       scene_motion_source=support['scene_motion_source'],scene_texture=texture,scene_motion_ms=scene_ms,

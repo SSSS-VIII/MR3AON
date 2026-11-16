@@ -87,14 +87,56 @@ def connected_height(segments,selected_id,x,seconds=0):
     return min(values)if values else None
 
 
+def overlapping_static_camera_shift(current,previous,dx=None):
+    """Recover camera Y through neural line splits/merges without track IDs.
+
+    Compare overlapping material after this interval's measured X translation.
+    A horizontal line also constrains Y without X evidence. Multiple parallel
+    levels or inconsistent hypotheses are unknown, rather than a nearest match.
+    """
+    candidates=[]
+    for new in current:
+        if new['kind']not in('rope','platform')or new['confidence']<.7:continue
+        na,nb=new['a'],new['b'];nw=nb[0]-na[0]
+        if nw<64:continue
+        ns=(nb[1]-na[1])/nw
+        for old in previous:
+            if old['kind']!=new['kind']or old['confidence']<.7:continue
+            oa,ob=old['a'],old['b'];ow=ob[0]-oa[0]
+            if ow<64 or not .006<=new['stamp']-old['stamp']<=.16:continue
+            os=(ob[1]-oa[1])/ow
+            if abs(ns-os)>.02:continue
+            if dx is None and max(abs(ns),abs(os))>.002:continue
+            shift_x=0. if dx is None else dx
+            left=max(na[0],oa[0]+shift_x,0.)
+            right=min(nb[0],ob[0]+shift_x,640.)
+            if right-left<64:continue
+            x=(left+right)/2
+            shift=na[1]+ns*(x-na[0])-oa[1]-os*(x-shift_x-oa[0])
+            if abs(shift)<=35:candidates.append((shift,right-left,left,right))
+    if not candidates or max(c[0]for c in candidates)-min(c[0]for c in candidates)>3:return None
+    # Duplicated pieces aren't independent votes. Require actual image coverage,
+    # and use a length-weighted median only after every hypothesis agrees.
+    intervals=sorted((c[2],c[3])for c in candidates);end=-1.;coverage=0.
+    for left,right in intervals:
+        coverage+=max(0.,right-max(left,end));end=max(end,right)
+    if coverage<96:return None
+    half=sum(c[1]for c in candidates)/2;weight=0.
+    for shift,length,_,_ in sorted(candidates):
+        weight+=length
+        if weight>=half:return shift
+
+
 class VisualSupports:
-    def __init__(self):
+    def __init__(self,*,line_camera_recovery=False):
         self.tracks=[];self.next_id=1;self.mode=None;self.reference_y=None
         self.camera_y=0.;self.camera_vy=0.;self.scroll_vx=0.
         self.last_translation=-1e9
         self.scroll_samples=deque(maxlen=7)
         self.scroll_position=0.;self.instant_vx=0.
         self.translation_source=None
+        self.line_camera_recovery=line_camera_recovery
+        self.camera_motion_source=None
 
     def associate(self,segments,stamp,texture=None):
         candidates=[]
@@ -175,6 +217,14 @@ class VisualSupports:
             shift=line_y(s,px)-line_y(old,px)+slope*self.instant_vx*dt
             shifts.append(shift);velocities.append(shift/dt)
             if not s['history']:s['vx']=self.scroll_vx
+        self.camera_motion_source='support_track'if shifts else None
+        if not shifts and self.line_camera_recovery and self.tracks:
+            dt=stamp-self.tracks[0]['stamp']
+            dx=self.instant_vx*dt if translations or texture is not None else None
+            recovered=overlapping_static_camera_shift(current,self.tracks,dx)
+            if recovered is not None:
+                shifts.append(recovered);velocities.append(recovered/dt)
+                self.camera_motion_source='support_line_overlap'
         self.camera_vy=float(np.median(velocities))if velocities else 0.
         if shifts:self.camera_y+=float(np.median(shifts))
         self.tracks=current
