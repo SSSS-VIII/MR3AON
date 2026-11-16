@@ -74,6 +74,22 @@ def advance_terrain(terrain,seconds,px):
     return describe_terrain(segments,selected,px,include_samples=False)
 
 
+def joined_endpoints(previous,current):
+    """Same six-pixel join test without allocating two NumPy vectors.
+
+    Keep the original norm at the floating-point boundary and on nonfinite
+    inputs. Ordinary beam-search queries only need scalar squared distances.
+    """
+    a,b=previous['a'],current['b'];c,d=previous['b'],current['a']
+    dx,dy=a[0]-b[0],a[1]-b[1]
+    ex,ey=c[0]-d[0],c[1]-d[1]
+    squared=min(dx*dx+dy*dy,ex*ex+ey*ey)
+    if squared<36.-1e-9:return True
+    if squared>36.+1e-9:return False
+    return min(np.linalg.norm(np.asarray(previous[p])-current[q])
+               for p,q in [('a','b'),('b','a')])<=6
+
+
 def connected_height(segments,selected_id,x,seconds=0):
     """Follow visible touching surfaces, without bridging a gap or a step."""
     reachable={selected_id};pending=[s for s in segments if s['id']==selected_id]
@@ -81,7 +97,7 @@ def connected_height(segments,selected_id,x,seconds=0):
         previous=pending.pop()
         for s in segments:
             if s['id']in reachable or s['kind']!=previous['kind']:continue
-            if min(np.linalg.norm(np.asarray(previous[a])-s[b])for a,b in [('a','b'),('b','a')])<=6:
+            if joined_endpoints(previous,s):
                 reachable.add(s['id']);pending.append(s)
     values=[y for s in segments if s['id']in reachable for y in[height(s,x,seconds)]if y is not None]
     return min(values)if values else None
