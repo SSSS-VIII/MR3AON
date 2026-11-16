@@ -99,8 +99,11 @@ class Track:
     pinball_rebound_carry: bool = False
     pinball_fit: dict | None = None
     pinball_carry_active: bool = False
+    pinball_fast_rebound: bool = False
+    pinball_fast_rebound_active: bool = False
 
     def update(self, detection, stamp, player, support_y=None):
+        self.pinball_fast_rebound_active=False
         if self.quad is not None or detection.quad is not None:
             from arena_oriented import update_rotation
             update_rotation(self,detection,stamp)
@@ -216,6 +219,9 @@ class Track:
             from arena_projection import SCALE
             self.ballistic=False
             fit_ballistic(self,SCALE)
+            if self.pinball_fast_rebound:
+                from arena_pinball_impulse import refresh_fast_rebound
+                self.pinball_fast_rebound_active=refresh_fast_rebound(self,SCALE)
 
     def future(self, seconds):
         if self.attack_phase in ('ready','rush'):
@@ -288,6 +294,7 @@ class Tracker:
         self.adaptive=adaptive;self.adaptive_rush_speed=adaptive_rush_speed
         self.source_pinball_prior=False
         self.pinball_rebound_carry=False
+        self.pinball_fast_rebound=False
         self.tracks = []
         self.next_id = 1
 
@@ -331,6 +338,7 @@ class Tracker:
                 t = track_type(self.next_id, d.box, d.kind, d.confidence, stamp)
                 t.source_pinball_prior=self.source_pinball_prior and d.kind=='pinball'
                 t.pinball_rebound_carry=self.pinball_rebound_carry and d.kind=='pinball'
+                t.pinball_fast_rebound=self.pinball_fast_rebound and d.kind=='pinball'
                 t.adaptive_rush_speed=self.adaptive_rush_speed
                 if self.adaptive:
                     t.adaptive_velocity=True;t.history=deque(maxlen=64)
