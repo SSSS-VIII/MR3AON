@@ -218,11 +218,12 @@ def run(args):
              'tools/arena_obb_detector.py','tools/arena_support.py','tools/arena_object_support.py',
              'tools/arena_bamboo_motion.py','tools/arena_scene_motion.py','tools/arena_arrow_motion.py','tools/arena_mace_motion.py',
              'tools/arena_bamboo_phase.py','tools/arena_action_timing.py',
-             'tools/arena_reactive_sweep.py','tools/arena_key_receipts.py')
+             'tools/arena_reactive_sweep.py','tools/arena_key_receipts.py','tools/arena_input_timeline.py')
     source_hashes={name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest()for name in sources}
     (args.output / 'setup.json').write_text(json.dumps(dict(seed=args.seed, level=args.level,
         map=args.map, start=start_board,goal_stage_index=goal,pins=pins, observe=args.observe_only, initial=initial,sources=source_hashes,
-        detector=detector_info,policy=dict(continuous_collision=getattr(policy,'continuous_collision',False))), indent=2))
+        detector=detector_info,policy=dict(continuous_collision=getattr(policy,'continuous_collision',False),
+        own_input_timeline=getattr(perception,'input_timeline',None)is not None)), indent=2))
     capture_times, vision_times, action_times, intervals, fresh_intervals,ages = [], [], [], [], [], []
     fresh_vision_times=[]
     first_evaluation=None
@@ -261,7 +262,10 @@ def run(args):
                     if is_fresh:
                         if latest is not None:
                             fresh_intervals.append(frame.device_captured_ns/1e6-latest['time']*1000)
-                        latest=perception.observe(frame.array(),frame.device_captured_ns/1e9)
+                        timeline=getattr(perception,'input_timeline',None)
+                        stamp=frame.device_captured_ns/1e9
+                        latest=(timeline.observe(frame.array(),stamp,capture_return_stamp=stamp)
+                                if timeline is not None else perception.observe(frame.array(),stamp))
                         capture_request=frame.request_ns
                         previous_crc=crc;fresh+=1
                     now=(time.perf_counter_ns()-clock['offset_ns'])/1e9
@@ -276,7 +280,9 @@ def run(args):
                     expensive=isinstance(policy,MpcAvoider)and policy.uses_search(latest)
                     samples=policy_samples[expensive]
                     compute_prior=percentile(samples,90)/1000 if samples else (.01 if expensive else 0.)
-                    obs=extrapolate(latest,now+1/60+compute_prior)
+                    timeline=getattr(perception,'input_timeline',None)
+                    obs=(timeline.project(now+1/60+compute_prior)if timeline is not None
+                         else extrapolate(latest,now+1/60+compute_prior))
                     decision_start=time.perf_counter()
                     action, reason = ((None,'waiting_initial_pixels')if readiness=='waiting'else policy.choose(obs))
                     compute_ms=(time.perf_counter()-decision_start)*1000
@@ -299,6 +305,12 @@ def run(args):
                             key=key,key_count=sent_keys[key],request_ns=ack.request_ns,
                             capture_request_ns=capture_request,planned_time=obs['time'],**committed))
                     row = serializable(obs)
+                    measured={key:latest.get(key)for key in (
+                        'time','phase','jumps','player','player_predicted','motion','rope',
+                        'terrain','camera_reference_y','camera_velocity_y','player_detection_source')}
+                    if measured['terrain'] is not None:
+                        measured['terrain']={k:v for k,v in measured['terrain'].items()if k!='samples'}
+                    row['observed']=serializable(measured)
                     executed=action if not args.observe_only else None
                     row.update(frame=count, elapsed=time.monotonic()-begin, action=executed,proposed_action=action,
                                reason=reason, capture_ms=frame.request_ms, vision_ms=vision_times[-1],

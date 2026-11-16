@@ -216,7 +216,13 @@ class ObbPerception(Perception):
         predicted=False;prediction_reason=None
         if player is not None:self.last_seen_player=stamp
         elif self.last_seen_player is not None:
-            player,prediction_reason=missing_role_prediction(self.last_observation,stamp,stamp-self.last_seen_player)
+            context=self.last_observation
+            timeline=getattr(self,'input_timeline',None)
+            if timeline is not None:
+                context,context_reason=timeline.missing_role_context()
+                if context is None:prediction_reason=context_reason
+            if context is not None:
+                player,prediction_reason=missing_role_prediction(context,stamp,stamp-self.last_seen_player)
             predicted=player is not None
         support_player=player
         if player is not None and self.active_motion:

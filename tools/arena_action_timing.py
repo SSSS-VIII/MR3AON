@@ -19,6 +19,16 @@ def commit_action(perception,latest,action,ack,input_delay=1/60,*,primitive=None
     """
     enqueued=ack.device_ready_ns/1e9
     stamp=enqueued+input_delay
+    timeline=getattr(perception,'input_timeline',None)
+    if timeline is not None:
+        current=timeline.project(stamp)
+        timeline.record(action,ack,primitive=primitive,planned=planned or latest,input_delay=input_delay)
+        committed=timeline.project(stamp)
+        active=committed.get('motion')or{}
+        return dict(enqueued_time=enqueued,committed_time=stamp,
+                    committed_phase=current['phase'],committed_jumps=current['jumps'],
+                    submitted_primitive=primitive,committed_primitive=active.get('name'),
+                    support_unconfirmed=bool(active.get('support_unconfirmed')))
     current=extrapolate(latest,stamp)
     if primitive is None:
         perception.action(action,stamp,current)
