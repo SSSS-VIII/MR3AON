@@ -8,6 +8,10 @@
   "stand_width": 0.36,
   "stand_height": 0.936,
   "stand_offset_x": 0.052,
+  "fall_from_run": {
+    "gravity": 31.5,
+    "source": "Original Ninja.UpdateGravity state13 selects _downGravity1=-9, multiplied by native 3.5; two ledge probes each measured -0.63 velocity per 20ms. Jump from state13 still enters jump1."
+  },
   "profiles": {
     "rope_down": {
       "initial_offset_y": 0.0,

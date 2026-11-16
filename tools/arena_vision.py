@@ -1133,7 +1133,7 @@ def ground_primitive_future(observation,seconds):
                 if connected_height(segments,selected['id'],root_x+root_dx(mid),mid)is None:hi=mid
                 else:lo=mid
             end=connected_height(segments,selected['id'],root_x+root_dx(lo),lo)
-            cy+=(end-y0 if end is not None else 0)+.5*19.8*3.5*scale*(seconds-lo)**2
+            cy+=(end-y0 if end is not None else 0)+.5*motion.DATA['fall_from_run']['gravity']*scale*(seconds-lo)**2
             h=max(h,observation.get('stand_h',p.h))
     cx=p.center[0]+dx+(b[0]-a[0])*scale
     return Box(cx-w/2,cy-h/2,w,h)
@@ -1191,7 +1191,7 @@ def supported_future(observation,seconds):
     edge=max(0,(selected['b'][0]-p.center[0])/-vx)if vx<0 else seconds
     until=min(seconds,edge)
     end_y=height(selected,p.center[0]+observation.get('vx',0.)*until,until)
-    dy=(end_y-y if end_y is not None else 0)+.5*19.8*3.5*observation.get('scale_px',41.)*max(0,seconds-edge)**2
+    dy=(end_y-y if end_y is not None else 0)+.5*motion.DATA['fall_from_run']['gravity']*observation.get('scale_px',41.)*max(0,seconds-edge)**2
     return Box(p.x+dx,p.y+dy,p.w,p.h)
 
 
@@ -1229,11 +1229,7 @@ def player_future(observation,seconds):
         return supported_future(observation,seconds)
     scale=observation.get('scale_px',41.)
     vy=observation.get('vy',0.)
-    second=observation['jumps']>=2
-    up=(9.8 if second else 25.)*3.5*scale
-    down=(9.8 if second else 9.)*3.5*scale
-    if not observation['jumps']:
-        down=19.8*3.5*scale
+    up,down=(value*scale for value in motion.air_accelerations(observation['jumps']))
     if vy<0:
         apex=-vy/up
         rise=min(seconds,apex)
@@ -1293,9 +1289,8 @@ def advance_player(observation,seconds,*,predict_contact=False):
     if not active:
         phase=observation['phase'];scale=observation.get('scale_px',41.)
         if phase.startswith('air_')or phase.startswith('jump'):
-            vy=observation.get('vy',0.);second=observation['jumps']>=2
-            up=(9.8 if second else 25.)*3.5*scale
-            down=(9.8 if second else 9.)*3.5*scale if observation['jumps']else 19.8*3.5*scale
+            vy=observation.get('vy',0.)
+            up,down=(value*scale for value in motion.air_accelerations(observation['jumps']))
             apex=max(0,-vy/up)
             current['vy']=vy+up*min(seconds,apex)+down*max(0,seconds-apex)
             current['phase']=phase.rsplit('_',1)[0]+('_rising'if current['vy']<0 else'_falling')
@@ -1307,7 +1302,7 @@ def advance_player(observation,seconds,*,predict_contact=False):
                     selected=next(s for s in terrain['segments']if s['id']==terrain['selected_id'])
                 vx=selected.get('vx',0)-observation.get('vx',0.)if selected else 0
                 edge=max(0,(selected['b'][0]-observation['player'].center[0])/-vx)if vx<0 else seconds
-                current.update(phase='air_falling',jumps=0,vy=19.8*3.5*scale*max(0,seconds-edge))
+                current.update(phase='air_falling',jumps=0,vy=motion.DATA['fall_from_run']['gravity']*scale*max(0,seconds-edge))
     if active:
         elapsed=current['time']-active['started'];name=active['name']
         current['phase']=motion.phase(name,elapsed,active)

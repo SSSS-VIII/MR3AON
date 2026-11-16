@@ -7,6 +7,19 @@ DATA=json.loads((Path(__file__).resolve().parents[1]/'arena/vision-motion-priors
 TIMES={name:tuple(p[0]for p in profile['points'])for name,profile in DATA['profiles'].items()}
 
 
+def air_accelerations(jumps):
+    """World acceleration for an untracked jump or original fallFromRun.
+
+    Leaving support without a submitted jump uses first-jump *down* gravity,
+    even though its jump budget is still zero. _normalGravity is not used by
+    that native physics state.
+    """
+    if not jumps:
+        gravity=DATA['fall_from_run']['gravity']
+        return gravity,gravity
+    return (9.8*3.5,9.8*3.5)if jumps>=2 else(25.*3.5,9.*3.5)
+
+
 def is_ground_transition(name):
     return name in ('slide','ground_recovery')
 

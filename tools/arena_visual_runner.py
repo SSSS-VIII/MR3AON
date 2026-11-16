@@ -28,6 +28,7 @@ from arena_local import LocalClient, FOLDER, ROOT
 from arena_capture import FastCapture, percentile
 from arena_vision import Perception, serializable, overlay,extrapolate
 from arena_policy import Avoider
+import arena_motion as motion
 from arena_mpc import MpcAvoider
 from arena_action_timing import commit_action,selected_primitive
 from arena_key_receipts import KeyReceiptMatcher
@@ -243,6 +244,8 @@ def run(args):
         ground_static_search=bool(getattr(policy,'ground_static_search',False)),
         ground_reserve_recovery=bool(getattr(policy,'ground_reserve_recovery',False)),
         source_pinball_prior=bool(getattr(getattr(perception,'tracker',None),'source_pinball_prior',False)),
+        support_fall_gravity=motion.DATA['fall_from_run']['gravity'],
+        uncommanded_air_accelerations=motion.air_accelerations(0),
         own_input_timeline=getattr(perception,'input_timeline',None)is not None)), indent=2))
     capture_times, vision_times, action_times, intervals, fresh_intervals,ages = [], [], [], [], [], []
     fresh_vision_times=[]

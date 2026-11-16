@@ -1,0 +1,760 @@
+{
+  "scope": "Original native paired fixed-step calibration only; two independent ledges; no god mode, damage retained; native state was used to schedule one diagnostic impulse, not live actor input.",
+  "native_library_sha256": "08cc44d9d8c8edf397fa886335ffd04897ab1b8ab1d3ddd44c4ba788afa0d9b0",
+  "update_gravity_state13": -9.0,
+  "native_multiplier": 3.5,
+  "fixed_dt": 0.02,
+  "gravity_hotfix_active": false,
+  "cases": [
+    {
+      "seed": 54404,
+      "block": 1,
+      "source_sha256": "e99be7fdd03ee7f7883f96c39056836852db1d5fcd83443ce9c17763ad543934",
+      "samples": [
+        {
+          "frame": 333,
+          "time": 6.659994602203369,
+          "physics": "runOnGround: 5",
+          "velocity_y": 0,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 334,
+          "time": 6.679994583129883,
+          "physics": "runOnGround: 5",
+          "velocity_y": 0,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 335,
+          "time": 6.6999945640563965,
+          "physics": "fallFromRun: 13",
+          "velocity_y": -0.6299999952316284,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 336,
+          "time": 6.71999454498291,
+          "physics": "fallFromRun: 13",
+          "velocity_y": -1.2599999904632568,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 337,
+          "time": 6.739994525909424,
+          "physics": "fallFromRun: 13",
+          "velocity_y": -1.8899999856948853,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 338,
+          "time": 6.7599945068359375,
+          "physics": "fallFromRun: 13",
+          "velocity_y": -2.5199999809265137,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 339,
+          "time": 6.779994487762451,
+          "physics": "fallFromRun: 13",
+          "velocity_y": -3.1500000953674316,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 340,
+          "time": 6.799994468688965,
+          "physics": "fallFromRun: 13",
+          "velocity_y": -3.7800002098083496,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 341,
+          "time": 6.8199944496154785,
+          "physics": "fallFromRun: 13",
+          "velocity_y": -4.410000324249268,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 342,
+          "time": 6.839994430541992,
+          "physics": "fallFromRun: 13",
+          "velocity_y": -5.0400004386901855,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 343,
+          "time": 6.859994411468506,
+          "physics": "fallFromRun: 13",
+          "velocity_y": -5.6700005531311035,
+          "action": "jump",
+          "health": 5000
+        },
+        {
+          "frame": 344,
+          "time": 6.8799943923950195,
+          "physics": "jump: 14",
+          "velocity_y": 23.5,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 345,
+          "time": 6.899994373321533,
+          "physics": "jump: 14",
+          "velocity_y": 21.75,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 346,
+          "time": 6.919994354248047,
+          "physics": "jump: 14",
+          "velocity_y": 20,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 347,
+          "time": 6.9399943351745605,
+          "physics": "jump: 14",
+          "velocity_y": 18.25,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 348,
+          "time": 6.959994316101074,
+          "physics": "jump: 14",
+          "velocity_y": 16.5,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 349,
+          "time": 6.979994297027588,
+          "physics": "jump: 14",
+          "velocity_y": 14.75,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 350,
+          "time": 6.999994277954102,
+          "physics": "jump: 14",
+          "velocity_y": 13,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 351,
+          "time": 7.019994258880615,
+          "physics": "jump: 14",
+          "velocity_y": 11.25,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 352,
+          "time": 7.039994239807129,
+          "physics": "jump: 14",
+          "velocity_y": 9.5,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 353,
+          "time": 7.059994220733643,
+          "physics": "jump: 14",
+          "velocity_y": 7.75,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 354,
+          "time": 7.079994201660156,
+          "physics": "jump: 14",
+          "velocity_y": 6,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 355,
+          "time": 7.09999418258667,
+          "physics": "jump: 14",
+          "velocity_y": 4.25,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 356,
+          "time": 7.119994163513184,
+          "physics": "jump: 14",
+          "velocity_y": 2.5,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 357,
+          "time": 7.139994144439697,
+          "physics": "jump: 14",
+          "velocity_y": 0.75,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 358,
+          "time": 7.159994125366211,
+          "physics": "fall: 15",
+          "velocity_y": -1,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 359,
+          "time": 7.179994106292725,
+          "physics": "fall: 15",
+          "velocity_y": -1.6299999952316284,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 360,
+          "time": 7.199994087219238,
+          "physics": "fall: 15",
+          "velocity_y": -2.259999990463257,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 361,
+          "time": 7.219994068145752,
+          "physics": "fall: 15",
+          "velocity_y": -2.8899998664855957,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 362,
+          "time": 7.239994049072266,
+          "physics": "fall: 15",
+          "velocity_y": -3.5199999809265137,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 363,
+          "time": 7.259994029998779,
+          "physics": "fall: 15",
+          "velocity_y": -4.150000095367432,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 364,
+          "time": 7.279994010925293,
+          "physics": "fall: 15",
+          "velocity_y": -4.78000020980835,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 365,
+          "time": 7.299993991851807,
+          "physics": "fall: 15",
+          "velocity_y": -5.410000324249268,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 366,
+          "time": 7.31999397277832,
+          "physics": "fall: 15",
+          "velocity_y": -6.0400004386901855,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 367,
+          "time": 7.339993953704834,
+          "physics": "fall: 15",
+          "velocity_y": -6.6700005531311035,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 368,
+          "time": 7.359993934631348,
+          "physics": "fall: 15",
+          "velocity_y": -7.3000006675720215,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 369,
+          "time": 7.379993915557861,
+          "physics": "fall: 15",
+          "velocity_y": -7.9300007820129395,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 370,
+          "time": 7.399993896484375,
+          "physics": "fall: 15",
+          "velocity_y": -8.5600004196167,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 371,
+          "time": 7.419993877410889,
+          "physics": "fall: 15",
+          "velocity_y": -9.190000534057617,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 372,
+          "time": 7.439993858337402,
+          "physics": "fall: 15",
+          "velocity_y": -9.820000648498535,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 373,
+          "time": 7.459993839263916,
+          "physics": "fall: 15",
+          "velocity_y": -10.450000762939453,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 374,
+          "time": 7.47999382019043,
+          "physics": "fall: 15",
+          "velocity_y": -11.080000877380371,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 375,
+          "time": 7.499993801116943,
+          "physics": "fall: 15",
+          "velocity_y": -11.710000991821289,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 376,
+          "time": 7.519993782043457,
+          "physics": "fall: 15",
+          "velocity_y": -12.340001106262207,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 377,
+          "time": 7.539993762969971,
+          "physics": "fall: 15",
+          "velocity_y": -12.970001220703125,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 378,
+          "time": 7.559993743896484,
+          "physics": "fall: 15",
+          "velocity_y": -13.600001335144043,
+          "action": "none",
+          "health": 5000
+        }
+      ]
+    },
+    {
+      "seed": 54405,
+      "block": 3,
+      "source_sha256": "f45927eab9b5e413271e14997e61a36a001aa152bee897a209ece3ed3c1e30ab",
+      "samples": [
+        {
+          "frame": 349,
+          "time": 6.979994297027588,
+          "physics": "runOnGround: 5",
+          "velocity_y": 0,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 350,
+          "time": 6.999994277954102,
+          "physics": "runOnGround: 5",
+          "velocity_y": 0,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 351,
+          "time": 7.019994258880615,
+          "physics": "fallFromRun: 13",
+          "velocity_y": -0.6299999952316284,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 352,
+          "time": 7.039994239807129,
+          "physics": "fallFromRun: 13",
+          "velocity_y": -1.2599999904632568,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 353,
+          "time": 7.059994220733643,
+          "physics": "fallFromRun: 13",
+          "velocity_y": -1.8899999856948853,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 354,
+          "time": 7.079994201660156,
+          "physics": "fallFromRun: 13",
+          "velocity_y": -2.5199999809265137,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 355,
+          "time": 7.09999418258667,
+          "physics": "fallFromRun: 13",
+          "velocity_y": -3.1500000953674316,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 356,
+          "time": 7.119994163513184,
+          "physics": "fallFromRun: 13",
+          "velocity_y": -3.7800002098083496,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 357,
+          "time": 7.139994144439697,
+          "physics": "fallFromRun: 13",
+          "velocity_y": -4.410000324249268,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 358,
+          "time": 7.159994125366211,
+          "physics": "fallFromRun: 13",
+          "velocity_y": -5.0400004386901855,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 359,
+          "time": 7.179994106292725,
+          "physics": "fallFromRun: 13",
+          "velocity_y": -5.6700005531311035,
+          "action": "jump",
+          "health": 5000
+        },
+        {
+          "frame": 360,
+          "time": 7.199994087219238,
+          "physics": "jump: 14",
+          "velocity_y": 23.5,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 361,
+          "time": 7.219994068145752,
+          "physics": "jump: 14",
+          "velocity_y": 21.75,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 362,
+          "time": 7.239994049072266,
+          "physics": "jump: 14",
+          "velocity_y": 20,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 363,
+          "time": 7.259994029998779,
+          "physics": "jump: 14",
+          "velocity_y": 18.25,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 364,
+          "time": 7.279994010925293,
+          "physics": "jump: 14",
+          "velocity_y": 16.5,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 365,
+          "time": 7.299993991851807,
+          "physics": "jump: 14",
+          "velocity_y": 14.75,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 366,
+          "time": 7.31999397277832,
+          "physics": "jump: 14",
+          "velocity_y": 13,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 367,
+          "time": 7.339993953704834,
+          "physics": "jump: 14",
+          "velocity_y": 11.25,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 368,
+          "time": 7.359993934631348,
+          "physics": "jump: 14",
+          "velocity_y": 9.5,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 369,
+          "time": 7.379993915557861,
+          "physics": "jump: 14",
+          "velocity_y": 7.75,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 370,
+          "time": 7.399993896484375,
+          "physics": "jump: 14",
+          "velocity_y": 6,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 371,
+          "time": 7.419993877410889,
+          "physics": "jump: 14",
+          "velocity_y": 4.25,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 372,
+          "time": 7.439993858337402,
+          "physics": "jump: 14",
+          "velocity_y": 2.5,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 373,
+          "time": 7.459993839263916,
+          "physics": "jump: 14",
+          "velocity_y": 0.75,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 374,
+          "time": 7.47999382019043,
+          "physics": "fall: 15",
+          "velocity_y": -1,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 375,
+          "time": 7.499993801116943,
+          "physics": "fall: 15",
+          "velocity_y": -1.6299999952316284,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 376,
+          "time": 7.519993782043457,
+          "physics": "fall: 15",
+          "velocity_y": -2.259999990463257,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 377,
+          "time": 7.539993762969971,
+          "physics": "fall: 15",
+          "velocity_y": -2.8899998664855957,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 378,
+          "time": 7.559993743896484,
+          "physics": "fall: 15",
+          "velocity_y": -3.5199999809265137,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 379,
+          "time": 7.579993724822998,
+          "physics": "fall: 15",
+          "velocity_y": -4.150000095367432,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 380,
+          "time": 7.599993705749512,
+          "physics": "fall: 15",
+          "velocity_y": -4.78000020980835,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 381,
+          "time": 7.619993686676025,
+          "physics": "fall: 15",
+          "velocity_y": -5.410000324249268,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 382,
+          "time": 7.639993667602539,
+          "physics": "fall: 15",
+          "velocity_y": -6.0400004386901855,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 383,
+          "time": 7.659993648529053,
+          "physics": "fall: 15",
+          "velocity_y": -6.6700005531311035,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 384,
+          "time": 7.679993629455566,
+          "physics": "fall: 15",
+          "velocity_y": -7.3000006675720215,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 385,
+          "time": 7.69999361038208,
+          "physics": "fall: 15",
+          "velocity_y": -7.9300007820129395,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 386,
+          "time": 7.719993591308594,
+          "physics": "fall: 15",
+          "velocity_y": -8.5600004196167,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 387,
+          "time": 7.739993572235107,
+          "physics": "fall: 15",
+          "velocity_y": -9.190000534057617,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 388,
+          "time": 7.759993553161621,
+          "physics": "fall: 15",
+          "velocity_y": -9.820000648498535,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 389,
+          "time": 7.779993534088135,
+          "physics": "fall: 15",
+          "velocity_y": -10.450000762939453,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 390,
+          "time": 7.799993515014648,
+          "physics": "fall: 15",
+          "velocity_y": -11.080000877380371,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 391,
+          "time": 7.819993495941162,
+          "physics": "fall: 15",
+          "velocity_y": -11.710000991821289,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 392,
+          "time": 7.839993476867676,
+          "physics": "fall: 15",
+          "velocity_y": -12.340001106262207,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 393,
+          "time": 7.8599934577941895,
+          "physics": "fall: 15",
+          "velocity_y": -12.970001220703125,
+          "action": "none",
+          "health": 5000
+        },
+        {
+          "frame": 394,
+          "time": 7.879993438720703,
+          "physics": "fall: 15",
+          "velocity_y": -13.600001335144043,
+          "action": "none",
+          "health": 5000
+        }
+      ]
+    }
+  ]
+}

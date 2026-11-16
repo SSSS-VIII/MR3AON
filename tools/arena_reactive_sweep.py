@@ -128,9 +128,7 @@ def player_smooth_padding(obs,action,start,end,after):
         prior=motion.DATA['profiles']['slide'];rate=math.log(prior['recovery_multiplier'])/prior['recovery_tick_seconds']
         pad[0]=abs(active.get('offset_carry_x',0))*scale*rate*rate*motion.recovery_factor(max(0,start-offset))*span*span/8
     if action=='none' and not active and obs['phase'] not in('ground','slide','rope_above','rope_below','unknown'):
-        second=obs.get('jumps',0)>=2
-        up=(9.8 if second else 25.)*3.5
-        down=((9.8 if second else 9.)if obs.get('jumps',0)else 19.8)*3.5
+        up,down=motion.air_accelerations(obs.get('jumps',0))
         pad[1]=max(up,down)*scale*span*span/8
     # The original finite-support functions append freefall only after leaving
     # connected visual support. Never add gravity on a supported flat segment.
@@ -147,7 +145,7 @@ def player_smooth_padding(obs,action,start,end,after):
             root_x=(after.center[0]-motion.point(name,end-offset,active)[0]*scale
                     if ground_motion else obs['player'].center[0]+obs.get('vx',0.)*end)
             if connected_height(segments,selected['id'],root_x,end)is None:
-                pad[1]=max(pad[1],19.8*3.5*scale*span*span/8)
+                pad[1]=max(pad[1],motion.DATA['fall_from_run']['gravity']*scale*span*span/8)
     return pad
 
 
