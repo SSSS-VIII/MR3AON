@@ -157,6 +157,7 @@ class MpcAvoider(VisualAvoider):
         return .09*min(2,max(0,state.get('jumps',0)))
 
     def uses_search(self,obs):
+        if obs.get('player')is None:return False
         airborne_ground=bool(obs.get('terrain')and obs['terrain'].get('source')=='neural_segments'
                              and obs.get('phase','').startswith(('jump','air_')))
         return bool(obs.get('player')and (obs.get('rope')is not None and not obs.get('terrain')or airborne_ground)

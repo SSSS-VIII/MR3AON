@@ -30,3 +30,11 @@ def test_ground_airborne_search_can_cancel_second_jump_and_then_jump_from_landin
 def test_ground_down_is_rejected_when_its_predicted_landing_is_past_the_edge():
     obs=falling();obs['terrain']['segments'][0]['b']=(200,260)
     assert not can_air_down(obs)
+
+
+@pytest.mark.parametrize('phase',('ground','jump1_falling'))
+def test_missing_body_cannot_enter_search_budget_probe(phase):
+    # The runner probes uses_search before choose's unknown-player guard.
+    obs=dict(falling(),player=None,phase=phase);planner=MpcAvoider()
+    assert not planner.uses_search(obs)
+    assert planner.choose(obs)==(None,'unknown_player')
