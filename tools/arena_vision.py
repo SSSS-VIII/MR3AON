@@ -1210,7 +1210,14 @@ def player_future(observation,seconds):
             w,h=p.w,p.h
             if surface is not None:
                 target=surface+transition_surface_offset(active,destination)*scale
-                if min(p.center[1],cy)<=target<=max(p.center[1],cy):
+                crosses=min(p.center[1],cy)<=target<=max(p.center[1],cy)
+                # Original rope transfers clamp at their selected side. A
+                # slightly overshot compact pixel body must not make waiting
+                # for contact extrapolate through the rope indefinitely.
+                # Keep the phase/jump ledger pending until observed contact.
+                past_rope=(destination=='rope'and active.get('destination','rope')=='rope'
+                           and not active.get('support_unconfirmed')and (cy-target)*speed>=0)
+                if crosses or past_rope:
                     cy=target;w=observation.get('stand_w',w);h=observation.get('stand_h',h)
             return Box(cx-w/2,cy-h/2,w,h)
         elapsed=max(0,observation['time']-active['started'])

@@ -1,0 +1,85 @@
+{
+  "scope": "Frozen pixel state and own motion history first; independent native collision witness is posthoc only and never actor input.",
+  "vision_sha256": "516eff80ae462639fe1cc2016a29584de961956be5640294edb2836efaf8fc01",
+  "state": {
+    "time": 205993.5029444,
+    "player": {
+      "x": 180.04054260253906,
+      "y": 229.41554260253906,
+      "w": 8.668914794921875,
+      "h": 8.668914794921875
+    },
+    "phase": "flip_up",
+    "jumps": 1,
+    "motion": {
+      "name": "air_up",
+      "started": 205993.44994723366,
+      "height": 0.8726189472216883,
+      "lead": -0.7000000000000002,
+      "speed": 28.0,
+      "destination": "rope",
+      "surface_velocity": -0.00292238564887492,
+      "offset_x": 0.0,
+      "offset_y": 0.0,
+      "width": 0.20000000000000004,
+      "height_box": 0.2,
+      "requires_contact": true,
+      "contact_pending": true
+    },
+    "rope": 259.0,
+    "rope_segment": {
+      "kind": "rope",
+      "a": [
+        -51.461900711892405,
+        259.0
+      ],
+      "b": [
+        584.0380992881076,
+        259.0
+      ],
+      "confidence": 0.96337890625,
+      "left_clipped": true,
+      "right_clipped": true,
+      "stamp": 205993.5029444,
+      "observations": 37,
+      "vx": -942.4112911401683,
+      "vy": 0.0,
+      "id": 6
+    },
+    "rope_segments": [
+      {
+        "kind": "rope",
+        "a": [
+          -51.461900711892405,
+          259.0
+        ],
+        "b": [
+          584.0380992881076,
+          259.0
+        ],
+        "confidence": 0.96337890625,
+        "left_clipped": true,
+        "right_clipped": true,
+        "stamp": 205993.5029444,
+        "observations": 37,
+        "vx": -942.4112911401683,
+        "vy": 0.0,
+        "id": 6
+      }
+    ],
+    "terrain": null,
+    "scale_px": 39.50531027533791,
+    "stand_w": 14.221911699121648,
+    "stand_h": 36.97697041771629,
+    "vx": -6.921826542756889,
+    "vy": 616.5745453030831
+  },
+  "expected": {
+    "horizon": 0.04,
+    "alignment_ms": 1.730100018903613,
+    "native_body_center_y": 229.381640553475,
+    "native_physics": "runOnLine: 1",
+    "native_health_loss": 250.0,
+    "native_shape": "CapsuleCollider"
+  }
+}
