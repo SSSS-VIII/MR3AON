@@ -13,18 +13,47 @@ local function method(kind,name,count)
  assert(false,'Capture method absent: '..name)
 end
 local function make_managed_sender(texture,stream)
- local raw_method=method(typeof(CS.UnityEngine.Texture2D),'GetRawTextureData',0)
+ local raw_method
+ local methods=typeof(CS.UnityEngine.Texture2D):GetMethods(flags)
+ for i=0,methods.Length-1 do local m=methods[i]
+  if m.Name=='GetRawTextureData'and m.IsGenericMethod and m:GetParameters().Length==0 then
+   local type_args=array(typeof(CS.System.Type),{typeof(CS.System.Byte)})
+   local invoke_args=array(typeof(CS.System.Object),{type_args})
+   raw_method=method(typeof(CS.System.Reflection.MethodInfo),'MakeGenericMethod',1):Invoke(m,CS.System.Reflection.BindingFlags.__CastFrom(0),nil,invoke_args,nil);break
+  end
+ end
+ assert(raw_method,'Generic raw view absent')
  local write_method=method(typeof(CS.System.IO.Stream),'Write',3)
+ local bytes=typeof(CS.System.Byte):MakeArrayType()
+ local copy_method
+ local copies=raw_method.ReturnType:GetMethods(flags)
+ for i=0,copies.Length-1 do local m=copies[i];local ps=m:GetParameters()
+  if m.Name=='CopyTo'and ps.Length==1 and ps[0].ParameterType.FullName=='System.Byte[]'then copy_method=m;break end
+ end
+ assert(copy_method,'Native byte view CopyTo absent')
+ local function expressions(values)return array(typeof(CS.System.Linq.Expressions.Expression),values)end
+ local function action(body)
+  local args=array(typeof(CS.System.Object),{typeof(CS.System.Action),body,array(typeof(CS.System.Linq.Expressions.ParameterExpression),{})})
+  local lambda=method(typeof(CS.System.Linq.Expressions.Expression),'Lambda',3):Invoke(nil,CS.System.Reflection.BindingFlags.__CastFrom(0),nil,args,nil)
+  assert(lambda,'Lambda absent');return lambda:Compile(true)
+ end
+ local zero=X.Default(typeof(CS.System.Int32))
+ -- Allocate byte[] inside managed code: XLua otherwise converts it to a Lua string.
+ local holder=CS.System.Array.CreateInstance(typeof(CS.System.Object),1)
+ local slot=X.ArrayAccess(X.Constant(holder),expressions({zero}))
+ local count=X.Convert(X.Constant(texture.width*texture.height*4),typeof(CS.System.Int32))
+ local buffer_new=X.NewArrayBounds(typeof(CS.System.Byte),expressions({count}))
+ local allocation=X.Assign(slot,X.Convert(buffer_new,typeof(CS.System.Object)))
+ local allocate=action(X.Block(array(typeof(CS.System.Linq.Expressions.ParameterExpression),{}),expressions({allocation,X.Default(write_method.ReturnType)})))
+ allocate()
+ local buffer=X.Convert(slot,bytes)
  local raw=X.Variable(raw_method.ReturnType,'raw')
- local assign=X.Assign(raw,X.Call(X.Constant(texture),raw_method,array(typeof(CS.System.Linq.Expressions.Expression),{})))
- local write=X.Call(X.Constant(stream),write_method,array(typeof(CS.System.Linq.Expressions.Expression),{
-  raw,X.Default(typeof(CS.System.Int32)),X.ArrayLength(raw)}))
- local body=X.Block(array(typeof(CS.System.Linq.Expressions.ParameterExpression),{raw}),array(typeof(CS.System.Linq.Expressions.Expression),{assign,write}))
- assert(raw and assign and write and body,'Expression node absent')
- local args=array(typeof(CS.System.Object),{typeof(CS.System.Action),body,array(typeof(CS.System.Linq.Expressions.ParameterExpression),{})})
- local lambda=method(typeof(CS.System.Linq.Expressions.Expression),'Lambda',3):Invoke(nil,CS.System.Reflection.BindingFlags.__CastFrom(0),nil,args,nil)
- assert(lambda,'Lambda absent')
- return lambda:Compile(true)
+ local assign=X.Assign(raw,X.Call(X.Constant(texture),raw_method,expressions({})))
+ local copy=X.Call(raw,copy_method,expressions({buffer}))
+ local write=X.Call(X.Constant(stream),write_method,expressions({buffer,zero,X.ArrayLength(buffer)}))
+ local body=X.Block(array(typeof(CS.System.Linq.Expressions.ParameterExpression),{raw}),expressions({assign,copy,write}))
+ MR3A.renderCapture.result.sender='native_byte_view_reused_managed_buffer'
+ return action(body)
 end
 
 -- Copy the final rendered image; no input, physics or original camera changes.
