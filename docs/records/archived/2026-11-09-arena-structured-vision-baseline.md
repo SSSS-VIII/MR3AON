@@ -15,7 +15,7 @@
 
 ## 实测与依据
 
-当前发布范围及命令见[实时视觉基线](../../arena/visual-baseline.md)。全部原图/覆盖图/日志在忽略目录`debug/arena-client/vision-v1/`，没有将客户端资源或画面提交至Git。
+当前发布范围及命令见[实时视觉基线](../../../arena/visual-baseline.md)。全部原图/覆盖图/日志在忽略目录`debug/arena-client/vision-v1/`，没有将客户端资源或画面提交至Git。
 
 seed42/map1，第一位置1101：run46、正式入口acceptance48和acceptance49均连续经过1101→11022→11032，到达11042，累计掉血分别1140、780、1560。不是无伤；原恢复血量单独保留，因此HP差不是累计受伤。当前版本不能宣称稳定通竞技场。
 

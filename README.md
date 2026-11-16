@@ -31,7 +31,7 @@ Powered by [MaaFramework](https://github.com/MaaXYZ/MaaFramework) & [MFAAvalonia
 同名保留配置与 Android 数据，新名字不继承主账号密码。
 首次使用新环境进入独立任务配置；也可用 `./run 小号 --configure` 修改配置。
 关闭实例窗口和 Waydroid 后台使用 `./run 小号 --stop`，默认主环境为 `./run --stop`；先退出同名脚本，配置及账号数据保留。
-详情见 [运行环境](.mr3a-records/test-environment.md) 和 [实例开发约定](docs/develop/命名实例.md)。
+详情见 [运行环境](docs/records/test-environment.md) 和 [实例开发约定](docs/develop/命名实例.md)。
 
 - 🚧 强化错误处理 现在基本可以24小时一直跑了！
 - ✅ Agent 动态调度任务队列

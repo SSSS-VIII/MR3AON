@@ -1,5 +1,7 @@
 # 当前工作交接
 
+2026-11-16项目协作规范已简化：根目录AGENTS.md为入口，记录迁至docs/records/，移除Cursor规则及逐提交强制归档；按记录价值选择更新现有专题、交接或仅用Git说明。历史记录保留为依据，不作为现行指令。
+
 2026-11-16修复main推送分歧：上次分支收口漏fetch，远端实际有3条自动兑换码提交；已正常merge origin/main并采用远端较新兑换码，全部双方提交保留，远端独有数归零，未强推/未推送，原工作草稿保留。见[远端分歧](archived/2026-11-16-origin-main-divergence.md)。
 
 2026-11-16补原标注派生参数导出：旧EnemyInfo嵌套仅基类，新增custom_type/custom_parameters只用于离线。v152平绳336帧/66引用无错，47 Pinball真实10/6/5（当前汇总8/8/7），god全false并恢复；735通过/2跳过，继续独立运动真值，不向actor注入参数，见[派生参数](archived/2026-11-16-arena-derived-parameter-export.md)。
@@ -405,17 +407,17 @@
 
 2026-11-09（后续授权）：用户明确允许微调现成 YOLO，禁止自写网络。原版暂停步进配对采集已补齐绳下/空中姿态与连续数字键数组兼容，并防止轨迹验收跨对象池复用；32项回归通过，见[配对采集](archived/2026-11-09-arena-paired-native-collection.md)。现成 YOLO26n 微调和真实按键闭环正在验证，后续结果单独归档；下文“未训练”是此前授权阶段的历史状态。
 
-2026-11-09：按用户要求停止并撤回自写网络草稿，未产生训练权重。已接通现成YOLO26n/YOLOE-11s及84类原生资产视觉profile，独立96帧验收只匹配4/179个敌人目标，准确性失败；离线图像→CPU结果P95约19.77ms，不能当实时完整链路。保留原避障控制，未发新模型操作。见[YOLO实测](archived/2026-11-09-arena-pretrained-yolo-evaluation.md)、[使用与限制](../arena/yolo-evaluation.md)。动态机关及游戏类别适配仍待做，未启动训练。
+2026-11-09：按用户要求停止并撤回自写网络草稿，未产生训练权重。已接通现成YOLO26n/YOLOE-11s及84类原生资产视觉profile，独立96帧验收只匹配4/179个敌人目标，准确性失败；离线图像→CPU结果P95约19.77ms，不能当实时完整链路。保留原避障控制，未发新模型操作。见[YOLO实测](archived/2026-11-09-arena-pretrained-yolo-evaluation.md)、[使用与限制](../../arena/yolo-evaluation.md)。动态机关及游戏类别适配仍待做，未启动训练。
 
 2026-11-09：按用户补充要求建立疾风完整资源/碰撞引用目录，并通过原运行时生成84幅默认姿态参考图；69敌人/26物品类型、595预制体、199碰撞组件均有来源与验证状态。动态机关状态和3个当前缺失配置未伪造补齐。见[资源与参考图](archived/2026-11-09-arena-entity-catalog-native-previews.md)。用户已要求停止自写网络训练，现成YOLO评估另行记录。
 
-2026-11-09：结构化视觉首版已实现并经原arena实跑：识别/跟踪/速度轨迹、人物状态、原动作碰撞时序和短时决策闭环，正式入口`./tools/run-arena-vision`。三轮连续三块有伤通过，累计掉血780–1560；同种子不操作对照1860，混合弹跳/曲线板仍会变差，不能称为稳定无伤。截图请求到Unity按键P95约47–48ms，原渲染60FPS；相关96项通过。详见 [首版记录](archived/2026-11-09-arena-structured-vision-baseline.md) 和 [运行/限制](../arena/visual-baseline.md)。未训练神经网络，未动main，原暂停菜单保留。
+2026-11-09：结构化视觉首版已实现并经原arena实跑：识别/跟踪/速度轨迹、人物状态、原动作碰撞时序和短时决策闭环，正式入口`./tools/run-arena-vision`。三轮连续三块有伤通过，累计掉血780–1560；同种子不操作对照1860，混合弹跳/曲线板仍会变差，不能称为稳定无伤。截图请求到Unity按键P95约47–48ms，原渲染60FPS；相关96项通过。详见 [首版记录](archived/2026-11-09-arena-structured-vision-baseline.md) 和 [运行/限制](../../arena/visual-baseline.md)。未训练神经网络，未动main，原暂停菜单保留。
 
 2026-11-09：视觉试验发现已完成的长RPC请求被原桥每帧重复读取解析，导致游戏13–27FPS；现由LocalClient在确认本id完成后持租约清理命令，实测恢复59.69FPS，50项相关回归通过。见 [RPC渲染停顿](archived/2026-11-09-arena-rpc-render-stall.md)。识别和避障仍在试验，早期低FPS及一次run19错误验收不算最终通过。
 
 2026-11-09：用户已确认结构化视觉方案并授权首版闭环试跑。高速取图增加原版K/S/P脉冲，真实跳跃/下翻及38项相关回归通过，见 [低延迟按键](archived/2026-11-09-arena-fast-key-pulses.md)。识别、差分速度/轨迹、状态机和避障策略正在arena试验，尚未通过多个板子；完整结果另行归档。未操作main。
 
-2026-11-09：用户否决首轮图像循环策略。已完成Android原生高速取图（无宿主桌面/合成器API依赖）：动态640×360中位4.7ms/P95 6.6ms，1280×720中位10.3ms/P95 12.1ms；预热后1500帧最大8.4ms，像素与原PNG完全一致，47项回归通过。见 [高速取图](archived/2026-11-09-arena-native-fast-capture.md)。当前只交付捕获工具，ArenaEnv未替换；[结构化视觉方案](../arena/visual-control-proposal.md)待用户确认，识别/跟踪/训练均未动手。旧RawZip测量与撤回依据见 [首轮调研](archived/2026-11-09-arena-visual-policy-research.md)。死亡回合平台回收异常及启动RPC短超时另已记录，未在本任务改游戏代码。
+2026-11-09：用户否决首轮图像循环策略。已完成Android原生高速取图（无宿主桌面/合成器API依赖）：动态640×360中位4.7ms/P95 6.6ms，1280×720中位10.3ms/P95 12.1ms；预热后1500帧最大8.4ms，像素与原PNG完全一致，47项回归通过。见 [高速取图](archived/2026-11-09-arena-native-fast-capture.md)。当前只交付捕获工具，ArenaEnv未替换；[结构化视觉方案](../../arena/visual-control-proposal.md)待用户确认，识别/跟踪/训练均未动手。旧RawZip测量与撤回依据见 [首轮调研](archived/2026-11-09-arena-visual-policy-research.md)。死亡回合平台回收异常及启动RPC短超时另已记录，未在本任务改游戏代码。
 
 2026-11-09：本地客户端迁移阶段已汇总为 [迁移报告](archived/2026-11-09-arena-client-migration-report.md)，包含原资源恢复、最终原APK/GameOnly/Lua桥方案、轻改机制、实测和6002入口待查项。用户已要求发至本人Gmail，邮件正文及Markdown附件发送成功（message/thread：1a1be8813783dcaa）。接续调研以截图为输入的实时策略，重点是延迟测量与建模，训练模型尚未实现。
 
@@ -429,9 +431,9 @@
 
 2026-11-09：今日每日悬赏实际已自动拉入xiaoli并打完首场，但失败页只写「失败」，小号JSON标题仅认「讨伐失败」等，导致结算不动、状态停fighting，下一轮大号30秒到期回退。现补独立失败文案，保留本轮参与/标题/按钮三重识别；6项真实图回放及相关76项测试、资源加载通过。main未操作，今日完成状态保留；小号下次新起worker加载修复，完整多轮待自然运行确认，见 [失败结算修复](archived/2026-11-09-bounty-companion-failed-settlement.md)。
 
-2026-11-09：暂停训练菜单已重新接入原机制选关，按实际1～8关→30地图→有序板子/无限段→版型池排列，标随机分布/固定布置/动作随机。5000血、K/S/P/R/N及原屏幕三按钮实机通过；冷启动、原路线map24、真实板内索引、版型重放、保护回收及重开无残留通过，相关63项测试通过。main未操作。见 [暂停菜单](archived/2026-11-09-arena-native-pause-selection-menu.md)、[用法](../arena/README.md)。未穷尽509种版型的每个随机结果；旧裁剪方案始终撤回。
+2026-11-09：暂停训练菜单已重新接入原机制选关，按实际1～8关→30地图→有序板子/无限段→版型池排列，标随机分布/固定布置/动作随机。5000血、K/S/P/R/N及原屏幕三按钮实机通过；冷启动、原路线map24、真实板内索引、版型重放、保护回收及重开无残留通过，相关63项测试通过。main未操作。见 [暂停菜单](archived/2026-11-09-arena-native-pause-selection-menu.md)、[用法](../../arena/README.md)。未穷尽509种版型的每个随机结果；旧裁剪方案始终撤回。
 
-2026-11-09：原传送符/通灵兽选关接口完成，保留完整地图，只固定原地图和版型候选。Boss/奖励循环不能按静态长度求起点，现读原生成StageStartX并核验实际脚下板索引；map52短平台第8块、map24跳关路线、无限段8010均真实落地/5000血/GodMode=false。API支持map_id/start_board/boards，见 [原机制选关](archived/2026-11-09-arena-full-map-native-selection.md)、[用法](../arena/selection.md)；菜单独立接入。
+2026-11-09：原传送符/通灵兽选关接口完成，保留完整地图，只固定原地图和版型候选。Boss/奖励循环不能按静态长度求起点，现读原生成StageStartX并核验实际脚下板索引；map52短平台第8块、map24跳关路线、无限段8010均真实落地/5000血/GodMode=false。API支持map_id/start_board/boards，见 [原机制选关](archived/2026-11-09-arena-full-map-native-selection.md)、[用法](../../arena/selection.md)；菜单独立接入。
 
 2026-11-09：离线疾风Boss在原正式开战后用原bonus/阶段/健康接口设为1/1，原战斗/死亡保留；原DragonBoss实机及原setter次序回归通过，见 [Boss血量](archived/2026-11-09-arena-native-boss-health.md)。
 
@@ -443,7 +445,7 @@
 
 2026-11-09：原版视觉训练适配器 `tools/arena_env.py` 已提供reset/step、原PNG、原分差与死亡标记；冷启动后的30步跳/8步翻、同种子90块复现和换种子91块实测通过，相关48项测试通过。当前arena原版窗口已暂停可操作，训练策略尚未开发；见 [训练接口记录](archived/2026-11-09-arena-visual-training-adapter.md)。
 
-2026-11-09：原版离线竞技场已提供 `./tools/run-arena`、键盘、50Hz原生物理步、实际参数/地图导出；小黑第397步死亡后原生复位HP100通过。冷启动采用本地资源初始化、临时Java通道后退出；独立显示父链识别已修正，stop后全新冷启动及R/N/P键实测通过。见 [本地环境](../arena/README.md)、[运行入口记录](archived/2026-11-09-arena-native-offline-environment.md)。
+2026-11-09：原版离线竞技场已提供 `./tools/run-arena`、键盘、50Hz原生物理步、实际参数/地图导出；小黑第397步死亡后原生复位HP100通过。冷启动采用本地资源初始化、临时Java通道后退出；独立显示父链识别已修正，stop后全新冷启动及R/N/P键实测通过。见 [本地环境](../../arena/README.md)、[运行入口记录](archived/2026-11-09-arena-native-offline-environment.md)。
 
 2026-11-08：原客户端arena已断网完整进入战斗；本地Manifest/MD5/原生资源解密初始化打通，临时Java消息退出后原引擎运行。原模型/VFX/跳跃/下翻已实测，重置后一级小黑HP100；seed42最终90块逐项重现，seed43变为91块。启动入口/键盘、死亡复位及画面对照继续收口，未宣称完整验收，见 [GameOnly调查](archived/2026-11-08-arena-gameonly-bootstrap-investigation.md)。
 
@@ -483,7 +485,7 @@
 
 2026-11-07：工坊挑战已按用户要求从Python界面控制器改为原生JSON流水线，删除专属控制器、移除奖励/结算截图，结束前领取全部可领奖励（含已经完成的通关目标）。周末、九点调度与下周六持久禁用保留；24项相关测试及资源加载通过。xiaoli完整10次游玩、领奖回主页、返回0及已完成复跑跳过均通过，持久禁用到11-14 05:00、控制权释放，main未接管，详见 [工坊流水线重构](archived/2026-11-07-workshop-json-pipeline.md)。
 
-2026-11-07：每日悬赏拉小号现只填写实例名称；按用户纠正移除多余UID配置和个人资料校验，小号在主页现场读取昵称，大号匹配好友昵称直接邀请。152项相关测试、原生资源及main/xiaoli仅邀请实机通过，旧保存UID自动忽略；小号已回收，main保留，控制权释放。见 [移除多余UID](archived/2026-11-07-bounty-companion-nickname-only.md)、[当前配置用法](../docs/develop/每日悬赏协同.md)。此前连续两轮战斗、奖励隔离及回收验证见 [协同首版](archived/2026-11-07-daily-bounty-companion.md)，冷启动OPPO弹窗修复见 [渠道启动弹窗](archived/2026-11-07-oppo-startup-coupon-popup.md)。
+2026-11-07：每日悬赏拉小号现只填写实例名称；按用户纠正移除多余UID配置和个人资料校验，小号在主页现场读取昵称，大号匹配好友昵称直接邀请。152项相关测试、原生资源及main/xiaoli仅邀请实机通过，旧保存UID自动忽略；小号已回收，main保留，控制权释放。见 [移除多余UID](archived/2026-11-07-bounty-companion-nickname-only.md)、[当前配置用法](../develop/每日悬赏协同.md)。此前连续两轮战斗、奖励隔离及回收验证见 [协同首版](archived/2026-11-07-daily-bounty-companion.md)，冷启动OPPO弹窗修复见 [渠道启动弹窗](archived/2026-11-07-oppo-startup-coupon-popup.md)。
 
 2026-11-07：深渊结束后误用每日重置已修正，完成/非周五/超时出口现持久禁用至下一周五05:00，到期再由独立门挂起到20:00。31项相关回归与原生资源加载通过，未实跑活动。main 当前仍运行旧规则，需退出后更新既有05:00完成记录再重启，本次未在线改状态，见 [深渊每周完成](archived/2026-11-07-abyss-weekly-completion.md)。
 
@@ -499,7 +501,7 @@
 
 2026-11-06：鬼族活动草稿已按用户要求撤回。深渊挑战已接入家族战同款挂起调度，开启等待时周五20:00前交回队列，到点恢复并沿用选卡配置，保留既有21:00截止；跳过/结束登记到下一次每日重置。代码未发现自动领取宝箱或个人积分奖励分支。10项相关回归与原生资源加载通过，未实机验证，见 [深渊周五调度](archived/2026-11-06-abyss-friday-deferred.md)。
 
-2026-11-04：v1.6.2已在 `integrate/upstream-v162` 按功能实施：7项bug修复、一次性阶段进度/暂停与计划校验、独立时序能力、新号14段及10个动作接入，框架保留5.14.2/定制MaaPiCli。最终离线回归172 passed、5 skipped、5项既有失败、85 subtests passed，原生资源及CLI加载通过。用户明确本轮不实跑，新号全流程待后续验收；运行实例未动，详见 [分批实施收口](archived/2026-11-04-v162-onboarding-integration.md)、[起号用法](../docs/develop/新号起号.md)。前期判断保留在 [v1.6.2评估](archived/2026-11-04-upstream-v162-integration-assessment.md)。
+2026-11-04：v1.6.2已在 `integrate/upstream-v162` 按功能实施：7项bug修复、一次性阶段进度/暂停与计划校验、独立时序能力、新号14段及10个动作接入，框架保留5.14.2/定制MaaPiCli。最终离线回归172 passed、5 skipped、5项既有失败、85 subtests passed，原生资源及CLI加载通过。用户明确本轮不实跑，新号全流程待后续验收；运行实例未动，详见 [分批实施收口](archived/2026-11-04-v162-onboarding-integration.md)、[起号用法](../develop/新号起号.md)。前期判断保留在 [v1.6.2评估](archived/2026-11-04-upstream-v162-integration-assessment.md)。
 
 2026-11-04：小鲤清晨首轮启动因设备截图不返回触发 600 秒外层超时，第二轮启动检查也超时；她自行 stop/start 后恢复。底层阻塞原因尚未确定，未修改 MR3A 运行逻辑；模型侧故障编号与转述要求在 xiaoli 仓库清理，见 [清晨截图阻塞](archived/2026-11-04-xiaoli-startup-screencap-hang.md)。
 

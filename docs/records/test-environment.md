@@ -141,19 +141,19 @@ main保存计划已加入工坊挑战，单次入口为 `./run [名字] --once -
 
 ## 原客户端竞技场本地环境
 
-原生资产参考图入口`PYTHONPATH=tools:agent .venv/bin/python tools/arena_preview_assets.py`要求arena已经暂停，使用相同控制租约，结束恢复菜单并核对物理帧/位置/血量/敌人数。用户后续已允许微调现成YOLO：独立`debug/arena-client/yolo/.venv`（Python3.12/GPU）已完成标准YOLO26n适配，默认视觉入口复用该环境及`arena/vision-detector.json`的本地权重/SHA，未改基础Agent环境。模型操作见[YOLO实测](../arena/yolo-evaluation.md)。原资源目录、参考图及碰撞状态边界见[对象目录](../arena/entity-catalog.md)。
+原生资产参考图入口`PYTHONPATH=tools:agent .venv/bin/python tools/arena_preview_assets.py`要求arena已经暂停，使用相同控制租约，结束恢复菜单并核对物理帧/位置/血量/敌人数。用户后续已允许微调现成YOLO：独立`debug/arena-client/yolo/.venv`（Python3.12/GPU）已完成标准YOLO26n适配，默认视觉入口复用该环境及`arena/vision-detector.json`的本地权重/SHA，未改基础Agent环境。模型操作见[YOLO实测](../../arena/yolo-evaluation.md)。原资源目录、参考图及碰撞状态边界见[对象目录](../../arena/entity-catalog.md)。
 
-实时结构化视觉入口为`./tools/run-arena-vision --seed 48 --map 1 --pin 1:1101 --pin 2:11022 --pin 3:11032 --boards 3`，目标40Hz，弹球重规划时实际频率可能下降；复用arena InstanceSession与同一控制租约。结束恢复原暂停菜单，原图/估计和验收分开记录；有伤通过单独标记。当前默认20类官方YOLO26n-OBB v15，配合像素飞竹阶段时钟、原Mace偏心轴预测、原动作先验和滚动规划；控制期间完整循环垃圾回收延后到原生暂停。第6关60011三组新候选均整板有伤通过，第5关飞竹仍有无伤及400伤害回合，坡段/箭板仍有伤，尚未稳定完整竞技场，见 [视觉控制](../arena/visual-baseline.md)。暂停原collider标注为`tools/arena_snapshot_labels.py`，原动作校准为`tools/arena_motion_probe.py`，均保留原游戏机制。
+实时结构化视觉入口为`./tools/run-arena-vision --seed 48 --map 1 --pin 1:1101 --pin 2:11022 --pin 3:11032 --boards 3`，目标40Hz，弹球重规划时实际频率可能下降；复用arena InstanceSession与同一控制租约。结束恢复原暂停菜单，原图/估计和验收分开记录；有伤通过单独标记。当前默认20类官方YOLO26n-OBB v15，配合像素飞竹阶段时钟、原Mace偏心轴预测、原动作先验和滚动规划；控制期间完整循环垃圾回收延后到原生暂停。第6关60011三组新候选均整板有伤通过，第5关飞竹仍有无伤及400伤害回合，坡段/箭板仍有伤，尚未稳定完整竞技场，见 [视觉控制](../../arena/visual-baseline.md)。暂停原collider标注为`tools/arena_snapshot_labels.py`，原动作校准为`tools/arena_motion_probe.py`，均保留原游戏机制。
 
 默认v15另叠飞竹阶段v16：同一GPU Python环境内用标准YOLO26n-cls查看64px局部图，两头共识确认阶段，分歧保留不确定；额外模型及metadata摘要在vision-detector.json，运行setup一并留证。无飞竹不调用，批形在捕获前预热。新5/6关五策略整板两无伤/三有伤，50013的400仍未修复；默认38123无显式权重整板50013为0伤。训练/GPU评分和实时按键计分分开，结束已恢复1101/5000血/暂停菜单/键盘/评估关闭，见[阶段v16](archived/2026-11-10-arena-bamboo-aim-lock-vision-v16.md)。
 
 高速捕获独立工具为 `.venv/bin/python tools/arena_capture.py --frames 300`，arena已运行即可，默认1280×720 RGBA；不改游戏APK或训练接口。使用Android13常驻辅助进程与命名设备数据通道，启动完成包含3帧预热；无宿主桌面/合成器截图API依赖，验证见 [高速取图](archived/2026-11-09-arena-native-fast-capture.md)。
 
-当前为疾风/基础小黑5000血，暂停页不显示HP。选关通灵兽固定4倍冲刺，骑乘中原生吸取飞镖球，落地关闭自身额外能力。P或原屏幕暂停键打开选关页，定位沿原传送符/通灵兽完整跑图；Boss/奖励循环可能耗时数分钟，交互菜单到达后直接开跑，训练接口仍保持暂停。`--no-focus`及训练ArenaEnv隐藏菜单；训练结束后重新运行正常入口恢复交互菜单。重开先走原Item/Enemy回收，不能省略后只销毁Scene。详见 [原机制选关](../arena/selection.md)。
+当前为疾风/基础小黑5000血，暂停页不显示HP。选关通灵兽固定4倍冲刺，骑乘中原生吸取飞镖球，落地关闭自身额外能力。P或原屏幕暂停键打开选关页，定位沿原传送符/通灵兽完整跑图；Boss/奖励循环可能耗时数分钟，交互菜单到达后直接开跑，训练接口仍保持暂停。`--no-focus`及训练ArenaEnv隐藏菜单；训练结束后重新运行正常入口恢复交互菜单。重开先走原Item/Enemy回收，不能省略后只销毁Scene。详见 [原机制选关](../../arena/selection.md)。
 
 `./tools/run-arena --seed 42 --level 4 --paused` 运行已准备的空白arena，`--stop` 关闭arena及自己的嵌套显示；`--restart` 只重启游戏，`--cold` 重启该名字Android。内部统一复用InstanceSession与同名控制租约，不运行MaaPiCli、不重新分配Waydroid/ADB。main及其它实例保留。arena只复制资源白名单、不复制登录凭据，游戏UID的IPv4/IPv6路由禁止联网；重启后重新核验规则。
 
-本地资源/工具依赖来自此前提取，入口会核对原APK、Lua桥报告与源码摘要；不是从Git克隆后无需资源即可运行的独立发行版。60Hz/1280×720 gamescope窗口只按本工具命令参数/PID识别，不聚焦其它Waydroid窗口。键盘、参数和验证边界见 [arena说明](../arena/README.md)。按键与脚本步进不要并用；每条控制命令通过arena租约互斥，截图可只读。冷启动临时native Java消息完成初始化后退出，原战斗通过本地资源桥在Unity主线程控制。
+本地资源/工具依赖来自此前提取，入口会核对原APK、Lua桥报告与源码摘要；不是从Git克隆后无需资源即可运行的独立发行版。60Hz/1280×720 gamescope窗口只按本工具命令参数/PID识别，不聚焦其它Waydroid窗口。键盘、参数和验证边界见 [arena说明](../../arena/README.md)。按键与脚本步进不要并用；每条控制命令通过arena租约互斥，截图可只读。冷启动临时native Java消息完成初始化后退出，原战斗通过本地资源桥在Unity主线程控制。
 
 ## 情报模拟战（截图回放验收）
 

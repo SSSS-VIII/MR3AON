@@ -18,8 +18,8 @@ export default defineConfig({
     ['style', {}, '.VPHero .text { white-space: pre-line; }'],
   ],
 
-  // develop/ 仅保留在仓库，不在站点展示
-  srcExclude: ['develop/**'],
+  // 开发文档与工作记录仅保留在仓库，不在用户站点展示
+  srcExclude: ['develop/**', 'records/**'],
 
   themeConfig: {
     logo: '/logo.webp',

@@ -6,7 +6,7 @@ from pathlib import Path
 from intelligence_simulator.gold_value import load_historical,recompute
 
 p=argparse.ArgumentParser(description=__doc__)
-p.add_argument('--historical',type=Path,default=Path('.mr3a-records/benchmarks/2026-11-15-intelligence-pool.json'))
+p.add_argument('--historical',type=Path,default=Path('docs/records/benchmarks/2026-11-15-intelligence-pool.json'))
 p.add_argument('--recompute',action='store_true')
 p.add_argument('--seconds',type=float,default=60)
 p.add_argument('--output',type=Path,required=True)

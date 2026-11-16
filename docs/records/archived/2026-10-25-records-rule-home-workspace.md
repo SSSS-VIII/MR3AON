@@ -1,5 +1,7 @@
 # 开发记录规则：家目录工作区也能读到
 
+> 历史记录：本文的 Cursor 注入与逐提交强制归档规则已废止。现行约定见仓库根 AGENTS.md；保留本文仅用于解释旧记录为何产生。
+
 ## 现象
 
 仓库里早已有 `.cursor/rules/development-records.mdc`（`alwaysApply: true`），要求提交前写 `.mr3a-records` 且与代码同一次 commit。但 Cursor 工作区经常是 `/home/linn`，子目录 `MR3A/.cursor/rules/` **不会**作为项目规则注入，Agent 等于没读到，于是又只交代码漏归档。
