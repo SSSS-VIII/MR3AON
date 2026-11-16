@@ -1,0 +1,535 @@
+{
+  "scope": "Two saved pixel-derived observations plus own input clock; no map/native IDs, native geometry or hidden state used by planner",
+  "cases": [
+    {
+      "observation": {
+        "time": 179861.41477827408,
+        "player": {
+          "x": 179.5620315717131,
+          "y": 210.5033482735044,
+          "w": 15.34375,
+          "h": 37.0
+        },
+        "phase": "ground",
+        "jumps": 0,
+        "rope": null,
+        "terrain": {
+          "y": 252.4873199194841,
+          "at_player": true,
+          "edge": null,
+          "landing": null,
+          "speed": 738.8160477952895,
+          "samples": [],
+          "segments": [
+            {
+              "kind": "platform",
+              "a": [
+                -32.445149976314035,
+                259.46075439453125
+              ],
+              "b": [
+                610.554850023686,
+                259.53924560546875
+              ],
+              "confidence": 0.92041015625,
+              "left_clipped": true,
+              "right_clipped": true,
+              "stamp": 179861.3776308,
+              "observations": 327,
+              "vx": -738.8160477952895,
+              "vy": 0.0,
+              "id": 23
+            }
+          ],
+          "selected_id": 23,
+          "source": "neural_segments"
+        },
+        "motion": null,
+        "scale_px": 39.50531027533791,
+        "stand_w": 14.221911699121648,
+        "stand_h": 36.97697041771629,
+        "vx": -0.43323075635050223,
+        "vy": 4.385719961347185,
+        "scene_velocity_x": -738.8160477952895,
+        "scene_motion_observed": true,
+        "hazard_confidence": 0.25,
+        "visible_supports": [
+          {
+            "kind": "platform",
+            "a": [
+              -5.0,
+              259.46075439453125
+            ],
+            "b": [
+              638.0,
+              259.53924560546875
+            ],
+            "confidence": 0.92041015625,
+            "left_clipped": true,
+            "right_clipped": true,
+            "stamp": 179861.3776308,
+            "observations": 327,
+            "vx": -738.8160477952895,
+            "vy": 0.0,
+            "id": 23
+          }
+        ],
+        "incoming_jump2": true,
+        "ground_contact_observed": false,
+        "down_action_end_observed": false,
+        "rope_contact_observed": false,
+        "tracks": [
+          {
+            "id": 48,
+            "box": {
+              "x": 622.9492158160467,
+              "y": 223.44448732162942,
+              "w": 25.101568367906637,
+              "h": 25.101568367906637
+            },
+            "kind": "trap",
+            "confidence": 0.18771859125117774,
+            "seen": 179861.2534834,
+            "vx": 0,
+            "vy": 0,
+            "ax": 0,
+            "ay": 0,
+            "observations": 1,
+            "active": false,
+            "arming": false,
+            "collider_shape": "SphereCollider",
+            "quad": [
+              [
+                640.2478637695312,
+                256.3174455778484
+              ],
+              [
+                640.3302612304688,
+                215.69253713058276
+              ],
+              [
+                630.7521362304688,
+                215.67309743331714
+              ],
+              [
+                630.6697387695312,
+                256.29800588058276
+              ]
+            ],
+            "angular_velocity": 0.0,
+            "attack_phase": null,
+            "curve_count": 0,
+            "sine_count": 0,
+            "sine_frequency": 0,
+            "sine_a": 0,
+            "sine_b": 0
+          },
+          {
+            "id": 49,
+            "box": {
+              "x": 486.8500452198982,
+              "y": 167.8007499730051,
+              "w": 48.44016339574739,
+              "h": 85.64850005398978
+            },
+            "kind": "trap",
+            "confidence": 0.85400390625,
+            "seen": 179861.3776308,
+            "vx": -751.8646632954977,
+            "vy": 0.0,
+            "ax": 0,
+            "ay": 0,
+            "observations": 4,
+            "active": false,
+            "arming": false,
+            "collider_shape": "BoxCollider",
+            "quad": [
+              [
+                535.2902086156456,
+                247.51063401890875
+              ],
+              [
+                500.428515950423,
+                167.8007499730051
+              ],
+              [
+                486.8500452198982,
+                173.73936598109125
+              ],
+              [
+                521.7117378851208,
+                253.4492500269949
+              ]
+            ],
+            "angular_velocity": -2.305133943289388,
+            "attack_phase": null,
+            "curve_count": 0,
+            "sine_count": 0,
+            "sine_frequency": 0,
+            "sine_a": 0,
+            "sine_b": 0
+          },
+          {
+            "id": 50,
+            "box": {
+              "x": 580.1376953125,
+              "y": 180.45932006835938,
+              "w": 20.724609375,
+              "h": 75.83135986328125
+            },
+            "kind": "trap",
+            "confidence": 0.8916015625,
+            "seen": 179861.3776308,
+            "vx": 0,
+            "vy": 0,
+            "ax": 0,
+            "ay": 0,
+            "observations": 2,
+            "active": false,
+            "arming": false,
+            "collider_shape": "BoxCollider",
+            "quad": [
+              [
+                600.8623046875,
+                254.9654541015625
+              ],
+              [
+                593.4390869140625,
+                180.45932006835938
+              ],
+              [
+                580.1376953125,
+                181.7845458984375
+              ],
+              [
+                587.5609130859375,
+                256.2906799316406
+              ]
+            ],
+            "angular_velocity": 0.0,
+            "attack_phase": null,
+            "curve_count": 0,
+            "sine_count": 0,
+            "sine_frequency": 0,
+            "sine_a": 0,
+            "sine_b": 0
+          }
+        ]
+      },
+      "last_action": 179860.41406985067,
+      "expected_previous_reason": "slide:49"
+    },
+    {
+      "observation": {
+        "time": 179861.5880239191,
+        "player": {
+          "x": 211.62640915853316,
+          "y": 237.84873844311554,
+          "w": 15.803088039705884,
+          "h": 15.802523113768945
+        },
+        "phase": "slide",
+        "jumps": 0,
+        "rope": null,
+        "terrain": {
+          "y": 252.5,
+          "at_player": true,
+          "edge": null,
+          "landing": null,
+          "speed": 786.2659739899129,
+          "samples": [],
+          "segments": [
+            {
+              "kind": "platform",
+              "a": [
+                -24.241853004463444,
+                259.5
+              ],
+              "b": [
+                609.7581469955365,
+                259.5
+              ],
+              "confidence": 0.89404296875,
+              "left_clipped": true,
+              "right_clipped": true,
+              "stamp": 179861.5571923,
+              "observations": 333,
+              "vx": -786.2659739899129,
+              "vy": 0.0,
+              "id": 23
+            }
+          ],
+          "selected_id": 23,
+          "source": "neural_segments"
+        },
+        "motion": {
+          "name": "slide",
+          "started": 179861.41747272966,
+          "base_speed": 18.690723143108464
+        },
+        "scale_px": 39.50531027533791,
+        "stand_w": 14.221911699121648,
+        "stand_h": 36.97697041771629,
+        "vx": -33.28890879801983,
+        "vy": 51.94209653004094,
+        "scene_velocity_x": -786.2659739899129,
+        "scene_motion_observed": true,
+        "hazard_confidence": 0.25,
+        "visible_supports": [
+          {
+            "kind": "platform",
+            "a": [
+              0.0,
+              259.5
+            ],
+            "b": [
+              634.0,
+              259.5
+            ],
+            "confidence": 0.89404296875,
+            "left_clipped": true,
+            "right_clipped": true,
+            "stamp": 179861.5571923,
+            "observations": 333,
+            "vx": -786.2659739899129,
+            "vy": 0.0,
+            "id": 23
+          }
+        ],
+        "incoming_jump2": true,
+        "ground_contact_observed": false,
+        "down_action_end_observed": false,
+        "rope_contact_observed": false,
+        "tracks": [
+          {
+            "id": 49,
+            "box": {
+              "x": 351.5489327965744,
+              "y": 163.77569205323942,
+              "w": 36.257647958387906,
+              "h": 86.44861589352115
+            },
+            "kind": "trap",
+            "confidence": 0.8662109375,
+            "seen": 179861.5571923,
+            "vx": -788.8733693253151,
+            "vy": 0.0,
+            "ax": 0,
+            "ay": 0,
+            "observations": 10,
+            "active": false,
+            "arming": false,
+            "collider_shape": "BoxCollider",
+            "quad": [
+              [
+                387.8065807549623,
+                246.65670432134726
+              ],
+              [
+                363.9360609313072,
+                163.77569205323942
+              ],
+              [
+                351.5489327965744,
+                167.34329567865274
+              ],
+              [
+                375.41945262022944,
+                250.22430794676058
+              ]
+            ],
+            "angular_velocity": -0.13937017611256566,
+            "attack_phase": null,
+            "curve_count": 0,
+            "sine_count": 0,
+            "sine_frequency": 0,
+            "sine_a": 0,
+            "sine_b": 0
+          },
+          {
+            "id": 50,
+            "box": {
+              "x": 479.3252818401038,
+              "y": 170.66726684570312,
+              "w": 29.763519287109375,
+              "h": 91.41546630859375
+            },
+            "kind": "trap",
+            "confidence": 0.89013671875,
+            "seen": 179861.5571923,
+            "vx": -593.3188704081358,
+            "vy": 0.0,
+            "ax": -5773.705805427484,
+            "ay": 491.3461614918891,
+            "observations": 8,
+            "active": false,
+            "arming": false,
+            "collider_shape": "BoxCollider",
+            "quad": [
+              [
+                494.4340236003577,
+                262.0827331542969
+              ],
+              [
+                509.0888087566077,
+                173.15716552734375
+              ],
+              [
+                493.9800441081702,
+                170.66726684570312
+              ],
+              [
+                479.32528946949833,
+                259.59283447265625
+              ]
+            ],
+            "angular_velocity": 0.0,
+            "attack_phase": null,
+            "curve_count": 0,
+            "sine_count": 0,
+            "sine_frequency": 0,
+            "sine_a": 0,
+            "sine_b": 0
+          },
+          {
+            "id": 51,
+            "box": {
+              "x": 412.59472670425737,
+              "y": 176.4403329021277,
+              "w": 19.444415672393802,
+              "h": 85.11933419574461
+            },
+            "kind": "trap",
+            "confidence": 0.8798828125,
+            "seen": 179861.5571923,
+            "vx": -792.4678038255531,
+            "vy": 0.0,
+            "ax": 0,
+            "ay": 0,
+            "observations": 6,
+            "active": false,
+            "arming": false,
+            "collider_shape": "BoxCollider",
+            "quad": [
+              [
+                432.03914237665117,
+                260.60383656006127
+              ],
+              [
+                426.06866621247394,
+                176.4403329021277
+              ],
+              [
+                412.59472670425737,
+                177.39616343993873
+              ],
+              [
+                418.5652028684346,
+                261.5596670978723
+              ]
+            ],
+            "angular_velocity": 0.034994307069018855,
+            "attack_phase": null,
+            "curve_count": 0,
+            "sine_count": 0,
+            "sine_frequency": 0,
+            "sine_a": 0,
+            "sine_b": 0
+          },
+          {
+            "id": 52,
+            "box": {
+              "x": 523.5052973854187,
+              "y": 163.7024519623987,
+              "w": 25.77497989746348,
+              "h": 89.32122707825363
+            },
+            "kind": "trap",
+            "confidence": 0.87841796875,
+            "seen": 179861.5571923,
+            "vx": -798.1161353601487,
+            "vy": -207.15533888140442,
+            "ax": 0,
+            "ay": 0,
+            "observations": 3,
+            "active": false,
+            "arming": false,
+            "collider_shape": "BoxCollider",
+            "quad": [
+              [
+                549.2802772828821,
+                251.13307927163166
+              ],
+              [
+                537.2824739218037,
+                163.7024519623987
+              ],
+              [
+                523.5052973854187,
+                165.59305173141937
+              ],
+              [
+                535.5031007464971,
+                253.02367904065233
+              ]
+            ],
+            "angular_velocity": -0.4718638043485463,
+            "attack_phase": null,
+            "curve_count": 0,
+            "sine_count": 0,
+            "sine_frequency": 0,
+            "sine_a": 0,
+            "sine_b": 0
+          },
+          {
+            "id": 53,
+            "box": {
+              "x": 609.6200561523438,
+              "y": 192.3918228149414,
+              "w": 35.7598876953125,
+              "h": 75.21632385253906
+            },
+            "kind": "trap",
+            "confidence": 0.7080078125,
+            "seen": 179861.5571923,
+            "vx": 0,
+            "vy": 0,
+            "ax": 0,
+            "ay": 0,
+            "observations": 1,
+            "active": false,
+            "arming": false,
+            "collider_shape": "BoxCollider",
+            "quad": [
+              [
+                627.4298706054688,
+                267.60813903808594
+              ],
+              [
+                645.3799438476562,
+                196.9139404296875
+              ],
+              [
+                627.5701293945312,
+                192.39181518554688
+              ],
+              [
+                609.6200561523438,
+                263.08604431152344
+              ]
+            ],
+            "angular_velocity": 0.0,
+            "attack_phase": null,
+            "curve_count": 0,
+            "sine_count": 0,
+            "sine_frequency": 0,
+            "sine_a": 0,
+            "sine_b": 0
+          }
+        ]
+      },
+      "last_action": 179861.41747272966,
+      "expected_previous_reason": "action_transition"
+    }
+  ]
+}

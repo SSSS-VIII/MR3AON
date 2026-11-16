@@ -129,6 +129,7 @@ class MpcAvoider(VisualAvoider):
     STEP=.08
     STEPS=12
     BEAM=24
+    ground_static_search=False
 
     def rope_exit(self,obs):
         segment=obs.get('rope_segment')
@@ -160,14 +161,22 @@ class MpcAvoider(VisualAvoider):
         if obs.get('player')is None:return False
         airborne_ground=bool(obs.get('terrain')and obs['terrain'].get('source')=='neural_segments'
                              and obs.get('phase','').startswith(('jump','air_')))
-        return bool(obs.get('player')and (obs.get('rope')is not None and not obs.get('terrain')or airborne_ground)
+        ground_static=bool(self.ground_static_search and obs.get('terrain')
+                           and obs['terrain'].get('source')=='neural_segments'
+                           and obs.get('phase')in('ground','slide')
+                           and any(t.kind in('trap','mace','terrain_wall')for t in self._objects(obs)))
+        return bool(obs.get('player')and (obs.get('rope')is not None and not obs.get('terrain')or airborne_ground or ground_static)
                     and (self.recovery_needed(obs)or self.rope_exit(obs)or self._targets(obs)or any(t.kind in ('pinball','trap','arrow','mace','terrain_wall')or t.attack_phase is not None for t in self._objects(obs))))
 
     def _options(self,state,stamp):
         names=[None]
         phase=state['phase']
         if phase=='rope_above':names+=['rope_down','jump1']
-        elif phase=='ground'or phase.startswith('air_')and not state['jumps']:names+=['jump1']
+        elif phase=='ground':names+=['jump1','slide']
+        elif phase.startswith('air_')and not state['jumps']:names+=['jump1']
+        elif phase=='slide':
+            active=state.get('motion')
+            if active and stamp-active['started']>=.17:names+=['jump1']
         elif phase=='rope_below':names+=['rope_up']
         elif state['jumps']==1 and phase.startswith('jump1'):
             active=state.get('motion')
@@ -272,5 +281,5 @@ class MpcAvoider(VisualAvoider):
         best=min(beam,key=lambda n:(n.cost,n.actions))
         if not best.first:return None,'mpc_wait'
         self.last_action=now
-        action='down'if best.first in ('rope_down','air_down')else'jump'
+        action='slide'if best.first=='slide'else'down'if best.first in ('rope_down','air_down')else'jump'
         return action,'mpc_'+best.first
