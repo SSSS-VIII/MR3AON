@@ -10,7 +10,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 from arena_bamboo_point import (
-    normalized_box, point_y, refine_point_cue, remember_point_interval,
+    normalized_box, point_y, point_bounds, refine_point_cue, remember_point_interval,
     target_envelope,
 )
 from arena_vision import Box
@@ -51,6 +51,7 @@ def test_nearby_distinct_points_abstain_even_with_high_visibility():
     assert result['center_refinement']['reason'] == 'ambiguous_points'
     # Visibility alone cannot distinguish the two actual target centers.
     assert point_y(result, 0.) == 200.
+    assert point_bounds(result, 17.) == (181., 186.)
 
 
 def test_duplicate_predictions_of_same_point_are_not_distinct_targets():
@@ -203,3 +204,64 @@ def test_roi_refiner_rejects_wrong_screenshot_geometry_before_inference():
     refiner = BambooPointRefiner.__new__(BambooPointRefiner)
     with pytest.raises(ValueError, match='640x360'):
         refiner.refine(np.zeros((360, 640, 4), np.uint8), [])
+
+
+def test_stock_pose_warmup_retains_overlapping_boxes_for_point_selection(tmp_path, monkeypatch):
+    import json
+    from types import SimpleNamespace
+    import arena_yolo
+    from arena_bamboo_point import BambooPointRefiner
+
+    weights = tmp_path / 'weights' / 'best.pt'
+    weights.parent.mkdir()
+    weights.write_bytes(b'fake model; the test substitutes the stock loader')
+    (tmp_path / 'profile.json').write_text(json.dumps(dict(
+        task='pose', crop_px=64, imgsz=192, kpt_shape=[1, 3], classes=['aim', 'locked'],
+    )))
+    calls = []
+
+    class Model:
+        task = 'pose'
+        names = {0: 'aim', 1: 'locked'}
+
+        def predict(self, images, **options):
+            calls.append((len(images), options))
+            return []
+
+    monkeypatch.setitem(sys.modules, 'torch', SimpleNamespace(set_num_threads=lambda _: None))
+    monkeypatch.setattr(arena_yolo, 'offline_sdk', lambda: SimpleNamespace(YOLO=lambda _: Model()))
+    refiner = BambooPointRefiner(weights)
+    assert [count for count, _ in calls] == [1, 2, 4, 8, 16, 32]
+    assert all(options['iou'] == .95 for _, options in calls)
+    assert refiner.options['iou'] == refiner.info['nms_iou'] == .95
+    # Overlapping full-ring boxes remain separate until this point check.
+    result = refine_point_cue(cue(), [prediction(y=196.), prediction(y=204.)])
+    assert result['center_refinement']['reason'] == 'ambiguous_points'
+
+
+@pytest.mark.parametrize('candidates', [None, [True], [[300., math.nan]], [[300., 230.]], [[True, 200.]]])
+def test_malformed_or_distant_ambiguous_candidates_keep_original_bounds(candidates):
+    ambiguous = dict(cue(), center_refinement=dict(
+        version=1, space='screen_640x360', reason='ambiguous_points',
+        evidence=dict(candidates=candidates), center=None,
+    ))
+    assert point_bounds(ambiguous, 17.) == (183., 183.)
+
+
+def test_stateful_ambiguous_ownership_keeps_both_points_and_original_clock():
+    from arena_bamboo_motion import BambooClocks
+    clock = BambooClocks()
+    clock.point_uncertainty = True
+    for index, phase in enumerate(('aim', 'aim', 'locked', 'locked')):
+        raw = cue(phase)
+        candidates = [prediction(y=196., phase=phase), prediction(y=204., phase=phase)]
+        refined = refine_point_cue(raw, candidates)
+        assert refined['center_refinement']['center'] is None
+        clock.observe([refined], index * .03)
+    forecast, = clock.forecasts(.09, -700.)
+    from arena_projection import SCALE
+    for target in (196., 200., 204.):
+        box = forecast.future(.2)
+        # Even the original unscaled collider around either candidate fits.
+        assert box.y <= target - .1 * SCALE + 1e-9
+        assert box.y + box.h >= target + .1 * SCALE - 1e-9

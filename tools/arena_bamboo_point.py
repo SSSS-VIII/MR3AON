@@ -42,7 +42,9 @@ def refine_point_cue(cue,predictions):
             if eligible:
                 first=eligible[0]
                 others=[p for p in eligible[1:]if math.dist(p[2]['point'][:2],first[2]['point'][:2])>=3]
-                if others and others[0][0]-first[0]<3:reason='ambiguous_points'
+                if others and others[0][0]-first[0]<3:
+                    reason='ambiguous_points'
+                    evidence=dict(candidates=[list(map(float,p[2]['point'][:2])) for p in eligible])
                 else:
                     chosen=list(map(float,first[2]['point'][:2]));reason=None
                     evidence=dict(confidence=first[2]['confidence'],visibility=first[2]['point'][2],
@@ -63,11 +65,35 @@ def point_y(cue,camera_y):
     return center[1]-camera_y
 
 
-def remember_point_interval(clock,baseline,point):
+def point_bounds(cue,camera_y):
+    """Unresolved ownership retains all gated points instead of picking one."""
+    estimate=point_y(cue,camera_y)
+    field=cue.get('center_refinement')
+    if (cue.get('phase')not in('aim','locked')or not isinstance(field,dict)
+            or field.get('version')!=1 or field.get('space')!='screen_640x360'
+            or field.get('reason')!='ambiguous_points'):
+        return estimate,estimate
+    evidence=field.get('evidence')
+    if not isinstance(evidence,dict):return estimate,estimate
+    points=evidence.get('candidates')
+    if not isinstance(points,(list,tuple)):return estimate,estimate
+    try:x,y,w,h=normalized_box(cue['box'])
+    except (ValueError,AttributeError,TypeError,OverflowError):return estimate,estimate
+    values=[estimate]
+    for center in points:
+        if not isinstance(center,(list,tuple))or len(center)!=2:continue
+        if any(isinstance(v,bool)or not isinstance(v,(int,float))or not math.isfinite(v)for v in center):continue
+        if (0<=center[0]<=640 and 55<=center[1]<=360
+                and math.dist(center,(x+w/2,y+h/2))<=8):values.append(center[1]-camera_y)
+    return min(values),max(values)
+
+
+def remember_point_interval(clock,baseline,point,*,upper=None):
     """Parallel rolling medians retain the original target on either side."""
-    if not all(math.isfinite(v)for v in(baseline,point)):return
-    clock['point_low_samples']=(clock.get('point_low_samples',[])+[min(baseline,point)])[-3:]
-    clock['point_high_samples']=(clock.get('point_high_samples',[])+[max(baseline,point)])[-3:]
+    upper=point if upper is None else upper
+    if not all(math.isfinite(v)for v in(baseline,point,upper)):return
+    clock['point_low_samples']=(clock.get('point_low_samples',[])+[min(baseline,point,upper)])[-3:]
+    clock['point_high_samples']=(clock.get('point_high_samples',[])+[max(baseline,point,upper)])[-3:]
 
 
 def target_envelope(clock,base_height):
@@ -96,12 +122,15 @@ class BambooPointRefiner:
         torch.set_num_threads(2);self.model=offline_sdk().YOLO(str(weights))
         if self.model.task!='pose'or list(self.model.names.values())!=profile['classes']:
             raise ValueError('Reticle pose checkpoint/profile mismatch')
-        self.options=dict(device=0,imgsz=profile['imgsz'],conf=.1,verbose=False,quantize=32)
+        # The annotation box includes the outer ring. Distinct neighboring
+        # points can have almost identical boxes; retain them for point-based
+        # ambiguity checks instead of suppressing them as duplicate objects.
+        self.options=dict(device=0,imgsz=profile['imgsz'],conf=.1,verbose=False,quantize=32,iou=.95)
         self.dummy=np.full((64,64,3),114,np.uint8)
         for count in(1,2,4,8,16,32):self.model.predict([self.dummy]*count,**self.options)
         self.info=dict(weights=str(weights),sha256=hashlib.sha256(weights.read_bytes()).hexdigest(),
             profile_sha256=hashlib.sha256(profile_path.read_bytes()).hexdigest(),crop_px=64,
-            imgsz=profile['imgsz'],batch_chunk=32,quantize=32,point_selection='phase_agreement_and_unique_nearby_point',
+            imgsz=profile['imgsz'],batch_chunk=32,quantize=32,nms_iou=.95,point_selection='phase_agreement_and_unique_nearby_point',
             geometry='Parallel target interval must retain the original bbox target; not a phase override')
         self.last_ms=0.;self.last_stats={}
 

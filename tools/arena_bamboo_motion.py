@@ -9,7 +9,7 @@ from dataclasses import dataclass,replace
 from statistics import median
 from arena_vision import Box,Detection,Track,Tracker
 from arena_projection import SCALE
-from arena_bamboo_point import point_y, remember_point_interval, target_envelope
+from arena_bamboo_point import point_bounds, remember_point_interval, target_envelope
 
 
 @dataclass
@@ -65,7 +65,8 @@ class BambooClocks:
                 clock['target_samples']=(clock['target_samples']+[track.box.center[1]-camera_y])[-3:]
                 clock['target_y']=median(clock['target_samples'])
                 if self.point_uncertainty:
-                    remember_point_interval(clock,track.box.center[1]-camera_y,point_y(cue,camera_y))
+                    low,high=point_bounds(cue,camera_y)
+                    remember_point_interval(clock,track.box.center[1]-camera_y,low,upper=high)
             if clock['fire']is not None:continue
             if cue['phase']=='aim':
                 clock.update(last_aim=stamp,first_lock=None,lock_count=0,
