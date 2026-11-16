@@ -6,6 +6,8 @@ local function get(o,k) return o:GetType():GetField(k,flags):GetValue(o) end
 local lastHurtField=typeof(CS.Ninja):GetField('_lastHurtNinjaEnemy',flags)
 local lastHurtIndexField=typeof(CS.Ninja):GetField('lastHurtEnemyIndex',flags)
 local enemyInfoField=typeof(CS.EnemyBase):GetField('_enemyInfo',flags)
+local attackOwnerField=typeof(CS.EnemyAttackModule):GetField('_belongToEnemy',flags)
+assert(attackOwnerField,'Original EnemyAttackModule owner field missing')
 local file=U.Application.persistentDataPath..'/arena-control/vision-eval.json'
 local watch=CS.System.Diagnostics.Stopwatch
 local function monotonic() return watch.GetTimestamp()/watch.Frequency end
@@ -73,12 +75,20 @@ function E.vision_hit_geometry(n)
         if not o or not o.gameObject then return result end
         local all=o.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
         for i=0,all.Length-1 do local c=all[i]
+            local damageCallback
+            if not role then
+                local module=c.gameObject:GetComponent(typeof(CS.EnemyAttackModule))
+                local target=module and attackOwnerField:GetValue(module)
+                if target and target:GetInstanceID()==o:GetInstanceID()then
+                    damageCallback={kind='EnemyAttackModule',owner_id=target:GetInstanceID()}
+                end
+            end
             if c.enabled and c.gameObject.activeInHierarchy and
-                    ((role and c.name=='Role')or(not role and c.tag=='Enemy')) then
+                    ((role and c.name=='Role')or(not role and(c.tag=='Enemy'or damageCallback))) then
                 local bounds=c.bounds
                 local row={id=c:GetInstanceID(),name=c.name,type=c:GetType().Name,
                     world_center=vector(bounds.center),world_extents=vector(bounds.extents),
-                    plane_quad={},lossy_scale=vector(c.transform.lossyScale)}
+                    plane_quad={},lossy_scale=vector(c.transform.lossyScale),damage_callback=damageCallback}
                 if row.type=='BoxCollider' then
                     row.size=vector(c.size);row.center=vector(c.center)
                     for _,s in ipairs({{-1,-1},{1,-1},{1,1},{-1,1}})do

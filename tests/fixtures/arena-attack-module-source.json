@@ -1,0 +1,470 @@
+{
+  "scope": "Unmodified component fields from original PoleaxeWarrior prefab. Only files needed for verified callback/owner/collider graph retained.",
+  "bundle": "913323ba8cce4c94d83e42a2fd29e8c1.ab",
+  "files": {
+    "-1651730573104695588.MonoScript.json": {
+      "m_Name": "EnemyAttackModule",
+      "m_ExecutionOrder": 0,
+      "m_PropertiesHash": {
+        "bytes[0]": 237,
+        "bytes[1]": 30,
+        "bytes[2]": 120,
+        "bytes[3]": 187,
+        "bytes[4]": 244,
+        "bytes[5]": 83,
+        "bytes[6]": 205,
+        "bytes[7]": 131,
+        "bytes[8]": 70,
+        "bytes[9]": 185,
+        "bytes[10]": 253,
+        "bytes[11]": 49,
+        "bytes[12]": 250,
+        "bytes[13]": 109,
+        "bytes[14]": 246,
+        "bytes[15]": 52
+      },
+      "m_ClassName": "EnemyAttackModule",
+      "m_Namespace": "",
+      "m_AssemblyName": "Assembly-CSharp"
+    },
+    "-2482845195881815651.Transform.json": {
+      "m_GameObject": {
+        "m_FileID": 0,
+        "m_PathID": -2610426104904157479
+      },
+      "m_LocalRotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0021267905831336975,
+        "w": 0.9999977350234985
+      },
+      "m_LocalPosition": {
+        "x": 4.442375659942627,
+        "y": 0.004073028452694416,
+        "z": 0.0
+      },
+      "m_LocalScale": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      },
+      "m_Children": [
+        {
+          "m_FileID": 0,
+          "m_PathID": -8010739356907497555
+        }
+      ],
+      "m_Father": {
+        "m_FileID": 0,
+        "m_PathID": -6891135252027161296
+      }
+    },
+    "-2610426104904157479.GameObject.json": {
+      "m_Component": [
+        {
+          "component": {
+            "m_FileID": 0,
+            "m_PathID": -2482845195881815651
+          }
+        },
+        {
+          "component": {
+            "m_FileID": 0,
+            "m_PathID": -3105905429972907149
+          }
+        },
+        {
+          "component": {
+            "m_FileID": 0,
+            "m_PathID": 3208626612763105471
+          }
+        },
+        {
+          "component": {
+            "m_FileID": 0,
+            "m_PathID": -7953010125049378766
+          }
+        }
+      ],
+      "m_Layer": 9,
+      "m_Name": "axe",
+      "m_Tag": 0,
+      "m_IsActive": true
+    },
+    "-2671468648480661154.MonoBehaviour.json": {
+      "m_GameObject": {
+        "m_FileID": 0,
+        "m_PathID": 640895221307768368
+      },
+      "m_Enabled": 1,
+      "m_Script": {
+        "m_FileID": 0,
+        "m_PathID": -5002341095430012535
+      },
+      "m_Name": "",
+      "_level": 0,
+      "_enemyInfo": {
+        "baseID": 0,
+        "_localPosition": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "_localEulerAngles": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "_localScale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        },
+        "_enemyType": 0,
+        "_overAutoDiffCtrl": 0,
+        "_level": 0,
+        "_enemyInfoCustom": {
+          "_render": -1
+        },
+        "generateDistance": 15.0,
+        "generateDistanceY": 20.0
+      },
+      "_category": 1,
+      "_species": 160016,
+      "_allRenderObj": [
+        {
+          "m_FileID": 0,
+          "m_PathID": -5722035588407194407
+        }
+      ],
+      "_hasDeadAnimation": 1,
+      "_enableRebound": 0,
+      "_hideOffsetX": 14.0,
+      "_hideOffsetY": 14.0,
+      "_lastingHurtInterval": 0.0,
+      "durationDamageRatio": 1.0,
+      "isNeedHpBar": 0,
+      "_hpBarOffset": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "_buffEfectOffset": {
+        "x": 0.0,
+        "y": 1.600000023841858,
+        "z": 0.0
+      },
+      "_hpBar": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "_multiColliderCtrl": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "shootIndex": 0,
+      "_validAttackEffectName": "",
+      "_dieEffect": "",
+      "_renderMapDieEffect": [],
+      "_autoRecycleAftDieAnim": 1,
+      "_boss": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "_goldCoinEnemy": 0,
+      "_goldCoinEnemyEffect": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "_oneOffDamageEnemy": 0,
+      "hurtNinjaRecycle": 0,
+      "reverseRunFlip": 1,
+      "deadAudio": 0,
+      "m_attackMaterial": 2,
+      "destroySkillBulletFlag": 0,
+      "beDrownedType": 0,
+      "drownCtrlRenderList": [],
+      "enterWaterEffectName": "",
+      "enterWaterHeight": 0.0,
+      "outWaterEffectName": "",
+      "m_hitMaterial": 2,
+      "m_index": 0,
+      "buffDurationEffectParamList": [],
+      "subEnemy": 0,
+      "_bloodPs": {
+        "m_FileID": 0,
+        "m_PathID": -6837741367154900007
+      }
+    },
+    "-5002341095430012535.MonoScript.json": {
+      "m_Name": "EnemyPoleaxeWarrior",
+      "m_ExecutionOrder": 0,
+      "m_PropertiesHash": {
+        "bytes[0]": 230,
+        "bytes[1]": 119,
+        "bytes[2]": 120,
+        "bytes[3]": 242,
+        "bytes[4]": 240,
+        "bytes[5]": 38,
+        "bytes[6]": 253,
+        "bytes[7]": 233,
+        "bytes[8]": 250,
+        "bytes[9]": 160,
+        "bytes[10]": 74,
+        "bytes[11]": 225,
+        "bytes[12]": 170,
+        "bytes[13]": 166,
+        "bytes[14]": 54,
+        "bytes[15]": 60
+      },
+      "m_ClassName": "EnemyPoleaxeWarrior",
+      "m_Namespace": "",
+      "m_AssemblyName": "Assembly-CSharp"
+    },
+    "-6762987250398181821.Transform.json": {
+      "m_GameObject": {
+        "m_FileID": 0,
+        "m_PathID": 3278764271728743757
+      },
+      "m_LocalRotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "m_LocalPosition": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "m_LocalScale": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      },
+      "m_Children": [
+        {
+          "m_FileID": 0,
+          "m_PathID": -7791038515804216658
+        },
+        {
+          "m_FileID": 0,
+          "m_PathID": -6891135252027161296
+        }
+      ],
+      "m_Father": {
+        "m_FileID": 0,
+        "m_PathID": 8291225537736035542
+      }
+    },
+    "-6891135252027161296.Transform.json": {
+      "m_GameObject": {
+        "m_FileID": 0,
+        "m_PathID": 2376115637519222164
+      },
+      "m_LocalRotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.9976484775543213,
+        "w": 0.06853873282670975
+      },
+      "m_LocalPosition": {
+        "x": -0.061820294708013535,
+        "y": 1.6676609516143799,
+        "z": 0.0
+      },
+      "m_LocalScale": {
+        "x": 1.0994350910186768,
+        "y": 1.0,
+        "z": 1.0
+      },
+      "m_Children": [
+        {
+          "m_FileID": 0,
+          "m_PathID": -2482845195881815651
+        }
+      ],
+      "m_Father": {
+        "m_FileID": 0,
+        "m_PathID": -6762987250398181821
+      }
+    },
+    "-7953010125049378766.MonoBehaviour.json": {
+      "m_GameObject": {
+        "m_FileID": 0,
+        "m_PathID": -2610426104904157479
+      },
+      "m_Enabled": 1,
+      "m_Script": {
+        "m_FileID": 0,
+        "m_PathID": -1651730573104695588
+      },
+      "m_Name": "",
+      "_belongToEnemy": {
+        "m_FileID": 0,
+        "m_PathID": -2671468648480661154
+      }
+    },
+    "3208626612763105471.BoxCollider.json": {
+      "m_GameObject": {
+        "m_FileID": 0,
+        "m_PathID": -2610426104904157479
+      },
+      "m_Material": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "m_IncludeLayers": {
+        "m_Bits": 0
+      },
+      "m_ExcludeLayers": {
+        "m_Bits": 0
+      },
+      "m_LayerOverridePriority": 0,
+      "m_IsTrigger": true,
+      "m_ProvidesContacts": false,
+      "m_Enabled": true,
+      "m_Size": {
+        "x": 1.1299999952316284,
+        "y": 2.3499999046325684,
+        "z": 1.0
+      },
+      "m_Center": {
+        "x": 0.3199999928474426,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "5152237344009261631.Transform.json": {
+      "m_GameObject": {
+        "m_FileID": 0,
+        "m_PathID": 640895221307768368
+      },
+      "m_LocalRotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "m_LocalPosition": {
+        "x": -2.950000047683716,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "m_LocalScale": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      },
+      "m_Children": [
+        {
+          "m_FileID": 0,
+          "m_PathID": 9167339679196994887
+        }
+      ],
+      "m_Father": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      }
+    },
+    "640895221307768368.GameObject.json": {
+      "m_Component": [
+        {
+          "component": {
+            "m_FileID": 0,
+            "m_PathID": 5152237344009261631
+          }
+        },
+        {
+          "component": {
+            "m_FileID": 0,
+            "m_PathID": -2671468648480661154
+          }
+        }
+      ],
+      "m_Layer": 9,
+      "m_Name": "EnemyPoleaxeWarrior",
+      "m_Tag": 20001,
+      "m_IsActive": true
+    },
+    "8291225537736035542.Transform.json": {
+      "m_GameObject": {
+        "m_FileID": 0,
+        "m_PathID": -4392156491542162080
+      },
+      "m_LocalRotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "m_LocalPosition": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "m_LocalScale": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      },
+      "m_Children": [
+        {
+          "m_FileID": 0,
+          "m_PathID": -6762987250398181821
+        }
+      ],
+      "m_Father": {
+        "m_FileID": 0,
+        "m_PathID": 9167339679196994887
+      }
+    },
+    "9167339679196994887.Transform.json": {
+      "m_GameObject": {
+        "m_FileID": 0,
+        "m_PathID": -5722035588407194407
+      },
+      "m_LocalRotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "m_LocalPosition": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "m_LocalScale": {
+        "x": 0.699999988079071,
+        "y": 0.699999988079071,
+        "z": 1.0
+      },
+      "m_Children": [
+        {
+          "m_FileID": 0,
+          "m_PathID": 8291225537736035542
+        }
+      ],
+      "m_Father": {
+        "m_FileID": 0,
+        "m_PathID": 5152237344009261631
+      }
+    }
+  },
+  "original_sha256": {
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/-1651730573104695588.MonoScript.json": "44b9bdc138f7a4d7d04132bfc97700800bdd2e3ab46fe129232d6f95c4541e75",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/-2482845195881815651.Transform.json": "31fe2765e9b26f2a9f1276993a1ece580a842473dcb029881943649eecd8cda0",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/-2610426104904157479.GameObject.json": "97a5f202a4ce32ef0921024687e073c21ba36f2f0e079d4ab2f1fbf55e868f1b",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/-2671468648480661154.MonoBehaviour.json": "c60b524a37a868fdc4b13af0d0fa2ee142b5cb5c90d6aff7096c34a8a0c2c80f",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/-5002341095430012535.MonoScript.json": "c63f6389dd241cc7daa1bbf8913617ae5799afa5d0a910522d9293159bf5aca0",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/-6762987250398181821.Transform.json": "80ac2d3af4868b516e93a8ad8a694b3684f54b1887d73db55051b32a03cae5aa",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/-6891135252027161296.Transform.json": "9eef96702110ec457d45f8cde9ed4911808816e9b11f85113c7596fdd719c2e2",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/-7953010125049378766.MonoBehaviour.json": "822d1eee52093c3b54de21cf1710075f5b1cd29e7afd159fd24d63be8513558d",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/3208626612763105471.BoxCollider.json": "45ba6aa6baa11601d9aa680903769e274ada667fa02d695def69f5758992ac4d",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/5152237344009261631.Transform.json": "a3dc91e75812b0a04e46365b06b9df841bd81fd9319f25b5be469c352682a9f4",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/640895221307768368.GameObject.json": "9fda6cbf3573ed79d3ebce1ff48a9a7dcc70b2d8bd95a41d5cdcb64716e63212",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/8291225537736035542.Transform.json": "d29f550cfdd3c02ec9dd90c641e32d79583c492dbcf49ab7bacf04f44ca84bfe",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/9167339679196994887.Transform.json": "37ed2f72d4f8d9504b1eadfaf8e97650e3bdb1afe65380d2c69b520544318b13"
+  }
+}

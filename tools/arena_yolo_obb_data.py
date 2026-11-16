@@ -16,6 +16,7 @@ import numpy as np
 from arena_native_json import normalize_arrays
 from arena_projection import sphere_plane,capsule_plane
 from arena_vision import Box
+from arena_damage_modules import is_damage_collider
 
 SHAPES=('BoxCollider','SphereCollider','CapsuleCollider')
 INTERACTIONS=Path(__file__).resolve().parents[1]/'arena/vision-interactions.json'
@@ -276,7 +277,7 @@ def targets(raw,profile):
         if resource is None:
             counts['unbound_family']+=1
             for collider in obj.get('colliders')or[]:
-                if collider.get('tag')=='Enemy'and visible_quad(collider_quad(collider))is not None:
+                if is_damage_collider(obj,collider,profile.get('source_damage_modules',()))and visible_quad(collider_quad(collider))is not None:
                     counts['unbound_visible_targets']+=1
                     identity=obj.get('family_type_id',obj.get('source_type_id'))
                     counts['unbound_visible_type:'+str(identity)]+=1
@@ -284,7 +285,11 @@ def targets(raw,profile):
         physical=[]
         for collider in obj.get('colliders')or[]:
             if collider.get('owner_id')!=obj['id']:raise ValueError('Native collider ownership mismatch')
-            if collider.get('tag')=='Enemy':physical.append(collider)
+            if is_damage_collider(obj,collider,profile.get('source_damage_modules',())):
+                physical.append(collider)
+                if collider.get('tag')!='Enemy':
+                    counts['damage_module_colliders']+=1
+                    if visible_quad(collider_quad(collider))is not None:counts['damage_module_visible_targets']+=1
             else:counts['auxiliary_colliders']+=1
         phase='normal'
         if profile['families'][resource].get('bamboo_phases')and physical:

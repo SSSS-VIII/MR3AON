@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "scope": "Original EnemyAttackModule._belongToEnemy component references; offline annotation only.",
+  "bindings": [
+    {
+      "bundle": "913323ba8cce4c94d83e42a2fd29e8c1.ab",
+      "module_component": -7953010125049378766,
+      "module_source": "-7953010125049378766.MonoBehaviour.json",
+      "script_source": "-1651730573104695588.MonoScript.json",
+      "owner_component": -2671468648480661154,
+      "owner_source": "-2671468648480661154.MonoBehaviour.json",
+      "owner_class": "EnemyPoleaxeWarrior",
+      "owner_name": "EnemyPoleaxeWarrior",
+      "collider_component": 3208626612763105471,
+      "collider_source": "3208626612763105471.BoxCollider.json",
+      "collider_name": "axe",
+      "collider_type": "BoxCollider",
+      "tag_id": 0,
+      "enabled_in_prefab": true,
+      "is_trigger": true,
+      "owner_in_ancestors": true,
+      "signature": {
+        "center": {
+          "x": 0.3199999928474426,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "size": {
+          "x": 1.1299999952316284,
+          "y": 2.3499999046325684,
+          "z": 1.0
+        }
+      }
+    },
+    {
+      "bundle": "c699a200f35271697d26bbddecc7a8bb.ab",
+      "module_component": -690825311843247415,
+      "module_source": "-690825311843247415.MonoBehaviour.json",
+      "script_source": "-1651730573104695588.MonoScript.json",
+      "owner_component": -4181904865090909763,
+      "owner_source": "-4181904865090909763.MonoBehaviour.json",
+      "owner_class": "EnemyPoleaxeWarrior",
+      "owner_name": "EnemyPoleaxeWarriorPaper",
+      "collider_component": 9049055122579088186,
+      "collider_source": "9049055122579088186.BoxCollider.json",
+      "collider_name": "axe",
+      "collider_type": "BoxCollider",
+      "tag_id": 0,
+      "enabled_in_prefab": true,
+      "is_trigger": true,
+      "owner_in_ancestors": true,
+      "signature": {
+        "center": {
+          "x": 0.3199999928474426,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "size": {
+          "x": 1.1299999952316284,
+          "y": 2.3499999046325684,
+          "z": 1.0
+        }
+      }
+    }
+  ],
+  "unresolved": [],
+  "input_files_read": 662,
+  "inputs_digest_sha256": "2945e8aefcdec444751c7e3dbde9ccba7b323897922a8d6b3ffa4011ededf2be",
+  "source_sha256": {
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/-1651730573104695588.MonoScript.json": "44b9bdc138f7a4d7d04132bfc97700800bdd2e3ab46fe129232d6f95c4541e75",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/-2482845195881815651.Transform.json": "31fe2765e9b26f2a9f1276993a1ece580a842473dcb029881943649eecd8cda0",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/-2610426104904157479.GameObject.json": "97a5f202a4ce32ef0921024687e073c21ba36f2f0e079d4ab2f1fbf55e868f1b",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/-2671468648480661154.MonoBehaviour.json": "c60b524a37a868fdc4b13af0d0fa2ee142b5cb5c90d6aff7096c34a8a0c2c80f",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/-5002341095430012535.MonoScript.json": "c63f6389dd241cc7daa1bbf8913617ae5799afa5d0a910522d9293159bf5aca0",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/-6762987250398181821.Transform.json": "80ac2d3af4868b516e93a8ad8a694b3684f54b1887d73db55051b32a03cae5aa",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/-6891135252027161296.Transform.json": "9eef96702110ec457d45f8cde9ed4911808816e9b11f85113c7596fdd719c2e2",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/-7953010125049378766.MonoBehaviour.json": "822d1eee52093c3b54de21cf1710075f5b1cd29e7afd159fd24d63be8513558d",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/3208626612763105471.BoxCollider.json": "45ba6aa6baa11601d9aa680903769e274ada667fa02d695def69f5758992ac4d",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/5152237344009261631.Transform.json": "a3dc91e75812b0a04e46365b06b9df841bd81fd9319f25b5be469c352682a9f4",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/640895221307768368.GameObject.json": "9fda6cbf3573ed79d3ebce1ff48a9a7dcc70b2d8bd95a41d5cdcb64716e63212",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/8291225537736035542.Transform.json": "d29f550cfdd3c02ec9dd90c641e32d79583c492dbcf49ab7bacf04f44ca84bfe",
+    "913323ba8cce4c94d83e42a2fd29e8c1.ab/9167339679196994887.Transform.json": "37ed2f72d4f8d9504b1eadfaf8e97650e3bdb1afe65380d2c69b520544318b13",
+    "c699a200f35271697d26bbddecc7a8bb.ab/-1651730573104695588.MonoScript.json": "44b9bdc138f7a4d7d04132bfc97700800bdd2e3ab46fe129232d6f95c4541e75",
+    "c699a200f35271697d26bbddecc7a8bb.ab/-1805587505825785079.Transform.json": "4508e9e1457f7222a0217b132008a823e543c936bbb1dcbff7cce2befd3a49c8",
+    "c699a200f35271697d26bbddecc7a8bb.ab/-3816154398848040661.Transform.json": "f30adc2bd2c56807d962288fe1dead51a16163cbe9f11cc9fd0f56af17974957",
+    "c699a200f35271697d26bbddecc7a8bb.ab/-4181904865090909763.MonoBehaviour.json": "2dedda0c2b1456a072930e05ba7012617acca6bda65258c97d7ef5b0e97a37bb",
+    "c699a200f35271697d26bbddecc7a8bb.ab/-5002341095430012535.MonoScript.json": "c63f6389dd241cc7daa1bbf8913617ae5799afa5d0a910522d9293159bf5aca0",
+    "c699a200f35271697d26bbddecc7a8bb.ab/-690825311843247415.MonoBehaviour.json": "628844282fcb21f22b210e2a05c75f2efb3d48e35addae6037f12d0e3506c3d9",
+    "c699a200f35271697d26bbddecc7a8bb.ab/-7146163665856234582.GameObject.json": "72f78535181409e99df0a7ef9d4b7af4824718334bc34e82b85382c4f4e4566e",
+    "c699a200f35271697d26bbddecc7a8bb.ab/-7176498034733376697.Transform.json": "b9e7fb3c0e31b30249f1336e4b37cb27b455303723e2b8cfbdae4af2a214da83",
+    "c699a200f35271697d26bbddecc7a8bb.ab/-8021537774130682330.GameObject.json": "ef699e870499a7a6c854c26b34da94975d7139a594df1f8ebfbf6bce50731823",
+    "c699a200f35271697d26bbddecc7a8bb.ab/-825290327890527622.Transform.json": "2cbc035ef2564969d1fac2bc6c0ffbcfee257166b5463cd85815361735f92eba",
+    "c699a200f35271697d26bbddecc7a8bb.ab/5458096123891952124.Transform.json": "0411be3ee5cf64da9010c7e65de111b0cd3ad1cd50b503fd76716dfb77764c28",
+    "c699a200f35271697d26bbddecc7a8bb.ab/7005912047288410288.Transform.json": "afc92a82445a436906851618da6706d6cdfdfd059d83a19ea518eba6f23b389e",
+    "c699a200f35271697d26bbddecc7a8bb.ab/9049055122579088186.BoxCollider.json": "162cba3d7c8fa9ed9a3c47373a5f08d546a1ddf0211ea2ac46c6443d1b58c2a4"
+  },
+  "counts": {
+    "bundles_scanned": 503,
+    "bindings": 2,
+    "owners": 2,
+    "owner_classes": [
+      "EnemyPoleaxeWarrior"
+    ],
+    "untagged_bindings": 2,
+    "detached_bindings": 0,
+    "unresolved": 0
+  }
+}

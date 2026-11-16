@@ -5,6 +5,8 @@ local deadField=typeof(CS.EnemyBase):GetField('_dead',inspectFlags)
 local enemyInfoField=typeof(CS.EnemyBase):GetField('_enemyInfo',inspectFlags)
 local enemyPropertyField=typeof(CS.EnemyBase):GetField('_enemyBaseProperty',inspectFlags)
 local callbackOwnerField=typeof(CS.EnemyBaseCollider):GetField('_enemy',inspectFlags)
+local attackOwnerField=typeof(CS.EnemyAttackModule):GetField('_belongToEnemy',inspectFlags)
+assert(attackOwnerField,'Original EnemyAttackModule owner field missing')
 local supportType=typeof(CS.LevelBlockCollider)
 local airGroundType=typeof(CS.ItemAirGround)
 local supportDataField=supportType:GetField('_levelBlockInfo',inspectFlags)
@@ -84,6 +86,11 @@ function E.vision_labels(include_scene)
    local target=callbackOwnerField:GetValue(callback)
    if target then row.callback_owner_id=target:GetInstanceID()end
   end
+  local attack=c.gameObject:GetComponent(typeof(CS.EnemyAttackModule))
+  if attack and attackOwnerField then
+   local target=attackOwnerField:GetValue(attack)
+   if target then row.damage_callback={kind='EnemyAttackModule',owner_id=target:GetInstanceID()}end
+  end
   if kind=='BoxCollider' then
    row.center=vector(c.center);row.world_center=vector(c.transform:TransformPoint(c.center));row.size=vector(c.size);row.plane_quad={}
    for _,sign in ipairs({{-1,-1},{1,-1},{1,1},{-1,1}})do
@@ -100,7 +107,7 @@ function E.vision_labels(include_scene)
   return row
  end
  local n=CS.NinjaController.Instance.NinjaScript
- local out={label_schema=4,frame=U.Time.frameCount,tick=CS.GameManager.Instance.GameInfo._totalFrameCount,
+ local out={label_schema=5,frame=U.Time.frameCount,tick=CS.GameManager.Instance.GameInfo._totalFrameCount,
   time=CS.GameManager.Instance.GameInfo._totalTime,engineTime=U.Time.time,width=640,height=360,
   physics=E.state().physics,health=n.CurrentHp,god=n:IsGodMode(),mounted=n.IsMountState,
   role={point=point(n.transform.position),colliders={}},objects={},supports={},
