@@ -207,6 +207,7 @@ def run(args):
         point=getattr(perception.detector,'point_refiner',None)
         if point is not None:detector_info['reticle_point']=dict(point.info)
         detector_info['predictive_player_roi']=bool(getattr(perception,'predictive_player_roi',False))
+        detector_info['jump_clock_feedback']=getattr(perception,'jump_clock_feedback',None)is not None
     else:
         perception=Perception();detector_info=None
     policy=MpcAvoider() if detector_weights else Avoider()
@@ -232,7 +233,7 @@ def run(args):
              'tools/arena_support_refiner.py',
              'tools/arena_bamboo_motion.py','tools/arena_bamboo_point.py','tools/arena_bamboo_instances.py','tools/arena_scene_motion.py','tools/arena_arrow_motion.py','tools/arena_mace_motion.py',
              'tools/arena_bamboo_phase.py','tools/arena_action_timing.py',
-             'tools/arena_reactive_sweep.py','tools/arena_key_receipts.py','tools/arena_input_timeline.py')
+             'tools/arena_reactive_sweep.py','tools/arena_key_receipts.py','tools/arena_input_timeline.py','tools/arena_jump_clock.py')
     sources+=('arena/Local/environment.lua','arena/Local/native_selection.lua','tools/arena_local.py')
     if capture_type is not FastCapture:
         sources+=('tools/arena_render_capture.py','arena/Local/render_capture.lua','arena/Capture/RenderRelay.java')

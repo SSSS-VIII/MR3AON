@@ -245,6 +245,7 @@ class ObbPerception(Perception):
         self.ground_texture=GroundTextureMotion()
         self.jump_camera_recovery=False
         self.predictive_player_roi=False
+        self.jump_clock_feedback=None
         if any(c.get('motion_kind')=='bamboo'for c in getattr(detector,'profile',{}).get('classes',[])):
             from arena_bamboo_motion import BambooClocks
             self.bamboo_clocks=BambooClocks()
@@ -387,4 +388,13 @@ class ObbPerception(Perception):
         result['player_roi_window']=getattr(self.detector,'last_player_roi_window',None)
         result['player_roi_hint_used']=getattr(self.detector,'last_player_roi_hint_used',False)
         result['predictive_player_roi']=self.predictive_player_roi
+        feedback=getattr(self,'jump_clock_feedback',None)
+        if feedback is not None:
+            estimate=feedback.estimate(result)
+            result['jump_clock_feedback']=estimate
+            if estimate['applied']:
+                active=dict(result['motion'],clock_anchor_started=estimate['anchor_started'],
+                            started=estimate['anchor_started']-estimate['shift_seconds'])
+                self.active_motion=active
+                result.update(motion=active,phase=motion.phase('jump1',stamp-active['started'],active))
         return result
