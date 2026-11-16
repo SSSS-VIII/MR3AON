@@ -293,6 +293,12 @@ class Tracker:
             for t in available.values():
                 elapsed=stamp-t.seen
                 tx, ty = predicted[t.id]
+                # A new repeated trap has no fitted motion yet. Match it after
+                # the measured scene translation, rather than to its neighbour
+                # at the old screen position. Mature tracks keep their own fit.
+                if (t.kind=='trap'and t.observations<3 and d.scene_velocity_x is not None
+                        and math.isfinite(d.scene_velocity_x)):
+                    tx=t.box.center[0]+d.scene_velocity_x*elapsed
                 x, y = d.box.center
                 ox,oy=player[0]-t.reference[0],player[1]-t.reference[1]
                 distance = math.hypot(x-(tx+ox),y-(ty+oy))

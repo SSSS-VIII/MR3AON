@@ -239,6 +239,8 @@ class ObbPerception(Perception):
             dy=support['tracking_reference'][1]-self.last_observation.get('camera_reference_y',0.)
             player=Box(player.x,player.y+dy,player.w,player.h)
         for detection in detections:
+            if detection.kind=='trap'and support['scene_motion_observed']:
+                detection.scene_velocity_x=support['scene_vx']
             if detection.kind=='arrow':
                 detection.scene_velocity_x=support['scene_vx']if support['scene_motion_observed']else None
                 from arena_arrow_motion import restore_tail
