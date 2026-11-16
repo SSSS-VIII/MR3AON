@@ -131,6 +131,7 @@ class MpcAvoider(VisualAvoider):
     BEAM=24
     ground_static_search=False
     ground_reserve_recovery=False
+    ordinary_air_down_gap=.1
 
     def rope_exit(self,obs):
         segment=obs.get('rope_segment')
@@ -196,7 +197,9 @@ class MpcAvoider(VisualAvoider):
         if can_air_up(state):names+=['air_up']
         previous=state.get('last_input_time',self.last_action)
         return [name for name in names if name is None or
-                stamp-previous>=(.1 if name in('air_down','air_up')else .17)]
+                stamp-previous>=(self.ordinary_air_down_gap
+                    if name=='air_down'and phase.startswith(('jump','air_'))
+                    else .1 if name in('air_down','air_up')else .17)]
 
     def choose(self,obs):
         if obs['player']is None:return None,'unknown_player'

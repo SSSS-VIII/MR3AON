@@ -247,6 +247,7 @@ def run(args):
         planning_beam=getattr(policy,'BEAM',None),
         ground_static_search=bool(getattr(policy,'ground_static_search',False)),
         ground_reserve_recovery=bool(getattr(policy,'ground_reserve_recovery',False)),
+        ordinary_air_down_gap=getattr(policy,'ordinary_air_down_gap',.1),
         source_pinball_prior=bool(getattr(getattr(perception,'tracker',None),'source_pinball_prior',False)),
         pinball_rebound_carry=bool(getattr(getattr(perception,'tracker',None),'pinball_rebound_carry',False)),
         pinball_fast_rebound=bool(getattr(getattr(perception,'tracker',None),'pinball_fast_rebound',False)),
