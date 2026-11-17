@@ -30,6 +30,16 @@ def test_world_and_screen_coordinates_share_the_same_original_geometry():
     np.testing.assert_allclose(screen,world*[40,-40]+[200,120],atol=1e-10)
 
 
+@pytest.mark.parametrize('clip',['attack_up','attack_down'])
+def test_batched_original_poses_match_native_projection(clip):
+    samples=[s for s in FIXTURE['samples']if s['clip']==clip];prior=PoleaxeAnimation()
+    quads=prior.quads(clip,[s['phase']for s in samples],origins=[s['origin']for s in samples],
+                      pixels_per_world=samples[0]['pixels_per_world'],screen=True)
+    for q,sample in zip(quads,samples):
+        ulp=float(np.spacing(np.float32(max(map(abs,sample['world_root'])))))
+        np.testing.assert_allclose(q,sample['quad'],atol=4*ulp*sample['pixels_per_world']+.0002,rtol=0)
+
+
 def test_one_shot_attack_holds_final_pose_and_ready_curves_remain_nominal():
     prior=PoleaxeAnimation();duration=prior.clips['attack_up'][0]['duration']
     np.testing.assert_array_equal(prior.pose('attack_up',duration+1),prior.pose('attack_up',duration))
