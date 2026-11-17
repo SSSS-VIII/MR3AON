@@ -11,6 +11,8 @@ from pathlib import Path
 import shutil
 import time
 
+LOADED_SOURCE = Path(__file__).read_bytes()
+
 BOARD = """
 local f=CS.System.Reflection.BindingFlags.__CastFrom(52)
 local l=CS.LevelManager.Instance.GameLevelInfo
@@ -41,14 +43,18 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
     root = gate.snapshot()['result']['id']
     owned = [root]
     trials = []
-    stats = dict(trials=0, rejected_damage=0, restores_ms=[], seconds=0)
+    stats = dict(trials=0, rejected_damage=0, restores_ms=[], action_limits_tried=[], seconds=0)
+    unsafe_actions = set()
     began = time.monotonic()
 
-    def walk(point, depth, path):
+    def walk(point, depth, path, remaining_actions):
         if depth >= horizon:
             return path, False
         ticks = 2 if (offset + depth) % 2 == 0 else 3
         for action in ('none', 'down', 'jump'):
+            cost = int(action != 'none')
+            if cost > remaining_actions or (point, action) in unsafe_actions:
+                continue
             if stats['trials'] >= max_trials:
                 raise BudgetExceeded('Native window trial budget exhausted')
             restored = gate.restore(point)
@@ -62,6 +68,7 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
                 on_trial(row)
             if not safe:
                 stats['rejected_damage'] += 1
+                unsafe_actions.add((point, action))
                 continue
             board = gate.call('exec', code=BOARD)
             if board['mounted'] or board['map'] != start['board']['map']:
@@ -74,7 +81,7 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
             crossed = board['stage_index'] > start['board']['stage_index']
             if crossed:
                 return advanced, True
-            result = walk(child, depth + 1, advanced)
+            result = walk(child, depth + 1, advanced, remaining_actions - cost)
             if result is not None:
                 return result
             gate.restore(point)
@@ -83,7 +90,15 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
         return None
 
     try:
-        result = walk(root, 0, [])
+        result = None
+        # Search by input count before exploring combinations of late inputs.
+        # This reaches a single earlier jump before thousands of ineffective
+        # late alternatives. Every undo still restores a real VM node.
+        for limit in range(horizon + 1):
+            stats['action_limits_tried'].append(limit)
+            result = walk(root, 0, [], limit)
+            if result is not None:
+                break
         if result is None:
             gate.restore(root)
             return dict(found=False, reason='No safe path within the finite window', root=root,
@@ -120,6 +135,10 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120)
 
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
+    sources = {name: (LOADED_SOURCE if name == 'search.py' else (Path(__file__).parent / name).read_bytes())
+               for name in ('search.py', 'render.py', 'gate.py', 'game_gate.lua', 'worker.rs')}
+    for name, data in sources.items():
+        (output / name).write_bytes(data)
     initial = gate.call('state')
     board = gate.call('exec', code=BOARD)
     if (board['stage_index'] < 0 or board['mounted'] or initial.get('content') != 'Running: 1'
@@ -128,7 +147,7 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120)
     renderer = prepare_renderer(gate)
     start = dict(health=initial['health'], state=initial, board=board)
     report = dict(complete=False, uses_restart_replay=False, game_rollback_complete=False,
-                  algorithm='Original-engine bounded DFS; irreversible rolling window commits',
+                  algorithm='Original-engine iterative input-count DFS; irreversible rolling window commits',
                   horizon=horizon, commit=commit, max_trials=max_trials, start=start,
                   renderer=renderer, windows=[], route=[])
     interval = 0
@@ -184,6 +203,4 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120)
             report['worker_status'] = gate.vm.request('status')['result']
         except Exception as error:
             report['worker_status_error'] = repr(error)
-        for name in ('search.py', 'render.py', 'gate.py', 'game_gate.lua', 'worker.rs'):
-            shutil.copy2(Path(__file__).parent / name, output / name)
         (output / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2))

@@ -90,6 +90,34 @@ def test_fifty_ms_parity_continues_after_a_committed_window():
     assert oracle.native['frame'] == 3
 
 
+def test_single_early_jump_is_found_before_late_action_combinations_exhaust_budget():
+    class EarlyJump(Oracle):
+        def call(self, op, **args):
+            value = super().call(op, **args)
+            if op == 'exec':
+                value['stage_index'] = int(self.native['frame'] >= 20)
+            return value
+
+        def step(self, ticks, action):
+            before = deepcopy(self.view['state'])
+            if action == 'jump' and self.native['frame'] == 0:
+                self.native['lifted'] = True
+            self.native['frame'] += ticks
+            if self.native['frame'] >= 12 and not self.native['lifted']:
+                self.native['hp'] -= 250
+            self.update()
+            return dict(done=True, before=before, after=deepcopy(self.view['state']))
+
+    oracle = EarlyJump()
+    result = search.search_window(oracle, start=start(oracle), offset=0,
+                                  horizon=8, commit=4, max_trials=100)
+    assert result['found'] and result['crossed']
+    assert result['path'][0]['action'] == 'jump'
+    assert sum(row['action'] != 'none' for row in result['path']) == 1
+    assert oracle.native['hp'] == 5000
+    assert result['stats']['action_limits_tried'] == [0, 1]
+
+
 @pytest.mark.parametrize('error', [RuntimeError('native transport failed'), KeyboardInterrupt()])
 def test_native_failure_is_not_turned_into_a_bad_route(monkeypatch, error):
     oracle = Oracle()
