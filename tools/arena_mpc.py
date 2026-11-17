@@ -39,6 +39,11 @@ def foot_array(states):
 
 
 def forecast_geometry(tracks,times,predict,step):
+    # Curve tracks may fill their point cache in one batch. Keep every predict
+    # call below: policy-specific hazard corrections still apply per sample.
+    for track in tracks:
+        prepare=getattr(track,'prepare_forecast',None)
+        if prepare is not None:prepare(times)
     boxes=np.array([[[b.center[0],b.center[1],b.w/2,b.h/2]
                      for track in tracks for b in[predict(track,t)]]for t in times]).reshape(len(times),len(tracks),4)
     for index,track in enumerate(tracks):
