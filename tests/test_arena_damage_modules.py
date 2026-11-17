@@ -155,6 +155,7 @@ def test_explicit_stock_head_extension_separates_original_weapon_from_body(tmp_p
 
 
 def test_separation_rejects_missing_body_and_unreachable_only_profiles(tmp_path):
+    pytest.importorskip('cv2')
     from arena_yolo_obb_data import physics_profile
     result=registry(tmp_path);binding=result['bindings'][0];resource=binding['owner_name']
     native=dict(classes=[],families={resource:dict(straight_bat=False)},type_bindings={})
