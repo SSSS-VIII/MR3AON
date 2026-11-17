@@ -42,6 +42,7 @@ def touching(player,hazard,margin=4,*,shape="ellipse"):
 class Avoider:
     solid_ground_slide_only=False
     revalidate_ground_down=False
+    young_sphere_hazards=False
 
     def __init__(self,*,continuous_collision=False):
         self.continuous_collision=continuous_collision
@@ -75,7 +76,11 @@ class Avoider:
         p=obs['player']
         threshold=obs.get('hazard_confidence',.7)
         objects=[t for t in obs['tracks'] if t.kind!='slice_target'and track_confidence(t,obs['time'])>=threshold
-                and (t.observations>=3 or t.arming or t.active)
+                and (t.observations>=3 or t.arming or t.active or
+                     self.young_sphere_hazards and t.kind=='trap'
+                     and t.collider_shape=='SphereCollider'
+                     and 0<=obs['time']-t.seen<=.16
+                     and track_confidence(t,obs['time'])>=max(.8,threshold))
                 and t.box.x+t.box.w>p.x-100]
         for face in leading_ground_faces(obs.get('visible_supports',[]),obs['time']):
             if face['x']<p.x-100:continue
