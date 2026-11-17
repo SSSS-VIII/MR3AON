@@ -28,6 +28,8 @@ native = gate.call('probe') # 有限原生字段观察，不能称为完整引�
 
 `lifecycle.run_boundary(gate, output)`从出口前停车点验证跨板及敌人ID生成/退出，逐段恢复对照并检查PNG；`lifecycle.run_native_death`检查原Die入口后恢复与替代动作，不代表自然致死/完整结算验收。原Die会把时间倍率改为.5，受控检查需在返回后停回0；任意exec若破坏暂停条件可能使门控超时，此时恢复已知gate快照，禁止覆盖未完成命令。
 
+`lifecycle.run_death_frames(gate, output, lethal=True)`通过原DamageSelf降至0并继续300渲染帧，保留原死亡时间倍率，比较重复分支的状态轨迹/PNG及恢复后活人输入。实际GameOnly最终停dieOnLine/content Running，因此只证明该段回调，不宣称结算UI/自然陷阱致死已验收。两条已完成固定路线索引为`native-route-index-v1.json`，原arena与旧视觉策略未切换。
+
 `search.run(gate, output)`是独立的原引擎oracle有限窗DFS，默认12个40/60ms交替区间，确认前6个再rebase；每个候选实际运行原输入，扣血即恢复VM父节点，找不到窗口内解/预算耗尽明确失败并留下根点。重建RAM基线会放弃更早历史，因此这不是全局完备搜索；不允许用重开/历史输入重放兜底。`trials.jsonl`保留所有成功/失败候选，`report.json`只把真正提交的无扣血动作写入route；起止原地图/板序/坐标/帧/绳上绳下状态明确记录。它不读取YOLO、不修改陷阱，也尚未接视觉执行器。初始化原选板可单独使用一次，不能放入撤销路径。
 
 窗口内按非none输入次数0/1/2…迭代，优先找到较早的一次跳跃，而不是先耗尽大量晚动作组合；同一真实点已实测受伤的动作可跳过。仍有全局候选上限，无法保证所有局面更快。开跑时冻结实际已加载搜索源码及依赖，编辑源码不覆盖正在跑的版本证据。

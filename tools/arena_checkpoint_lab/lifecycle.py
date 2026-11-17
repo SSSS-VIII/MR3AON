@@ -155,3 +155,90 @@ def run_native_death(gate, output):
         for name in ('lifecycle.py', 'gate.py', 'game_gate.lua', 'worker.rs'):
             shutil.copy2(Path(__file__).parent / name, output / name)
         (output / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2))
+
+
+def run_death_frames(gate, output, *, lethal=False):
+    """Continue original Die for 300 render frames, then compare both branches.
+
+    Use rendered frames because native physics counters can stop during death.
+    Retain original death time scaling until the final parked boundary. The
+    actual state trace establishes how much of the lifecycle was exercised.
+    """
+    output = Path(output)
+    output.mkdir(parents=True, exist_ok=False)
+    report = dict(pass_=False, game_rollback_complete=False, uses_restart_replay=False,
+                  scope='Original DamageSelf to zero HP followed by 300 render frames; controlled native damage'
+                        if lethal else 'Original Die followed by 300 render frames; natural lethal collision not exercised',
+                  lethal=lethal,
+                  checks={}, branches=[])
+    command = """
+local E,U=MR3A,CS.UnityEngine
+local C=E.checkpointGate
+local runner=U.GameObject.Find('MR3A_LocalControl'):GetComponent(typeof(U.EventSystems.EventTrigger))
+C.deathFrames={trace={},done=false}
+E.busy=true
+runner:StartCoroutine(require('common/util').cs_generator(function()
+ local ok,err=pcall(function()
+  local first=U.Time.frameCount
+  -- CHECKPOINT_NATIVE_DEATH_TRIGGER
+  local previous=nil
+  while U.Time.frameCount-first<300 do
+   local valid,s=pcall(E.state)
+   local key=valid and (s.state..'|'..s.content..'|'..tostring(s.physics)) or tostring(s)
+   if key~=previous then
+    C.deathFrames.trace[#C.deathFrames.trace+1]={state=valid and s or nil,error=not valid and tostring(s)or nil}
+    previous=key
+   end
+   coroutine.step()
+  end
+  C.deathFrames.frames=U.Time.frameCount-first
+ end)
+ U.Time.timeScale=0
+ C.deathFrames.done=true
+ if not ok then C.deathFrames.error=tostring(err)end
+ E.busy=false
+end))
+return true
+"""
+    trigger = ('local n=CS.NinjaController.Instance.NinjaScript;n:DamageSelf(n.MaxHp*2)' if lethal else
+               'CS.NinjaController.Instance.NinjaScript:Die(nil,false)')
+    command = command.replace('-- CHECKPOINT_NATIVE_DEATH_TRIGGER', trigger)
+    try:
+        before = observe(gate)
+        root = gate.snapshot()
+        report.update(before=before, root=root)
+        for index in range(2):
+            report.setdefault('restores', []).append(gate.restore(root['result']['id']))
+            gate.call('exec', code=command)
+            trace = gate.call('exec', code='return MR3A.checkpointGate.deathFrames')
+            picture = gate.screenshot()
+            (output / f'death-{index}.png').write_bytes(picture)
+            report['branches'].append(dict(trace=trace, stopped=gate.view['state'],
+                                           image_sha256=hashlib.sha256(picture).hexdigest()))
+            transitions = [(row.get('state') or {}).get('content', row.get('error'))
+                           for row in trace.get('trace', [])]
+            print(f'原Die后300渲染帧分支 {index + 1}/2: {transitions}', flush=True)
+        report['restore_living'] = gate.restore(root['result']['id'])
+        report['checks']['living_native_restored'] = observe(gate) == before
+        report['checks']['death_trace_and_png_repeated'] = report['branches'][0] == report['branches'][1]
+        report['checks']['full_render_interval_exercised'] = all(
+            b['trace'].get('frames') == 300 and b['trace'].get('done') and not b['trace'].get('error')
+            for b in report['branches'])
+        if lethal:
+            report['checks']['native_zero_health_observed'] = all(
+                any((row.get('state') or {}).get('health') == 0 for row in b['trace'].get('trace', []))
+                for b in report['branches'])
+        job = gate.step(3, 'jump')
+        report['living_input'] = job
+        report['checks']['living_input_after_callbacks_restored'] = (
+            job['after']['health'] == before['native']['state']['health'] and job['after']['physics'] != 'die: 31')
+        gate.restore(root['result']['id'])
+        report['pass_'] = all(report['checks'].values())
+        return report
+    except BaseException as error:
+        report['error'] = repr(error)
+        raise
+    finally:
+        for name in ('lifecycle.py', 'gate.py', 'game_gate.lua', 'worker.rs'):
+            shutil.copy2(Path(__file__).parent / name, output / name)
+        (output / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2))
