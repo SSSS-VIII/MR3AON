@@ -418,6 +418,7 @@ class Perception:
         phase=current['phase'] if current else 'unknown'
         name=None
         support_unconfirmed=False
+        pending_ground=None
         if action == 'jump':
             if current and can_air_up(current):
                 name='air_up';self.jump_count=current.get('jumps',self.jump_count)
@@ -460,10 +461,24 @@ class Perception:
                              terrain=None,motion=source_observation['motion'])
                 name='air_down';support_unconfirmed=True
                 self.jump_count=source_observation.get('jumps',self.jump_count)
+            elif (primitive=='air_down'and current and current.get('player')is not None
+                    and source_observation and source_observation.get('rope')is None
+                    and (source_observation.get('terrain')or{}).get('source')=='neural_segments'
+                    and can_air_down(source_observation)):
+                # The original air-down key is already sent even if its finite
+                # landing top has passed during ACK replay. Keep the native
+                # downward motion, not the previous jump or a fictitious floor.
+                pending_ground=create_motion(source_observation,'air_down',stamp)
+                ox,oy=current_offsets(current);p=current['player'];scale=current.get('scale_px',41.)
+                pending_ground.update(lead=air_down_lead(current),offset_x=ox,offset_y=oy,
+                    width=p.w/scale,height_box=p.h/scale,contact_pending=True,
+                    ground_target_missing=True,requires_contact=True,support_unconfirmed=True)
+                name='air_down';support_unconfirmed=True
+                self.jump_count=current.get('jumps',self.jump_count)
         elif action=='slide':
             name='slide'
         if name and current and current['player']:
-            self.active_motion=create_motion(current,name,stamp)
+            self.active_motion=pending_ground or create_motion(current,name,stamp)
             if name in ('air_down','air_up')and self.visual_role:
                 self.active_motion['requires_contact']=True
             if support_unconfirmed:
@@ -778,12 +793,17 @@ class Perception:
                 phase = ('jump2' if self.jump_count >= 2 else 'jump1' if self.jump_count else 'air')
                 phase += '_rising' if self.player_velocity < -30 else '_falling'
             if self.active_motion:
+                if (self.active_motion.get('ground_target_missing')and player_observed
+                        and player.h<.65*self.motion_origin['stand_h']
+                        and player.w<.75*self.motion_origin['stand_w']):
+                    self.active_motion=dict(self.active_motion,compact_seen=True)
                 name=self.active_motion['name'];elapsed=max(0,stamp-self.active_motion['started'])
                 phase=motion.phase(name,elapsed,self.active_motion)
                 if motion.is_ground_transition(name):
                     if elapsed>=motion.duration(name,self.active_motion)and abs(motion.point(name,elapsed,self.active_motion)[0]-motion.DATA['stand_offset_x'])<.005:
                         self.active_motion=None
                 elif motion.is_rope_transition(name)and (elapsed>=motion.duration(name,self.active_motion)
+                        or (self.active_motion.get('ground_target_missing')and self.active_motion.get('compact_seen'))
                         or (name=='air_up'or self.active_motion.get('support_unconfirmed'))
                         and elapsed>=motion.DATA['air_up']['input_delay']and player_observed
                         and down_contact(dict(player=player,rope=self.rope,
@@ -1237,7 +1257,7 @@ def player_future(observation,seconds):
             anchored=anchored_down_future(observation,seconds)
             if anchored is not None:return anchored
         if motion.is_ground_transition(active['name']):return ground_primitive_future(observation,seconds)
-        if active.get('contact_pending'):
+        if active.get('contact_pending')and not active.get('ground_target_missing'):
             scale=observation.get('scale_px',41.)
             cx=p.center[0]+observation.get('vx',0.)*seconds
             speed=transition_speed(active)

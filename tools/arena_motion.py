@@ -65,6 +65,7 @@ def duration(name,parameters=None):
         distance=parameters['height']+parameters['lead']+parameters['speed']*transfer_delay(name,parameters)
         return max(0,distance/speed)+DATA['air_down']['settle_seconds'] if abs(speed)>1e-6 else float('inf')
     if name=='air_down':
+        if parameters.get('ground_target_missing'):return float('inf')
         prior=DATA['air_down']
         speed=parameters.get('speed',prior['speed'])
         relative=speed-parameters.get('surface_velocity',0.)
@@ -105,12 +106,13 @@ def point(name,t,parameters=None):
         speed=parameters.get('speed',prior['speed'])
         delta=parameters['lead']*min(1,t/delay)-speed*max(0,t-delay)
         target=-parameters['height']-parameters.get('surface_velocity',0.)*t
-        arrived=t>=delay and (delta<=target if speed>0 else delta>=target)
+        missing_ground=name=='air_down'and parameters.get('ground_target_missing',False)
+        arrived=not missing_ground and t>=delay and (delta<=target if speed>0 else delta>=target)
         # The original physics collider is restored before the rendered root
         # finishes interpolating to the rope. Preserve that larger hurt body.
         restored=arrived or (name=='air_up'and t>=delay and
                             abs(delta-target)<=abs(speed)*DATA['air_up']['collider_restore_lead'])
-        if (name=='air_down'and parameters.get('destination')=='ground'and t>=delay
+        if (name=='air_down'and not missing_ground and parameters.get('destination')=='ground'and t>=delay
                 and speed>parameters.get('surface_velocity',0.)):
             # Ground contact can restore the physics body one fixed update
             # before the rendered root arrives. This changes geometry only;

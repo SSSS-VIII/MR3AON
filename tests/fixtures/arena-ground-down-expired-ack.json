@@ -1,0 +1,248 @@
+{
+  "scope": "Actual pixel/own-key planned and ACK-projected geometry from v472 frame245. No native state or labels enter this reproduction.",
+  "planned": {
+    "down_action_end_observed": false,
+    "ground_contact_observed": false,
+    "ground_down_collider_restore": false,
+    "jumps": 1,
+    "motion": {
+      "name": "jump1",
+      "started": 271533.03125112166
+    },
+    "pending_rope_clamp": false,
+    "phase": "jump1_rising",
+    "player": [
+      178.1200785490892,
+      190.83617845005617,
+      15.802183368100579,
+      24.65131756234188
+    ],
+    "player_predicted": false,
+    "rope": null,
+    "rope_contact_observed": false,
+    "rope_down_anchor": true,
+    "rope_segment": null,
+    "rope_segments": [],
+    "scale_px": 39.50531027533791,
+    "scene_motion_observed": false,
+    "scene_velocity_x": -733.9241500675184,
+    "stand_h": 36.97697041771629,
+    "stand_w": 14.221911699121648,
+    "terrain": {
+      "at_player": true,
+      "edge": 250.08675826379064,
+      "landing": 361.23843424074926,
+      "samples": [],
+      "segments": [
+        {
+          "a": [
+            -28.663241736209358,
+            259.38033713046497
+          ],
+          "b": [
+            250.08675826379064,
+            259.4483913296837
+          ],
+          "confidence": 0.92529296875,
+          "id": 13,
+          "kind": "floating_platform",
+          "left_clipped": true,
+          "observations": 10,
+          "right_clipped": false,
+          "stamp": 271533.0385328,
+          "vx": -657.2278637696681,
+          "vy": -1.938210124489879
+        },
+        {
+          "a": [
+            361.23843424074926,
+            182.32335293500086
+          ],
+          "b": [
+            608.8634342407493,
+            182.32335293500086
+          ],
+          "confidence": 0.92041015625,
+          "id": 14,
+          "kind": "floating_platform",
+          "left_clipped": false,
+          "observations": 6,
+          "right_clipped": true,
+          "stamp": 271533.0385328,
+          "vx": -734.4256709482783,
+          "vy": -9.65638145932668
+        }
+      ],
+      "selected_id": 13,
+      "source": "neural_segments",
+      "speed": 657.2278637696681,
+      "y": 252.43224880304678
+    },
+    "time": 271533.0827157133,
+    "visible_supports": [
+      {
+        "a": [
+          0.375,
+          259.4659729003906
+        ],
+        "b": [
+          279.125,
+          259.5340270996094
+        ],
+        "confidence": 0.92529296875,
+        "id": 13,
+        "kind": "floating_platform",
+        "left_clipped": true,
+        "observations": 10,
+        "right_clipped": false,
+        "stamp": 271533.0385328,
+        "vx": -657.2278637696681,
+        "vy": -1.938210124489879
+      },
+      {
+        "a": [
+          393.6875,
+          182.75
+        ],
+        "b": [
+          641.3125,
+          182.75
+        ],
+        "confidence": 0.92041015625,
+        "id": 14,
+        "kind": "floating_platform",
+        "left_clipped": false,
+        "observations": 6,
+        "right_clipped": true,
+        "stamp": 271533.0385328,
+        "vx": -734.4256709482783,
+        "vy": -9.65638145932668
+      }
+    ],
+    "vx": 0.47914977870094355,
+    "vy": -5.130606201095854
+  },
+  "receipt": {
+    "down_action_end_observed": false,
+    "ground_contact_observed": false,
+    "ground_down_collider_restore": false,
+    "jumps": 1,
+    "motion": {
+      "name": "jump1",
+      "started": 271533.03125112166
+    },
+    "pending_rope_clamp": false,
+    "phase": "jump1_rising",
+    "player": [
+      178.13102338291267,
+      173.45154463920514,
+      15.802183368100579,
+      24.65131756234188
+    ],
+    "player_predicted": false,
+    "rope": null,
+    "rope_contact_observed": false,
+    "rope_down_anchor": true,
+    "rope_segment": null,
+    "rope_segments": [],
+    "scale_px": 39.50531027533791,
+    "scene_motion_observed": false,
+    "scene_velocity_x": -733.9241500675184,
+    "stand_h": 36.97697041771629,
+    "stand_w": 14.221911699121648,
+    "terrain": {
+      "at_player": true,
+      "edge": 235.07422967070653,
+      "landing": 344.46253809817483,
+      "samples": [],
+      "segments": [
+        {
+          "a": [
+            -43.675770329293485,
+            259.33606415222204
+          ],
+          "b": [
+            235.07422967070653,
+            259.4041183514408
+          ],
+          "confidence": 0.92529296875,
+          "id": 13,
+          "kind": "floating_platform",
+          "left_clipped": true,
+          "observations": 10,
+          "right_clipped": false,
+          "stamp": 271533.0385328,
+          "vx": -657.2278637696681,
+          "vy": -1.938210124489879
+        },
+        {
+          "a": [
+            344.46253809817483,
+            182.10277996365363
+          ],
+          "b": [
+            592.0875380981748,
+            182.10277996365363
+          ],
+          "confidence": 0.92041015625,
+          "id": 14,
+          "kind": "floating_platform",
+          "left_clipped": false,
+          "observations": 6,
+          "right_clipped": true,
+          "stamp": 271533.0385328,
+          "vx": -734.4256709482783,
+          "vy": -9.65638145932668
+        }
+      ],
+      "selected_id": 13,
+      "source": "neural_segments",
+      "speed": 657.2278637696681,
+      "y": 252.39164366499597
+    },
+    "time": 271533.1055579107,
+    "visible_supports": [
+      {
+        "a": [
+          0.375,
+          259.4659729003906
+        ],
+        "b": [
+          279.125,
+          259.5340270996094
+        ],
+        "confidence": 0.92529296875,
+        "id": 13,
+        "kind": "floating_platform",
+        "left_clipped": true,
+        "observations": 10,
+        "right_clipped": false,
+        "stamp": 271533.0385328,
+        "vx": -657.2278637696681,
+        "vy": -1.938210124489879
+      },
+      {
+        "a": [
+          393.6875,
+          182.75
+        ],
+        "b": [
+          641.3125,
+          182.75
+        ],
+        "confidence": 0.92041015625,
+        "id": 14,
+        "kind": "floating_platform",
+        "left_clipped": false,
+        "observations": 6,
+        "right_clipped": true,
+        "stamp": 271533.0385328,
+        "vx": -734.4256709482783,
+        "vy": -9.65638145932668
+      }
+    ],
+    "vx": 0.47914977870094355,
+    "vy": -5.130606201095854
+  },
+  "stamp": 271533.1055579107
+}
