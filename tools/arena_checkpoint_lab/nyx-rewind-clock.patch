@@ -1,0 +1,34 @@
+diff --git a/src/nyx_vm.rs b/src/nyx_vm.rs
+index 5d68f1f..1296291 100644
+--- a/src/nyx_vm.rs
++++ b/src/nyx_vm.rs
+@@ -232,2 +231,0 @@ impl NyxVM {
+-        let memory = Self::take_memory_snapshot(&vmm, snap_type);
+-
+@@ -253,0 +252,7 @@ impl NyxVM {
++        // Rewind must capture clocks/CPU/devices at the stopped instruction,
++        // before a potentially long baseline RAM copy. Migration downtime is
++        // deliberately not added to the saved guest clock.
++        let mut rewind_clock = vmm.vm.fd().get_clock().unwrap();
++        rewind_clock.flags = 0;
++        let state = self.save_vm_state(&vmm);
++        let memory = Self::take_memory_snapshot(&vmm, snap_type);
+@@ -260 +265 @@ impl NyxVM {
+-            state: self.save_vm_state(&vmm),
++            state,
+@@ -261,0 +267 @@ impl NyxVM {
++            rewind_clock,
+@@ -264,0 +271,3 @@ impl NyxVM {
++        drop(vmm);
++        // Do not charge host time spent copying RAM to guest timers on resume.
++        self.apply_snapshot(&new_snap);
+@@ -454,0 +464,3 @@ impl NyxVM {
++        // Firecracker's migration clock preserves host elapsed time. Branch
++        // replay instead resumes the exact saved guest time (flags == 0).
++        vmm.vm.fd().set_clock(&snapshot.rewind_clock).unwrap();
+diff --git a/src/snapshot.rs b/src/snapshot.rs
+index a201dca..4ed84dd 100644
+--- a/src/snapshot.rs
++++ b/src/snapshot.rs
+@@ -45,0 +46 @@ pub struct NyxSnapshot {
++    pub rewind_clock: kvm_bindings::kvm_clock_data,
