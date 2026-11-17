@@ -149,7 +149,9 @@ def decode(quads,ids,scores,profile,player_x=180.,image_shape=(360,640)):
                 box=Box(x,box.y,3*SCALE,box.h)
                 q=np.array([[x,box.y],[x+box.w,box.y],[x+box.w,box.y+box.h],[x,box.y+box.h]])
             hazards.append(Detection(box,motion_kind,confidence,phase=='rush'or motion_kind=='bamboo',phase=='ready',phase,
-                                     resource,shape,tuple(tuple(map(float,p))for p in q)))
+                                     resource,shape,tuple(tuple(map(float,p))for p in q),
+                                     source_part=meta.get('source_part'),
+                                     source_damage_callback=meta.get('source_damage_callback')))
             if motion_kind=='mace':
                 hazards[-1].pivot_offset_ratio=meta['pivot_offset_ratio']
     return player,hazards,supports,cues

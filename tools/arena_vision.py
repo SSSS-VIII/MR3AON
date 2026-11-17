@@ -46,6 +46,8 @@ class Detection:
     scene_velocity_x: float | None = None
     geometry_restored: bool = False
     pivot_offset_ratio: float | None = None
+    source_part: str | None = None
+    source_damage_callback: str | None = None
 
 
 @dataclass
@@ -101,6 +103,8 @@ class Track:
     pinball_carry_active: bool = False
     pinball_fast_rebound: bool = False
     pinball_fast_rebound_active: bool = False
+    source_part: str | None = None
+    source_damage_callback: str | None = None
 
     def update(self, detection, stamp, player, support_y=None):
         self.pinball_fast_rebound_active=False
@@ -108,6 +112,8 @@ class Track:
             from arena_oriented import update_rotation
             update_rotation(self,detection,stamp)
         self.resource=detection.resource;self.collider_shape=detection.collider_shape
+        self.source_part=detection.source_part
+        self.source_damage_callback=detection.source_damage_callback
         self.box, self.kind, self.confidence, self.seen = (
             detection.box, detection.kind, detection.confidence, stamp)
         self.active = detection.active
@@ -316,6 +322,12 @@ class Tracker:
                 ox,oy=player[0]-t.reference[0],player[1]-t.reference[1]
                 distance = math.hypot(x-(tx+ox),y-(ty+oy))
                 compatible=(d.kind==t.kind or {d.kind,t.kind}<={'eye_enemy','spider'})
+                # Explicit model subtypes identify separate physical parts.
+                # The same owner may have both a body and a distant weapon;
+                # proximity alone must not exchange their motion histories.
+                if ((d.source_part,d.source_damage_callback)!=
+                        (t.source_part,t.source_damage_callback)):
+                    compatible=False
                 if d.collider_shape and t.collider_shape and ((d.collider_shape=='BoxCollider')!=(t.collider_shape=='BoxCollider')):
                     compatible=False
                 if (compatible and distance < max(35, min(180, 1600 * elapsed + 12))
