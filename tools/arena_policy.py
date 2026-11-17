@@ -41,6 +41,7 @@ def touching(player,hazard,margin=4,*,shape="ellipse"):
 
 class Avoider:
     solid_ground_slide_only=False
+    revalidate_ground_down=False
 
     def __init__(self,*,continuous_collision=False):
         self.continuous_collision=continuous_collision

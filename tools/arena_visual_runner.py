@@ -31,6 +31,7 @@ from arena_policy import Avoider
 import arena_motion as motion
 from arena_mpc import MpcAvoider
 from arena_action_timing import commit_action,selected_primitive,DecisionCadence
+from arena_control_validation import validate_ground_down
 from arena_key_receipts import KeyReceiptMatcher
 from runtime import InstanceSession
 import cv2
@@ -232,7 +233,7 @@ def run(args):
              'tools/arena_obb_detector.py','tools/arena_support.py','tools/arena_object_support.py',
              'tools/arena_support_refiner.py',
              'tools/arena_bamboo_motion.py','tools/arena_bamboo_point.py','tools/arena_bamboo_instances.py','tools/arena_scene_motion.py','tools/arena_arrow_motion.py','tools/arena_mace_motion.py',
-             'tools/arena_bamboo_phase.py','tools/arena_action_timing.py',
+             'tools/arena_bamboo_phase.py','tools/arena_action_timing.py','tools/arena_control_validation.py',
              'tools/arena_yolo_obb_data.py','tools/arena_damage_modules.py',
              'tools/arena_reactive_sweep.py','tools/arena_key_receipts.py','tools/arena_input_timeline.py','tools/arena_jump_clock.py')
     sources+=('arena/Local/environment.lua','arena/Local/native_selection.lua','tools/arena_local.py')
@@ -253,6 +254,7 @@ def run(args):
         planning_step_seconds=getattr(policy,'STEP',None),planning_steps=getattr(policy,'STEPS',None),
         planning_beam=getattr(policy,'BEAM',None),
         measured_control_step=bool(getattr(policy,'measured_control_step',False)),
+        revalidate_ground_down=bool(getattr(policy,'revalidate_ground_down',False)),
         ground_static_search=bool(getattr(policy,'ground_static_search',False)),
         ground_reserve_recovery=bool(getattr(policy,'ground_reserve_recovery',False)),
         ordinary_air_down_gap=getattr(policy,'ordinary_air_down_gap',.1),
@@ -270,6 +272,7 @@ def run(args):
     sent_keys={'jump':0,'down':0}
     receipt_matcher=KeyReceiptMatcher(initial['monotonic']);receipt_matches=[]
     consume_times=[];chain_times=[]
+    submission_checks=[]
     board_entries=[];had_damage=False
     actions, count, max_stage, status, final = [], 0, -1, 'duration', initial
     initial_pixels=InitialPixels()
@@ -325,6 +328,7 @@ def run(args):
                     obs=(timeline.project(now+1/60+compute_prior)if timeline is not None
                          else extrapolate(latest,now+1/60+compute_prior))
                     obs=dict(obs,decision_interval_seconds=cadence)
+                    last_action_before=policy.last_action
                     decision_start=time.perf_counter()
                     action, reason = ((None,'waiting_initial_pixels')if readiness=='waiting'else policy.choose(obs))
                     compute_ms=(time.perf_counter()-decision_start)*1000
@@ -335,10 +339,23 @@ def run(args):
                         fresh_vision_times.append(vision_times[-1])
                     capture_times.append(frame.request_ms)
                     committed=None
+                    proposed_action=action
+                    submission_check=None
+                    if action and not args.observe_only:
+                        primitive=selected_primitive(action,reason)
+                        if getattr(policy,'revalidate_ground_down',False):
+                            check_start=time.perf_counter()
+                            project=(lambda stamp:timeline.project(stamp,include_tracks=False))if timeline is not None else None
+                            send_stamp=(time.perf_counter_ns()-clock['offset_ns'])/1e9
+                            action,submission_check=validate_ground_down(policy,action,primitive,obs,
+                                project,send_stamp,last_action_before)
+                            if submission_check is not None:
+                                submission_check['wall_ms']=(time.perf_counter()-check_start)*1000
+                                submission_checks.append(submission_check)
                     if action and not args.observe_only:
                         ack = cap.tap(action)
                         committed=commit_action(perception,latest,action,ack,
-                                                primitive=selected_primitive(action,reason),planned=obs)
+                                                primitive=primitive,planned=obs)
                         policy.last_action=committed['committed_time']
                         action_times.append(ack.request_ms)
                         key='down'if action in ('slide','down')else'jump'
@@ -356,10 +373,10 @@ def run(args):
                         measured['terrain']={k:v for k,v in measured['terrain'].items()if k!='samples'}
                     row['observed']=serializable(measured)
                     executed=action if not args.observe_only else None
-                    row.update(frame=count, elapsed=time.monotonic()-begin, action=executed,proposed_action=action,
+                    row.update(frame=count, elapsed=time.monotonic()-begin, action=executed,proposed_action=proposed_action,
                                reason=reason, capture_ms=frame.request_ms, vision_ms=vision_times[-1],
                                policy_compute_ms=compute_ms,policy_compute_prior_ms=compute_prior*1000,
-                               action_commit=committed)
+                               action_commit=committed,submission_check=submission_check)
                     if getattr(cap,'source_name',None)=='unity_render_readback':
                         row['render_capture']=dict(cap.last_render_header,
                             received=(frame.received_ns-clock['offset_ns'])/1e9)
@@ -439,6 +456,9 @@ def run(args):
     report['cyclic_gc_deferred']=collections.was_enabled
     report['cycles_collected_after_pause']=collections.collected
     report['policy_compute_ms']=timing(policy_times)
+    report['ground_down_submission_checks']=dict(count=len(submission_checks),
+        rejected=sum(not item['allowed']for item in submission_checks),
+        wall_ms=timing([item['wall_ms']for item in submission_checks]))
     report['policy_compute_prior_ms']=timing(compute_priors)
     report['fresh_perception_policy_ms']=timing(fresh_vision_times)
     if first_evaluation and final['time']>first_evaluation['time']:

@@ -5,10 +5,11 @@ from arena_vision import extrapolate
 
 
 def selected_primitive(action,reason):
-    """Carry the chosen MPC primitive separately from the shared input key."""
+    """Carry the chosen primitive separately from the shared input key."""
     expected={'air_up':'jump','rope_up':'jump','jump1':'jump','jump2':'jump',
               'air_down':'down','rope_down':'down','slide':'slide'}
-    name=reason.removeprefix('mpc_')if reason.startswith('mpc_')else None
+    name=(reason.removeprefix('mpc_')if reason.startswith('mpc_')else
+          'air_down'if reason.startswith('air_down:')else None)
     return name if expected.get(name)==action else None
 
 
