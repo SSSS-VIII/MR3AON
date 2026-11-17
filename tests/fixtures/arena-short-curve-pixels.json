@@ -1,0 +1,50 @@
+{
+  "scope": "Original saved pixel tracking coordinates, compensated by visual support reference; no native telemetry. First seven points are causal input; eighth is only future pixel scoring.",
+  "source_vision_sha256": "42358e045011da7c64d8b8d98eb0a869639e4b77c4fa79d0ce89dd71802fa957",
+  "source_frame": 141,
+  "track_id": 29,
+  "kind": "eye_enemy",
+  "confidence": 0.96142578125,
+  "samples": [
+    [
+      0.0,
+      635.5,
+      195.11651975467012
+    ],
+    [
+      0.06501479999860749,
+      588.0,
+      204.74167234256075
+    ],
+    [
+      0.14998720004223287,
+      518.5000152587891,
+      216.8594726901586
+    ],
+    [
+      0.21559980005258694,
+      463.0,
+      225.43812411017376
+    ],
+    [
+      0.28203070000745356,
+      409.0,
+      232.42624771572903
+    ],
+    [
+      0.3509438000037335,
+      352.5,
+      238.5073891904763
+    ],
+    [
+      0.4151640000054613,
+      297.5,
+      244.09969567190262
+    ],
+    [
+      0.4816405000165105,
+      242.75,
+      248.00829710396445
+    ]
+  ]
+}

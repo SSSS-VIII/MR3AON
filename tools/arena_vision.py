@@ -106,6 +106,8 @@ class Track:
     source_part: str | None = None
     source_damage_callback: str | None = None
 
+    early_sine_motion: bool = False
+
     def update(self, detection, stamp, player, support_y=None):
         self.pinball_fast_rebound_active=False
         if self.quad is not None or detection.quad is not None:
@@ -182,7 +184,11 @@ class Track:
                     self.vx,self.vy=map(float,curved[1])
         self.curve_count=self.curve_count+1 if stable else 0
         sine=None
-        if (self.confidence>=.7 and self.kind!='pinball' and len(all_samples)>=11 and all_samples[-1,0]-all_samples[0,0]>=.25
+        # Short visible crossings can end before eleven samples exist. The
+        # candidate still needs two consecutive fits and the same residual,
+        # amplitude, duration and linear/quadratic rejection checks below.
+        minimum_sine_samples=6 if self.early_sine_motion and self.kind=='eye_enemy' else 11
+        if (self.confidence>=.7 and self.kind!='pinball' and len(all_samples)>=minimum_sine_samples and all_samples[-1,0]-all_samples[0,0]>=.25
                 and np.ptp(all_samples[:,2])>8 and not self.arming and not self.active):
             times=all_samples[:,0]-stamp;ys=all_samples[:,2]
             centered=times-times.mean()
@@ -299,6 +305,7 @@ class Tracker:
     def __init__(self,adaptive=False,adaptive_rush_speed=False):
         self.adaptive=adaptive;self.adaptive_rush_speed=adaptive_rush_speed
         self.source_pinball_prior=False
+        self.early_sine_motion=False
         self.pinball_rebound_carry=False
         self.pinball_fast_rebound=False
         self.tracks = []
@@ -349,6 +356,7 @@ class Tracker:
                     track_type=MaceTrack
                 t = track_type(self.next_id, d.box, d.kind, d.confidence, stamp)
                 t.source_pinball_prior=self.source_pinball_prior and d.kind=='pinball'
+                t.early_sine_motion=self.early_sine_motion
                 t.pinball_rebound_carry=self.pinball_rebound_carry and d.kind=='pinball'
                 t.pinball_fast_rebound=self.pinball_fast_rebound and d.kind=='pinball'
                 t.adaptive_rush_speed=self.adaptive_rush_speed
