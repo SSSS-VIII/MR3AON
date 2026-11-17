@@ -85,6 +85,26 @@ def test_original_job_error_is_not_reported_as_a_successful_step():
     assert gate.view['state']['episodeFrame'] == 54
 
 
+@pytest.mark.parametrize('after,stopped,terminated,accepted', [
+    (74, 74, False, True),
+    (72, 72, True, True),
+    (72, 72, False, False),
+    (75, 75, False, False),
+    (70, 70, True, False),
+    (74, 75, False, False),
+])
+def test_step_checks_actual_tick_interval_and_allows_early_death(after, stopped, terminated, accepted):
+    job = dict(done=True, before=dict(episodeFrame=71), after=dict(episodeFrame=after), terminated=terminated)
+    vm = VM([reply(state=dict(episodeFrame=stopped), last=dict(ok=True, result=job))])
+    gate = module.GameGate(vm)
+    gate.view = dict(schema=1)
+    if accepted:
+        assert gate.step(3) == job
+    else:
+        with pytest.raises(RuntimeError, match='interval mismatch'):
+            gate.step(3)
+
+
 def test_root_file_commands_are_refused_after_handover():
     spec = importlib.util.spec_from_file_location('arena_gate_client', BASE / 'client.py')
     client_module = importlib.util.module_from_spec(spec)

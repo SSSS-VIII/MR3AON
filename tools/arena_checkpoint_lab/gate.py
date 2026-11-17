@@ -65,6 +65,14 @@ class GameGate:
         result = self.call('step', ticks=ticks, action=action)
         if result.get('error'):
             raise RuntimeError(result['error'])
+        before = result.get('before', {}).get('episodeFrame')
+        after = result.get('after', {}).get('episodeFrame')
+        stopped = (self.view.get('state') or {}).get('episodeFrame')
+        if type(before) is not int or type(after) is not int or not result.get('done'):
+            raise RuntimeError('Native step did not return a completed physics interval')
+        elapsed = after - before
+        if stopped != after or not 0 <= elapsed <= ticks or (not result.get('terminated') and elapsed != ticks):
+            raise RuntimeError(f'Native physics interval mismatch: requested {ticks}, advanced {elapsed}, stopped {stopped}')
         return result
 
     def screenshot(self):

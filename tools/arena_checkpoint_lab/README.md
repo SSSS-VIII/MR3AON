@@ -26,6 +26,8 @@ native = gate.call('probe') # 有限原生字段观察，不能称为完整引�
 
 50ms采样交替使用2/3原tick。`gate.view`是已经停住的主线程结果，读取它不推进客体；重复state/probe也不增加Unity帧。game gate接管后禁止旧`sh`/文件RPC，且只能恢复本gate创建的点，因为宿主选中的mailbox地址/CR3不属于guest快照内容。带GATE code的响应与可能迟到的root响应分开检查。操作超时后禁止覆盖命令或保存伪停点，只能恢复已知gate点。
 
+`lifecycle.run_boundary(gate, output)`从出口前停车点验证跨板及敌人ID生成/退出，逐段恢复对照并检查PNG；`lifecycle.run_native_death`检查原Die入口后恢复与替代动作，不代表自然致死/完整结算验收。原Die会把时间倍率改为.5，受控检查需在返回后停回0；任意exec若破坏暂停条件可能使门控超时，此时恢复已知gate快照，禁止覆盖未完成命令。
+
 `gate.rebase()`在当前停点生成新的完整RAM根并释放旧RAM祖先，旧点ID全部失效；不重开游戏、不重放动作，也不重写角色字段。该操作要额外暂存一份3GiB RAM，有空闲内存保护；已有实际分支一致性、磁盘读写和PNG恢复检查；跨板/死亡/长期增长仍待验证。COW盘父层是Weak引用，worker会独立保留磁盘层强引用；其历史缓存长期增长仍待测量，不能把RAM树释放等同于全部内存有界。控制台退出会关闭自有VM；目前RAM快照不跨进程持久化。
 
 首例证据为`native-game-gate-v1/report.json`：map42/stage50012，第136→139帧原碰撞5000→4750，整机恢复73.89ms后改下翻保持5000；同点四次完整已导出字段一致。`game_rollback_complete=false`仍保留，不能把单例当完整生命周期通过。v4的11项有限检查已全部通过，含修正COW父层后的RAM新基线与PNG字节一致；受伤恢复48.43ms。当前软件渲染搜索较慢，step和restore分别计时。v1实验JSON为游戏原json.stringify格式；后续gate源码沿用既有文件桥的17位数值/数组编码，需按冻结源码区分证据版本。
