@@ -242,7 +242,8 @@ def object_resource(obj,profile):
 
 def bamboo_marker_quad(obj):
     names={'Sprite','Outline (1)','Outline (2)','Outline (3)','Outline (4)',
-           'Triangle (1)','Triangle (2)','Triangle (3)'}
+           'Triangle (1)','Triangle (2)','Triangle (3)',
+           'aim_laser','Outline1','Outline2','Outline3'}
     boxes=[r['box']for r in obj.get('renderers',[])if r.get('name')in names]
     if not boxes:return None
     a=np.asarray(boxes,float)
@@ -252,7 +253,11 @@ def bamboo_marker_quad(obj):
 def targets(raw,profile):
     if profile.get('taxonomy')=='physics':
         native,counts=targets(raw,profile['native_targets'])
-        return [(profile['class_mapping'][cls],quad)for cls,quad in native],counts
+        mapped=[(profile['class_mapping'][cls],quad)for cls,quad in native]
+        if profile.get('separate_bamboo_laser'):
+            from arena_bamboo_geometry import retag_laser_targets
+            mapped=retag_laser_targets(raw,mapped,profile)
+        return mapped,counts
     row=normalize_arrays(raw)
     if row.get('label_schema',0)<4:
         raise ValueError('Full support supervision requires native label schema 4')
