@@ -5,6 +5,23 @@ from arena_support import leading_ground_faces
 import arena_motion as motion
 
 
+def ground_slide_supported(observation):
+    """The existing slide prior describes solid ground, not a float down-pass.
+
+    Original non-avoiding ItemAirGround turns a grounded down key into fall,
+    retaining the full collider and allowing jump2 next. Pixels identifying a
+    floating platform do not prove its hidden avoid-fall flag, so that surface
+    cannot certify the solid-ground slide trajectory.
+    """
+    terrain=observation.get('terrain')
+    if not terrain:return False
+    if terrain.get('source')!='neural_segments':return True
+    selected=next((s for s in terrain.get('segments',[])
+                   if s.get('id')==terrain.get('selected_id')),None)
+    return bool(selected and selected.get('kind')=='platform'
+                and selected.get('raw_kind')!='floating_platform')
+
+
 def collision_weight(track):
     # Blocking the runner against a scrolling ground entrance is terminal;
     # ordinary uncertain enemy contacts retain the existing health-loss cost.
@@ -23,6 +40,8 @@ def touching(player,hazard,margin=4,*,shape="ellipse"):
 
 
 class Avoider:
+    solid_ground_slide_only=False
+
     def __init__(self,*,continuous_collision=False):
         self.continuous_collision=continuous_collision
         self.last_action=-10
@@ -191,7 +210,8 @@ class Avoider:
         if can_air_down(obs):candidates.append(('air_down',.03))
         if stamp-self.last_action<.32 and not landing_ready:
             candidates=[c for c in candidates if c[0]=='air_down']
-        if obs['phase']=='ground' and ground:
+        if (obs['phase']=='ground' and ground and
+                (not self.solid_ground_slide_only or ground_slide_supported(obs))):
             candidates.append(('slide',.02))
         scored=[(self._risk(obs,a)[0]+effort,a)for a,effort in candidates]
         if not scored:

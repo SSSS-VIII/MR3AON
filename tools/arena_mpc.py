@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 import numpy as np
 from arena_vision import advance_player,native_motion_box,create_motion,can_air_down,can_air_up,root_foot_box
-from arena_policy import VisualAvoider,collision_weight
+from arena_policy import VisualAvoider,collision_weight,ground_slide_supported
 import arena_motion as motion
 from arena_object_motion import PRIORS
 from arena_oriented import is_box,swept_capsules
@@ -202,7 +202,9 @@ class MpcAvoider(VisualAvoider):
         names=[None]
         phase=state['phase']
         if phase=='rope_above':names+=['rope_down','jump1']
-        elif phase=='ground':names+=['jump1','slide']
+        elif phase=='ground':
+            names+=['jump1']
+            if not self.solid_ground_slide_only or ground_slide_supported(state):names+=['slide']
         elif phase.startswith('air_')and not state['jumps']:names+=['jump1']
         elif phase=='slide':
             active=state.get('motion')

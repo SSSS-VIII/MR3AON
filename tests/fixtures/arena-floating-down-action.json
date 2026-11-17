@@ -1,0 +1,392 @@
+{
+  "scope": "Frozen actual pixel/own-key state immediately before the recorded float down key; native geometry/clock/health deliberately excluded.",
+  "source_run": "l5-map43-start1-s55089-model1",
+  "frame": 246,
+  "expected_original": [
+    "slide",
+    "slide:34"
+  ],
+  "observation": {
+    "time": 267956.568809927,
+    "player": {
+      "x": 178.13709019613916,
+      "y": 203.9773783642077,
+      "w": 16.12957763671875,
+      "h": 37.533203125
+    },
+    "phase": "ground",
+    "jumps": 0,
+    "motion": null,
+    "terrain": {
+      "y": 245.68508362111095,
+      "at_player": true,
+      "edge": 516.8912018317095,
+      "landing": null,
+      "speed": 252.50336586153273,
+      "samples": [],
+      "segments": [
+        {
+          "kind": "floating_platform",
+          "a": [
+            42.89130864323297,
+            252.77129964043942
+          ],
+          "b": [
+            516.8912018317095,
+            252.48199299981442
+          ],
+          "confidence": 0.9287109375,
+          "left_clipped": false,
+          "right_clipped": false,
+          "stamp": 267956.518875,
+          "observations": 6,
+          "vx": -252.50336586153273,
+          "vy": -252.79607774931839,
+          "id": 13
+        }
+      ],
+      "selected_id": 13,
+      "source": "neural_segments"
+    },
+    "rope": null,
+    "rope_segment": null,
+    "rope_segments": [],
+    "stand_h": 36.97697041771629,
+    "stand_w": 14.221911699121648,
+    "scale_px": 39.50531027533791,
+    "vy": -41.188134568709586,
+    "vx": -0.9636738936971859,
+    "scene_velocity_x": -706.0795978578174,
+    "scene_motion_observed": false,
+    "visible_supports": [
+      {
+        "kind": "floating_platform",
+        "a": [
+          55.50004577636719,
+          265.3946533203125
+        ],
+        "b": [
+          529.4999389648438,
+          265.1053466796875
+        ],
+        "confidence": 0.9287109375,
+        "left_clipped": false,
+        "right_clipped": false,
+        "stamp": 267956.518875,
+        "observations": 6,
+        "vx": -252.50336586153273,
+        "vy": -252.79607774931839,
+        "id": 13
+      }
+    ],
+    "ground_contact_observed": false,
+    "tracks": [
+      {
+        "id": 34,
+        "box": {
+          "x": 398.2537941444481,
+          "y": 116.0119937328678,
+          "w": 48.29688168257093,
+          "h": 48.29688168257093
+        },
+        "kind": "spider",
+        "confidence": 0.96484375,
+        "seen": 267956.518875,
+        "history": [
+          [
+            267956.2528921,
+            635.0,
+            -15.000754201364003
+          ],
+          [
+            267956.337609,
+            592.5,
+            -32.30123109745409
+          ],
+          [
+            267956.4158259,
+            530.9999847412109,
+            -46.85896781973054
+          ],
+          [
+            267956.4537121,
+            505.74998474121094,
+            -59.85896781973054
+          ],
+          [
+            267956.4863471,
+            482.0,
+            -68.35896781973054
+          ],
+          [
+            267956.518875,
+            457.75,
+            -73.3589716344278
+          ]
+        ],
+        "vx": -707.8765738029279,
+        "vy": -232.09329251417432,
+        "ax": 0,
+        "ay": 0,
+        "residual": 4.04727900865681,
+        "observations": 6,
+        "active": false,
+        "arming": false,
+        "reference": [
+          0.0,
+          225.10896781973054
+        ],
+        "curve_count": 0,
+        "sine_frequency": 0,
+        "sine_a": 0,
+        "sine_b": 0,
+        "sine_count": 0,
+        "adaptive_velocity": true,
+        "ballistic": false,
+        "gravity_up": 0,
+        "gravity_down": 0,
+        "floor_y": null,
+        "floor_vy": 0.0,
+        "floor_segment": null,
+        "rebound_speed": 0,
+        "attack_phase": null,
+        "ready_started": null,
+        "ready_remaining": 0,
+        "rush_scale_remaining": 0,
+        "rush_target_w": 0,
+        "rush_target_h": 0,
+        "horizontal_stopped": false,
+        "resource": null,
+        "collider_shape": "SphereCollider",
+        "quad": [
+          [
+            446.49448962440545,
+            164.3649671974443
+          ],
+          [
+            446.6534862064367,
+            116.11523422625288
+          ],
+          [
+            398.3099803470617,
+            115.95590195086226
+          ],
+          [
+            398.15098376503045,
+            164.20563492205366
+          ]
+        ],
+        "angular_velocity": 0.0,
+        "angular_history": [],
+        "adaptive_rush_speed": true,
+        "rush_history": [],
+        "rush_fit_velocity": null,
+        "rush_velocity": null,
+        "confidence_history": [
+          0.36669921875,
+          0.900390625,
+          0.9541015625,
+          0.9013671875,
+          0.9404296875,
+          0.96484375
+        ],
+        "source_pinball_prior": false,
+        "pinball_rebound_carry": false,
+        "pinball_fit": null,
+        "pinball_carry_active": false,
+        "pinball_fast_rebound": false,
+        "pinball_fast_rebound_active": false,
+        "source_part": null,
+        "source_damage_callback": null
+      },
+      {
+        "id": 35,
+        "box": {
+          "x": 613.5703065026909,
+          "y": 149.57030650269093,
+          "w": 32.85938699461816,
+          "h": 32.85938699461816
+        },
+        "kind": "spider",
+        "confidence": 0.7838736649835483,
+        "seen": 267956.4158259,
+        "history": [
+          [
+            267956.4158259,
+            630.0,
+            -59.10896781973054
+          ]
+        ],
+        "vx": 0,
+        "vy": 0,
+        "ax": 0,
+        "ay": 0,
+        "residual": 0,
+        "observations": 1,
+        "active": false,
+        "arming": false,
+        "reference": [
+          0.0,
+          225.10896781973054
+        ],
+        "curve_count": 0,
+        "sine_frequency": 0,
+        "sine_a": 0,
+        "sine_b": 0,
+        "sine_count": 0,
+        "adaptive_velocity": true,
+        "ballistic": false,
+        "gravity_up": 0,
+        "gravity_down": 0,
+        "floor_y": null,
+        "floor_vy": 0.0,
+        "floor_segment": null,
+        "rebound_speed": 0,
+        "attack_phase": null,
+        "ready_started": null,
+        "ready_remaining": 0,
+        "rush_scale_remaining": 0,
+        "rush_target_w": 0,
+        "rush_target_h": 0,
+        "horizontal_stopped": false,
+        "resource": null,
+        "collider_shape": "SphereCollider",
+        "quad": [
+          [
+            640.1212158203125,
+            188.7274169921875
+          ],
+          [
+            640.1600341796875,
+            143.2899169921875
+          ],
+          [
+            619.8787841796875,
+            143.2725830078125
+          ],
+          [
+            619.8399658203125,
+            188.7100830078125
+          ]
+        ],
+        "angular_velocity": 0.0,
+        "angular_history": [],
+        "adaptive_rush_speed": true,
+        "rush_history": [],
+        "rush_fit_velocity": null,
+        "rush_velocity": null,
+        "confidence_history": [
+          0.845703125
+        ],
+        "source_pinball_prior": false,
+        "pinball_rebound_carry": false,
+        "pinball_fit": null,
+        "pinball_carry_active": false,
+        "pinball_fast_rebound": false,
+        "pinball_fast_rebound_active": false,
+        "source_part": null,
+        "source_damage_callback": null
+      },
+      {
+        "id": 36,
+        "box": {
+          "x": 507.44673630056127,
+          "y": 72.09456043346265,
+          "w": 46.62500543911469,
+          "h": 46.62500543911469
+        },
+        "kind": "spider",
+        "confidence": 0.96337890625,
+        "seen": 267956.518875,
+        "history": [
+          [
+            267956.4537121,
+            617.5,
+            -79.6089716344278
+          ],
+          [
+            267956.4863471,
+            594.0,
+            -96.48396781973054
+          ],
+          [
+            267956.518875,
+            568.5,
+            -108.2339716344278
+          ]
+        ],
+        "vx": -755.7988620884837,
+        "vy": -429.9181822497014,
+        "ax": 0,
+        "ay": 0,
+        "residual": 0.9348069744837639,
+        "observations": 3,
+        "active": false,
+        "arming": false,
+        "reference": [
+          0.0,
+          225.10896781973054
+        ],
+        "curve_count": 0,
+        "sine_frequency": 0,
+        "sine_a": 0,
+        "sine_b": 0,
+        "sine_count": 0,
+        "adaptive_velocity": true,
+        "ballistic": false,
+        "gravity_up": 0,
+        "gravity_down": 0,
+        "floor_y": null,
+        "floor_vy": 0.0,
+        "floor_segment": null,
+        "rebound_speed": 0,
+        "attack_phase": null,
+        "ready_started": null,
+        "ready_remaining": 0,
+        "rush_scale_remaining": 0,
+        "rush_target_w": 0,
+        "rush_target_h": 0,
+        "horizontal_stopped": false,
+        "resource": null,
+        "collider_shape": "SphereCollider",
+        "quad": [
+          [
+            553.8268049380873,
+            118.9634481933032
+          ],
+          [
+            553.9415510318373,
+            71.96359315179929
+          ],
+          [
+            507.6916731021498,
+            71.85067811273679
+          ],
+          [
+            507.5769270083998,
+            118.8505331542407
+          ]
+        ],
+        "angular_velocity": 0.0,
+        "angular_history": [],
+        "adaptive_rush_speed": true,
+        "rush_history": [],
+        "rush_fit_velocity": null,
+        "rush_velocity": null,
+        "confidence_history": [
+          0.97021484375,
+          0.94873046875,
+          0.96337890625
+        ],
+        "source_pinball_prior": false,
+        "pinball_rebound_carry": false,
+        "pinball_fit": null,
+        "pinball_carry_active": false,
+        "pinball_fast_rebound": false,
+        "pinball_fast_rebound_active": false,
+        "source_part": null,
+        "source_damage_callback": null
+      }
+    ]
+  }
+}
