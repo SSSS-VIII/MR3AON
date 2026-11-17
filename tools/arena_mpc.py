@@ -153,6 +153,11 @@ class MpcAvoider(VisualAvoider):
         # A visible rope gives a route back to renewable jump actions. This
         # enables planning even when no currently observed hazard intersects.
         spent=obs.get('jumps',0)>0 and obs.get('phase','').startswith(('jump','air_','flip_'))
+        # Walking off an edge retains the first jump in the original game.
+        # No observed hazard is required to plan a route back onto support.
+        if (cls.ground_reserve_recovery and obs.get('phase','').startswith('air_')
+                and (obs.get('terrain')or{}).get('source')=='neural_segments'):
+            return True
         if not spent:return False
         if obs.get('rope')is not None and not obs.get('terrain'):return True
         return bool(cls.ground_reserve_recovery and
@@ -285,9 +290,15 @@ class MpcAvoider(VisualAvoider):
                 cost-=.1*(min(10,len(target_hits))-min(10,len(node.target_hits)))
                 count=node.actions+bool(name)
                 terrain=end.get('terrain')
-                if (terrain and not terrain['at_player']and end['player'].center[1]>terrain['y']+35
-                        and 'unsupported'not in hits):
-                    cost+=10000;hits.add('unsupported')
+                unsupported=bool(terrain and end['player'].center[1]>terrain['y']+35
+                    and(not terrain['at_player']or self.ground_reserve_recovery
+                        and end.get('phase','').startswith('air_')))
+                if unsupported:
+                    if 'unsupported'not in hits:cost+=10000;hits.add('unsupported')
+                    # Horizontal overlap with a platform above the falling
+                    # role is not a landing. When already below it, shorten
+                    # exposure rather than tying every escape with waiting.
+                    if self.ground_reserve_recovery:cost+=100*control_step
                 if ('below_rope_exit'not in hits and
                         (crosses_rope_end_below(state,half)or crosses_rope_end_below(half,end))):
                     cost+=10000;hits.add('below_rope_exit')

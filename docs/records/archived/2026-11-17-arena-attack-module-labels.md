@@ -122,3 +122,12 @@ v388在接管实例前的源快照阶段因绝对launcher路径拼接错误触�
 原21类新增武器与身体仍共享resource，不能只按resource识别部件。Detection/Track现在传递profile的source_part/source_damage_callback，明示部件不同的观测不会交换轨迹历史；旧profile全部为空时维持旧关联。几何与置信度不修改。5项新增部件/序列测试及全竞技场984通过、2跳过；未将曲线候选加入默认actor。
 
 v391仅把已有原EnemyPoleaxeWarrior普通身体标注4→21，武器20及其他ID/几何/全部图像与划分不改；train1143身体、val284身体，仍20526/10533图，没加入诊断或actor图片。准备使用官方22类YOLO微调，不自写网络。v390正在对374补完整8471旧帧回归，不能把前200帧预查当完整回归。
+
+
+## v390完整识别回归与走落恢复候选
+
+v390正常退出0，374在原8471帧完整回归：high/dense/clean/legacy物理匹配为3502/2693/1612/14827；相较362为3489/2688/1609/14835，前三升、legacy下降8。legacy武器19/20但41个预测，P=.463；platform1748/2029低于362的1760，flying_ready410/456低于417，spider1849/1914低于1851。完整原图/原始预测和comparison-362.json保留，不以总体掩盖退步。
+
+v389斧板候选首伤400+400后，无敌人引用的4200是走落死亡：原评估fallFromRun持续下降，视觉air_falling/jumps0，却连续输出clear。已有ground_reserve_recovery只考虑spent jump且需can_air_down，漏掉原版已证明可使用首跳的走落状态；at_player又只表示水平覆盖，不能把头顶平台视作落地。
+
+v394只改早期spent门槛仍被末尾can_air_down挡住，129状态0新增跳跃，不采用。v395允许neural terrain上的air_首跳状态进入已有MPC，并将头顶平台下方持续下降计入原unsupported代价；次级暴露时间代价避免所有初始不安全分支平手。129个原记录状态首先全部复现旧动作/原因，候选改变76项（含只改原因），22项新增跳跃；实际死亡回放140帧起开始补跳，但尚无实机救回证明。接入后129项逐项一致，新增4项含真实像素状态fixture，全竞技场988通过/2跳过。仍只在既有研究ground_reserve_recovery=True下生效，默认False不变，待同模型单项原生对照。

@@ -1,0 +1,78 @@
+{
+  "scope": "Saved pixel-only falling state; native audit separately confirms this uncorrected episode died on the ground. No native state supplied to policy.",
+  "source": "native-poleaxe-source-v389/l5-map43-start1-s55068-model1/vision.jsonl frame140",
+  "observation": {
+    "time": 257725.85003343335,
+    "player": {
+      "x": 178.4037066544222,
+      "y": 251.01692973117798,
+      "w": 15.91204833984375,
+      "h": 37.13079833984375
+    },
+    "terrain": {
+      "y": 187.5659900706799,
+      "at_player": true,
+      "edge": 531.1933383871552,
+      "landing": null,
+      "speed": 690.2119123391566,
+      "samples": [],
+      "segments": [
+        {
+          "kind": "floating_platform",
+          "a": [
+            136.19370459809278,
+            194.6305933106297
+          ],
+          "b": [
+            531.1933383871552,
+            194.1001978028172
+          ],
+          "confidence": 0.91650390625,
+          "left_clipped": false,
+          "right_clipped": false,
+          "stamp": 257725.8115576,
+          "observations": 14,
+          "vx": -690.2119123391566,
+          "vy": -3.4984152803782815,
+          "id": 5
+        }
+      ],
+      "selected_id": 5,
+      "source": "neural_segments"
+    },
+    "phase": "air_falling",
+    "jumps": 0,
+    "motion": null,
+    "vx": -0.3968510706869747,
+    "vy": 246.99764411895686,
+    "rope": null,
+    "scale_px": 39.50531027533791,
+    "stand_w": 14.221911699121648,
+    "stand_h": 36.97697041771629,
+    "visible_supports": [
+      {
+        "kind": "floating_platform",
+        "a": [
+          162.75018310546875,
+          194.76519775390625
+        ],
+        "b": [
+          557.7498168945312,
+          194.23480224609375
+        ],
+        "confidence": 0.91650390625,
+        "left_clipped": false,
+        "right_clipped": false,
+        "stamp": 257725.8115576,
+        "observations": 14,
+        "vx": -690.2119123391566,
+        "vy": -3.4984152803782815,
+        "id": 5
+      }
+    ],
+    "ground_contact_observed": false,
+    "incoming_jump2": true,
+    "ground_down_collider_restore": false,
+    "tracks": []
+  }
+}
