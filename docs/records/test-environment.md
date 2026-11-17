@@ -164,3 +164,9 @@ main保存计划已加入工坊挑战，单次入口为 `./run [名字] --once -
 竞技场内部研究可使用`tools/arena_render_capture.py`的RenderCapture：要求arena已暂停，复用同一InstanceSession与原Android按键/时钟，原Unity EOF读回完整渲染后缩至640×360；无桌面截图依赖，不改游戏UID禁止联网路由。默认视觉入口仍为FastCapture。协议/同帧像素码/活动负载及时间定义见[渲染读回](archived/2026-11-16-arena-render-readback.md)，不能把读回开始时刻称曝光时间。
 
 2026-11-16修复竞技场新回合及选板边界的慢动作残留：通过原GameManager/NinjaController时间恢复接口同步内部倍率与Unity/Lua固定步；v56重开及跨Boss定位后正常1倍/.02，日志新增fixedDeltaTime。旧直接恢复Unity.timeScale可能保留.01；校准/验收必须记录实际步长，详见[时钟恢复](archived/2026-11-16-arena-round-clock-recovery.md)。
+
+## 竞技场整机回溯研究沙盒（2026-11-18，实验后端）
+
+`arena-search`仅通过`runtime.checkpoint_sandbox.ArenaCheckpointSandbox(InstanceSession(...))`持有同一命名租约，私有配置/镜像/socket在该名字的`checkpoint/`目录；不为它另外创建Waydroid/ADB，不克隆arena/main/xiaoli账号。普通`./run arena-search`尚未分流到这个实验后端，勿用它代替研究控制台。运行入口为`tools/arena_checkpoint_console.py`，内部`gate=start_client()`只用于一次初始化；训练回退只使用gate快照，禁止重开重放。控制台退出会关闭自己的VM，RAM快照不持久化。
+
+客体单vCPU、3GiB、无NIC，Binder/Weston headless/ANGLE+SwiftShader全部在客体内部；不透传宿主GPU/显示。首次安装可显式将自己的userdata设为Sync，快照/恢复/rebase必须拒绝；sync停机后切全Cow才能搜索。切换/刷新boot都须持命名租约并确认VM已停。game gate接管mailbox后，禁止旧root命令/文件RPC，禁止恢复gate之前的快照；VM shutdown仍由原上下文负责。只读观察projection不等于全引擎hash，单板受伤回退通过也不能当全生命周期验收。原arena仍为视觉部署/对照环境，未迁移或修改。

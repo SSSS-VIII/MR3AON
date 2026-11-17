@@ -1,6 +1,36 @@
-# 独立增量快照实验
+# 独立整机回溯实验
 
-这是合成 Linux 客体的底层验证，**没有接入 Android 或竞技场客户端**。不把结果当作游戏回溯验收。它不使用 ADB、不修改宿主内核/网络、不更换 arena 的后端，也不加载到游戏菜单。
+包含合成夹具和后续原 Android 客户端沙盒。原客户端已通过一次真实受伤回退和同点重复分支检查；**跨板、死亡和长期运行的完整验收仍在继续**。合成结果与游戏结果分别记录，不混为同一结论。不使用外部 ADB、不修改宿主内核/网络、不更换现有 arena，也不加载到用户菜单。
+
+## 原客户端实验后端
+
+只接受 `InstanceSession('arena-search')`，使用既有同名控制租约。私有配置/磁盘在 `.mr3a-instances/arena-search/checkpoint/`；单 vCPU、3GiB、无 NIC，Binder/Weston headless/ANGLE 软件渲染全部在客体内。APK与白名单资源来自原arena，不复制账号。`android_prepare.py`拒绝覆盖已经准备的实例；`android_payload.py`显式只读复制资源。研究依赖/本机环境及第一次准备过程见专题记录，不要对现有Waydroid磁盘运行这些安装操作。
+
+初次安装只能在显式 `provision` 阶段让**这个名字自己的 userdata**使用Sync；worker此时禁止snapshot/restore/rebase。安装与sync完成后停机，通过持租约的`set_phase(session,'checkpoint')`切全部Cow，再启动。不可对直接写盘客体做回溯。
+
+已有准备好的私有镜像时，先将`worker.rs`复制为固定研究克隆的`src/arena_checkpoint_worker.rs`，使用下文的编译环境构建`arena_checkpoint_worker`。启动内部控制台：
+
+```bash
+PYTHONPATH=agent .venv/bin/python -u tools/arena_checkpoint_console.py
+```
+
+控制台中 `gate=start_client()` 会编译两个约10KiB的JNI桥和小型DEX，完成原GameOnly冷初始化，再移交给Unity主线程gate。使用Android userdebug原有`am attach-agent`调用原UnitySendMessage；没有Frida、JVMTI hook、APK重签名、陷阱替换或自写运动更新。JNI头来自固定SHA的AOSP，编译工具复用本机已下载的ecj/D8/Android SDK。该冷初始化**不是回溯**，后续搜索不能重启它来重放历史。
+
+```python
+point = gate.snapshot()
+step = gate.step(3, 'none')  # 原20ms tick，共60ms
+gate.restore(point['result']['id'])
+step = gate.step(3, 'down')
+native = gate.call('probe') # 有限原生字段观察，不能称为完整引擎hash
+```
+
+50ms采样交替使用2/3原tick。`gate.view`是已经停住的主线程结果，读取它不推进客体；重复state/probe也不增加Unity帧。game gate接管后禁止旧`sh`/文件RPC，且只能恢复本gate创建的点，因为宿主选中的mailbox地址/CR3不属于guest快照内容。带GATE code的响应与可能迟到的root响应分开检查。操作超时后禁止覆盖命令或保存伪停点，只能恢复已知gate点。
+
+`gate.rebase()`在当前停点生成新的完整RAM根并释放旧RAM祖先，旧点ID全部失效；不重开游戏、不重放动作，也不重写角色字段。该操作要额外暂存一份3GiB RAM，有空闲内存保护；已有实际分支一致性、磁盘读写和PNG恢复检查；跨板/死亡/长期增长仍待验证。COW盘父层是Weak引用，worker会独立保留磁盘层强引用；其历史缓存长期增长仍待测量，不能把RAM树释放等同于全部内存有界。控制台退出会关闭自有VM；目前RAM快照不跨进程持久化。
+
+首例证据为`native-game-gate-v1/report.json`：map42/stage50012，第136→139帧原碰撞5000→4750，整机恢复73.89ms后改下翻保持5000；同点四次完整已导出字段一致。`game_rollback_complete=false`仍保留，不能把单例当完整生命周期通过。v4的11项有限检查已全部通过，含修正COW父层后的RAM新基线与PNG字节一致；受伤恢复48.43ms。当前软件渲染搜索较慢，step和restore分别计时。v1实验JSON为游戏原json.stringify格式；后续gate源码沿用既有文件桥的17位数值/数组编码，需按冻结源码区分证据版本。
+
+## 合成夹具
 
 快照使用 Nyx-Lite 的基础 RAM + 脏页增量树，保存客体 CPU、内核、设备和 COW 磁盘。只读已有基础磁盘；没有宿主 GPU、显示/网络服务透传。线程、TLS、栈/堆、mmap/munmap、子进程、未读取的 Unix socket 消息、文件 FD/偏移与 fsync 都在客体内。64MiB 映射逐字节参与 hash，同一快照反复执行同操作应得到相同状态，不同操作应形成不同分支。
 
