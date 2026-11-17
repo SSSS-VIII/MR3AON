@@ -11,6 +11,7 @@ from arena_vision import Box,Detection,Track,Tracker
 from arena_projection import SCALE
 from arena_bamboo_point import point_bounds, remember_point_interval, target_envelope
 from arena_bamboo_instances import pose_phase_agreement
+from arena_bamboo_geometry import projectile_envelope
 
 
 @dataclass
@@ -42,6 +43,10 @@ class BambooClocks:
     def __init__(self):
         self.tracker=Tracker();self.clocks={}
         self.point_uncertainty=False
+        self.source_geometry_variants=False
+
+    def retention_seconds(self):
+        return projectile_envelope().retention_seconds if self.source_geometry_variants else .35
 
     def observe(self,cues,stamp,camera_y=0.):
         # Two phase logits can survive class-wise NMS at the same reticle.
@@ -94,26 +99,29 @@ class BambooClocks:
                            if aim is not None else first-1.04)
                     clock.update(fire=(start+1.,first+1.04))
         self.clocks={k:v for k,v in self.clocks.items()if
-                     (stamp<=v['fire'][1]+.35 if v['fire']else stamp-v['last_seen']<.25)}
+                     (stamp<=v['fire'][1]+self.retention_seconds() if v['fire']else stamp-v['last_seen']<.25)}
 
     def forecasts(self,stamp,scene_vx,camera_y=0.):
         result=[]
+        geometry=projectile_envelope() if self.source_geometry_variants else None
+        width=geometry.width if geometry else 3*SCALE
+        base_height=geometry.height if geometry else .2*SCALE
         for identity,clock in self.clocks.items():
             if clock['fire']is None:continue
             lo,hi=clock['fire']
-            if stamp>hi+.35:continue
-            target,height=(target_envelope(clock,.2*SCALE) if self.point_uncertainty
-                           else (clock['target_y'],.2*SCALE))
+            if stamp>hi+self.retention_seconds():continue
+            target,height=(target_envelope(clock,base_height) if self.point_uncertainty
+                           else (clock['target_y'],base_height))
             y=target+camera_y
             # A full-width rope has no uncropped material endpoint. Missing
             # scroll evidence is not evidence that the camera stopped. Original
             # Gale positive block speeds are 9..20; include blocked motion 0.
             fast=-80*SCALE if scene_vx is None else -60*SCALE+scene_vx
             slow=-60*SCALE if scene_vx is None else fast
-            t=BambooForecast(-2000000-identity,Box(700,y-height/2,3*SCALE,height),
+            t=BambooForecast(-2000000-identity,Box(700,y-height/2,width,height),
                 'bamboo_forecast',median(clock['confidence']),stamp,observations=3,
                 vx=(fast+slow)/2,attack_phase='bamboo_locked',collider_shape='BoxCollider',
-                projectile_height=height,fire_earliest=lo,fire_latest=hi,spawn_left=640+(2-.85)*SCALE,
-                spawn_right=640+(2-.0677337646484375)*SCALE,velocity_fast=fast,velocity_slow=slow)
+                projectile_width=width,projectile_height=height,fire_earliest=lo,fire_latest=hi,spawn_left=geometry.spawn_left if geometry else 640+(2-.85)*SCALE,
+                spawn_right=geometry.spawn_right if geometry else 640+(2-.0677337646484375)*SCALE,velocity_fast=fast,velocity_slow=slow)
             t.box=t.future(0);result.append(t)
         return result
