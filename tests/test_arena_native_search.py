@@ -90,12 +90,13 @@ def test_fifty_ms_parity_continues_after_a_committed_window():
     assert oracle.native['frame'] == 3
 
 
-def test_native_failure_is_not_turned_into_a_bad_route(monkeypatch):
+@pytest.mark.parametrize('error', [RuntimeError('native transport failed'), KeyboardInterrupt()])
+def test_native_failure_is_not_turned_into_a_bad_route(monkeypatch, error):
     oracle = Oracle()
     def fail(*_):
         oracle.native['hp'] = 0
-        raise RuntimeError('native transport failed')
+        raise error
     monkeypatch.setattr(oracle, 'step', fail)
-    with pytest.raises(RuntimeError, match='transport failed'):
+    with pytest.raises(type(error)):
         search.search_window(oracle, start=start(oracle), offset=0)
     assert oracle.native == dict(frame=0, hp=5000, lifted=False)
