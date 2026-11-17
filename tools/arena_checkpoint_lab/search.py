@@ -116,6 +116,8 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120)
     and invalidates its earlier checkpoints. There is no restart/replay
     fallback. A stuck finite window leaves its root available for inspection.
     """
+    from render import prepare as prepare_renderer, INFO as RENDER_INFO
+
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
     initial = gate.call('state')
@@ -123,11 +125,12 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120)
     if (board['stage_index'] < 0 or board['mounted'] or initial.get('content') != 'Running: 1'
             or initial['health'] <= 0 or abs(initial['fixedDeltaTime'] - .02) > 1e-6):
         raise ValueError('Begin route search in a running unmounted battle with original 20ms physics')
+    renderer = prepare_renderer(gate)
     start = dict(health=initial['health'], state=initial, board=board)
     report = dict(complete=False, uses_restart_replay=False, game_rollback_complete=False,
                   algorithm='Original-engine bounded DFS; irreversible rolling window commits',
                   horizon=horizon, commit=commit, max_trials=max_trials, start=start,
-                  windows=[], route=[])
+                  renderer=renderer, windows=[], route=[])
     interval = 0
     started = time.monotonic()
     try:
@@ -148,6 +151,10 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120)
                     report['reason'] = window['reason']
                     break
                 path = window['path']
+                effective = gate.call('exec', code=RENDER_INFO)
+                if effective != renderer['requested']:
+                    raise RuntimeError('Original scene changed the search renderer size or interval')
+                window['renderer'] = effective
                 report['route'].extend({key: value for key, value in row.items() if key != 'point'} for row in path)
                 interval += len(path)
                 state = gate.view['state']
@@ -177,6 +184,6 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120)
             report['worker_status'] = gate.vm.request('status')['result']
         except Exception as error:
             report['worker_status_error'] = repr(error)
-        for name in ('search.py', 'gate.py', 'game_gate.lua', 'worker.rs'):
+        for name in ('search.py', 'render.py', 'gate.py', 'game_gate.lua', 'worker.rs'):
             shutil.copy2(Path(__file__).parent / name, output / name)
         (output / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2))

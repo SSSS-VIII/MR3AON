@@ -170,3 +170,5 @@ main保存计划已加入工坊挑战，单次入口为 `./run [名字] --once -
 `arena-search`仅通过`runtime.checkpoint_sandbox.ArenaCheckpointSandbox(InstanceSession(...))`持有同一命名租约，私有配置/镜像/socket在该名字的`checkpoint/`目录；不为它另外创建Waydroid/ADB，不克隆arena/main/xiaoli账号。普通`./run arena-search`尚未分流到这个实验后端，勿用它代替研究控制台。运行入口为`tools/arena_checkpoint_console.py`，内部`gate=start_client()`只用于一次初始化；训练回退只使用gate快照，禁止重开重放。控制台退出会关闭自己的VM，RAM快照不持久化。
 
 客体单vCPU、3GiB、无NIC，Binder/Weston headless/ANGLE+SwiftShader全部在客体内部；不透传宿主GPU/显示。首次安装可显式将自己的userdata设为Sync，快照/恢复/rebase必须拒绝；sync停机后切全Cow才能搜索。切换/刷新boot都须持命名租约并确认VM已停。game gate接管mailbox后，禁止旧root命令/文件RPC，禁止恢复gate之前的快照；VM shutdown仍由原上下文负责。只读观察projection不等于全引擎hash，单板受伤回退通过也不能当全生命周期验收。原arena仍为视觉部署/对照环境，未迁移或修改。
+
+原生选板后可能回到1920×1080，独立search入口会再次请求320×180并逐窗口确认。保持renderFrameInterval1，不用OnDemandRendering跳帧：原coroutine.step等帧末，跳渲染会破坏请求tick边界。搜索小图经同点60tick原字段对照通过；这项设置只作用于arena-search，不改变arena截图/显示链路。
