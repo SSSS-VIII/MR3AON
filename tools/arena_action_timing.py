@@ -23,9 +23,9 @@ def commit_action(perception,latest,action,ack,input_delay=1/60,*,primitive=None
     stamp=enqueued+input_delay
     timeline=getattr(perception,'input_timeline',None)
     if timeline is not None:
-        current=timeline.project(stamp)
+        current=timeline.project(stamp,include_tracks=False)
         timeline.record(action,ack,primitive=primitive,planned=planned or latest,input_delay=input_delay)
-        committed=timeline.project(stamp)
+        committed=timeline.project(stamp,include_tracks=False)
         active=committed.get('motion')or{}
         return dict(enqueued_time=enqueued,committed_time=stamp,
                     committed_phase=current['phase'],committed_jumps=current['jumps'],

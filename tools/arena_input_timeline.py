@@ -253,7 +253,7 @@ class OwnInputTimeline:
             self.failed=True
             raise
 
-    def project(self,target_stamp,*,predict_contact=False):
+    def project(self,target_stamp,*,predict_contact=False,include_tracks=True):
         self._ready()
         if self.latest is None:raise RuntimeError('Need an initial pixel observation')
         target_stamp=stamp(target_stamp)
@@ -269,7 +269,8 @@ class OwnInputTimeline:
         # Hazard trajectories still use their original image clock once. Own
         # keys do not cause arbitrary incremental re-fitting of track history.
         age=target_stamp-self.latest['time']
-        result['tracks']=[track.at(age)for track in self.latest.get('tracks',[])]
+        result['tracks']=([track.at(age)for track in self.latest.get('tracks',[])]
+                          if include_tracks else [])
         result.update(observation_age_ms=age*1000,source_image_stamp=self.latest['time'],
                       replayed_event_ids=[r['event_id']for r in receipts],replayed_events=receipts)
         if missing:
