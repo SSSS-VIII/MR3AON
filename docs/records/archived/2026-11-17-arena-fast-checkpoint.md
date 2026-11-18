@@ -308,3 +308,10 @@ search的retain_history只允许该后端成功建立file-backed根后启用；�
 | v24 | 750 | 700 | 0 | 1450 |
 
 v21第二板169帧固定接管，v23的103→119m一段/二段跳保持原录制动作，中间6帧recovering；但各版本识别稳定度/受伤差异较大，不能从单次下降作因果或稳定无伤结论。测试与KVM搜索并行，截图/调度慢尾仍保留。33项固定识别/编译缓存/输入确认/状态恢复与批测保护通过；没有改YOLO权重或原advance/物理/陷阱，原arena每轮最终暂停菜单/输入/评估恢复。
+
+
+### 原实时跑图器逐板批测队列
+
+新增arena_fixed_live_batch只调现有arena_visual_runner，通过原arena InstanceSession独占控制，逐case固定原地图/板序/板子、三seed55200/55201/55202独立单板试跑。原生数据只在运行后交给arena_fixed_validate，不能进actor。记录按实际库/程序/源码/profile指纹和seed区分；已有graded或failed不反复空跑，库或源码改变再测，interrupted可重试。source bundle在开跑前后改变或被actor拒绝就不拿预期程序评分。超时先SIGINT给原runner恢复菜单/输入/评估，等待60秒后才回收失控子进程。与原生队列coverage内存状态分离，只写queue/validation及自身ledger，不能把native_passed写成视觉无伤。
+
+32项固定相关保护及后来补充的参考缓存对应检查合计33通过；mr3a-arena-fixed-live已启动。首两个51012、51013原实机均passed_with_damage，detector/live均False，正确保留为失败；其它逐板仍在进行。入口服务启动命令见systemd用户临时单元；结果在debug/arena-client/fixed-route-work/live-batch/ledger.json和runs，后续原生新通过经mr3a-arena-fixed-refresh原子编库后自动加入。范围只是单板入口，不能代替连续跨板或全部竞技场无伤；三板联调失败表仍有效。
