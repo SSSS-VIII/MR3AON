@@ -116,7 +116,11 @@ class GameGate:
     def restore(self, identity):
         if identity not in self.points:
             raise ValueError('Only snapshots taken through this active game gate may be restored')
-        result = self.vm.request('restore', id=identity, timeout=20)
+        # Cold file-backed histories have measured seconds-long tails. Keep
+        # waiting on this one request instead of dropping its socket and then
+        # enqueuing a second restore whose ordering is no longer known.
+        timeout=180 if getattr(self.vm,'capabilities',{}).get('file_ram')else 20
+        result = self.vm.request('restore', id=identity, timeout=timeout)
         self.view = deepcopy(self.points[identity])
         self.waiting = False
         return result

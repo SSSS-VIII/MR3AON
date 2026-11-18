@@ -116,6 +116,20 @@ def test_real_gate_keeps_the_complete_job_when_rejecting_a_tick_boundary(monkeyp
     assert caught.value.job==job
 
 
+@pytest.mark.parametrize('file_ram,timeout',[(False,20),(True,180)])
+def test_restore_keeps_one_transport_request_for_the_selected_backing(file_ram,timeout):
+    from types import SimpleNamespace
+    from arena_checkpoint_lab.gate import GameGate
+    calls=[]
+    def request(op,**args):calls.append((op,args));return dict(ms=1,result=dict(id=7))
+    vm=SimpleNamespace(session=SimpleNamespace(spec=SimpleNamespace(name='arena-search')),
+                       capabilities=dict(file_ram=file_ram),request=request)
+    gate=GameGate(vm);gate.points[7]=dict(state=dict(health=5000));gate.waiting=True
+    gate.restore(7)
+    assert calls==[('restore',dict(id=7,timeout=timeout))]
+    assert gate.view==gate.points[7]and not gate.waiting
+
+
 def test_fifty_ms_parity_continues_after_a_committed_window():
     oracle = Oracle()
     result = search.search_window(oracle, start=start(oracle), offset=1, horizon=1, commit=1)

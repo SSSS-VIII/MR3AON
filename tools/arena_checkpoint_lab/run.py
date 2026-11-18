@@ -47,7 +47,7 @@ def run(binary, output, rounds=300):
                   benchmark_binary_sha256=sha(binary), rounds=rounds,
                   guest_memory_mib=config['machine-config'].get('mem_size_mib'),
                   benchmark_environment={name:os.environ[name]for name in
-                      ('NYX_BENCH_HISTORY','NYX_RAM_RESTORE','NYX_RAM_BACKING_DIR')if name in os.environ})
+                      ('NYX_BENCH_HISTORY','NYX_RAM_RESTORE','NYX_RAM_BACKING_DIR','NYX_TRACE_RESTORE')if name in os.environ})
     log = output / 'benchmark.log'
     with log.open('xb') as stream:
         try:

@@ -1,0 +1,72 @@
+--- a/src/nyx_vm.rs
++++ b/src/nyx_vm.rs
+@@ -439,10 +439,13 @@
+     /// avoids a target-parent walk per dirty page on long retained histories.
+     #[cfg(feature = "arena-file-ram")]
+     fn apply_batched_memory(vmm: &mut Vmm, active: &Arc<NyxSnapshot>, snapshot: &Arc<NyxSnapshot>) {
++        let trace=std::env::var_os("NYX_TRACE_RESTORE").is_some();
++        if trace {eprintln!("RESTORE_PHASE dirty active={} target={}",active.depth,snapshot.depth);}
+         let mut needed = HashSet::new();
+         Self::iter_dirty_pages(vmm, |region, address| {
+             needed.insert(region.start_addr().0 + address as u64);
+         });
++        if trace {eprintln!("RESTORE_PHASE ancestry dirty={}",needed.len());}
+         let mut left = active.clone();
+         let mut right = snapshot.clone();
+         let collect = |point: &NyxSnapshot, pages: &mut HashSet<u64>| {
+@@ -463,6 +466,7 @@
+             left = left.parent.as_ref().expect("shared RAM root").clone();
+             right = right.parent.as_ref().expect("shared RAM root").clone();
+         }
++        if trace {eprintln!("RESTORE_PHASE target-deltas needed={}",needed.len());}
+         let mem = vmm.get_mem();
+         let mut source = snapshot.as_ref();
+         while !needed.is_empty() && source.memory.is_incremental() {
+@@ -475,6 +479,7 @@
+         }
+         // File offsets of the base image match RAM addresses. Read remaining
+         // pages in address order instead of faulting through a random HashSet.
++        if trace {eprintln!("RESTORE_PHASE base remaining={}",needed.len());}
+         let mut remaining: Vec<u64> = needed.into_iter().collect();
+         remaining.sort_unstable();
+         for address in remaining {
+@@ -486,6 +491,8 @@
+     pub fn apply_snapshot(&mut self, snapshot: &Arc<NyxSnapshot>) {
+         let mut vmm = self.vmm.lock().unwrap();
+ 
++        let trace=std::env::var_os("NYX_TRACE_RESTORE").is_some();
++        if trace {eprintln!("RESTORE_PHASE memory target={}",snapshot.depth);}
+         let mut pages_reset = HashSet::new();
+         let active_snapshot = self.active_snapshot.as_ref().expect("can only apply snapshots on VMs with an active snapshot");
+ 
+@@ -521,16 +528,19 @@
+         //println!("acpi state: {:#?}", &state.acpi_dev_state);
+         //println!("vmm acpi_device_manager {:#?}", vmm.acpi_device_manager);
+ 
++        if trace {eprintln!("RESTORE_PHASE vcpu");}
+         self.vcpu
+             .kvm_vcpu
+             .restore_state(&snapshot.state.vcpu_states[0])
+             .unwrap();
+ 
+         // we currently can't restore the net mmio device, only the block one
++        if trace {eprintln!("RESTORE_PHASE block");}
+         Self::apply_snapshot_mmio(&mut vmm.mmio_device_manager, snapshot);
+         // cpu might need to restore piodevices, investigate
+         //Self::apply_snapshot_pio(&mut vmm.pio_device_manager, snap);
+ 
++        if trace {eprintln!("RESTORE_PHASE vm-clock");}
+         vmm.vm.restore_state(&snapshot.state.vm_state).unwrap();
+         // Firecracker's migration clock preserves host elapsed time. Branch
+         // replay instead resumes the exact saved guest time (flags == 0).
+@@ -540,8 +550,10 @@
+         // the VM isn't. Doing this early will introduce additional
+         // noise/nondeterminism
+         drop(vmm);
++        if trace {eprintln!("RESTORE_PHASE tsc");}
+         self.apply_tsc(snapshot.tsc);
+         self.continuation_state = snapshot.continuation_state.clone();
++        if trace {eprintln!("RESTORE_PHASE done");}
+     }
+ 
+     pub fn sregs(&self) -> kvm_sregs {

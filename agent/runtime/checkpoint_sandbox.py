@@ -5,6 +5,8 @@ The VM control socket and all writable images belong to this named instance.
 """
 from contextlib import contextmanager
 import json
+import errno
+import os
 from pathlib import Path
 import socket
 import subprocess
@@ -20,20 +22,52 @@ class ArenaCheckpointSandbox:
         self.session = session
         self.root = session.spec.work_root / 'checkpoint'
         self.socket = self.root / 'control.sock'
+        self.owner_file = self.root / 'worker-owner.json'
         self.process = None
         self.arena_game_gate = False
+        self.capabilities = {}
+        self.uncertain_operation = None
+
+    @staticmethod
+    def process_start(pid):
+        try:return Path(f'/proc/{pid}/stat').read_text().rsplit(') ',1)[1].split()[19]
+        except (FileNotFoundError,ProcessLookupError):return None
+
+    def recover_orphan(self):
+        """Remove a refused socket only after its recorded worker has exited."""
+        if not self.session._owns_control:raise RuntimeError('Orphan recovery requires the named control lease')
+        if not self.owner_file.exists():return False
+        owner=json.loads(self.owner_file.read_text())
+        actual=self.process_start(owner['pid'])
+        if actual is not None and (owner.get('start')is None or actual==owner['start']):return False
+        if self.socket.exists():
+            with socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)as probe:
+                probe.settimeout(1)
+                try:probe.connect(str(self.socket))
+                except OSError as error:
+                    if error.errno!=errno.ECONNREFUSED:raise
+                else:return False
+            self.socket.unlink()
+        self.owner_file.unlink()
+        return True
 
     def request(self, operation, *, timeout=10, **args):
         if not self.session._owns_control:
             raise RuntimeError('Checkpoint operations require the named instance control lease')
         if self.process is None or self.process.poll() is not None:
             raise RuntimeError('Checkpoint worker is not running')
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as transport:
-            transport.settimeout(timeout)
-            transport.connect(str(self.socket))
-            transport.sendall((json.dumps(dict(op=operation, **args)) + '\n').encode())
-            with transport.makefile('rb') as stream:
-                payload = stream.readline(2_000_000)
+        if self.uncertain_operation is not None:
+            raise RuntimeError('Checkpoint transport has an unfinished '+self.uncertain_operation+'; stop this worker epoch')
+        try:
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as transport:
+                transport.settimeout(timeout)
+                transport.connect(str(self.socket))
+                transport.sendall((json.dumps(dict(op=operation, **args)) + '\n').encode())
+                with transport.makefile('rb') as stream:
+                    payload = stream.readline(2_000_000)
+        except TimeoutError:
+            self.uncertain_operation = operation
+            raise
         if not payload:
             raise RuntimeError('Checkpoint worker closed the transport; inspect its private worker.log')
         response = json.loads(payload)
@@ -56,11 +90,14 @@ class ArenaCheckpointSandbox:
                 if ((drive.get('io_engine') != 'Cow' and not initial_install) or
                         not Path(drive['path_on_host']).resolve().is_relative_to(self.root.resolve())):
                     raise ValueError('Guest drives must be private COW images inside this instance')
-            if self.socket.exists():
+            if (self.socket.exists()or self.owner_file.exists())and not self.recover_orphan():
                 raise RuntimeError('Existing checkpoint socket requires ownership inspection before recovery')
             with (self.root / 'worker.log').open('ab') as log:
                 self.process = subprocess.Popen([str(Path(binary).resolve()), str(config), str(self.socket)],
                                                 stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
+                if getattr(self.process,'pid',None)is not None:
+                    self.owner_file.write_text(json.dumps(dict(pid=self.process.pid,
+                        start=self.process_start(self.process.pid),owner_pid=os.getpid())))
                 try:
                     deadline = time.monotonic() + 15
                     while not self.socket.exists():
@@ -69,7 +106,7 @@ class ArenaCheckpointSandbox:
                         if time.monotonic() >= deadline:
                             raise TimeoutError('Checkpoint worker did not open its private socket')
                         time.sleep(.05)
-                    self.request('status')
+                    self.capabilities = self.request('status')['result']
                     yield self
                 finally:
                     if self.process.poll() is None:
@@ -82,10 +119,14 @@ class ArenaCheckpointSandbox:
                                 self.process.wait(timeout=5)
                             except subprocess.TimeoutExpired:
                                 self.process.kill()
-                                self.process.wait(timeout=5)
-                    self.socket.unlink(missing_ok=True)
-                    self.process = None
-                    self.arena_game_gate = False
+                                self.process.wait(timeout=30)
+                    if self.process.poll() is not None:
+                        self.socket.unlink(missing_ok=True)
+                        self.process = None
+                        self.arena_game_gate = False
+                        self.capabilities = {}
+                        self.uncertain_operation = None
+                        self.owner_file.unlink(missing_ok=True)
 
     def command(self, text, *, timeout=30):
         if self.arena_game_gate:

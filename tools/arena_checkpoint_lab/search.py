@@ -186,7 +186,7 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
     names=('search.py','render.py','gate.py','game_gate.lua')+(
-        ('worker_file.rs','ram_file.rs','ram_file.patch','ram_restore.patch')if retain_history else('worker.rs',))
+        ('worker_file.rs','ram_file.rs','ram_file.patch','ram_restore.patch','restore_trace.patch')if retain_history else('worker.rs',))
     sources = {name: (LOADED_SOURCE if name == 'search.py' else (Path(__file__).parent / name).read_bytes())
                for name in names}
     if collector is not None:
