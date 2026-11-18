@@ -107,8 +107,10 @@ def features(image, observation=None):
     if root is not None:
         for d in observation.get('detections', []):
             name = (d.resource or '').lower()
+            provisional=(d.kind=='trap' and d.collider_shape=='BoxCollider' and d.confidence>=.7
+                         and any(abs(d.box.center[0]-x)<1 for x in observation.get('ordered_box_candidates',[])))
             group = (1 if d.kind == 'spider' and 'muppet' not in name else
-                     2 if 'hideblade' in name or static_box_anchor(d,observation) else None)
+                     2 if 'hideblade' in name or static_box_anchor(d,observation) or provisional else None)
             if group==2:
                 group=blade_anchor_kind(d,observation)
             if group and d.confidence >= .4:
@@ -236,6 +238,20 @@ class Atlas:
 
     def match(self, image, observation, prior=None):
         observation = self.static_flow.observe(observation)
+        window=getattr(self,'action_window',None)
+        if prior and window and window['key'] in self.contexts and identity(self.contexts[window['key']])==prior['identity']:
+            # Inside a confirmed board, original geometry can test generic
+            # tracked boxes as a PAIR even when rope scene flow is unavailable.
+            # This does not turn those provisional boxes into single anchors.
+            candidates=[]
+            for d in observation.get('detections',[]):
+                if d.kind!='trap' or d.collider_shape!='BoxCollider' or d.confidence<.7:continue
+                if any(t.kind=='trap' and t.collider_shape=='BoxCollider' and t.observations>=3
+                       and 0<=observation['time']-t.seen<=.1
+                       and abs(t.box.center[0]-d.box.center[0])<=5
+                       and abs(t.box.center[1]-d.box.center[1])<=8 for t in observation.get('tracks',[])):
+                    candidates.append(d.box.center[0])
+            observation=dict(observation,ordered_box_candidates=candidates)
         query = features(image, observation)
         self.last_query = query
         if query['count'] < 8 and query['landmark_count'] < 2 or not len(self.rows):
@@ -301,6 +317,8 @@ class Atlas:
             stored = self.feature(int(i))
             match = matches[int(i)]if int(i)in matches else register(stored, query)
             shifts = landmark_shifts(stored, query)
+            if observation.get('ordered_box_candidates') and prior and identity(row)!=prior['identity']:
+                shifts=[]
             if match is None and not shifts:
                 continue
             if match is None and (not prior or identity(row)!=prior['identity']):
@@ -340,6 +358,8 @@ class Atlas:
                 context=self.contexts[key]
                 ordered=bool(action_window and action_window['key']==key and prior
                              and identity(context)==prior['identity'])
+                if observation.get('ordered_box_candidates') and not ordered:
+                    continue
                 required=2 if entry or ordered else 3
                 if len(selected_static)<required:continue
                 current=dict(landmarks=selected_static,landmark_count=len(selected_static))
@@ -371,6 +391,7 @@ class Atlas:
                         std=aligned['std'],score=min(1.,.55+.12*aligned['count'])*aligned['agreement']*(.9+.1*background),
                         registration=None,progress_source='original_static_layout',landmark_count=aligned['count'],
                         ordered_static_pair=ordered,
+                        provisional_static_pair=bool(ordered and observation.get('ordered_box_candidates')),
                         temporal_entry_pair=bool(entry and len(selected_static)==2 and set(selected_static[:,0]) in ({2,4},{5,4})
                             and any(static_box_anchor(d,observation)for d in observation.get('detections',[]))
                             and any(s.get('observations',0)>=3 for s in observation.get('visible_supports',[])))))
@@ -387,6 +408,15 @@ class Atlas:
                     for point in endpoints:
                         if point[0]!=kind:continue
                         if kind in (1,2,5) and not prior.get('tentative') and prior.get('std',0)>.2:continue
+                        if kind in (2,5) and observation.get('ordered_box_candidates'):
+                            player=observation.get('player')
+                            root=observation.get('root_screen_x')
+                            if root is None and player is not None:
+                                root=player.center[0]-.052*observation.get('scale_px',39.5)
+                            if root is None or not any(static_box_anchor(d,observation)
+                                and abs(d.box.center[0]-(root+point[1]))<=5
+                                for d in observation.get('detections',[])):
+                                continue
                         progress=x-float(point[1])/39.5
                         if abs(progress-prior['progress'])>max(.8,3*prior.get('std',0)):
                             continue
@@ -416,6 +446,7 @@ class BoardTracker:
         metadata=getattr(atlas,'meta',{}).get('map_sequences')
         self.sequence=BoardSequence(metadata)if metadata else None
         self.spatial_pending=None
+        self.geometry_pending=None
 
     def action_allows(self,key,progress):
         window=self.action_window
@@ -604,6 +635,7 @@ class BoardTracker:
                 margin = max(.8, 3*(prediction['std']+item['std']))
                 wraps = bool(loop_transition and 0 <= item['progress'] <= 4)
                 ordered_pair=(item.get('ordered_static_pair') and self.action_window
+                              and prediction['std']>.25
                               and self.action_allows(item['row']['key'],item['progress']))
                 if abs(item['progress'] - prediction['progress']) > margin and not wraps and not ordered_pair:
                     continue
@@ -660,7 +692,8 @@ class BoardTracker:
         # A better-looking photograph cannot disambiguate a repeated original
         # arrangement. Only a fresh spatial prior can select its occurrence.
         structural_alias=any(c['identity']==first['identity']and c['score']>=.7
-            and c.get('progress_source')=='original_static_layout'and c.get('landmark_count',0)>=3
+            and c.get('progress_source')=='original_static_layout'
+            and c.get('landmark_count',0)>=(2 if c.get('ordered_static_pair') else 3)
             for c in competing)
         if structural_alias or competing and first['score'] - competing[0]['score'] < .09:
             coast = self.coast(prediction, 'ambiguous')
@@ -671,6 +704,18 @@ class BoardTracker:
             self.state = dict(status='ambiguous', identity=None, localized=False)
             return self.state
         key = first['identity']
+        if first.get('provisional_static_pair') and (prediction is None or prediction['std']>.25
+                or abs(first['progress']-prediction['progress'])>.8):
+            old=self.geometry_pending
+            now=observation['time'];x=first['progress']
+            coherent=(old is not None and old['identity']==key and 0<now-old['time']<=.18
+                      and -.2<=x-old['x']<=40*(now-old['time'])+.4)
+            count=old['count']+1 if coherent else 1
+            self.geometry_pending=dict(identity=key,time=now,x=x,count=count)
+            if count<2:
+                self.state=self.coast(prediction,'confirming_static_pair') or dict(status='identified',
+                    identity=key,key=first['row']['key'],visit=self.visit,localized=False)
+                return self.state
         old_cycle, old_odometer = self.cycle, self.odometer_base
         was_identity = self.confirmed_identity
         tracked_entry=(first.get('temporal_entry_pair')and self.start_context is not None and self.sequence is not None

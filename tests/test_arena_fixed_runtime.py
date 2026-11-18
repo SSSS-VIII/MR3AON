@@ -70,6 +70,44 @@ def test_ordered_static_pair_repairs_odometry_drift_without_choosing_a_distant_r
     assert not value['localized'] and value['status']=='ambiguous'
 
 
+def test_tracked_generic_boxes_can_relocalize_a_known_board_without_rope_motion(tmp_path,monkeypatch):
+    import json
+    from arena_vision import Box,Detection
+    context=dict(key=KEY,level=5,map=42,slot=1,stage=50012,length=100,fixed=True,
+        anchors=[[2,32],[5,41],[2,64],[5,73]],support_anchors=[])
+    (tmp_path/'index.json').write_text(json.dumps(dict(schema=1,mode=6,contexts=[context],
+        references=[dict(context,local_x=30)],map_sequences=[dict(level=5,map=42,
+        slots=[dict(slot=1,fixed=[50012],random=False)])])))
+    stored=dict(coarse=np.ones(64,np.float32),points=np.zeros((128,2),np.float32),
+        descriptors=np.zeros((128,32),np.uint8),count=8,semantic=np.zeros(32,np.float32),
+        landmarks=np.zeros((48,3),np.float32),landmark_count=0)
+    np.savez_compressed(tmp_path/'features.npz',**{k:np.asarray([v])for k,v in stored.items()})
+    monkeypatch.setattr(matching,'register',lambda *_:None)
+    bank=Atlas(tmp_path);tracker=BoardTracker(bank)
+    tracker.sequence.begin(5,1);tracker.sequence.accept(ID,28,100)
+    tracker.confirmed_identity=ID;tracker.visit=1
+    tracker.last=dict(identity=ID,progress=34,std=.7,time=1,length=100,loop=False)
+    tracker.last_velocity=10;tracker.positions.append((.5,28))
+    tracker.action_window=dict(key=KEY,visit=1,low=28,high=45,event=1)
+    detections=[Detection(Box(273,180,12,40),'trap',.9,collider_shape='BoxCollider'),
+                Detection(Box(628.5,280,12,40),'trap',.9,collider_shape='BoxCollider')]
+    tracks=[SimpleNamespace(id=i,kind='trap',collider_shape='BoxCollider',observations=4,
+        confidence=.9,seen=1.05,box=d.box,vx=-740)for i,d in enumerate(detections)]
+    obs=dict(observation(1.05),player=Box(194,200,16,36),scene_motion_observed=False,
+        tracks=tracks,detections=detections,visible_supports=[dict(kind='rope',a=(0,250),b=(640,250),
+        confidence=.9,left_clipped=True,right_clipped=True)])
+    pixels=np.zeros((360,640,3),np.uint8)
+    assert not any(static_box_anchor(d,obs)for d in detections)
+    first=tracker.observe(pixels,obs)
+    assert not first['localized']  # New generic correspondence needs another frame.
+    for track,d in zip(tracks,detections):
+        d.box=Box(d.box.x-36.5375,d.box.y,d.box.w,d.box.h)
+        track.box=d.box;track.seen=1.1
+    second=tracker.observe(pixels,dict(obs,time=1.1))
+    assert second['localized'] and abs(second['progress_x']-30.925)<.01
+    assert not bank.static_flow.confirmed  # No circular single-anchor motion claim.
+
+
 
 def test_photo_score_cannot_override_a_different_repetition_allowed_by_original_geometry():
     bank=Bank();tracker=BoardTracker(bank)
@@ -83,6 +121,14 @@ def test_photo_score_cannot_override_a_different_repetition_allowed_by_original_
         dict(candidate(10,.84),progress_source='original_static_layout',landmark_count=3)]
     value=tracker.observe(None,observation(.3))
     assert value['localized']and value['progress_x']==42
+
+
+def test_photo_score_cannot_pick_between_ordered_two_anchor_repetitions():
+    bank=Bank();tracker=BoardTracker(bank)
+    bank.candidates=[dict(candidate(42,1),progress_source='static_foreground'),
+        dict(candidate(10,.79),progress_source='original_static_layout',landmark_count=2,ordered_static_pair=True)]
+    for t in (0,.05,.1):value=tracker.observe(None,observation(t))
+    assert value['status']=='ambiguous' and not value['localized']
 
 
 def test_own_start_order_and_visual_motion_can_reject_a_different_repetition():
