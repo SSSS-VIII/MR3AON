@@ -39,6 +39,20 @@ def test_same_looking_repetitions_without_progress_are_ambiguous():
     assert value['status']=='ambiguous' and not value['localized']
 
 
+def test_photo_score_cannot_override_a_different_repetition_allowed_by_original_geometry():
+    bank=Bank();tracker=BoardTracker(bank)
+    bank.candidates=[dict(candidate(42,1),progress_source='static_foreground'),
+        dict(candidate(10,.84),progress_source='original_static_layout',landmark_count=3)]
+    for t in (0,.05,.1):value=tracker.observe(None,observation(t))
+    assert value['status']=='ambiguous'and not value['localized']
+    for t,x in ((.15,40),(.2,40.5),(.25,41)):
+        bank.candidates=[candidate(x)];tracker.observe(None,observation(t))
+    bank.candidates=[dict(candidate(42,1),progress_source='static_foreground'),
+        dict(candidate(10,.84),progress_source='original_static_layout',landmark_count=3)]
+    value=tracker.observe(None,observation(.3))
+    assert value['localized']and value['progress_x']==42
+
+
 def test_forward_prior_rejects_an_earlier_identical_pattern_and_tracks_block_instance():
     bank=Bank();tracker=BoardTracker(bank)
     for t,x in ((0,40),(.05,40.5),(.1,41)):

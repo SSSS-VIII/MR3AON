@@ -326,3 +326,21 @@ v3再次在53012第31窗耗尽1200候选，真实回前窗980.58ms，已开始18
 实机匹配另修正一个过硬的排除条件：多出参考图没有的动态类别，不能否定已由静态几何独立对齐的候选；只有无几何证据的纯背景候选继续硬排除，几何候选仍受语义不一致的置信惩罚。新增包含新动态类而3静态锚点一致/无几何仍拒绝的保护，固定相关34项通过。实机新版本成绩待队列。
 
 mr3a-arena-fixed-live-v2现续同一live-batch ledger；旧live服务SIGINT正常退出。指纹只跟踪actor入口及其静态导入的arena模块和profile/库，单改独立checkpoint实验不会再把整批视觉成绩作废重跑。首轮51042、50031有单板0伤，但识别/实际固定接管没有达到验收，仍False；其它已测有伤，未虚报为固定板完全跑通。原生计数仍11/407，原生、单板视觉与连续跨板验收分开保留。
+
+
+### 真实恢复超时、进程回收与daemon重启续作
+
+v4在第29窗、尚未触发回起跳前策略时，restore请求超过20秒；随后重复恢复/关闭同样等待超时，强杀等待5秒也超时，最终worker退出但遗留拒绝连接的socket。完整栈在mr3a-arena-file-history-v4 journal；search/report.json保留TimeoutError及28个已提交窗。不是已验证的内存压力原因，也没有Rust panic证明；不能因提高deadline就称根因修复。旧RAM点已丢失，该轮未新增原生通过。
+
+文件后端现在单个restore socket等待180秒，Raw后端保持20秒，仍读取同一请求的原结果；增加NYX_TRACE_RESTORE可选宿主分阶段日志（脏页/祖先/目标页/base/CPU/block/VM时钟/TSC），不改变游戏状态/物理或恢复结果。叠加trace后的3GiB独立VM30轮、原盘/时钟/计时器检查通过（checkpoint-lab-trace-v1），只属synthetic。私有安装器支持补丁栈逆序剥离再重放，重入结果一致，拒绝未知更改时恢复输入；真实三文件夹具核对在installer-stack-fixture-v1/audit.json。
+
+实例后端缓存worker能力，强杀后最多等30秒确认结束；仅在确认退出后清理socket。新增worker-owner.json记录PID及/proc启动时间，在同一InstanceSession租约内，只有旧进程确认已死且socket拒绝连接才自动清理，PID仍活或有listener均拒绝，不杀其它控制者。46项保护通过，含慢退出/原异常保留/活listener拒绝/单个restore请求等待。第一次无owner文件的旧socket已在独占租约中核对无worker、ECONNREFUSED后手动移除。
+
+当前原生服务是mr3a-arena-fixed-search-v5：原有batch入口/file worker、恢复追踪开启、MemoryHigh回到曾通过原生audit的14G；Restart=on-failure/15秒，异常新epoch不冒充原RAM续算，更不作为搜索撤销。原生还是11/407，改先处理其它未尝试固定场景，53012失败仍在队列。daemon重启后已核对本服务/worker及mr3a-arena-fixed-refresh、mr3a-arena-fixed-live-v2均保留运行，没有重复启动。
+
+视觉ledger累计54项graded、1项interrupted、1项failed（包括旧/新actor版本，不能当54种板子）；50012 seed55201有一项识别/进度/实际固定接管/无伤全部通过，其它场景未联合通过。空板50031及51042虽有0伤，仍因识别/接管不达标为False。实测服务已完成现有库的这一轮并等待新库/actor版本，不反复空跑已判失败；原生新证据仍会自动编库→加入原视觉验收。所有固定板无伤与连续竞技场无伤均未完成。
+
+
+最后补充：socket真的超时后，新的实例所有者会把该epoch标为传输状态未知，禁止再追加restore/state等命令，转进程清理；真实Unix socket测试证明只发送一次restore。该补充在当前v5进程启动后写入，需下次所有者启动才加载，当前进程已有180秒等待和分阶段追踪，不为加载该补充丢掉现有RAM点。Raw两二进制feature关闭的编译检查仍通过。
+
+逐场景三seed汇总已写live-batch/triage.json：51012/51013/51043/5001/50023多轮没有固定键；51042、51073、50022还出现米级到42m的进度误差，53011有错身份。首先补了重复排列歧义保护：原静态布局仍允许另一个发生位置时，较好看的照片分数不能覆盖这个结构性竞争解释；必须有新鲜空间先验才选定出现次数。35项固定相关保护通过，新实测自动排队，不能当作42m错误已实机修复。其它问题继续按该汇总单点排查。

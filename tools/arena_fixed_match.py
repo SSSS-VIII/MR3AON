@@ -485,7 +485,12 @@ class BoardTracker:
         # Equal-looking repeated patterns are separate spatial hypotheses.
         competing = [c for c in plausible[1:] if c['identity'] != first['identity']
                      or abs(c['progress']-first['progress']) > max(1.2, 3*(c['std']+first['std']))]
-        if competing and first['score'] - competing[0]['score'] < .09:
+        # A better-looking photograph cannot disambiguate a repeated original
+        # arrangement. Only a fresh spatial prior can select its occurrence.
+        structural_alias=any(c['identity']==first['identity']and c['score']>=.7
+            and c.get('progress_source')=='original_static_layout'and c.get('landmark_count',0)>=3
+            for c in competing)
+        if structural_alias or competing and first['score'] - competing[0]['score'] < .09:
             coast = self.coast(prediction, 'ambiguous')
             if coast is not None:
                 self.state = coast
