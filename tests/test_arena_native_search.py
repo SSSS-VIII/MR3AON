@@ -3,6 +3,7 @@ from copy import deepcopy
 import importlib.util
 from pathlib import Path
 import pytest
+from arena_checkpoint_errors import NativeIntervalError
 
 SOURCE = Path(__file__).resolve().parents[1] / 'tools/arena_checkpoint_lab/search.py'
 spec = importlib.util.spec_from_file_location('arena_native_search', SOURCE)
@@ -81,6 +82,38 @@ def test_all_damaged_actions_leave_the_window_root_intact():
     assert not result['found']
     assert result['stats']['rejected_damage'] == 3
     assert oracle.native == dict(frame=0, hp=5000, lifted=False)
+
+
+def test_tick_overshoot_is_restored_and_excluded_even_when_health_is_unchanged():
+    class Overshoot(Oracle):
+        def step(self,ticks,action):
+            result=super().step(ticks,action)
+            if self.native['frame']==2 and action=='none':
+                self.native['frame']+=1;self.update()
+                result['after']=deepcopy(self.view['state'])
+                raise NativeIntervalError('requested 2, advanced 3',result)
+            return result
+    oracle=Overshoot()
+    result=search.search_window(oracle,start=start(oracle),offset=0,horizon=4,commit=2)
+    assert result['found']and result['crossed']
+    assert result['stats']['rejected_invalid_interval']>0
+    assert any(row.get('interval_error')and not row['safe']for row in result['trials'])
+    assert result['path'][0]['action']=='jump'
+    assert all(row['job']['after']['episodeFrame']-row['job']['before']['episodeFrame']==row['ticks']
+               for row in result['path'])
+
+
+def test_real_gate_keeps_the_complete_job_when_rejecting_a_tick_boundary(monkeypatch):
+    from types import SimpleNamespace
+    from arena_checkpoint_lab.gate import GameGate
+    vm=SimpleNamespace(session=SimpleNamespace(spec=SimpleNamespace(name='arena-search')))
+    gate=GameGate(vm)
+    job=dict(done=True,before=dict(episodeFrame=0,health=5000),after=dict(episodeFrame=4,health=5000))
+    gate.view=dict(state=job['after'])
+    monkeypatch.setattr(gate,'call',lambda *_args,**_kwargs:job)
+    with pytest.raises(NativeIntervalError,match='requested 3, advanced 4')as caught:
+        gate.step(3,'none')
+    assert caught.value.job==job
 
 
 def test_fifty_ms_parity_continues_after_a_committed_window():
@@ -184,6 +217,7 @@ def test_cross_window_dead_end_restores_an_earlier_real_root_and_changes_its_inp
                       retain_history=True,collector=collector)
     assert result['complete']and result['no_health_loss']
     assert result['backtracks']and oracle.rebases==1
+    assert any(window['horizon']>result['horizon']for window in result['windows'])
     assert any(row['action']=='jump'for row in result['route'])
     assert result['route'][0]['job']['before']['episodeFrame']==0
     assert all(row['job']['after']['health']==5000 for row in result['route'])

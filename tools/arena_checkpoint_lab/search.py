@@ -12,6 +12,7 @@ from pathlib import Path
 import shutil
 import time
 from arena_fixed_goal import exit_kind
+from arena_checkpoint_errors import NativeIntervalError
 
 LOADED_SOURCE = Path(__file__).read_bytes()
 
@@ -50,6 +51,7 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
     trials = []
     stats = dict(trials=0, rejected_damage=0, restores_ms=[], action_limits_tried=[], seconds=0)
     stats['prefix_cache_hits']=0
+    stats['rejected_invalid_interval']=0
     prefix={}
     unsafe_actions = set()
     began = time.monotonic()
@@ -85,15 +87,24 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
                 continue
             restored = gate.restore(point)
             stats['restores_ms'].append(restored['ms'])
-            job = gate.step(ticks, action)
+            interval_error=None
+            try:
+                job = gate.step(ticks, action)
+            except NativeIntervalError as error:
+                # Reject this candidate without weakening the exact step
+                # contract or publishing a 4-tick run as a requested 3 ticks.
+                job=error.job
+                interval_error=str(error)
+                stats['rejected_invalid_interval']+=1
             stats['trials'] += 1
-            safe = not job.get('terminated') and job['after']['health'] == start['health']
+            safe = interval_error is None and not job.get('terminated') and job['after']['health'] == start['health']
             row = dict(depth=depth, action=action, ticks=ticks, safe=safe, job=job)
+            if interval_error is not None:row['interval_error']=interval_error
             trials.append(row)
             if on_trial:
                 on_trial(row)
             if not safe:
-                stats['rejected_damage'] += 1
+                if job.get('terminated')or job['after']['health']!=start['health']:stats['rejected_damage'] += 1
                 unsafe_actions.add((point, action))
                 continue
             board = gate.call('exec', code=BOARD)
@@ -205,6 +216,7 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
     history=[]
     forbidden={}
     retry_root=None
+    retry_horizon=None
     interval = 0
     started = time.monotonic()
     try:
@@ -220,14 +232,17 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
                     nonlocal damage_count
                     trial_log.write(json.dumps(dict(window=index, **row), ensure_ascii=False) + '\n')
                     trial_log.flush()
-                    if not row['safe']:
+                    if not row['safe'] and (row['job'].get('terminated')or row['job']['after']['health']!=start['health']):
                         damage_count += 1
                         if damage_count == 1 or damage_count % 25 == 0:
                             print(f'搜索回溯: 窗{index + 1} 已拒{damage_count}个扣血分支，'
                                   f'帧{row["job"]["after"]["episodeFrame"]}', flush=True)
-                window = search_window(gate, start=start, offset=interval, horizon=horizon,
+                effective_horizon=retry_horizon or horizon
+                window = search_window(gate, start=start, offset=interval, horizon=effective_horizon,
                                        commit=commit, max_trials=max_trials, on_trial=save_trial,
-                                       root_point=retry_root,forbidden_prefixes=forbidden.get(retry_root,()))
+                                       root_point=retry_root,forbidden_prefixes=forbidden.get(retry_root,()),
+                                       cache_prefix=4 if retain_history else 0)
+                window['horizon']=effective_horizon
                 window.pop('trials')  # Complete per-candidate evidence is streamed above.
                 report['windows'].append(window)
                 if not window['found']:
@@ -245,6 +260,10 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
                         del report['route'][previous['route_length']:]
                         interval=previous['offset']
                         retry_root=previous['root']
+                        # Keep the failed future in view after moving the root
+                        # backward; otherwise an ineffective early key can
+                        # merely commit us into the same later dead end again.
+                        retry_horizon=min(24,max(effective_horizon,previous['horizon'])+commit)
                         print(f'跨窗回退: 窗{index+1} → 窗{previous["attempt"]+1}，'
                               f'恢复{restored["ms"]:.2f}ms，换此前的输入前缀',flush=True)
                         (output/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
@@ -256,8 +275,10 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
                     forbidden.setdefault(window['root'],set()).add(tuple(r['action']for r in path))
                     history.append(dict(root=window['root'],route_length=len(report['route']),
                                         offset=interval,attempt=index,points=[r['point']for r in path],
+                                        horizon=effective_horizon,
                                         reference_count=len(collector.rows)if collector is not None else 0))
                     retry_root=None
+                    retry_horizon=None
                 effective = gate.call('exec', code=RENDER_INFO)
                 if effective != renderer['requested'] and not window['crossed']:
                     raise RuntimeError('Original scene changed the search renderer size or interval')

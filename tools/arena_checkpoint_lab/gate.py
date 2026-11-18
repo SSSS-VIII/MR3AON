@@ -3,6 +3,7 @@ from copy import deepcopy
 import base64
 import json
 import time
+from arena_checkpoint_errors import NativeIntervalError
 
 GATE_CODE = 0x47415445
 CONTROL = '/data/media/0/Android/data/com.pandadastudio.ninjamustdie3/files/arena-control'
@@ -72,7 +73,8 @@ class GameGate:
             raise RuntimeError('Native step did not return a completed physics interval')
         elapsed = after - before
         if stopped != after or not 0 <= elapsed <= ticks or (not result.get('terminated') and elapsed != ticks):
-            raise RuntimeError(f'Native physics interval mismatch: requested {ticks}, advanced {elapsed}, stopped {stopped}')
+            raise NativeIntervalError(
+                f'Native physics interval mismatch: requested {ticks}, advanced {elapsed}, stopped {stopped}',result)
         return result
 
     def screenshot(self):

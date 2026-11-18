@@ -29,6 +29,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--continue-queue',action='store_true')
+    parser.add_argument('--case',default='L5-M42-S1-B50012')
     args=parser.parse_args();args.output.mkdir(parents=True,exist_ok=False)
     os.environ['MR3A_CHECKPOINT_FILE_RAM']='1'
     session=InstanceSession('arena-search')
@@ -40,7 +41,7 @@ def main():
         else:raise TimeoutError('Private boot agent did not register')
         gate=start(vm)
         queue=WorkQueue(ROOT/'debug/arena-client/fixed-route-work/batch-all')
-        case=queue.cases['L5-M42-S1-B50012']
+        case=queue.cases[args.case]
         initialize(gate,case,lambda v:print(v.get('phase'),flush=True))
         install_observer(gate)
         references=AuditReferences(args.output/'references')

@@ -102,7 +102,8 @@ class WorkQueue:
         cases = [c for key, c in self.cases.items() if not (self.state['cases'][key]['native_passed']
                  and self.state['cases'][key].get('reference_count', 0) >= 3)]
         return sorted(cases, key=lambda c: (bool(self.state['cases'][c['key']]['attempts']),c['kind'] != 'ordinary',
-            c['level'] not in (5, 6), len(self.inventory['stages'][str(c['stage'])]['groups']), c['key']))
+            c['level'] not in (5, 6),c['slot']!=1,
+            len(self.inventory['stages'][str(c['stage'])]['groups']), c['key']))
 
     def adopt(self, artifact):
         artifact = Path(artifact)
