@@ -338,7 +338,10 @@ class Atlas:
                         continue
                     candidates.append(dict(row=context,identity=identity(context),progress=progress,
                         std=aligned['std'],score=min(1.,.55+.12*aligned['count'])*aligned['agreement']*(.9+.1*background),
-                        registration=None,progress_source='original_static_layout',landmark_count=aligned['count']))
+                        registration=None,progress_source='original_static_layout',landmark_count=aligned['count'],
+                        temporal_entry_pair=bool(entry and len(selected_static)==2 and set(selected_static[:,0])=={2,4}
+                            and any(static_box_anchor(d,observation)for d in observation.get('detections',[]))
+                            and any(s.get('observations',0)>=3 for s in observation.get('visible_supports',[])))))
         # A single periodic rope endpoint cannot establish an absolute place.
         # Once the board and progress are known, it can correct accumulated
         # motion error without confusing this boundary with one 32m earlier.
@@ -477,7 +480,7 @@ class BoardTracker:
                     loop_cycle=self.cycle, absolute_progress=self.odometer_base+progress,
                     localized=True, confidence=None, visual_match=status)
 
-    def confirm(self, key,carry=None,spatial=None):
+    def confirm(self, key,carry=None,spatial=None,min_hits=3):
         if self.confirmed_identity == key:
             self.pending = key
             return True
@@ -494,7 +497,7 @@ class BoardTracker:
             # This is confirmation only; it never synthesizes a position.
             self.pending_count=count
         self.pending = key
-        if self.pending_count < 3:
+        if self.pending_count < min_hits:
             return False
         if self.confirmed_identity != key:
             self.visit += 1
@@ -635,7 +638,9 @@ class BoardTracker:
         key = first['identity']
         old_cycle, old_odometer = self.cycle, self.odometer_base
         was_identity = self.confirmed_identity
-        if not self.confirm(key,spatial=(observation['time'],first['progress'])):
+        tracked_entry=(first.get('temporal_entry_pair')and self.start_context is not None and self.sequence is not None
+                       and self.sequence.place==key[:2]and first['score']>=.7)
+        if not self.confirm(key,spatial=(observation['time'],first['progress']),min_hits=1 if tracked_entry else 3):
             self.state = dict(status='confirming', identity=key, localized=False)
             return self.state
         context = self.atlas.contexts[first['row']['key']]

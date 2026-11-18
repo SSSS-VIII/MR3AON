@@ -74,6 +74,20 @@ def test_short_occlusions_preserve_spatial_confirmation_without_merging_repetiti
     assert not value['localized']
 
 
+def test_temporally_tracked_entry_pair_still_requires_known_map_and_own_start():
+    bank=Bank();bank.meta=dict(map_sequences=[dict(level=5,map=42,
+        slots=[dict(slot=1,fixed=[50012],random=False)])])
+    bank.candidates=[dict(candidate(10,.75),temporal_entry_pair=True)]
+    tracker=BoardTracker(bank);tracker.begin_episode(level=5,slot=1)
+    assert not tracker.observe(None,observation(0))['localized']
+    other=BoardTracker(bank);other.begin_episode(level=5,slot=1)
+    for _ in range(3):other.sequence.background({(5,42):1.})
+    assert other.observe(None,observation(0))['localized']
+    no_start=BoardTracker(bank)
+    for _ in range(3):no_start.sequence.background({(5,42):1.})
+    assert not no_start.observe(None,observation(0))['localized']
+
+
 def test_own_start_context_cannot_create_a_location_from_background_or_ignore_missing_motion():
     bank=Bank();tracker=BoardTracker(bank);tracker.begin_episode(level=5,slot=1)
     bank.candidates=[dict(candidate(0),progress=None)]
