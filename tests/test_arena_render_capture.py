@@ -32,3 +32,20 @@ def test_only_isolated_arena_and_reviewed_geometry_can_open():
 def test_native_paired_collection_cannot_silently_use_another_image_backend():
     instance=RenderCapture(SimpleNamespace(spec=SimpleNamespace(name='arena')))
     with pytest.raises(RuntimeError,match='paired'):instance.paired_step(2)
+
+
+def test_resume_and_first_image_share_one_request_and_keep_the_regular_frame_protocol():
+    import io,json
+    instance=RenderCapture(SimpleNamespace(spec=SimpleNamespace(name='arena')))
+    with pytest.raises(RuntimeError,match='initialized'):instance.resume_capture()
+    instance._render_ready=True;instance._sequence=0;sent=[]
+    instance._render_socket=SimpleNamespace(sendall=sent.append)
+    data=b''
+    for sequence in (1,2):
+        packet=dict(header(),sequence=sequence)
+        data+=json.dumps(packet).encode()+b'\n'+bytes(packet['size'])
+    instance._render_file=io.BytesIO(data)
+    first=instance.resume_capture();second=instance.capture()
+    assert sent==[b'\2',b'\1']
+    assert (first.width,first.height)==(640,360) and first.sequence+1==second.sequence
+    assert first.device_captured_ns==1010000000

@@ -312,15 +312,22 @@ def run(args):
                     (args.output/'fixed-start-context.json').write_text(json.dumps(dict(
                         level=args.level,slot=start_board,source='Own start request; map and variant withheld',
                         native_position_used=False)))
-                client.execute('return MR3A.resume()',lease_held=True)
-                begin = time.monotonic(); next_image = begin; previous_loop=None;last_eval=begin
+                pending_frame=None
+                begin=time.monotonic()
+                if hasattr(cap,'resume_capture'):
+                    pending_frame=cap.resume_capture()
+                else:
+                    client.execute('return MR3A.resume()',lease_held=True)
+                    begin=time.monotonic()
+                next_image = begin; previous_loop=None;last_eval=begin
                 previous_crc=None;latest=None;fresh=0
                 while time.monotonic() - begin < args.seconds:
                     loop = time.monotonic()
                     if previous_loop is not None:
                         intervals.append((loop-previous_loop)*1000)
                     previous_loop=loop
-                    frame = cap.capture()
+                    frame = pending_frame if pending_frame is not None else cap.capture()
+                    pending_frame=None
                     readiness=initial_pixels.check(frame.array(),loop-begin)
                     if readiness=='timeout':
                         status='initial_black_frame';break

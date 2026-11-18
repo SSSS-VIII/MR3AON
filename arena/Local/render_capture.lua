@@ -114,8 +114,13 @@ local ok,err=pcall(function()
      if p.client:Poll(0,CS.System.Net.Sockets.SelectMode.SelectRead)then
       local command=p.stream:ReadByte()
       if command<=0 then break end
-      assert(command==1,'Unknown capture command')
-      local requested=now();p.last_request=requested;coroutine.yield(eof)
+      assert(command==1 or command==2,'Unknown capture command')
+      local requested=now();p.last_request=requested
+      if command==2 then
+       assert(U.Time.timeScale==0 and not E.busy,'Resume requires a paused ready client')
+       E.resume()
+      end
+      coroutine.yield(eof)
       local frame=U.Time.frameCount;local stamp=now();local previous=U.RenderTexture.active
       local read_ok,read_error=pcall(function()
        U.RenderTexture.active=nil;U.Graphics.ExecuteCommandBuffer(p.command)

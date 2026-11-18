@@ -1,6 +1,6 @@
 """Optional same-frame Unity readback, with the original Android key transport.
 
-Only rendered pixels/timestamps cross this channel. A shell-UID relay reaches
+Rendered pixels/timestamps and an own resume request cross this channel. A shell-UID relay reaches
 an authenticated game socket over loopback; game network prohibition remains.
 """
 from pathlib import Path
@@ -113,9 +113,17 @@ class RenderCapture(FastCapture):
             # FastCapture starts and warms its Android key/clock worker before
             # the render channel is installed. This is initialization only.
             return super().capture()
+        return self._request(b'\1')
+
+    def resume_capture(self):
+        if not self._render_ready:
+            raise RuntimeError('Resume capture requires the initialized render channel')
+        return self._request(b'\2')
+
+    def _request(self,command):
         try:
             self._sequence+=1;self._render_sequence+=1
-            begin=time.perf_counter_ns();self._render_socket.sendall(b'\1')
+            begin=time.perf_counter_ns();self._render_socket.sendall(command)
             line=self._render_file.readline(4096)
             if not line.endswith(b'\n'):raise EOFError('Incomplete render header')
             header=validate_header(json.loads(line),self._render_sequence)
