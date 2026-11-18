@@ -3,6 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 from arena_fixed_goal import exit_kind
+from arena_timing_certificate import valid as valid_timing_certificate
 
 
 def export(reports, destination):
@@ -20,6 +21,11 @@ def export(reports, destination):
         report = json.loads(raw)
         if report.get('uses_restart_replay') is not False or not report.get('route'):
             raise ValueError('A source must contain committed native steps without restart/replay')
+        certified=bool(report.get('complete')and valid_timing_certificate(report.get('timing_validation',{}),
+            report['start']['state']['episodeFrame'],report['end']['state']['episodeFrame'],
+            sum(r['action']!='none'for r in report['route'])))if report.get('timing_validation')else False
+        if report.get('complete')and report.get('native_decision')and not certified:
+            raise ValueError('A new native-policy route needs its independent operation timing certificate')
         start = report['start']
         if expected is None:
             result['start'] = start
@@ -63,6 +69,10 @@ def export(reports, destination):
                             first_tick=start['state']['episodeFrame'], last_tick=expected['episodeFrame']))
     result['end'] = dict(state=expected, board=board)
     result['duration_ticks'] = expected['episodeFrame'] - result['start']['state']['episodeFrame']
+    certificate=report.get('timing_validation',{})
+    if (result['complete']and valid_timing_certificate(certificate,result['start']['state']['episodeFrame'],
+        result['end']['state']['episodeFrame'],sum(r['action']!='none'for r in result['steps']))):
+        result['timing_validation']=certificate
     result['action_events'] = [{key: row[key] for key in ('action', 'relative_tick', 'local_x',
                                 'stage_id', 'stage_index', 'physics_before', 'physics_after')}
                               for row in result['steps'] if row['action'] != 'none']

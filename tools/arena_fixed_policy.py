@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from arena_fixed_match import Atlas, BoardTracker,feature_signature
+from arena_timing_certificate import valid as valid_timing_certificate
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / 'arena/vision-fixed-routes.json'
@@ -68,11 +69,14 @@ def compile_program(route, key):
     monotone = all(b['x'] >= a['x']-.05 for a,b in zip(poses,poses[1:]))
     clock_required = any(abs(b['x']-a['x'])<.2 and b['relative_tick']-a['relative_tick']>4
                          for a,b in zip(events,events[1:]))
+    certificate=route.get('timing_validation',{})
+    robust=bool(certificate and valid_timing_certificate(certificate,
+        route['start']['state']['episodeFrame'],route['end']['state']['episodeFrame'],len(events)))
     return dict(key=key, entry_x=poses[0]['x'], end_x=route['end']['state']['position']['x']-origin,
                 poses=poses, events=events, native_passed=True, visual_execution_verified=False,
                 monotone=monotone, requires_phase_clock=clock_required,
                 input_order='Acknowledged event cursor; no automatic skipping after takeover',
-                tick_seconds=.02)
+                tick_seconds=.02,timing_robust=robust,timing_window_ms=80 if robust else None)
 
 
 def compatible(expected, observation, jumps=None):

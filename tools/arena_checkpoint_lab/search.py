@@ -40,7 +40,7 @@ class BudgetExceeded(RuntimeError):
 
 
 def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200, on_trial=None, cache_prefix=0,
-                  root_point=None, forbidden_prefixes=(),early_jump=False):
+                  root_point=None, forbidden_prefixes=(),early_jump=False,guided=False,retain_forecast=False):
     """Leave the guest at a chosen real checkpoint, or at this window's root.
 
     A 50ms nominal interval alternates 40/60ms original ticks. offset counts
@@ -59,6 +59,8 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
     force_first_jump=False
     prefix={}
     unsafe_actions = set()
+    decisions={}
+    stats['native_decisions']=[]
     began = time.monotonic()
 
     def release(keep):
@@ -71,7 +73,14 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
         if depth >= horizon:
             return path, False
         ticks = 2 if (offset + depth) % 2 == 0 else 3
-        for action in (('jump',)if force_first_jump and depth==0 else('none','down','jump')):
+        order=('none','down','jump')
+        if guided:
+            from native_policy import read,decision
+            if point not in decisions:
+                decisions[point]=decision(read(gate))
+                stats['native_decisions'].append(dict(point=point,**decisions[point]))
+            order=tuple(decisions[point]['order'])
+        for action in (('jump',)if force_first_jump and depth==0 else order):
             cost = int(action != 'none')
             if cost > remaining_actions or (point, action) in unsafe_actions:
                 continue
@@ -141,7 +150,7 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
         # Search by input count before exploring combinations of late inputs.
         # This reaches a single earlier jump before thousands of ineffective
         # late alternatives. Every undo still restores a real VM node.
-        for limit in range(horizon + 1):
+        for limit in ([horizon]if guided else range(horizon + 1)):
             stats['action_limits_tried'].append(limit)
             result = walk(root, 0, [], limit)
             if early_jump and limit==0 and result is None and trials:
@@ -197,10 +206,12 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
         actual = gate.call('state')
         if actual != selected['job']['after']:
             raise RuntimeError('Chosen VM checkpoint differs from the searched native state')
-        keep={root,*(r['point']for r in path[:count])}
+        keep={root,*(r['point']for r in (path if retain_forecast else path[:count]))}
         release(keep)
-        return dict(found=True, crossed=crossed, path=deepcopy(path[:count]), root=root,
+        result=dict(found=True, crossed=crossed, path=deepcopy(path[:count]), root=root,
                     trials=trials, stats=stats)
+        if retain_forecast:result['forecast_path']=deepcopy(path)
+        return result
     except BudgetExceeded as error:
         gate.restore(root)
         release({root})
@@ -214,7 +225,7 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
 
 
 def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120, collector=None,
-        retain_history=False):
+        retain_history=False,native_decision=False):
     """Find one board exit from the current native starting point, if possible.
 
     Rolling mode rebases after each window. Retained mode keeps real earlier
@@ -225,8 +236,10 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
 
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
+    if native_decision and not retain_history:raise ValueError('Timing repair needs retained original checkpoints')
     names=('search.py','render.py','gate.py','game_gate.lua')+(
         ('worker_file.rs','ram_file.rs','ram_file.patch','ram_restore.patch','restore_trace.patch')if retain_history else('worker.rs',))
+    if native_decision:names+=('native_policy.py','native_observation.lua','timing_margin.py','guided_search.py')
     sources = {name: (LOADED_SOURCE if name == 'search.py' else (Path(__file__).parent / name).read_bytes())
                for name in names}
     if collector is not None:
@@ -241,12 +254,16 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
             or initial['health'] <= 0 or abs(initial['fixedDeltaTime'] - .02) > 1e-6):
         raise ValueError('Begin route search in a running unmounted battle with original 20ms physics')
     renderer = prepare_renderer(gate)
+    if native_decision:
+        from collector import install_lua
+        install_lua(gate,(Path(__file__).parent/'native_observation.lua').read_text())
     start = dict(health=initial['health'], state=initial, board=board)
     report = dict(complete=False, uses_restart_replay=False, game_rollback_complete=False,
                   algorithm='Original-engine iterative input-count DFS; irreversible rolling window commits',
                   horizon=horizon, commit=commit, max_trials=max_trials, start=start,
                   renderer=renderer, windows=[], route=[])
     report['retains_window_roots']=retain_history
+    report['native_decision']=native_decision
     if retain_history:report['backtrack_policy']='nearest_original_resting_root; finite search heuristic'
     process=getattr(gate.vm,'process',None)if hasattr(gate,'vm')else None
     if process is not None:
@@ -255,13 +272,39 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
         report['worker_capabilities']=gate.vm.request('status')['result']
         report['source_scope']='Editor source snapshot; the executable SHA identifies the actual running backend'
     if retain_history:report['algorithm']='Original-engine input-count DFS with whole-VM cross-window backtracking'
+    if native_decision:report['algorithm']='Privileged native-state action proposals with exact-engine lookahead and independent 80ms operation windows'
     report['backtracks']=[]
     history=[]
+    nominal=[]
     forbidden={}
     retry_root=None
     retry_horizon=None
     interval = 0
     started = time.monotonic()
+    def backtrack(window,index,reason,target_row=None):
+        nonlocal interval,retry_root,retry_horizon
+        if not retain_history or not history:return False
+        abandoned_windows=[history.pop()]
+        while history and target_row is not None and abandoned_windows[-1]['route_length']>target_row:
+            abandoned_windows.append(history.pop())
+        while history and not abandoned_windows[-1]['resting']:
+            abandoned_windows.append(history.pop())
+        previous=abandoned_windows[-1]
+        restored=gate.restore(previous['root'])
+        abandoned={window['root']}
+        for old in abandoned_windows:abandoned.update([old['root'],*old['points']])
+        abandoned.discard(previous['root']);abandoned.discard(report['initial_ram_root']['result']['id'])
+        for identity in abandoned:gate.drop(identity)
+        if collector is not None:collector.rewind(previous['reference_count'])
+        report['backtracks'].append(dict(from_attempt=index,to_attempt=previous['attempt'],
+            root=previous['root'],restore_ms=restored['ms'],reason=reason,
+            skipped_attempts=[old['attempt']for old in abandoned_windows],target_row=target_row))
+        for old in abandoned_windows:report['windows'][old['attempt']]['backtracked']=True
+        del report['route'][previous['route_length']:];del nominal[previous['route_length']:]
+        interval=previous['offset'];retry_root=previous['root']
+        retry_horizon=min(24,max(window['horizon'],previous['horizon'])+commit*len(abandoned_windows))
+        print(f'跨窗回退: 窗{index+1} → 窗{previous["attempt"]+1}，恢复{restored["ms"]:.2f}ms，{reason}',flush=True)
+        return True
     try:
         report['initial_ram_root'] = gate.rebase()
         if retain_history and not report['initial_ram_root']['result'].get('file_backed'):
@@ -281,43 +324,21 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
                             print(f'搜索回溯: 窗{index + 1} 已拒{damage_count}个扣血分支，'
                                   f'帧{row["job"]["after"]["episodeFrame"]}', flush=True)
                 effective_horizon=retry_horizon or horizon
-                window = search_window(gate, start=start, offset=interval, horizon=effective_horizon,
-                                       commit=commit, max_trials=max_trials, on_trial=save_trial,
-                                       root_point=retry_root,forbidden_prefixes=forbidden.get(retry_root,()),
-                                       cache_prefix=4 if retain_history else 0,early_jump=retain_history)
+                arguments=dict(start=start,offset=interval,horizon=effective_horizon,commit=commit,
+                    max_trials=max_trials,on_trial=save_trial,root_point=retry_root,
+                    forbidden_prefixes=forbidden.get(retry_root,()),cache_prefix=4 if retain_history else 0,
+                    early_jump=retain_history and not native_decision)
+                if native_decision:
+                    from guided_search import window as guided_window
+                    window=guided_window(gate,searcher=search_window,history=nominal,
+                        initial_point=report['initial_ram_root']['result']['id'],initial_state=start['state'],
+                        board_code=BOARD,**arguments)
+                else:window=search_window(gate,**arguments)
                 window['horizon']=effective_horizon
                 window.pop('trials')  # Complete per-candidate evidence is streamed above.
                 report['windows'].append(window)
                 if not window['found']:
-                    if retain_history and history:
-                        abandoned_windows=[history.pop()]
-                        # An airborne root may already have spent both jumps.
-                        # Prefer the last original resting state so this retry
-                        # can change the takeoff, not just spam keys after it.
-                        while history and not abandoned_windows[-1]['resting']:
-                            abandoned_windows.append(history.pop())
-                        previous=abandoned_windows[-1]
-                        restored=gate.restore(previous['root'])
-                        # Drop public owners of the abandoned branch. Parent
-                        # Arcs still preserve all ancestors of retained roots.
-                        abandoned={window['root']}
-                        for old in abandoned_windows:abandoned.update([old['root'],*old['points']])
-                        abandoned.discard(previous['root'])
-                        for identity in abandoned:gate.drop(identity)
-                        if collector is not None:collector.rewind(previous['reference_count'])
-                        report['backtracks'].append(dict(from_attempt=index,to_attempt=previous['attempt'],
-                            root=previous['root'],restore_ms=restored['ms'],reason=window['reason'],
-                            skipped_attempts=[old['attempt']for old in abandoned_windows]))
-                        for old in abandoned_windows:report['windows'][old['attempt']]['backtracked']=True
-                        del report['route'][previous['route_length']:]
-                        interval=previous['offset']
-                        retry_root=previous['root']
-                        # Keep the failed future in view after moving the root
-                        # backward; otherwise an ineffective early key can
-                        # merely commit us into the same later dead end again.
-                        retry_horizon=min(24,max(effective_horizon,previous['horizon'])+commit*len(abandoned_windows))
-                        print(f'跨窗回退: 窗{index+1} → 窗{previous["attempt"]+1}，'
-                              f'恢复{restored["ms"]:.2f}ms，换此前的输入前缀',flush=True)
+                    if backtrack(window,index,window['reason']):
                         (output/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
                         continue
                     report['reason'] = window['reason']
@@ -337,6 +358,7 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
                     raise RuntimeError('Original scene changed the search renderer size or interval')
                 window['renderer'] = effective
                 report['route'].extend({key: value for key, value in row.items() if key != 'point'} for row in path)
+                nominal.extend(path)
                 if collector is not None:
                     collector.window(gate, path, index)
                     if gate.call('state') != path[-1]['job']['after']:
@@ -347,6 +369,19 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
                 print(f'原生搜索 {index + 1}: 帧{state["episodeFrame"]} 血{state["health"]} '
                       f'x={state["position"]["x"]:.2f}，试{window["stats"]["trials"]}分支', flush=True)
                 if window['crossed']:
+                    if native_decision:
+                        from timing_margin import verify
+                        validation=verify(gate,nominal,initial_point=report['initial_ram_root']['result']['id'],
+                            initial_state=start['state'],start=start,board_code=BOARD,whole_board=True)
+                        report['timing_validation']=validation
+                        if not validation['passed']:
+                            failure=validation['failure']
+                            report.setdefault('timing_rejections',[]).append(validation)
+                            target=failure['event']['row_index']
+                            print(f'整板80ms独立容差失败，回退修正操作所在窗: row={target}',flush=True)
+                            if backtrack(window,index,'independent_operation_margin_failed',target):continue
+                            report['reason']='No retained prefix can repair the operation timing margin'
+                            break
                     report['complete'] = True
                     report['exit_kind'] = exit_kind(start['board'], path[-1]['board'])
                     break

@@ -67,6 +67,25 @@ def test_search_backtracks_before_an_unavoidable_late_collision():
     assert all(row['job']['after']['health'] == 5000 for row in result['path'])
 
 
+def test_privileged_policy_replaces_the_minimum_input_order_and_acts_before_the_hurt_boundary(monkeypatch):
+    monkeypatch.syspath_prepend(str(SOURCE.parent))
+    import native_policy
+    oracle=Oracle()
+    def read(gate):
+        x=gate.native['frame']*.37;y=3 if gate.native['lifted']else .75
+        return dict(state=dict(physics='jump: 14'if gate.native['lifted']else'runOnGround: 0',
+            speed=18.5,position=dict(x=x,y=y)),
+            role=[dict(center=dict(x=x,y=y),extents=dict(x=.18,y=.468))],
+            support=dict(start=dict(x=-10,y=0),finish=dict(x=100,y=0),continues=True,is_ground=True),
+            jumps_used=int(gate.native['lifted']),hazards=[dict(id=1,center=dict(x=5,y=.75),
+                extents=dict(x=.2,y=.8),enabled=True)])
+    monkeypatch.setattr(native_policy,'read',read)
+    result=search.search_window(oracle,start=start(oracle),offset=0,horizon=4,commit=2,guided=True)
+    assert result['found']and result['path'][0]['action']=='jump'
+    assert result['stats']['action_limits_tried']==[4]
+    assert result['stats']['native_decisions'][0]['reason']=='anticipate_ground_obstacle'
+
+
 def test_budget_exhaustion_restores_the_real_root_without_a_partial_success():
     oracle = Oracle()
     result = search.search_window(oracle, start=start(oracle), offset=0, horizon=4, commit=2, max_trials=2)
@@ -245,9 +264,24 @@ def test_bounded_prefix_cache_restores_exact_nodes_without_executing_them_again(
     assert b['stats']['trials']<a['stats']['trials']
 
 
-def test_cross_window_dead_end_restores_an_earlier_real_root_and_changes_its_input(tmp_path,monkeypatch):
+@pytest.mark.parametrize('quality',[False,True])
+def test_cross_window_dead_end_restores_an_earlier_real_root_and_changes_its_input(tmp_path,monkeypatch,quality):
     import sys
     from types import SimpleNamespace
+    monkeypatch.syspath_prepend(str(SOURCE.parent))
+    checks=[]
+    if quality:
+        import guided_search,timing_margin
+        def proposed(gate,*,searcher,history,initial_point,initial_state,board_code,**kwargs):
+            return searcher(gate,**kwargs)
+        def verify(gate,rows,**kwargs):
+            checks.append(len(rows))
+            if len(checks)==1:
+                bad=next(i for i,row in enumerate(rows)if row['action']=='jump')
+                return dict(passed=False,failure=dict(event=dict(row_index=bad)))
+            return dict(passed=True)
+        monkeypatch.setattr(guided_search,'window',proposed)
+        monkeypatch.setattr(timing_margin,'verify',verify)
     renderer=dict(width=320,height=180,interval=1)
     monkeypatch.setitem(sys.modules,'render',SimpleNamespace(
         prepare=lambda _:dict(requested=renderer),INFO='renderer'))
@@ -285,8 +319,8 @@ def test_cross_window_dead_end_restores_an_earlier_real_root_and_changes_its_inp
         def rewind(self,count):self.rejected.extend(self.rows[count:]);del self.rows[count:]
         def status(self):return dict(count=len(self.rows))
     collector=Collector()
-    result=search.run(oracle,tmp_path/'history',horizon=4,commit=2,max_trials=100,max_windows=15,
-                      retain_history=True,collector=collector)
+    result=search.run(oracle,tmp_path/'history',horizon=4,commit=2,max_trials=100,max_windows=30,
+                      retain_history=True,collector=collector,native_decision=quality)
     assert result['complete']and result['no_health_loss']
     assert result['backtracks']and oracle.rebases==1
     assert any(len(backtrack['skipped_attempts'])>1 for backtrack in result['backtracks'])
@@ -296,6 +330,9 @@ def test_cross_window_dead_end_restores_an_earlier_real_root_and_changes_its_inp
     assert all(row['job']['after']['health']==5000 for row in result['route'])
     assert collector.rejected
     assert collector.rows==[0]+[row['job']['after']['episodeFrame']for row in result['route']]
+    if quality:
+        assert len(checks)>=2 and result['timing_validation']['passed']
+        assert any(b['reason']=='independent_operation_margin_failed'for b in result['backtracks'])
     retained={result['initial_ram_root']['result']['id']}
     for window in result['windows']:
         if window.get('found')and not window.get('backtracked'):

@@ -31,7 +31,7 @@ def main():
         queue=WorkQueue(args.queue)
         unknown=set(args.case)-queue.cases.keys()
         if unknown:raise ValueError('Unknown canonical cases: '+', '.join(sorted(unknown)))
-        if not queue.pending():
+        if not queue.pending(require_margin=args.file_ram):
             print('All native cases already have exit evidence and references.',flush=True)
             return
         deadline=time.monotonic()+40
@@ -42,7 +42,7 @@ def main():
         # uses real gate checkpoints, never bootstrap or input-history replay.
         gate=start(vm)
         work=[queue.cases[key]for key in dict.fromkeys(args.case)]
-        work.extend(case for case in queue.pending()if case['key']not in args.case)
+        work.extend(case for case in queue.pending(require_margin=args.file_ram)if case['key']not in args.case)
         print(queue.run(gate,cases=work,retain_history=args.file_ram),flush=True)
 
 

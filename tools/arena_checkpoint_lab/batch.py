@@ -11,6 +11,7 @@ from arena_fixed_catalog import load_inventory
 from collector import References, install_observer
 from route import export
 import search
+from arena_timing_certificate import valid as valid_timing_certificate
 
 
 def lua(value):
@@ -85,12 +86,14 @@ class WorkQueue:
         for key, case in self.cases.items():
             self.state['cases'].setdefault(key, dict(status='pending', attempts=[],
                 native_passed=False, detector_verified=False, live_runner_verified=False))
+            self.state['cases'][key].setdefault('timing_robust',False)
         (self.folder / 'inventory.json').write_text(json.dumps(self.inventory, ensure_ascii=False, indent=2))
         self.save()
 
     def save(self):
         cases = list(self.state['cases'].values())
         self.state['counts'] = dict(self.inventory['counts'], native_passed=sum(c['native_passed'] for c in cases),
+            timing_robust=sum(c.get('timing_robust',False)for c in cases),
             detector_verified=sum(c['detector_verified'] for c in cases),
             live_runner_verified=sum(c['live_runner_verified'] for c in cases))
         self.state['updated_at'] = time.time()
@@ -98,9 +101,10 @@ class WorkQueue:
         temporary.write_text(json.dumps(self.state, ensure_ascii=False, indent=2))
         temporary.replace(self.folder / 'coverage.json')
 
-    def pending(self):
+    def pending(self,*,require_margin=False):
         cases = [c for key, c in self.cases.items() if not (self.state['cases'][key]['native_passed']
-                 and self.state['cases'][key].get('reference_count', 0) >= 3)]
+                 and self.state['cases'][key].get('reference_count', 0) >= 3
+                 and(not require_margin or self.state['cases'][key].get('timing_robust')))]
         return sorted(cases, key=lambda c: (bool(self.state['cases'][c['key']]['attempts']),c['kind'] != 'ordinary',
             c['level'] not in (5, 6),c['slot']!=1,
             len(self.inventory['stages'][str(c['stage'])]['groups']), c['key']))
@@ -127,22 +131,30 @@ class WorkQueue:
                       and report['start']['board']['map'] == case['map']
                       and report['start']['board']['stage_index'] == case['slot'] - 1
                       and not report['start']['board']['god'])
+        margin=report.get('timing_validation',{})
+        margin_ok=bool(report.get('complete')and valid_timing_certificate(margin,
+            report['start']['state']['episodeFrame'],report['end']['state']['episodeFrame'],
+            sum(r['action']!='none'for r in report['route'])))if margin else False
+        if report.get('native_decision'):
+            passed=passed and margin_ok
         item = self.state['cases'][case['key']]
         if passed:
             artifact = Path(report_path).parent / 'route.json'
             export([report_path], artifact)
             item.update(route=str(artifact), references=str(references.folder / 'references.json'),
-                        reference_count=len(references.rows), reference_errors=references.errors)
+                        reference_count=len(references.rows), reference_errors=references.errors,
+                        timing_robust=margin_ok)
         item.update(status='native_passed' if passed else 'search_stalled',
                     native_passed=item['native_passed'] or passed)
         self.save()
         return passed
 
     def run(self, gate, *, cases=None,retain_history=False):
-        work = self.pending() if cases is None else cases
+        work = self.pending(require_margin=retain_history) if cases is None else cases
         for index, case in enumerate(work):
             item = self.state['cases'][case['key']]
-            if item['native_passed'] and item.get('reference_count', 0) >= 3:
+            if (item['native_passed']and item.get('reference_count',0)>=3
+                    and(not retain_history or item.get('timing_robust'))):
                 continue
             name = str(time.time_ns())
             output = self.folder / 'runs' / case['key'] / name
@@ -163,7 +175,7 @@ class WorkQueue:
                 item['status'] = attempt['status'] = 'searching'
                 self.save()
                 report = search.run(gate, output / 'search', collector=references, max_windows=600,
-                                    retain_history=retain_history)
+                                    retain_history=retain_history,native_decision=retain_history)
                 attempt['status'] = 'native_passed' if self.accept(
                     case, report, output / 'search/report.json', references) else 'search_stalled'
             except KeyboardInterrupt:
