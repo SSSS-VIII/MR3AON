@@ -337,7 +337,7 @@ def test_generic_boxes_require_measured_static_horizontal_motion_to_anchor_live_
 def test_adjacent_rope_segments_supply_one_shared_joint_but_keep_distinct_endpoints():
     from arena_vision import Box
     supports=[dict(kind='rope',confidence=.9,a=(0,250),b=(400,250),left_clipped=True),
-        dict(kind='rope',confidence=.9,a=(403,252),b=(640,250),right_clipped=True),
+        dict(kind='rope',confidence=.9,a=(410,252),b=(640,250),right_clipped=True),
         dict(kind='rope',confidence=.9,a=(420,250),b=(640,250),right_clipped=True)]
     q=matching.features(np.zeros((360,640,3),np.uint8),dict(player=Box(170,210,16,36),visible_supports=supports))
     points=q['landmarks'][:q['landmark_count']]
