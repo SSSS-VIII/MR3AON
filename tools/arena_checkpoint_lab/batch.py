@@ -137,7 +137,7 @@ class WorkQueue:
         self.save()
         return passed
 
-    def run(self, gate, *, cases=None):
+    def run(self, gate, *, cases=None,retain_history=False):
         work = self.pending() if cases is None else cases
         for index, case in enumerate(work):
             item = self.state['cases'][case['key']]
@@ -161,7 +161,8 @@ class WorkQueue:
                 references = References(output / 'references')
                 item['status'] = attempt['status'] = 'searching'
                 self.save()
-                report = search.run(gate, output / 'search', collector=references, max_windows=600)
+                report = search.run(gate, output / 'search', collector=references, max_windows=600,
+                                    retain_history=retain_history)
                 attempt['status'] = 'native_passed' if self.accept(
                     case, report, output / 'search/report.json', references) else 'search_stalled'
             except KeyboardInterrupt:

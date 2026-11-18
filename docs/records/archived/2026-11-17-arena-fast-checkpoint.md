@@ -260,3 +260,16 @@ atlas-v6保留1052照片/18有图场景，50012加51个原静态X锚点；v7另�
 新增arena_fixed_refresh持续读取原生通过证据，使用共享特征缓存编译新库，程序/atlas/摘要放入同一个版本目录后原子替换current符号链接。运行加载器只resolve一次bundle根，避免交叉读到两个发布版本；编译失败或编译期间原生证据变化不替换当前库，单实例refresh文件锁防止两个编译者冲突。新库仍标visual_execution_verified=false，不把原生出口当视觉无伤。mr3a-arena-fixed-refresh用户服务已实际发布首个8程序/1044照片/238场景声明包，原load入口离线加载成HybridAvoider通过；未将其写成全板实机验收。失败候选保留build.log，只有原生证据更新才再试，避免每30秒重复同一编译失败。
 
 新入口诊断首次确认53052失败在Reset did not enter the battle：原角色已5000血/第20物理帧/x7.105，仍WaitGameStart，尚未到x8开局触发点，并非已到第五板后不安全。软件渲染的60秒加载期限过短。environment仅把加载等待改为可配置默认60，boot_client只在arena-search设300；原arena默认、20ms物理、陷阱、伤害和回退未改。受控SIGINT结束当时初始化并由原上下文清理VM后，启动mr3a-arena-fixed-search-v2加载新配置；此前失败仍保留，实际改善待新案例结果，不能提前记通过。56项相关视觉/静态/验收与65项checkpoint保护通过。原生8/407依旧；原先短窗前缀缓存默认关闭，真正跨窗口快照保留与回溯尚未实现。
+
+
+### 真正保留跨窗历史与原客户端往返检查（11月18日上午续）
+
+滚动rebase使53012的第31窗无法退回472帧以前，已新增独立、显式启用的`arena-file-ram`实验后端。原worker/默认内存形式不替换；`install_file_ram.py`仅给debug/arena-client下的私有Nyx checkout安装补丁和独立file worker/bench。每个完整VM快照的精确RAM页放入立即unlink的只读文件映射，CPU/KVM时钟/设备/COW磁盘仍沿用原快照；页缓存可回收，不靠从头重放、不手工恢复游戏字段。映射不是持久存档，所有者/worker死亡仍丢RAM点；没有实现压缩。修正Nyx原跨支深度断言误用active.depth的问题，新增不等深兄弟→保留未来→兄弟往返检查。
+
+search的retain_history只允许该后端成功建立file-backed根后启用；保留每窗真实根，后窗有限预算无解时恢复前窗并排除其已提交输入前缀。区间40/60ms奇偶与已选路线长度一起回退，不重新初始化。废弃分支快照显式释放；已采图撤出发布清单并独立保留abandoned-references.json，图名使用单调序号防止覆盖失败证据。默认短窗none前缀缓存仍0。本搜索有窗口/候选预算，不是全局完备证明。
+
+独立3GiB synthetic的100轮、110分支重复/不等深往返、三项时钟/计时器、原盘哈希检查通过；保存中位7.17/P95 15.45ms、同支恢复中位2.36/P95 3.46ms、跨支中位9.54/P95 13.04ms，范围仅测试虚拟机。随后原客户端`native-file-history-v1/audit.json`实际50012从22→577帧整板无伤：保存起点→完整搜索→恢复最早点→原生jump三tick新分支→恢复旧终点，起点和终点的全部已导出probe字段均相等、最终5000血。不是整个引擎的哈希，game_rollback_complete仍false；该容易板没有发生搜索死路后的跨窗换前缀。**冷的远距离原游戏恢复仍慢：最早点1677.31ms，另一分支的保留终点9037.76ms**，不能拿常规热恢复中位1.80/P95 5.29ms代替这两个慢尾。
+
+随后两项宿主侧优化：映射页按文件物理顺序遍历；待恢复页先收集脏页及两支至共同祖先的差异，再沿目标链由新到旧批量解析，每页只写一次，避免逐页反复走长祖先链。仅Mapped后端使用批量路径，原Raw默认路径不改；`NYX_RAM_RESTORE=legacy`只用于同一测试二进制的对照。新的3GiB/100轮synthetic通过；另768MiB/180层、MemoryHigh1536M/MemoryMax3G对照均通过，跨支P95 21.52→16.53ms/最大33.34→22.19ms，同支P95 2.60→3.61ms，批量版有单次保存2058.86ms慢尾，尚不能说全面更快。256MiB夹具在启动就Shutdown，尚未进入回溯检查；209MiB initramfs可能占用过多启动内存，原因未单独证明，保留失败不当通过。详细在checkpoint-lab-deep-{legacy,batched}-v2/report.json；这组未覆盖原游戏9秒慢尾，仍待复测。
+
+44项Python保护通过/1项跳过；FilePages两项Rust检查、file worker的COW父层生命周期检查通过，feature关闭的原worker/bench编译检查通过。原客户端/物理/陷阱源码无本次改动。原生累计11/407，343种布局其余仍未完成，视觉稳定无伤也未完成。mr3a-arena-file-history完成原生往返audit后卡在5306进场，SIGINT由所有者正常清理VM；当前`mr3a-arena-fixed-search-history`优先53012再继续队列，**正在用有序遍历的file worker，尚未换成批量解析版**；mr3a-arena-fixed-refresh继续自动编译新的原生通过证据。运行报告增加实际/proc/worker/exe SHA及能力标识，编辑器源码快照不能代替运行二进制版本；不要向持租约的VM另发命令。下一步看53012真正跨窗改前缀结果、原游戏批量恢复慢尾，再继续视觉动作衔接，不能用后台队列运行代替全部板已验收。

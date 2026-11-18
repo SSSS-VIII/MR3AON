@@ -80,3 +80,24 @@ def test_reference_capture_restores_selected_branch_even_if_annotation_fails(tmp
                       dict(point=2,action='none',job=dict(after=dict(episodeFrame=12)))],0)
     assert gate.current==2 and gate.hidden==5
     assert refs.errors and not refs.rows
+
+
+def test_abandoned_reference_images_do_not_overwrite_or_publish_as_accepted(tmp_path):
+    refs=collector.References(tmp_path/'references')
+    class Gate:
+        def restore(self,p):self.point=p
+        def screenshot(self):return b'png'+str(self.point).encode()
+        def call(self,op,**args):
+            if op=='state':return dict(episodeFrame=self.point,position=dict(x=1))
+            if 'vision_resolved_layout' in args['code']:return {}
+            return dict(map=42,stage_index=0,stage_start=0)
+    gate=Gate();context=dict(map=42,stage_index=0)
+    refs.capture(gate,1,context)
+    refs.capture(gate,2,context)
+    rejected=(refs.folder/'00001.png').read_bytes()
+    refs.rewind(1)
+    refs.capture(gate,3,context)
+    assert [r['tick']for r in refs.rows]==[1,3]
+    assert [r['tick']for r in refs.abandoned]==[2]
+    assert (refs.folder/'00001.png').read_bytes()==rejected
+    assert refs.rows[-1]['image']=='00002.png'

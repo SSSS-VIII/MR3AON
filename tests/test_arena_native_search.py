@@ -128,3 +128,69 @@ def test_native_failure_is_not_turned_into_a_bad_route(monkeypatch, error):
     with pytest.raises(type(error)):
         search.search_window(oracle, start=start(oracle), offset=0)
     assert oracle.native == dict(frame=0, hp=5000, lifted=False)
+
+
+def test_bounded_prefix_cache_restores_exact_nodes_without_executing_them_again():
+    plain,cached=Oracle(),Oracle()
+    a=search.search_window(plain,start=start(plain),offset=0,horizon=4,commit=2,cache_prefix=0)
+    b=search.search_window(cached,start=start(cached),offset=0,horizon=4,commit=2,cache_prefix=4)
+    assert b['found']and b['crossed']
+    assert [r['job']for r in a['path']]==[r['job']for r in b['path']]
+    assert plain.native==cached.native
+    assert b['stats']['prefix_cache_hits']>0
+    assert b['stats']['trials']<a['stats']['trials']
+
+
+def test_cross_window_dead_end_restores_an_earlier_real_root_and_changes_its_input(tmp_path,monkeypatch):
+    import sys
+    from types import SimpleNamespace
+    renderer=dict(width=320,height=180,interval=1)
+    monkeypatch.setitem(sys.modules,'render',SimpleNamespace(
+        prepare=lambda _:dict(requested=renderer),INFO='renderer'))
+    class HistoryOracle(Oracle):
+        def __init__(self):
+            super().__init__()
+            self.vm=SimpleNamespace(request=lambda *_,**__:dict(result=dict(file_ram=True)))
+            self.rebases=0
+        def rebase(self):
+            self.rebases+=1
+            self.points.clear()
+            result=self.snapshot();result['result']['file_backed']=True
+            return result
+        def update(self):
+            super().update()
+            self.view['state'].update(fixedDeltaTime=.02,content='Running: 1',
+                position=dict(x=self.native['frame']*.37,y=.75))
+        def call(self,op,**args):
+            if op=='state':return deepcopy(self.view['state'])
+            if args['code']=='renderer':return renderer
+            return dict(map=42,stage_index=int(self.native['frame']>=20),mounted=False)
+        def step(self,ticks,action):
+            before=deepcopy(self.view['state'])
+            if action=='jump'and self.native['frame']<3:self.native['lifted']=True
+            self.native['frame']+=ticks
+            if self.native['frame']>=13 and not self.native['lifted']:self.native['hp']-=250
+            self.update()
+            return dict(done=True,before=before,after=deepcopy(self.view['state']))
+    oracle=HistoryOracle()
+    class Collector:
+        def __init__(self):self.rows=[];self.rejected=[]
+        def begin(self,*_):self.rows.append(0)
+        def window(self,gate,path,index):self.rows.extend(row['job']['after']['episodeFrame']for row in path)
+        def rewind(self,count):self.rejected.extend(self.rows[count:]);del self.rows[count:]
+        def status(self):return dict(count=len(self.rows))
+    collector=Collector()
+    result=search.run(oracle,tmp_path/'history',horizon=4,commit=2,max_trials=100,max_windows=15,
+                      retain_history=True,collector=collector)
+    assert result['complete']and result['no_health_loss']
+    assert result['backtracks']and oracle.rebases==1
+    assert any(row['action']=='jump'for row in result['route'])
+    assert result['route'][0]['job']['before']['episodeFrame']==0
+    assert all(row['job']['after']['health']==5000 for row in result['route'])
+    assert collector.rejected
+    assert collector.rows==[0]+[row['job']['after']['episodeFrame']for row in result['route']]
+    retained={result['initial_ram_root']['result']['id']}
+    for window in result['windows']:
+        if window.get('found')and not window.get('backtracked'):
+            retained.update([window['root'],*(r['point']for r in window['path'])])
+    assert set(oracle.points)<=retained

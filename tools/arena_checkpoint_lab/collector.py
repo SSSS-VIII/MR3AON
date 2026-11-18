@@ -29,6 +29,8 @@ class References:
         self.rows = []
         self.errors = []
         self.start = None
+        self.sequence = 0
+        self.abandoned = []
 
     def capture(self, gate, point, context):
         from search import BOARD
@@ -43,7 +45,8 @@ class References:
             if (board['map'], board['stage_index']) != (context['map'], context['stage_index']):
                 return
             layout = gate.call('exec', code='return MR3A.vision_resolved_layout()')
-            name = f'{len(self.rows):05d}.png'
+            name = f'{self.sequence:05d}.png'
+            self.sequence += 1
             (self.folder / name).write_bytes(picture)
             row = dict(image=name, sha256=hashlib.sha256(picture).hexdigest(),
                        tick=current['episodeFrame'], state=current, board=board, context=context,
@@ -81,3 +84,12 @@ class References:
     def status(self):
         return dict(count=len(self.rows), errors=self.errors, folder=str(self.folder),
                     physics_branch_preserved=True)
+
+    def rewind(self, count):
+        """Keep rejected images as evidence, but never publish them as the route."""
+        if not 0 <= count <= len(self.rows):
+            raise ValueError('Invalid reference rollback boundary')
+        self.abandoned.extend(self.rows[count:])
+        del self.rows[count:]
+        (self.folder / 'abandoned-references.json').write_text(json.dumps(self.abandoned,ensure_ascii=False,indent=2))
+        (self.folder / 'references.json').write_text(json.dumps(self.rows,ensure_ascii=False,indent=2))
