@@ -36,9 +36,9 @@ def window(gate,*,searcher,history,initial_point,initial_state,board_code,**kwar
         combined=history+forecast
         selected={len(history)+i for i,row in enumerate(path)if row['action']!='none'}
         end_frame=forecast[-1]['job']['after']['episodeFrame']
-        upcoming=next((i for i,row in enumerate(forecast)if i>=len(path)and row['action']!='none'
-                       and row['job']['before']['episodeFrame']+2<end_frame),None)
-        if upcoming is not None:selected.add(len(history)+upcoming)
+        selected.update(len(history)+i for i,row in enumerate(forecast)
+                        if i>=len(path)and row['action']!='none'
+                        and row['job']['before']['episodeFrame']+2<end_frame)
         def progress(check):
             print(f'独立80ms窗口: 操作{check["event"]} 偏移{check["shift_ms"]}ms 通过={check["passed"]}',flush=True)
         audit=(verify(gate,combined,initial_point=initial_point,initial_state=initial_state,

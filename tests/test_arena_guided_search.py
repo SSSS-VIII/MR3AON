@@ -55,3 +55,17 @@ def test_a_future_key_at_the_horizon_is_not_rejected_for_lacking_a_later_forecas
     result=guided_search.window(SimpleNamespace(drop=lambda _:None),searcher=searcher,history=[],
         initial_point=10,initial_state={},board_code='board',start={},max_trials=2)
     assert result['found']and result['timing_attempts'][0]['operations']==0
+
+
+def test_an_earlier_safe_future_key_cannot_hide_a_later_unsafe_key(monkeypatch):
+    selected=[]
+    plan=rows(['none','none','jump','none','down','none'])
+    def searcher(*args,**kwargs):
+        return dict(found=True,root=10,stats=dict(trials=1),path=plan[:2],forecast_path=plan)
+    def verify(gate,rows,**kwargs):
+        selected.append(kwargs['selected_rows'])
+        return dict(passed=True,checks=[])
+    monkeypatch.setattr(guided_search,'verify',verify)
+    result=guided_search.window(SimpleNamespace(drop=lambda _:None),searcher=searcher,history=[],
+        initial_point=10,initial_state={},board_code='board',start={},max_trials=2)
+    assert result['found']and selected==[{2,4}]
