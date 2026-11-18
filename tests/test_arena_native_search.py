@@ -82,7 +82,8 @@ def test_privileged_policy_replaces_the_minimum_input_order_and_acts_before_the_
     monkeypatch.setattr(native_policy,'read',read)
     result=search.search_window(oracle,start=start(oracle),offset=0,horizon=4,commit=2,guided=True)
     assert result['found']and result['path'][0]['action']=='jump'
-    assert result['stats']['action_limits_tried']==[4]
+    assert result['stats']['action_limits_tried']==[]
+    assert result['stats']['proposal_deviation_limits_tried']==[0]
     assert result['stats']['native_decisions'][0]['reason']=='anticipate_ground_obstacle'
 
 
@@ -97,6 +98,70 @@ def test_guided_search_prunes_input_gaps_that_cannot_preserve_the_eighty_ms_wind
     times=[r['job']['before']['episodeFrame']for r in result['path']if r['action']!='none']
     assert times and times[0]>=2
     assert all(b-a>=3 for a,b in zip([-1,*times],times))
+    assert result['stats']['proposal_deviation_limits_tried']==[0]
+
+
+def test_guided_alternative_at_the_root_is_tried_before_combinations_of_late_corrections(monkeypatch):
+    monkeypatch.syspath_prepend(str(SOURCE.parent))
+    import native_policy
+    monkeypatch.setattr(native_policy,'read',lambda _:None)
+    monkeypatch.setattr(native_policy,'decision',lambda _:dict(order=['none','jump','down']))
+    class EarlyChoice(Oracle):
+        def call(self,op,**kwargs):
+            if op=='state':return deepcopy(self.view['state'])
+            return dict(map=42,stage_index=int(self.native['frame']>=20),mounted=False)
+        def step(self,ticks,action):
+            before=deepcopy(self.view['state'])
+            if action=='jump'and self.native['frame']==0:self.native['lifted']=True
+            self.native['frame']+=ticks
+            if self.native['frame']>=15 and not self.native['lifted']:self.native['hp']-=250
+            self.update()
+            return dict(done=True,before=before,after=deepcopy(self.view['state']))
+    oracle=EarlyChoice()
+    result=search.search_window(oracle,start=start(oracle),offset=0,horizon=8,commit=4,
+                                max_trials=100,guided=True,cache_prefix=4)
+    assert result['found']and result['crossed']
+    assert result['path'][0]['action']=='jump'
+    assert result['stats']['proposal_deviation_limits_tried']==[0,1]
+    assert result['stats']['trials']<100 and oracle.native['hp']==5000
+
+
+def test_guided_policy_can_request_many_keys_without_a_minimum_input_preference(monkeypatch):
+    monkeypatch.syspath_prepend(str(SOURCE.parent))
+    import native_policy
+    monkeypatch.setattr(native_policy,'read',lambda _:None)
+    monkeypatch.setattr(native_policy,'decision',lambda _:dict(order=['jump','none','down']))
+    oracle=Oracle()
+    result=search.search_window(oracle,start=start(oracle),offset=0,horizon=4,commit=2,guided=True)
+    assert result['found']and result['crossed']
+    assert [r['action']for r in result['path']]==['jump','none','jump','none']
+    assert result['stats']['proposal_deviation_limits_tried']==[0]
+
+
+@pytest.mark.parametrize('cache_prefix',[0,4])
+def test_cached_waits_still_count_as_native_policy_disagreements(monkeypatch,cache_prefix):
+    monkeypatch.syspath_prepend(str(SOURCE.parent))
+    import native_policy
+    monkeypatch.setattr(native_policy,'read',lambda gate:gate.native['lifted'])
+    monkeypatch.setattr(native_policy,'decision',lambda lifted:dict(
+        order=['none','jump','down']if lifted else['jump','none','down']))
+    class DelayedJump(Oracle):
+        def step(self,ticks,action):
+            before=deepcopy(self.view['state'])
+            if action=='jump':
+                if self.native['frame']<5:self.native['hp']-=250
+                else:self.native['lifted']=True
+            if action=='down':self.native['hp']-=250
+            self.native['frame']+=ticks
+            if self.native['frame']>=7 and not self.native['lifted']:self.native['hp']-=250
+            self.update()
+            return dict(done=True,before=before,after=deepcopy(self.view['state']))
+    oracle=DelayedJump()
+    result=search.search_window(oracle,start=start(oracle),offset=0,horizon=4,commit=2,
+                                guided=True,cache_prefix=cache_prefix)
+    assert result['found']and result['crossed']
+    assert [r['action']for r in result['path']]==['none','none','jump','none']
+    assert result['stats']['proposal_deviation_limits_tried']==[0,1,2]
 
 
 def test_budget_exhaustion_restores_the_real_root_without_a_partial_success():

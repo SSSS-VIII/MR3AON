@@ -63,13 +63,14 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
     decisions={}
     stats['native_decisions']=[]
     stats['timing_spacing_pruned']=0
+    stats['proposal_deviation_limits_tried']=[]
     began = time.monotonic()
 
     def release(keep):
         for identity in owned:
             if identity not in keep:gate.drop(identity)
 
-    def walk(point, depth, path, remaining_actions):
+    def walk(point, depth, path, remaining_cost):
         if depth>=commit and tuple(r['action']for r in path[:commit])in forbidden_prefixes:
             return None
         if depth >= horizon:
@@ -82,15 +83,16 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
                 decisions[point]=decision(read(gate))
                 stats['native_decisions'].append(dict(point=point,**decisions[point]))
             order=tuple(decisions[point]['order'])
+            previous=next((r['job']['before']['episodeFrame']for r in reversed(path)if r['action']!='none'),last_input_frame)
+            current=path[-1]['job']['after']['episodeFrame']if path else gate.view['state']['episodeFrame']
+            if previous is not None and current-previous<=2:
+                stats['timing_spacing_pruned']+=sum(action!='none'for action in order)
+                order=tuple(action for action in order if action=='none')
         for action in (('jump',)if force_first_jump and depth==0 else order):
-            cost = int(action != 'none')
-            if guided and cost:
-                previous=next((r['job']['before']['episodeFrame']for r in reversed(path)if r['action']!='none'),last_input_frame)
-                current=path[-1]['job']['after']['episodeFrame']if path else gate.view['state']['episodeFrame']
-                if previous is not None and current-previous<=2:
-                    stats['timing_spacing_pruned']+=1
-                    continue
-            if cost > remaining_actions or (point, action) in unsafe_actions:
+            # In guided mode a key is free when the native policy requests it.
+            # Limit disagreements with that policy, rather than key count.
+            cost = int(action != order[0]) if guided else int(action != 'none')
+            if cost > remaining_cost or (point, action) in unsafe_actions:
                 continue
             cached=prefix.get(point)if action=='none'else None
             if cached is None and stats['trials'] >= max_trials:
@@ -102,7 +104,7 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
                 stats['restores_ms'].append(gate.restore(child)['ms'])
                 advanced=path+[row]
                 crossed=exit_kind(start['board'],row['board'])is not None
-                result=(advanced,True)if crossed else walk(child,depth+1,advanced,remaining_actions)
+                result=(advanced,True)if crossed else walk(child,depth+1,advanced,remaining_cost-cost)
                 if result is not None:
                     return result
                 gate.restore(point)
@@ -144,7 +146,7 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
             crossed = goal is not None
             if crossed:
                 return advanced, True
-            result = walk(child, depth + 1, advanced, remaining_actions - cost)
+            result = walk(child, depth + 1, advanced, remaining_cost - cost)
             if result is not None:
                 return result
             gate.restore(point)
@@ -155,11 +157,12 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
 
     try:
         result = None
-        # Search by input count before exploring combinations of late inputs.
-        # This reaches a single earlier jump before thousands of ineffective
-        # late alternatives. Every undo still restores a real VM node.
-        for limit in ([horizon]if guided else range(horizon + 1)):
-            stats['action_limits_tried'].append(limit)
+        # Guided search first follows the native policy, then permits one,
+        # two, ... disagreements. An early alternative gets a turn before
+        # combinatorial late corrections consume the window's budget.
+        # Legacy mode retains its minimum-input search.
+        for limit in range(horizon + 1):
+            stats['proposal_deviation_limits_tried'if guided else'action_limits_tried'].append(limit)
             result = walk(root, 0, [], limit)
             if early_jump and limit==0 and result is None and trials:
                 before=trials[0]['job']['before'];after=trials[-1]['job']['after']
@@ -280,7 +283,7 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
         report['worker_capabilities']=gate.vm.request('status')['result']
         report['source_scope']='Editor source snapshot; the executable SHA identifies the actual running backend'
     if retain_history:report['algorithm']='Original-engine input-count DFS with whole-VM cross-window backtracking'
-    if native_decision:report['algorithm']='Privileged native-state action proposals with exact-engine lookahead and independent 80ms operation windows'
+    if native_decision:report['algorithm']='Native-policy limited-discrepancy search with exact-engine lookahead and independent 80ms operation windows'
     report['backtracks']=[]
     history=[]
     nominal=[]
@@ -379,8 +382,15 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
                 if window['crossed']:
                     if native_decision:
                         from timing_margin import verify
-                        validation=verify(gate,nominal,initial_point=report['initial_ram_root']['result']['id'],
-                            initial_state=start['state'],start=start,board_code=BOARD,whole_board=True)
+                        with (output/'timing-validation.jsonl').open('a')as audit_log:
+                            def timing_progress(check):
+                                audit_log.write(json.dumps(dict(attempt=index,**check),ensure_ascii=False)+'\n')
+                                audit_log.flush()
+                                print(f'整板80ms验证: 操作{check["event"]} 偏移{check["shift_ms"]}ms '
+                                      f'通过={check["passed"]}',flush=True)
+                            validation=verify(gate,nominal,initial_point=report['initial_ram_root']['result']['id'],
+                                initial_state=start['state'],start=start,board_code=BOARD,whole_board=True,
+                                on_result=timing_progress)
                         report['timing_validation']=validation
                         if not validation['passed']:
                             failure=validation['failure']
