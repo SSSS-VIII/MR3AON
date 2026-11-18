@@ -67,7 +67,7 @@ def verify(gate,rows,*,initial_point,initial_state,start,board_code,selected_row
 
 def _branch(gate,keys,event,shift,current,end_tick,start,board_code,whole_board):
     remaining=[k for k in keys if k['tick']>=current['episodeFrame']]
-    cursor=0;actions=[];steps=0
+    cursor=0;actions=[];steps=0;furthest=current['position']['x']
     limit=end_tick+(100 if whole_board else 0)
     while current['episodeFrame']<limit:
         before=current
@@ -91,8 +91,11 @@ def _branch(gate,keys,event,shift,current,end_tick,start,board_code,whole_board)
             else:ticks=min(5,limit-current['episodeFrame'])
             ticks=min(ticks,limit-current['episodeFrame'])
         job=gate.step(ticks,action);current=job['after'];steps+=1
+        furthest=max(furthest,before['position']['x'],current['position']['x'],
+                     *(s['position']['x']for s in job.get('samples',[])))
         if job.get('terminated')or current['health']!=start['health']:
-            return dict(passed=False,reason='native_damage',before=before,actual=current,actions=actions,steps=steps)
+            return dict(passed=False,reason='native_damage',before=before,actual=current,
+                        actions=actions,steps=steps,max_world_x=furthest)
         board=gate.call('exec',code=board_code)
         if exit_kind(start['board'],board):
             return dict(passed=cursor==len(remaining),reason='native_exit',actual=current,actions=actions,steps=steps)

@@ -65,13 +65,18 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
     stats['timing_spacing_pruned']=0
     stats['proposal_deviation_limits_tried']=[]
     began = time.monotonic()
+    rejected={}
+    for actions in forbidden_prefixes:rejected.setdefault(len(actions),set()).add(tuple(actions))
+
+    def forbidden(actions):
+        return any(actions[:length]in prefixes for length,prefixes in rejected.items()if length<=len(actions))
 
     def release(keep):
         for identity in owned:
             if identity not in keep:gate.drop(identity)
 
     def walk(point, depth, path, remaining_cost):
-        if depth>=commit and tuple(r['action']for r in path[:commit])in forbidden_prefixes:
+        if forbidden(tuple(r['action']for r in path)):
             return None
         if depth >= horizon:
             return path, False
@@ -90,6 +95,7 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
                 stats['timing_spacing_pruned']+=sum(action!='none'for action in order)
                 order=tuple(action for action in order if action=='none')
         for action in (('jump',)if force_first_jump and depth==0 else order):
+            if forbidden(tuple(r['action']for r in path)+(action,)):continue
             # In guided mode a key is free when the native policy requests it.
             # Limit disagreements with that policy, rather than key count.
             cost = int(action != order[0]) if guided else int(action != 'none')

@@ -65,6 +65,7 @@ def test_a_nominally_safe_last_moment_input_is_rejected_and_cannot_pollute_the_n
                   start=dict(health=5000,board=dict(map=42,stage_index=0)),board_code='board',whole_board=True)
     assert not result['passed']and result['checks'][0]['passed']
     assert result['failure']['shift_ticks']==-2 and result['failure']['reason']=='native_damage'
+    assert result['failure']['max_world_x']>=result['failure']['actual']['position']['x']
     assert oracle.data==end and oracle.data['hp']==5000
 
 
@@ -74,3 +75,22 @@ def test_first_key_cannot_claim_early_tolerance_before_the_retained_entry():
     result=verify(oracle,rows,initial_point=initial,initial_state=state,
                   start=dict(health=5000,board=dict(map=42,stage_index=0)),board_code='board')
     assert not result['passed']and result['failure']['reason']=='earlier_side_precedes_retained_entry'
+
+
+def test_damage_witness_keeps_the_furthest_native_sample_when_a_hit_moves_the_role_back():
+    class Knockback(Oracle):
+        knockback=False
+        def step(self,ticks,action):
+            job=super().step(ticks,action)
+            if self.knockback:
+                forward=self.data['x']+4
+                self.data['x']-=10;self.data['hp']=4750
+                job.update(after=self.state(),samples=[dict(position=dict(x=forward))])
+            return job
+    oracle=Knockback();initial,state,rows=baseline(oracle)
+    oracle.knockback=True
+    result=verify(oracle,rows,initial_point=initial,initial_state=state,
+                  start=dict(health=5000,board=dict(map=42,stage_index=0)),board_code='board')
+    failure=result['failure']
+    assert not result['passed']and failure['reason']=='native_damage'
+    assert failure['max_world_x']==10 and failure['actual']['position']['x']==-4

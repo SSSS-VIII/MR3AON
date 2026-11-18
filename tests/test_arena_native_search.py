@@ -67,6 +67,17 @@ def test_search_backtracks_before_an_unavoidable_late_collision():
     assert all(row['job']['after']['health'] == 5000 for row in result['path'])
 
 
+@pytest.mark.parametrize('prefix',[
+    ('none',),('none','jump','none','none')])
+def test_rejected_prefixes_work_before_commit_and_on_the_native_exit(prefix):
+    oracle=Oracle()
+    result=search.search_window(oracle,start=start(oracle),offset=0,horizon=4,commit=2,
+                                forbidden_prefixes={prefix})
+    assert result['found']and result['crossed']
+    assert tuple(r['action']for r in result['path'])[:len(prefix)]!=prefix
+    assert result['path'][0]['action']=='jump'
+
+
 def test_privileged_policy_replaces_the_minimum_input_order_and_acts_before_the_hurt_boundary(monkeypatch):
     monkeypatch.syspath_prepend(str(SOURCE.parent))
     import native_policy
