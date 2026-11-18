@@ -61,6 +61,19 @@ def test_own_start_order_and_visual_motion_can_reject_a_different_repetition():
     assert tracker.start_context is None
 
 
+def test_short_occlusions_preserve_spatial_confirmation_without_merging_repetitions():
+    bank=Bank();tracker=BoardTracker(bank)
+    for t in (0,.05,.1,.15,.2):
+        bank.candidates=[]if t in(.05,.15)else[candidate(10+10*t)]
+        value=tracker.observe(None,observation(t))
+        if t<.2:assert not value['localized']
+    assert value['localized']and value['progress_x']==12
+    other=BoardTracker(bank)
+    for t,x in((0,10),(.1,42),(.2,11)):
+        bank.candidates=[candidate(x)];value=other.observe(None,observation(t))
+    assert not value['localized']
+
+
 def test_own_start_context_cannot_create_a_location_from_background_or_ignore_missing_motion():
     bank=Bank();tracker=BoardTracker(bank);tracker.begin_episode(level=5,slot=1)
     bank.candidates=[dict(candidate(0),progress=None)]

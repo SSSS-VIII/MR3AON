@@ -378,6 +378,7 @@ class BoardTracker:
         self.entry_windows = {}
         metadata=getattr(atlas,'meta',{}).get('map_sequences')
         self.sequence=BoardSequence(metadata)if metadata else None
+        self.spatial_pending=None
 
     def action_allows(self,key,progress):
         window=self.action_window
@@ -475,11 +476,22 @@ class BoardTracker:
                     loop_cycle=self.cycle, absolute_progress=self.odometer_base+progress,
                     localized=True, confidence=None, visual_match=status)
 
-    def confirm(self, key,carry=None):
+    def confirm(self, key,carry=None,spatial=None):
         if self.confirmed_identity == key:
             self.pending = key
             return True
         self.pending_count = self.pending_count + 1 if self.pending == key else 1
+        if spatial is not None:
+            now,x=spatial
+            old=self.spatial_pending
+            coherent=(old is not None and old['identity']==key and 0<now-old['time']<=.4
+                      and -.2<=x-old['x']<=40*(now-old['time'])+.8)
+            count=old['count']+1 if coherent else 1
+            self.spatial_pending=dict(identity=key,time=now,x=x,count=count)
+            # Brief occlusion between independent consistent registrations
+            # cannot erase every prior observation of a short-lived warning.
+            # This is confirmation only; it never synthesizes a position.
+            self.pending_count=count
         self.pending = key
         if self.pending_count < 3:
             return False
@@ -611,7 +623,7 @@ class BoardTracker:
         key = first['identity']
         old_cycle, old_odometer = self.cycle, self.odometer_base
         was_identity = self.confirmed_identity
-        if not self.confirm(key):
+        if not self.confirm(key,spatial=(observation['time'],first['progress'])):
             self.state = dict(status='confirming', identity=key, localized=False)
             return self.state
         context = self.atlas.contexts[first['row']['key']]
