@@ -12,6 +12,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 from arena_fixed_sequence import BoardSequence
+from arena_fixed_static_flow import StaticAnchorFlow
 
 SIZE = (320, 180)
 MAX_POINTS = 128
@@ -183,6 +184,7 @@ def identity(row):
 class Atlas:
     def __init__(self, folder):
         self.folder = Path(folder).resolve()
+        self.static_flow = StaticAnchorFlow()
         self.meta = json.loads((self.folder / 'index.json').read_text())
         if self.meta.get('schema') != 1 or self.meta.get('mode') != 6:
             raise ValueError('Unknown Gale visual atlas schema')
@@ -212,6 +214,7 @@ class Atlas:
                     landmarks=self.data['landmarks'][index], landmark_count=int(self.data['landmark_count'][index]))
 
     def match(self, image, observation, prior=None):
+        observation = self.static_flow.observe(observation)
         query = features(image, observation)
         self.last_query = query
         if query['count'] < 8 and query['landmark_count'] < 2 or not len(self.rows):
@@ -351,10 +354,10 @@ class Atlas:
         # motion error without confusing this boundary with one 32m earlier.
         if prior and prior.get('progress')is not None and prior.get('std',0)<=1:
             endpoints=query['landmarks'][:query['landmark_count']]
-            endpoints=endpoints[np.isin(endpoints[:,0],(1,2,4)if prior.get('tentative')else(4,))]
+            endpoints=endpoints[np.isin(endpoints[:,0],(1,2,4))]
             for context in self.contexts.values():
                 if identity(context)!=prior['identity']:continue
-                anchors=context.get('support_anchors',[])+(context.get('anchors',[])if prior.get('tentative')else[])
+                anchors=context.get('support_anchors',[])+context.get('anchors',[])
                 for kind,x in anchors:
                     for point in endpoints:
                         if point[0]!=kind:continue
