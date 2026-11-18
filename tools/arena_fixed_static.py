@@ -1,4 +1,5 @@
 """Offline fixed-layout geometry; no client connection or inferred enemy IDs."""
+import math
 from arena_gale_catalog import classify_board
 
 
@@ -21,6 +22,11 @@ def resolved_anchors(layout,categories):
         for enemy in block.get('enemies',[]):
             kind=categories.get(enemy['source_type_id'])
             if kind is not None:
+                if kind==2 and 'rotation' in enemy:
+                    rotation=enemy['rotation']
+                    vertical=(math.cos(math.radians(rotation.get('z',0)))
+                              *math.cos(math.radians(rotation.get('x',0)))*enemy.get('scale_y',1))
+                    kind=2 if vertical>.05 else 5 if vertical<-.05 else 6
                 anchors.append([kind,round(block['start_x']-layout['stage_start']+enemy['position'].get('x',0),3)])
     return anchors
 
@@ -62,7 +68,8 @@ def expand(stage):
             blocks.append(dict(index=len(blocks),source_group=group_index,repeat=iteration,
                 ground_type=block.get('_groundType',0),
                 start_x=start+offset,finish_x=finish+offset,
-                enemies=[dict(source_type_id=e['_enemyType'],position=e.get('_localPosition',{}))
+                enemies=[dict(source_type_id=e['_enemyType'],position=e.get('_localPosition',{}),
+                              rotation=e.get('_localEulerAngles',{}),scale_y=e.get('_localScale',{}).get('y',1))
                          for e in block.get('enemyInfos',[])]))
         extra+=(repeat-1)*(finish-start)
     return dict(stage_id=stage['_stageID'],stage_start=0.,blocks=blocks,finite=finite,

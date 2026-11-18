@@ -187,8 +187,11 @@ def build(samples, output, detector, *, per_case=96, detector_sha256=None, cache
             # bank. It never enters a live observation or the visual actor.
             root=sample.get('root_screen_x')
             if root is None and found[0]is not None:root=found[0].center[0]-.052*39.5
+            anchors=contexts.get(key,{}).get('anchors',sample.get('anchors',[]))
             observation['reference_static_box_x']=[root+(x-sample['local_x'])*39.5
-                for kind,x in sample.get('anchors',[])if kind==2]if root is not None else []
+                for kind,x in anchors if kind in (2,5)]if root is not None else []
+            observation['reference_static_box_kinds']=[(root+(x-sample['local_x'])*39.5,kind)
+                for kind,x in anchors if kind in (2,5)]if root is not None else []
             value = features(rgb, observation)
             if cached is not None:np.savez_compressed(cached,**value)
         if value['count'] < 8:

@@ -35,3 +35,10 @@ def test_static_anchor_classes_come_from_original_config_and_exclude_moving_mupp
               (200,'EnemyMuppetBomb','EnemyInfoSpider'),(103,'EnemyHideBlade','EnemyInfoHideBlade'),
               (6037,'EnemySpiderBT','EnemyInfoBT')]]
     assert enemy_categories(rows)=={218:1,103:2}
+
+
+@pytest.mark.parametrize('rotation,scale,kind',[(0,1,2),(180,1,5),(180,-1,2),(90,1,6)])
+def test_original_rotation_and_scale_preserve_upper_lower_and_sideways_blades(rotation,scale,kind):
+    data=stage();enemy=data['_levelBlockInfos'][1][0]['enemyInfos'][0]
+    enemy['_localEulerAngles']=dict(z=rotation);enemy['_localScale']=dict(y=scale)
+    assert resolved_anchors(expand(data),{103:2})==[[kind,65.8]]

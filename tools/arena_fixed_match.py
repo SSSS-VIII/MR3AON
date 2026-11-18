@@ -58,6 +58,24 @@ def semantic(observation):
     return out
 
 
+def blade_anchor_kind(detection, observation):
+    x,y=detection.box.center
+    declared=observation.get('reference_static_box_kinds')
+    if declared is not None:
+        return next((kind for position,kind in declared if abs(x-position)<=10),None)
+    surfaces=[]
+    for segment in observation.get('visible_supports',[]):
+        if segment.get('kind') not in ('rope','platform') or segment.get('confidence',0)<.6:
+            continue
+        a,b=segment['a'],segment['b']
+        if b[0]>a[0] and a[0]-3<=x<=b[0]+3:
+            surfaces.append(a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0]))
+    if not surfaces:
+        return 2 if observation.get('reference_static_box_x') is not None else None
+    surface=min(surfaces,key=lambda v:abs(v-y))
+    return 2 if y<surface-3 else 5 if y>surface+3 else None
+
+
 def features(image, observation=None):
     rgb = cv2.resize(image[:, :, :3], SIZE, interpolation=cv2.INTER_AREA)
     gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
@@ -91,6 +109,8 @@ def features(image, observation=None):
             name = (d.resource or '').lower()
             group = (1 if d.kind == 'spider' and 'muppet' not in name else
                      2 if 'hideblade' in name or static_box_anchor(d,observation) else None)
+            if group==2:
+                group=blade_anchor_kind(d,observation)
             if group and d.confidence >= .4:
                 landmarks.append((group, d.box.center[0]-root, d.box.center[1]))
         for s in observation.get('visible_supports', []):
@@ -114,7 +134,8 @@ def features(image, observation=None):
 
 
 def feature_signature():
-    code=inspect.getsource(features)+inspect.getsource(semantic)+inspect.getsource(static_box_anchor)
+    code=(inspect.getsource(features)+inspect.getsource(semantic)+inspect.getsource(static_box_anchor)
+          +inspect.getsource(blade_anchor_kind))
     return hashlib.sha256(code.encode()).hexdigest()
 
 
@@ -315,7 +336,7 @@ class Atlas:
             sources.update({key:source for key,source in self.entry_features.items()if key in entry_windows})
             for key,source in sources.items():
                 entry=entry_windows.get(key)
-                selected_static=static[np.isin(static[:,0],(1,2,4)if entry else(1,2))]
+                selected_static=static[np.isin(static[:,0],(1,2,4,5)if entry else(1,2,5))]
                 context=self.contexts[key]
                 ordered=bool(action_window and action_window['key']==key and prior
                              and identity(context)==prior['identity'])
@@ -350,7 +371,7 @@ class Atlas:
                         std=aligned['std'],score=min(1.,.55+.12*aligned['count'])*aligned['agreement']*(.9+.1*background),
                         registration=None,progress_source='original_static_layout',landmark_count=aligned['count'],
                         ordered_static_pair=ordered,
-                        temporal_entry_pair=bool(entry and len(selected_static)==2 and set(selected_static[:,0])=={2,4}
+                        temporal_entry_pair=bool(entry and len(selected_static)==2 and set(selected_static[:,0]) in ({2,4},{5,4})
                             and any(static_box_anchor(d,observation)for d in observation.get('detections',[]))
                             and any(s.get('observations',0)>=3 for s in observation.get('visible_supports',[])))))
         # A single periodic rope endpoint cannot establish an absolute place.
@@ -358,14 +379,14 @@ class Atlas:
         # motion error without confusing this boundary with one 32m earlier.
         if prior and prior.get('progress')is not None and prior.get('std',0)<=1:
             endpoints=query['landmarks'][:query['landmark_count']]
-            endpoints=endpoints[np.isin(endpoints[:,0],(1,2,4))]
+            endpoints=endpoints[np.isin(endpoints[:,0],(1,2,4,5))]
             for context in self.contexts.values():
                 if identity(context)!=prior['identity']:continue
                 anchors=context.get('support_anchors',[])+context.get('anchors',[])
                 for kind,x in anchors:
                     for point in endpoints:
                         if point[0]!=kind:continue
-                        if kind in (1,2) and not prior.get('tentative') and prior.get('std',0)>.2:continue
+                        if kind in (1,2,5) and not prior.get('tentative') and prior.get('std',0)>.2:continue
                         progress=x-float(point[1])/39.5
                         if abs(progress-prior['progress'])>max(.8,3*prior.get('std',0)):
                             continue

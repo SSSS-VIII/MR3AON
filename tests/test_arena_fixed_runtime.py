@@ -9,6 +9,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
 import arena_fixed_match as matching
 from arena_fixed_match import Atlas,BoardTracker,landmark_shifts
 from arena_fixed_match import static_box_anchor
+from arena_fixed_match import blade_anchor_kind
 from arena_fixed_policy import HybridAvoider,compile_program,compatible
 
 ID=(5,42,1,50012)
@@ -453,6 +454,21 @@ def test_generic_boxes_require_measured_static_horizontal_motion_to_anchor_live_
     track.vx=-740;track.observations=1
     assert not static_box_anchor(detection,obs)
     assert not static_box_anchor(detection,dict(obs,scene_motion_observed=False))
+
+
+def test_blade_direction_uses_local_sloped_support_and_separates_equal_horizontal_patterns():
+    from arena_vision import Box,Detection
+    upper=Detection(Box(194,170,12,40),'trap',.9,collider_shape='BoxCollider')
+    lower=Detection(Box(194,210,12,40),'trap',.9,collider_shape='BoxCollider')
+    obs=dict(rope=250,visible_supports=[dict(kind='rope',confidence=.9,a=(0,160),b=(640,320))])
+    assert blade_anchor_kind(upper,obs)==2
+    assert blade_anchor_kind(lower,obs)==5  # Local rope Y=210; player rope Y is irrelevant.
+    assert blade_anchor_kind(lower,{}) is None
+    assert blade_anchor_kind(upper,dict(reference_static_box_kinds=[(200,5)]))==5
+    reference=dict(landmarks=np.array([[2,0,0],[2,100,0],[5,200,0]],np.float32),landmark_count=3)
+    query=dict(landmarks=np.array([[2,0,100],[5,100,200]],np.float32),landmark_count=2)
+    shifts=landmark_shifts(reference,query)
+    assert len(shifts)==1 and shifts[0]['dx']==-100
 
 
 def test_adjacent_rope_segments_supply_one_shared_joint_but_keep_distinct_endpoints():
