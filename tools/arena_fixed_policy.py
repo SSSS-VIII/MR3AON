@@ -61,6 +61,7 @@ def compile_program(route, key):
             events.append(dict(index=len(events), x=before['position']['x']-origin,
                 action='slide' if effect=='slide' else step['action'], primitive=effect,
                 relative_tick=step['relative_tick'],
+                native_tick=before.get('episodeFrame'),
                 before=current, before_jumps=jumps, native_before=before['physics'],
                 before_rope_height=(before['position']['y']-rope_y
                     if rope_y is not None and current in ('flip_up','flip_down')else None)))
@@ -69,7 +70,9 @@ def compile_program(route, key):
                          for a,b in zip(events,events[1:]))
     return dict(key=key, entry_x=poses[0]['x'], end_x=route['end']['state']['position']['x']-origin,
                 poses=poses, events=events, native_passed=True, visual_execution_verified=False,
-                monotone=monotone, requires_phase_clock=clock_required)
+                monotone=monotone, requires_phase_clock=clock_required,
+                input_order='Acknowledged event cursor; no automatic skipping after takeover',
+                tick_seconds=.02)
 
 
 def compatible(expected, observation, jumps=None):
@@ -90,6 +93,7 @@ class HybridAvoider:
         self.visit = None
         self.fixed_active = False
         self.last_fixed_commit = None
+        self.failed_visits = set()
         self.decision = dict(mode='reactive', reason='no_visual_match')
 
     def __getattr__(self, name):
@@ -108,6 +112,21 @@ class HybridAvoider:
         return not self.fixed_active and getattr(self.reactive, 'revalidate_ground_down', False)
 
     def observe(self, pixels, observation):
+        # The next unacknowledged input bounds the spatial hypotheses. A
+        # similar picture from a later repetition cannot advance this cursor.
+        window=None
+        if self.visit is not None and self.cursor is not None and self.visit not in self.failed_visits:
+            program=self.programs.get(self.visit[0])
+            if program is not None and self.cursor<len(program['events']):
+                event=program['events'][self.cursor]
+                previous=self.last_fixed_commit
+                low=(previous['event']['x']-.8 if previous is not None
+                     and previous['visit']==self.visit else program['entry_x']-.2)
+                window=dict(key=self.visit[0],visit=self.visit[1],low=low,high=event['x']+.65,
+                            event=event['index'],relative_tick=event.get('relative_tick'))
+        self.tracker.action_window=window
+        self.tracker.entry_windows={key:dict(low=p['entry_x']-.2,high=p['events'][0]['x']+.65)
+            for key,p in self.programs.items()if p['events']and (self.visit is None or key!=self.visit[0])}
         return self.tracker.observe(pixels, observation)
 
     def begin_episode(self,*,level,slot):
@@ -170,7 +189,7 @@ class HybridAvoider:
         events = program['events']
         event_x = [e['x'] for e in events]
         visit = (located['key'], located['visit'])
-        cursor = self.cursor if self.visit == visit else bisect.bisect_left(event_x,x-.65)
+        cursor = self.cursor if self.visit == visit else 0
         event = events[cursor] if cursor < len(events) else None
         # A forecast can already be beyond the recorded input boundary before
         # this key has been sent. Compare its pre-input pose, not the future
@@ -187,10 +206,6 @@ class HybridAvoider:
             if not any(compatible(p['phase'],observation,p.get('jumps'))
                        for p in poses[max(0,lo-1):max(hi,index+1)]):
                 return None, located
-        if not pending:
-            resume = bisect.bisect_left(event_x,x-.15)
-            if self.visit != visit or poses[index]['phase'] in ('rope_above','rope_below','ground'):
-                cursor = max(cursor,resume)
         located['cursor'] = cursor
         return program, located
 
@@ -290,6 +305,12 @@ class HybridAvoider:
         self.fixed_active = False
         program, located = self.eligibility(observation)
         self.decision = dict(mode='reactive', board=located)
+        visit=(located.get('key'),located.get('visit'))
+        if located.get('status')=='action_order_conflict':
+            self.failed_visits.add(visit)
+        if visit in self.failed_visits:
+            self.decision['reason']='fixed_sequence_aborted'
+            return self.reactive.choose(observation)
         if program is not None:
             x = located['progress_x']
             events = program['events']
@@ -299,11 +320,10 @@ class HybridAvoider:
                 # native pose. Inputs behind that state must not be reissued.
                 self.visit = visit
                 self.cursor = located['cursor']
-            else:
-                self.cursor = max(self.cursor,located['cursor'])
             if self.cursor < len(events):
                 event = events[self.cursor]
                 if x > event['x']+.65:
+                    self.failed_visits.add(visit)
                     self.decision['reason'] = 'missed_fixed_input_window'
                     return self.reactive.choose(observation)
                 if self.input_due(event,observation,x):

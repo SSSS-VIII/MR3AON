@@ -176,6 +176,80 @@ def test_future_position_uses_pre_input_pose_and_cursor_advances_only_on_ack():
     assert reactive.calls==0
 
 
+def test_resting_pose_after_a_missed_input_cannot_skip_to_a_later_operation():
+    policy,reactive=controller()
+    program=policy.programs[KEY]
+    program['events'].append(dict(index=1,x=22,action='jump',primitive='jump1',before='rope_above'))
+    program['poses'].append(dict(x=20,phase='rope_above',jumps=0))
+    # An early visual lock creates cursor 0, but no key was acknowledged.
+    assert policy.choose(dict(observation(1),test_progress=8))[0]is None
+    assert policy.cursor==0
+    assert policy.choose(dict(observation(1.5),test_progress=22))==('jump','reactive')
+    assert policy.cursor==0 and policy.decision['reason']=='missed_fixed_input_window'
+    policy.on_commit('jump',1.51)
+    assert policy.cursor==0
+    assert policy.choose(dict(observation(1.6),test_progress=10))==('jump','reactive')
+    assert policy.decision['reason']=='fixed_sequence_aborted'
+
+
+def test_initial_takeover_cannot_start_at_a_later_operation_in_a_repetition():
+    policy,_=controller()
+    policy.programs[KEY]['events'].append(dict(index=1,x=22,action='jump',primitive='jump1',before='rope_above'))
+    policy.programs[KEY]['poses'].append(dict(x=20,phase='rope_above',jumps=0))
+    assert policy.choose(dict(observation(1),test_progress=22))==('jump','reactive')
+    assert policy.cursor==0 and policy.proposed_event is None
+
+
+def test_action_sequence_restricts_repeat_registration_without_manufacturing_a_place():
+    bank=Bank();tracker=BoardTracker(bank)
+    for t,x in ((0,8),(.05,8.5),(.1,9)):
+        bank.candidates=[candidate(x)];tracker.observe(None,observation(t))
+    tracker.action_window=dict(key=KEY,visit=tracker.visit,low=8,high=10.65,event=0)
+    # Absolute odometry is deliberately uncertain. A far repetition cannot
+    # replace the expected next input even when it has the stronger image.
+    tracker.last['std']=2
+    bank.candidates=[candidate(42,1),candidate(10,.94)]
+    value=tracker.observe(None,observation(.15))
+    assert value['localized']and value['progress_x']==10
+    bank.candidates=[candidate(42,1)]
+    tracker.last['std']=2
+    value=tracker.observe(None,observation(.2))
+    assert not value['localized']
+    assert not tracker.projected(observation(.21))['localized']
+
+
+def test_policy_supplies_only_the_next_unacknowledged_operation_window():
+    policy,_=controller()
+    policy.tracker.observe=lambda *_:policy.tracker.action_window
+    policy.visit=(KEY,1);policy.cursor=0
+    value=policy.observe(None,observation(1))
+    assert value['event']==0 and value['high']==10.65
+    assert value['low']==-.2
+    policy.proposed_event=policy.programs[KEY]['events'][0];policy.on_commit('down',1)
+    assert policy.observe(None,observation(1.1))is None
+
+
+def test_first_operation_can_use_a_trap_and_rope_joint_but_not_a_later_identical_pair(tmp_path,monkeypatch):
+    import json
+    context=dict(key=KEY,level=5,map=42,slot=1,stage=50012,length=100,fixed=True,
+        anchors=[[2,32],[2,64]],support_anchors=[[4,24],[4,56]])
+    (tmp_path/'index.json').write_text(json.dumps(dict(schema=1,mode=6,contexts=[context],
+        references=[dict(context,local_x=20)])))
+    value=dict(coarse=np.ones(64,np.float32),points=np.zeros((128,2),np.float32),
+        descriptors=np.zeros((128,32),np.uint8),count=8,semantic=np.zeros(32,np.float32),
+        landmarks=np.zeros((48,3),np.float32),landmark_count=0)
+    np.savez_compressed(tmp_path/'features.npz',**{k:np.asarray([v])for k,v in value.items()})
+    query=deepcopy(value);query['landmark_count']=2
+    query['landmarks'][:2]=[[2,12*39.5,100],[4,4*39.5,150]]
+    monkeypatch.setattr(matching,'features',lambda *_:query)
+    monkeypatch.setattr(matching,'register',lambda *_:dict(inliers=22,ratio=1.,residual=0.,dx=0.,dy=0.))
+    bank=Atlas(tmp_path);bank.entry_windows={KEY:dict(low=0,high=30)}
+    positions=[c['progress']for c in bank.match(None,{})if c['progress']is not None]
+    assert positions and all(abs(x-20)<.01 for x in positions)
+    bank.entry_windows={}
+    assert not any(c['progress']is not None for c in bank.match(None,{}))
+
+
 def test_missing_visual_lock_and_wrong_jump_count_use_the_existing_reactive_policy():
     policy,reactive=controller();obs=dict(observation(1),test_progress=8,player_predicted=True)
     assert policy.choose(obs)==('jump','reactive')
@@ -258,6 +332,17 @@ def test_generic_boxes_require_measured_static_horizontal_motion_to_anchor_live_
     track.vx=-740;track.observations=1
     assert not static_box_anchor(detection,obs)
     assert not static_box_anchor(detection,dict(obs,scene_motion_observed=False))
+
+
+def test_adjacent_rope_segments_supply_one_shared_joint_but_keep_distinct_endpoints():
+    from arena_vision import Box
+    supports=[dict(kind='rope',confidence=.9,a=(0,250),b=(400,250),left_clipped=True),
+        dict(kind='rope',confidence=.9,a=(403,252),b=(640,250),right_clipped=True),
+        dict(kind='rope',confidence=.9,a=(420,250),b=(640,250),right_clipped=True)]
+    q=matching.features(np.zeros((360,640,3),np.uint8),dict(player=Box(170,210,16,36),visible_supports=supports))
+    points=q['landmarks'][:q['landmark_count']]
+    assert len(points)==2 and all(points[:,0]==4)
+    assert abs(points[1,1]-points[0,1]-20)<.01
 
 
 def test_offline_generic_box_reference_needs_a_declared_static_x_correspondence():

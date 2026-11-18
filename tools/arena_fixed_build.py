@@ -17,6 +17,7 @@ from arena_fixed_catalog import CATALOG, DATASET, ROOT
 from arena_fixed_match import features, register,feature_signature
 from arena_native_json import normalize_arrays
 from arena_fixed_static import enemy_categories,resolved_anchors,support_anchors,expand
+from arena_fixed_sequence import map_sequences
 
 
 @cache
@@ -141,7 +142,7 @@ def search_samples(path, catalog):
                          finish_x=b['finish_x']-layout['stage_start']) for b in layout['blocks']])
 
 
-def build(samples, output, detector, *, per_case=96, detector_sha256=None, cache=None, declarations=()):
+def build(samples, output, detector, *, per_case=96, detector_sha256=None, cache=None, declarations=(),sequences=()):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
     rows, values, contexts = [], [], {c['key']:c for c in declarations}
@@ -231,7 +232,7 @@ def build(samples, output, detector, *, per_case=96, detector_sha256=None, cache
                                                  for k in ('coarse','points','descriptors','count','semantic','landmarks','landmark_count')})
     result = dict(schema=1, mode=6, detector_sha256=detector_sha256,feature_sha256=feature_sha,
                   detector_sources=detector_sources,detector_signature=detector_signature,references=rows,
-                  contexts=list(contexts.values()), native_metadata_used='Offline image annotation only',
+                  contexts=list(contexts.values()),map_sequences=list(sequences),native_metadata_used='Offline image annotation and static map pools only',
                   source='Same standard YOLO detector as the runtime, plus original labelled captures')
     (output/'index.json').write_text(json.dumps(result, ensure_ascii=False, indent=2))
     return result
@@ -264,7 +265,8 @@ def main():
     detector = make_perception(args.weights).detector
     result = build(samples(), args.output, detector, per_case=args.per_case,
                    detector_sha256=hashlib.sha256(args.weights.read_bytes()).hexdigest(),
-                   cache=args.cache or args.output.parent/'feature-cache',declarations=declared_contexts(catalog))
+                   cache=args.cache or args.output.parent/'feature-cache',declarations=declared_contexts(catalog),
+                   sequences=map_sequences(catalog))
     print(json.dumps(dict(references=len(result['references']), contexts=len(result['contexts']))), flush=True)
 
 

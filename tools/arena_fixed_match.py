@@ -11,6 +11,7 @@ import math
 from pathlib import Path
 import cv2
 import numpy as np
+from arena_fixed_sequence import BoardSequence
 
 SIZE = (320, 180)
 MAX_POINTS = 128
@@ -97,7 +98,12 @@ def features(image, observation=None):
             for side, clipped in (('a', 'left_clipped'), ('b', 'right_clipped')):
                 x, y = s[side]
                 if not s.get(clipped) and 15 < x < 625:
-                    landmarks.append((3 if s['kind']=='platform' else 4, x-root, y))
+                    kind=3 if s['kind']=='platform'else 4
+                    # Adjacent segments both report their shared endpoint.
+                    # The source layout contains that joint once; counting it
+                    # twice would reject a valid trap + joint correspondence.
+                    if not any(k==kind and abs(px-(x-root))<12 and abs(py-y)<12 for k,px,py in landmarks):
+                        landmarks.append((kind, x-root, y))
     array = np.zeros((MAX_LANDMARKS, 3), np.float32)
     n = min(MAX_LANDMARKS, len(landmarks))
     if n:
@@ -190,6 +196,10 @@ class Atlas:
         self.layout_features={key:dict(landmarks=np.asarray([[kind,x*39.5,0]for kind,x in c['anchors']],np.float32),
                                       landmark_count=len(c['anchors']))
                               for key,c in self.contexts.items()if c.get('fixed')and len(c.get('anchors',[]))>=3}
+        self.entry_features={key:dict(landmarks=np.asarray([[kind,x*39.5,0]
+            for kind,x in c.get('anchors',[])+c.get('support_anchors',[])],np.float32),
+            landmark_count=len(c.get('anchors',[]))+len(c.get('support_anchors',[])))
+            for key,c in self.contexts.items()if c.get('fixed')and c.get('support_anchors')}
         # OpenCV/BLAS lazy initialization belongs before gameplay resumes.
         warm = features(np.random.default_rng(0).integers(0,256,(180,320,3),dtype=np.uint8))
         register(warm, warm)
@@ -207,14 +217,32 @@ class Atlas:
         if query['count'] < 8 and query['landmark_count'] < 2 or not len(self.rows):
             return []
         indices = np.arange(len(self.rows))
+        sequence=getattr(self,'sequence',None)
+        matches={}
+        if sequence is not None:
+            # Inspect map backgrounds independently of the board/operation
+            # shortlist. Reuse registrations below rather than run ORB twice.
+            scores={}
+            coarse=self.coarse@query['coarse']
+            for place in sequence.maps:
+                if not sequence.may_change_map(place):continue
+                group=[i for i,row in enumerate(self.rows)if (row['level'],row['map'])==place]
+                for i in sorted(group,key=lambda i:coarse[i],reverse=True)[:2]:
+                    matched=matches[i]=register(self.feature(i),query)
+                    if matched:
+                        scores[place]=max(scores.get(place,0),min(1.,matched['inliers']/22)*matched['ratio'])
+            if observation.get('time')is not None:sequence.background(scores)
+            indices=np.asarray([i for i in indices if sequence.permits(identity(self.rows[i]))],dtype=int)
+            if not len(indices):return []
         start_context=getattr(self,'start_context',None)
         if start_context is not None:
-            indices=np.asarray([i for i,row in enumerate(self.rows)
-                if row['level']==start_context['level']and row['slot']==start_context['slot']],dtype=int)
+            indices=np.asarray([i for i in indices if self.rows[i]['level']==start_context['level']
+                and self.rows[i]['slot']==start_context['slot']],dtype=int)
             if not len(indices):return []
         if prior:
             allowed = []
-            for i, row in enumerate(self.rows):
+            for i in indices:
+                row=self.rows[i]
                 current = identity(row) == prior['identity']
                 following = row['level'] == prior['identity'][0] and row['map'] == prior['identity'][1] and row['slot'] == prior['identity'][2] + 1
                 near_exit = prior.get('near_exit',False) or prior.get('progress') is not None and prior['progress'] >= prior['length'] - 18
@@ -222,13 +250,24 @@ class Atlas:
                 loop_entry = (loop_pool and prior.get('loop') and prior.get('progress') is not None
                               and prior['progress'] >= prior['length'] and row['local_x']<8)
                 if (current and (prior.get('progress') is None or abs(row['local_x']-prior['progress']) < 24)
-                        or following and near_exit or loop_entry):
+                        or following and near_exit or loop_entry
+                        or sequence is not None and not current and sequence.permits(identity(row))):
                     allowed.append(i)
             # A blank or occluded frame does not permit skipping several
             # boards in a map whose background is shared by every slot.
             indices = np.asarray(allowed, dtype=int)
             if not len(indices):
                 return []
+        action_window=getattr(self,'action_window',None)
+        entry_windows=getattr(self,'entry_windows',{})
+        indices=np.asarray([i for i in indices if self.rows[i]['key']not in entry_windows
+            or entry_windows[self.rows[i]['key']]['low']-12<=self.rows[i]['local_x']
+            <=entry_windows[self.rows[i]['key']]['high']+12],dtype=int)
+        if not len(indices):return []
+        if action_window is not None:
+            indices=np.asarray([i for i in indices if self.rows[i]['key']!=action_window['key']
+                or action_window['low']-12<=self.rows[i]['local_x']<=action_window['high']+12],dtype=int)
+            if not len(indices):return []
         coarse = self.coarse[indices] @ query['coarse']
         selected = indices[np.argsort(coarse)[-min(24, len(indices)):][::-1]]
         candidates = []
@@ -236,7 +275,7 @@ class Atlas:
         for i in selected:
             row = self.rows[int(i)]
             stored = self.feature(int(i))
-            match = register(stored, query)
+            match = matches[int(i)]if int(i)in matches else register(stored, query)
             shifts = landmark_shifts(stored, query)
             if match is None and not shifts:
                 continue
@@ -268,11 +307,17 @@ class Atlas:
                 candidates.append(dict(row=row, identity=identity(row), score=score,
                                        progress=progress, std=std, registration=match,progress_source='background'))
         static=query['landmarks'][:query['landmark_count']]
-        static=static[np.isin(static[:,0],(1,2))]
-        if len(static)>=3:
-            current=dict(landmarks=static,landmark_count=len(static))
-            for key,source in self.layout_features.items():
+        if len(static)>=2:
+            sources=dict(self.layout_features)
+            sources.update({key:source for key,source in self.entry_features.items()if key in entry_windows})
+            for key,source in sources.items():
+                entry=entry_windows.get(key)
+                selected_static=static[np.isin(static[:,0],(1,2,4)if entry else(1,2))]
+                required=2 if entry else 3
+                if len(selected_static)<required:continue
+                current=dict(landmarks=selected_static,landmark_count=len(selected_static))
                 context=self.contexts[key]
+                if sequence is not None and not sequence.permits(identity(context)):continue
                 if start_context is not None and (context['level']!=start_context['level']or context['slot']!=start_context['slot']):
                     continue
                 place=(context['level'],context['map'])
@@ -282,13 +327,14 @@ class Atlas:
                     following=place==prior['identity'][:2]and context['slot']==prior['identity'][2]+1
                     near_exit=prior.get('near_exit',False)or(prior.get('progress')is not None
                                        and prior['progress']>=prior['length']-18)
-                    if not own and not(following and near_exit):
+                    if not own and not(following and near_exit)and not(sequence is not None and sequence.permits(identity(context))):
                         continue
                 if background<.25 and not(prior and place==prior['identity'][:2]):
                     continue
                 for aligned in landmark_shifts(source,current):
                     progress=-aligned['dx']/39.5
-                    if aligned['count']<3 or aligned['agreement']<.75 or not 0<=progress<=context['length']+1:
+                    if (aligned['count']<required or aligned['agreement']<.75 or not 0<=progress<=context['length']+1
+                            or entry is not None and not entry['low']<=progress<=entry['high']):
                         continue
                     candidates.append(dict(row=context,identity=identity(context),progress=progress,
                         std=aligned['std'],score=min(1.,.55+.12*aligned['count'])*aligned['agreement']*(.9+.1*background),
@@ -328,6 +374,15 @@ class BoardTracker:
         self.cycle = 0
         self.odometer_base = 0.
         self.start_context = None
+        self.action_window = None
+        self.entry_windows = {}
+        metadata=getattr(atlas,'meta',{}).get('map_sequences')
+        self.sequence=BoardSequence(metadata)if metadata else None
+
+    def action_allows(self,key,progress):
+        window=self.action_window
+        return (window is None or key!=window['key'] or self.visit!=window['visit']
+                or progress is None or window['low']<=progress<=window['high'])
 
     def begin_episode(self,*,level,slot):
         if self.last is not None or self.confirmed_identity is not None:
@@ -337,6 +392,7 @@ class BoardTracker:
         # The local start command enters the beginning of the chosen board.
         # This is a broad interval, not a native position or a pinned variant.
         self.start_context=dict(level=level,slot=slot,low=0.,high=12.,time=None,started=None)
+        if self.sequence is not None:self.sequence.begin(level,slot)
 
     def advance_start_context(self,observation):
         context=self.start_context
@@ -461,8 +517,16 @@ class BoardTracker:
         self.advance_odometry(observation)
         prediction = self.predict(observation)
         self.atlas.start_context=self.start_context
+        self.atlas.action_window=self.action_window if self.action_window and self.action_window['visit']==self.visit else None
+        self.atlas.sequence=self.sequence
+        self.atlas.entry_windows=self.entry_windows
         prior=prediction if prediction and prediction['std']<=1 else self.recognition_prior(observation['time'])
         candidates = self.atlas.match(image, observation, prior)
+        candidates=[c for c in candidates if self.atlas.contexts[c['row']['key']].get('fixed',True)
+                    and (self.sequence is None or self.sequence.permits(c['identity']))]
+        candidates=[c for c in candidates if self.action_allows(c['row']['key'],c['progress'])]
+        candidates=[c for c in candidates if c['progress']is None or c['row']['key']not in self.entry_windows
+                    or self.entry_windows[c['row']['key']]['low']<=c['progress']<=self.entry_windows[c['row']['key']]['high']]
         context=self.start_context
         if context is not None:
             candidates=[c for c in candidates if c['identity'][0]==context['level']
@@ -580,6 +644,8 @@ class BoardTracker:
                          time=observation['time'], length=context['length'],loop=context.get('loop',False))
         self.registered_time=observation['time']
         self.start_context=None
+        if self.sequence is not None:
+            self.sequence.accept(key,progress,context['length'])
         self.state = dict(status='locked', identity=key, key=context['key'], visit=self.visit,
                           progress_x=progress, progress_std=first['std'], block_instance=block,
                           loop_cycle=self.cycle, absolute_progress=self.odometer_base+progress,
@@ -588,10 +654,13 @@ class BoardTracker:
 
     def projected(self, observation):
         value = self.state.copy()
+        if self.sequence is not None:value['sequence']=self.sequence.state()
         predicted = self.predict(observation)
         if predicted and self.state.get('status') in ('locked', 'tracked','identified'):
             value.update(progress_x=predicted['progress'], progress_std=predicted['std'],
                          localized=self.state.get('status')!='identified'and predicted['std'] <= .5)
         else:
             value['localized'] = False
+        if value.get('progress_x')is not None and not self.action_allows(value.get('key'),value['progress_x']):
+            value.update(localized=False,status='action_order_conflict')
         return value
