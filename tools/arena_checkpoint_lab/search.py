@@ -41,7 +41,7 @@ class BudgetExceeded(RuntimeError):
 
 def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200, on_trial=None, cache_prefix=0,
                   root_point=None, forbidden_prefixes=(),early_jump=False,guided=False,retain_forecast=False,
-                  last_input_frame=None):
+                  last_input_frame=None,warm_start=()):
     """Leave the guest at a chosen real checkpoint, or at this window's root.
 
     A 50ms nominal interval alternates 40/60ms original ticks. offset counts
@@ -64,6 +64,8 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
     stats['native_decisions']=[]
     stats['timing_spacing_pruned']=0
     stats['proposal_deviation_limits_tried']=[]
+    stats['warm_start_length']=len(warm_start)
+    stats['warm_start_choices']=[]
     began = time.monotonic()
     rejected={}
     for actions in forbidden_prefixes:rejected.setdefault(len(actions),set()).add(tuple(actions))
@@ -89,6 +91,10 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
                 decisions[point]=refine(gate,point,observation,decision(observation))
                 stats['native_decisions'].append(dict(point=point,**decisions[point]))
             order=tuple(decisions[point]['order'])
+            if depth<len(warm_start)and tuple(r['action']for r in path)==tuple(warm_start[:depth]):
+                preferred=warm_start[depth]
+                order=(preferred,*(action for action in order if action!=preferred))
+                stats['warm_start_choices'].append(dict(point=point,depth=depth,action=preferred))
             previous=next((r['job']['before']['episodeFrame']for r in reversed(path)if r['action']!='none'),last_input_frame)
             current=path[-1]['job']['after']['episodeFrame']if path else gate.view['state']['episodeFrame']
             if previous is not None and current-previous<=2:

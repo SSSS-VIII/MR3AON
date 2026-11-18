@@ -1,6 +1,7 @@
 from pathlib import Path
 import sys
 from types import SimpleNamespace
+import pytest
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools/arena_checkpoint_lab'))
 import guided_search
@@ -69,3 +70,24 @@ def test_an_earlier_safe_future_key_cannot_hide_a_later_unsafe_key(monkeypatch):
     result=guided_search.window(SimpleNamespace(drop=lambda _:None),searcher=searcher,history=[],
         initial_point=10,initial_state={},board_code='board',start={},max_trials=2)
     assert result['found']and selected==[{2,4}]
+
+
+@pytest.mark.parametrize('invalidate',['backtrack','new_start','different_point'])
+def test_verified_continuation_is_reused_only_for_the_same_committed_snapshot_history(monkeypatch,invalidate):
+    calls=[]
+    def searcher(gate,**kwargs):
+        calls.append(kwargs['warm_start'])
+        plan=rows(['none','none','jump','none'],10*len(calls))
+        return dict(found=True,root=10,stats=dict(trials=1),path=plan[:2],forecast_path=plan)
+    monkeypatch.setattr(guided_search,'verify',lambda *a,**kw:dict(passed=True,checks=[]))
+    gate=SimpleNamespace(drop=lambda _:None);start={}
+    arguments=dict(searcher=searcher,initial_point=10,initial_state={},board_code='board',max_trials=2)
+    first=guided_search.window(gate,history=[],start=start,**arguments)
+    history=first['path']
+    second=guided_search.window(gate,history=history,start=start,**arguments)
+    assert calls[:2]==[(),('jump','none')]
+    history=history+second['path']
+    if invalidate=='different_point':history=[*history[:-1],dict(history[-1],point=999)]
+    guided_search.window(gate,history=history[:1]if invalidate=='backtrack'else history,
+                         start={}if invalidate=='new_start'else start,**arguments)
+    assert calls[-1]==()

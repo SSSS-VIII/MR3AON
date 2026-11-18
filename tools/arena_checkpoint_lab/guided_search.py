@@ -24,6 +24,11 @@ def window(gate,*,searcher,history,initial_point,initial_state,board_code,**kwar
     budget=kwargs.pop('max_trials',1200)
     root=kwargs.pop('root_point',None)
     audits=[];used=0
+    hint=getattr(gate,'_arena_native_continuation',None)
+    matched=bool(hint and history and hint['start']is kwargs['start']
+                 and hint['history_length']==len(history)and hint['point']==history[-1]['point'])
+    kwargs['warm_start']=hint['actions']if matched else()
+    gate._arena_native_continuation=None
     previous=next((r['job']['before']['episodeFrame']for r in reversed(history)if r['action']!='none'),None)
     while used<budget:
         result=searcher(gate,**kwargs,max_trials=budget-used,root_point=root,
@@ -50,6 +55,9 @@ def window(gate,*,searcher,history,initial_point,initial_state,board_code,**kwar
             for point in {r['point']for r in forecast}-committed:gate.drop(point)
             result['timing_attempts']=audits
             result['stats']['total_candidate_trials']=used
+            gate._arena_native_continuation=dict(start=kwargs['start'],
+                history_length=len(history)+len(path),point=path[-1]['point'],
+                actions=tuple(row['action']for row in forecast[len(path):]))
             return result
         prefix=rejected_prefix(forecast,len(history),audit)
         audit['rejected_forecast_prefix']=list(prefix)

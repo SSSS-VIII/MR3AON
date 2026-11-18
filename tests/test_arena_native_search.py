@@ -153,6 +153,28 @@ def test_guided_policy_can_request_many_keys_without_a_minimum_input_preference(
     assert result['stats']['proposal_deviation_limits_tried']==[0]
 
 
+@pytest.mark.parametrize('reject_first_jump',[False,True])
+def test_warm_continuation_is_tried_first_but_discarded_after_its_prefix_changes(monkeypatch,reject_first_jump):
+    monkeypatch.syspath_prepend(str(SOURCE.parent))
+    import native_policy
+    monkeypatch.setattr(native_policy,'read',lambda gate:(gate.native['frame'],gate.native['lifted']))
+    monkeypatch.setattr(native_policy,'decision',lambda value:dict(order=
+        ['jump','none','down']if value[0]>0 and not value[1]else['none','jump','down']))
+    class WarmOracle(Oracle):
+        def step(self,ticks,action):
+            frame=self.native['frame'];result=super().step(ticks,action)
+            if reject_first_jump and frame==0 and action=='jump':
+                self.native['hp']=4750;self.update();result['after']=deepcopy(self.view['state'])
+            return result
+    oracle=WarmOracle()
+    hint=('jump','down')if reject_first_jump else('jump','none')
+    result=search.search_window(oracle,start=start(oracle),offset=0,horizon=4,commit=2,guided=True,
+                                warm_start=hint)
+    assert result['found']and result['crossed']and oracle.native['hp']==5000
+    assert [r['action']for r in result['path']][:2]==(['none','jump']if reject_first_jump else['jump','none'])
+    assert result['stats']['warm_start_length']==2 and result['stats']['warm_start_choices']
+
+
 @pytest.mark.parametrize('cache_prefix',[0,4])
 def test_cached_waits_still_count_as_native_policy_disagreements(monkeypatch,cache_prefix):
     monkeypatch.syspath_prepend(str(SOURCE.parent))
