@@ -55,6 +55,7 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
     stats['prefix_cache_hits']=0
     stats['rejected_invalid_interval']=0
     stats['early_jump_hint']=False
+    stats['blocked_rope_hint']=False
     force_first_jump=False
     prefix={}
     unsafe_actions = set()
@@ -143,6 +144,19 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
         for limit in range(horizon + 1):
             stats['action_limits_tried'].append(limit)
             result = walk(root, 0, [], limit)
+            if early_jump and limit==0 and result is None and trials:
+                before=trials[0]['job']['before'];after=trials[-1]['job']['after']
+                widths=[2*c['extents']['x']for c in before.get('colliders',[])
+                    if c.get('name')=='Role'and c.get('enabled')and c.get('extents',{}).get('x',0)>0]
+                x0=before.get('position',{}).get('x');x1=after.get('position',{}).get('x')
+                if (widths and x0 is not None and x1 is not None and abs(x1-x0)<2*max(widths)
+                        and before['physics'].split(':')[0].lower()=='runonlinedown'):
+                    # The original no-input branch is blocked under a rope.
+                    # Prioritize its native up-flip and at most one following
+                    # key, still evaluated by the original engine and budget.
+                    stats['blocked_rope_hint']=True;force_first_jump=True
+                    try:result=walk(root,0,[],2)
+                    finally:force_first_jump=False
             if result is not None:
                 break
         if early_jump and result is not None and offset>0:
@@ -152,7 +166,7 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
                      if c.get('name')=='Role'and c.get('enabled')and c.get('extents',{}).get('y',0)>0]
             y0=before.get('position',{}).get('y');y1=after.get('position',{}).get('y')
             if (not crossed and heights
-                    and before['physics'].split(':')[0].lower()=='fallfromrun'
+                    and before['physics'].split(':')[0].lower()in ('fallfromrun','fall')
                     and y0 is not None and y1 is not None and y0-y1>2*max(heights)):
                 # A no-input or late-input rollout can survive this horizon while
                 # already falling far below the ledge. Try one early native

@@ -84,22 +84,25 @@ def test_all_damaged_actions_leave_the_window_root_intact():
     assert oracle.native == dict(frame=0, hp=5000, lifted=False)
 
 
-@pytest.mark.parametrize('reject_jump,budget,expected_jump,late_required',[(False,100,True,False),(True,100,False,False),(False,4,False,False),(False,100,True,True)])
-def test_original_early_jump_rollout_is_preferred_before_a_deep_walkoff(reject_jump,budget,expected_jump,late_required):
+@pytest.mark.parametrize('reject_jump,budget,expected_jump,late_required,phase,ignore_jump',[
+    (False,100,True,False,'fallFromRun: 13',False),(True,100,False,False,'fallFromRun: 13',False),
+    (False,4,False,False,'fallFromRun: 13',False),(False,100,True,True,'fallFromRun: 13',False),
+    (False,100,True,False,'fall: 15',False),(False,100,False,False,'fall: 15',True)])
+def test_original_early_jump_rollout_is_preferred_before_a_deep_walkoff(reject_jump,budget,expected_jump,late_required,phase,ignore_jump):
     class Cliff(Oracle):
         def update(self):
             super().update()
             n=self.native
             self.view['state'].update(position=dict(x=n['frame']*.37,
                 y=n.get('jump_y',4)+(n['frame']-n.get('jump_at',10))*.2 if n['lifted']else 3-(n['frame']-10)),
-                physics='jump: 14'if n['lifted']else'fallFromRun: 13',
+                physics='jump: 14'if n['lifted']else phase,
                 colliders=[dict(name='Role',enabled=True,extents=dict(y=.5))])
         def call(self,op,**args):
             if op=='state':return deepcopy(self.view['state'])
             return dict(map=42,stage_index=int(self.native['frame']>=30),mounted=False)
         def step(self,ticks,action):
             before=deepcopy(self.view['state'])
-            if action=='jump':
+            if action=='jump'and not ignore_jump:
                 self.native.update(lifted=True,jump_at=self.native['frame'],jump_y=before['position']['y'])
             if action=='jump'and reject_jump:self.native['hp']-=250
             self.native['frame']+=ticks
@@ -112,6 +115,30 @@ def test_original_early_jump_rollout_is_preferred_before_a_deep_walkoff(reject_j
     assert result['path'][0]['action']==('jump'if expected_jump else'none')
     assert oracle.native['hp']==5000
     if expected_jump:assert oracle.view['state']['position']['y']>3
+
+
+def test_blocked_under_rope_tries_original_up_then_jump_before_late_input_combinations():
+    class Wall(Oracle):
+        def update(self):
+            super().update();j=self.native.get('jumps',0)
+            self.view['state'].update(physics='runOnLineDown: 2'if not j else'rollToLineOn: 4',
+                position=dict(x=self.native['frame']*.1 if j else 0,y=-.75),
+                colliders=[dict(name='Role',enabled=True,extents=dict(x=.2,y=.5))])
+        def call(self,op,**args):
+            if op=='state':return deepcopy(self.view['state'])
+            return dict(map=42,stage_index=int(self.native['frame']>=20),mounted=False)
+        def step(self,ticks,action):
+            before=deepcopy(self.view['state'])
+            if action=='jump':self.native['jumps']=self.native.get('jumps',0)+1
+            self.native['frame']+=ticks
+            if self.native['frame']>=13 and self.native.get('jumps',0)<2:self.native['hp']-=250
+            self.update()
+            return dict(done=True,before=before,after=deepcopy(self.view['state']))
+    oracle=Wall()
+    result=search.search_window(oracle,start=start(oracle),offset=0,horizon=8,commit=4,max_trials=40,early_jump=True)
+    assert result['found']and result['crossed']and result['stats']['blocked_rope_hint']
+    assert [r['action']for r in result['path']].count('jump')==2
+    assert result['path'][0]['action']=='jump'and oracle.native['hp']==5000
 
 
 def test_tick_overshoot_is_restored_and_excluded_even_when_health_is_unchanged():
