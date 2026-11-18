@@ -45,6 +45,7 @@ def initialize(gate, case, progress, seed=55200):
     try:
         native_call(gate, 'return MR3A.native_select(' + lua(case['selection']) + ',' + str(seed) + ')', progress)
         travel = gate.call('exec', code='return MR3A.travel')
+        progress(dict(phase='native_selection_completed',native_travel=travel))
         # The original wait_ready can expire while software rendering finishes
         # the same scene. Finish that initialization, not a search rollback.
         for attempt in range(85):
@@ -65,6 +66,8 @@ def initialize(gate, case, progress, seed=55200):
                         raise
             else:
                 break
+        progress(dict(phase='native_entry_rejected',rejected_state=state,
+                      rejected_board=board if state.get('state')=='Game: 8' else None))
         raise RuntimeError('Original selection did not produce the requested safe, unmounted board entry')
     except BaseException:
         gate.restore(root)
@@ -98,7 +101,7 @@ class WorkQueue:
     def pending(self):
         cases = [c for key, c in self.cases.items() if not (self.state['cases'][key]['native_passed']
                  and self.state['cases'][key].get('reference_count', 0) >= 3)]
-        return sorted(cases, key=lambda c: (c['kind'] != 'ordinary',
+        return sorted(cases, key=lambda c: (bool(self.state['cases'][c['key']]['attempts']),c['kind'] != 'ordinary',
             c['level'] not in (5, 6), len(self.inventory['stages'][str(c['stage'])]['groups']), c['key']))
 
     def adopt(self, artifact):
