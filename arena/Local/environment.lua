@@ -276,7 +276,7 @@ function E.wait_ready(previousNinja)
     local runner=U.GameObject.Find('MR3A_LocalControl'):GetComponent(typeof(U.EventSystems.EventTrigger))
     runner:StartCoroutine(require('common/util').cs_generator(function()
         local ok,err=pcall(function()
-            local deadline=U.Time.realtimeSinceStartup+60
+            local deadline=U.Time.realtimeSinceStartup+(E.initializationTimeout or 60)
             while true do
                 local controller=CS.NinjaController.Instance
                 local ninja=controller and controller.NinjaScript

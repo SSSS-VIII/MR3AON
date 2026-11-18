@@ -93,7 +93,7 @@ def start(vm, *, seed=55200, chapter=1, level=5):
     client.execute('CS.Patch.Instance.CurrentState=CS.Patch.State.__CastFrom(100);return true')
     client.load_environment()
     # Preserve the aspect/frustum; native field parity is checked independently.
-    client.execute('CS.UnityEngine.Screen.SetResolution(320,180,true);return true')
+    client.execute('MR3A.initializationTimeout=300;CS.UnityEngine.Screen.SetResolution(320,180,true);return true')
     client.execute(f'MR3A.seed={int(seed)};return MR3A.prepare({int(chapter)},{int(level)})')
     client.execute('return MR3A.load_audio()')
     client.wait_job('audio', timeout=180)
