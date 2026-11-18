@@ -70,11 +70,15 @@ def test_search_backtracks_before_an_unavoidable_late_collision():
 def test_privileged_policy_replaces_the_minimum_input_order_and_acts_before_the_hurt_boundary(monkeypatch):
     monkeypatch.syspath_prepend(str(SOURCE.parent))
     import native_policy
-    oracle=Oracle()
+    class NativeStateOracle(Oracle):
+        def update(self):
+            super().update()
+            self.view['state'].update(physics='jump: 14'if self.native['lifted']else'runOnGround: 0',
+                speed=18.5,position=dict(x=self.native['frame']*.37,y=3 if self.native['lifted']else .75))
+    oracle=NativeStateOracle()
     def read(gate):
         x=gate.native['frame']*.37;y=3 if gate.native['lifted']else .75
-        return dict(state=dict(physics='jump: 14'if gate.native['lifted']else'runOnGround: 0',
-            speed=18.5,position=dict(x=x,y=y)),
+        return dict(state=deepcopy(gate.view['state']),
             role=[dict(center=dict(x=x,y=y),extents=dict(x=.18,y=.468))],
             support=dict(start=dict(x=-10,y=0),finish=dict(x=100,y=0),continues=True,is_ground=True),
             jumps_used=int(gate.native['lifted']),hazards=[dict(id=1,center=dict(x=5,y=.75),

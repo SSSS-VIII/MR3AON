@@ -78,9 +78,10 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
         ticks = 2 if (offset + depth) % 2 == 0 else 3
         order=('none','down','jump')
         if guided:
-            from native_policy import read,decision
+            from native_policy import read,decision,refine
             if point not in decisions:
-                decisions[point]=decision(read(gate))
+                observation=read(gate)
+                decisions[point]=refine(gate,point,observation,decision(observation))
                 stats['native_decisions'].append(dict(point=point,**decisions[point]))
             order=tuple(decisions[point]['order'])
             previous=next((r['job']['before']['episodeFrame']for r in reversed(path)if r['action']!='none'),last_input_frame)

@@ -2,6 +2,38 @@
 REST=frozenset(('runonline','runonlinedown','runonground','slideonground'))
 
 
+def refine(gate,point,observation,proposal):
+    """Check the original first-jump trajectory before spending jump two.
+
+    Instantaneous height cannot say whether an ascending jump will clear a
+    volume, or whether a high jump is about to fall into it. Advance the real
+    engine without input, then restore the same full checkpoint. This is only
+    a proposal; the searched continuation and its timing margins still decide.
+    """
+    if (proposal.get('phase')!='jump'or proposal.get('reason')not in (
+            'airborne_native_threat','original_jump_already_clears_native_volumes')):
+        return proposal
+    from arena_checkpoint_errors import NativeIntervalError
+    evidence=dict(ticks=10,action='none',safe=None)
+    try:
+        try:
+            job=gate.step(10,'none')
+            evidence.update(job=job,safe=not job.get('terminated')and
+                            job['after']['health']==observation['state']['health'])
+        except NativeIntervalError as error:
+            evidence.update(interval_error=str(error),job=error.job)
+    finally:
+        evidence['restore_ms']=gate.restore(point)['ms']
+        if gate.call('state')!=observation['state']:
+            raise RuntimeError('Native jump forecast did not restore its original checkpoint')
+    result=dict(proposal,original_trajectory_forecast=evidence)
+    if evidence['safe']is True:
+        result.update(order=['none','jump','down'],reason='reserve_second_jump_after_native_forecast')
+    elif evidence['safe']is False:
+        result.update(order=['jump','down','none'],reason='extend_jump_before_native_forecast_damage')
+    return result
+
+
 def read(gate):
     return gate.call('exec',code='return MR3A.native_search_observation()')
 

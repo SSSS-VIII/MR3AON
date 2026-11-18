@@ -174,7 +174,10 @@ class WorkQueue:
                 references = References(output / 'references')
                 item['status'] = attempt['status'] = 'searching'
                 self.save()
+                # Cover the next jump/landing instead of committing from a
+                # 600ms survival suffix while both jumps are already spent.
                 report = search.run(gate, output / 'search', collector=references, max_windows=600,
+                                    horizon=24 if retain_history else 12,
                                     retain_history=retain_history,native_decision=retain_history)
                 attempt['status'] = 'native_passed' if self.accept(
                     case, report, output / 'search/report.json', references) else 'search_stalled'

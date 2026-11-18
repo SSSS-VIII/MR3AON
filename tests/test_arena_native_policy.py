@@ -5,7 +5,8 @@ import sys
 import pytest
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools/arena_checkpoint_lab'))
-from native_policy import decision
+from native_policy import decision,refine
+from arena_checkpoint_errors import NativeIntervalError
 
 
 def observation(phase='runOnLine: 1'):
@@ -67,3 +68,52 @@ def test_native_second_fall_recovers_the_rope_instead_of_waiting_with_spent_jump
     assert proposed['reason']=='recover_original_rope_jump_budget'
     obs['hazards']=[hazard(2,1)]
     assert decision(obs)['order'][0]!='jump'
+
+
+class TrajectoryOracle:
+    def __init__(self,outcome):
+        self.outcome=outcome
+        self.data=dict(state=dict(health=5000,episodeFrame=10),rng=17,collider='original')
+        self.saved=deepcopy(self.data);self.calls=[]
+    def step(self,ticks,action):
+        self.calls.append((ticks,action))
+        self.data.update(rng=99,collider='future');self.data['state']['episodeFrame']+=ticks
+        if self.outcome=='damage':self.data['state']['health']=4750
+        job=dict(after=deepcopy(self.data['state']),terminated=self.outcome=='terminated')
+        if self.outcome=='invalid':raise NativeIntervalError('10 ticks overshot',job)
+        if self.outcome=='error':raise RuntimeError('native forecast failed')
+        return job
+    def restore(self,point):
+        assert point==7
+        self.data=deepcopy(self.saved)
+        return dict(ms=2)
+    def call(self,operation):
+        assert operation=='state'
+        return deepcopy(self.data['state'])
+
+
+@pytest.mark.parametrize('outcome,reason,expected',[
+    ('safe','airborne_native_threat','none'),
+    ('damage','original_jump_already_clears_native_volumes','jump'),
+    ('terminated','original_jump_already_clears_native_volumes','jump')])
+def test_original_trajectory_overrides_instantaneous_height_and_restores_everything(outcome,reason,expected):
+    oracle=TrajectoryOracle(outcome)
+    obs=dict(state=deepcopy(oracle.data['state']))
+    proposal=dict(phase='jump',reason=reason,order=['jump','none','down'])
+    result=refine(oracle,7,obs,proposal)
+    assert result['order'][0]==expected and oracle.calls==[(10,'none')]
+    assert oracle.data==oracle.saved
+    assert result['original_trajectory_forecast']['safe']==(outcome=='safe')
+    assert proposal['reason']==reason  # Retained current observation is not rewritten.
+
+
+def test_invalid_or_failed_native_forecast_cannot_certify_or_leave_the_guest_in_the_future():
+    oracle=TrajectoryOracle('invalid')
+    proposal=dict(phase='jump',reason='airborne_native_threat',order=['jump','down','none'])
+    result=refine(oracle,7,dict(state=deepcopy(oracle.data['state'])),proposal)
+    assert result['order']==proposal['order']and result['original_trajectory_forecast']['safe']is None
+    assert oracle.data==oracle.saved
+    oracle.outcome='error'
+    with pytest.raises(RuntimeError,match='native forecast failed'):
+        refine(oracle,7,dict(state=deepcopy(oracle.data['state'])),proposal)
+    assert oracle.data==oracle.saved
