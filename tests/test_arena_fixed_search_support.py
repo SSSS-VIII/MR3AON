@@ -32,6 +32,20 @@ def test_uncertain_restore_aborts_the_epoch_without_marking_other_cases_failed(t
     assert queue.state['cases']['b']['attempts']==[]
 
 
+def test_native_timeout_aborts_even_after_a_known_root_was_restored(tmp_path,monkeypatch):
+    monkeypatch.syspath_prepend(str(ROOT/'tools/arena_checkpoint_lab'))
+    import batch
+    queue=batch.WorkQueue.__new__(batch.WorkQueue)
+    queue.folder=tmp_path;queue.state=dict(cases={k:dict(native_passed=False,attempts=[])for k in ('a','b')})
+    queue.save=lambda:None
+    gate=SimpleNamespace(waiting=False,vm=SimpleNamespace(process=SimpleNamespace(poll=lambda:None)))
+    def failed(*_):raise TimeoutError('Unity did not reach its game gate')
+    monkeypatch.setattr(batch,'initialize',failed)
+    with pytest.raises(TimeoutError):queue.run(gate,cases=[dict(key='a'),dict(key='b')])
+    assert queue.state['cases']['a']['attempts'][0]['status']=='failed'
+    assert queue.state['cases']['b']['attempts']==[]
+
+
 def test_native_exits_distinguish_board_map_and_new_loop_instance():
     before=dict(map=42,stage_index=1,stage_count=3)
     assert exit_kind(before,dict(map=42,stage_index=2))=='stage_advance'

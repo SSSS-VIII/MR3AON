@@ -179,7 +179,12 @@ class WorkQueue:
                 # restores its known VM point; search itself parks at a root.
                 vm=getattr(gate,'vm',None)
                 process=getattr(vm,'process',None)
-                if (gate.waiting or getattr(vm,'uncertain_operation',None)
+                # A restored command root is a valid search checkpoint, but
+                # need not be a clean scene from which to reset another case.
+                # In particular a native gate timeout can recur immediately
+                # when selection resumes that same pending callback. End this
+                # epoch instead of spending 900s on each remaining selection.
+                if (isinstance(error,TimeoutError) or gate.waiting or getattr(vm,'uncertain_operation',None)
                         or process is not None and process.poll()is not None):
                     raise
             finally:
