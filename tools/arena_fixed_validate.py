@@ -99,6 +99,10 @@ def review(folder, case, program):
                                       max=max(errors)if errors else None),
                 progress_grade='Interpolated native samples; not exact per-frame ground truth',
                 fixed_keys=fixed_keys,status=report['status'],had_damage=report['had_damage'])
+    own_context=folder/'fixed-start-context.json'
+    if own_context.exists():
+        result['initial_context']=json.loads(own_context.read_text())
+        result['recognition_scope']='Own requested starting level/slot; map, variant and subsequent progress are visual'
     return result
 
 

@@ -307,6 +307,11 @@ def run(args):
                     (args.output/'fixed-warmup.json').write_text(json.dumps(warmup))
                 recorder.thread.start();evaluator.thread.start()
                 resumed = True
+                if hasattr(policy,'begin_episode'):
+                    policy.begin_episode(level=args.level,slot=start_board)
+                    (args.output/'fixed-start-context.json').write_text(json.dumps(dict(
+                        level=args.level,slot=start_board,source='Own start request; map and variant withheld',
+                        native_position_used=False)))
                 client.execute('return MR3A.resume()',lease_held=True)
                 begin = time.monotonic(); next_image = begin; previous_loop=None;last_eval=begin
                 previous_crc=None;latest=None;fresh=0

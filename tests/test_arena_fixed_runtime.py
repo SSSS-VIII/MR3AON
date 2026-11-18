@@ -53,6 +53,25 @@ def test_photo_score_cannot_override_a_different_repetition_allowed_by_original_
     assert value['localized']and value['progress_x']==42
 
 
+def test_own_start_order_and_visual_motion_can_reject_a_different_repetition():
+    bank=Bank();tracker=BoardTracker(bank);tracker.begin_episode(level=5,slot=1)
+    bank.candidates=[candidate(42,1),candidate(10,.95)]
+    for t in (0,.05,.1):value=tracker.observe(None,observation(t))
+    assert value['localized']and value['progress_x']==10
+    assert tracker.start_context is None
+
+
+def test_own_start_context_cannot_create_a_location_from_background_or_ignore_missing_motion():
+    bank=Bank();tracker=BoardTracker(bank);tracker.begin_episode(level=5,slot=1)
+    bank.candidates=[dict(candidate(0),progress=None)]
+    for t in (0,.05,.1):value=tracker.observe(None,observation(t))
+    assert not value['localized']and tracker.last is None
+    tracker.observe(None,dict(observation(1.1),scene_motion_observed=False))
+    assert tracker.start_context['high']>40
+    tracker.observe(None,observation(9))
+    assert tracker.start_context is None
+
+
 def test_forward_prior_rejects_an_earlier_identical_pattern_and_tracks_block_instance():
     bank=Bank();tracker=BoardTracker(bank)
     for t,x in ((0,40),(.05,40.5),(.1,41)):

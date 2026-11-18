@@ -110,6 +110,9 @@ class HybridAvoider:
     def observe(self, pixels, observation):
         return self.tracker.observe(pixels, observation)
 
+    def begin_episode(self,*,level,slot):
+        self.tracker.begin_episode(level=level,slot=slot)
+
     def warm(self,pixels,found):
         observation=dict(player=found[0],detections=found[1],
                          visible_supports=found[2]if len(found)>2 else [])

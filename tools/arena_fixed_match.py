@@ -207,6 +207,11 @@ class Atlas:
         if query['count'] < 8 and query['landmark_count'] < 2 or not len(self.rows):
             return []
         indices = np.arange(len(self.rows))
+        start_context=getattr(self,'start_context',None)
+        if start_context is not None:
+            indices=np.asarray([i for i,row in enumerate(self.rows)
+                if row['level']==start_context['level']and row['slot']==start_context['slot']],dtype=int)
+            if not len(indices):return []
         if prior:
             allowed = []
             for i, row in enumerate(self.rows):
@@ -268,6 +273,8 @@ class Atlas:
             current=dict(landmarks=static,landmark_count=len(static))
             for key,source in self.layout_features.items():
                 context=self.contexts[key]
+                if start_context is not None and (context['level']!=start_context['level']or context['slot']!=start_context['slot']):
+                    continue
                 place=(context['level'],context['map'])
                 background=background_scores.get(place,0)
                 if prior:
@@ -320,6 +327,38 @@ class BoardTracker:
         self.registered_time = None
         self.cycle = 0
         self.odometer_base = 0.
+        self.start_context = None
+
+    def begin_episode(self,*,level,slot):
+        if self.last is not None or self.confirmed_identity is not None:
+            raise RuntimeError('Start context must precede visual tracking')
+        if type(level)is not int or type(slot)is not int or min(level,slot)<1:
+            raise ValueError('Expected an own requested level and starting slot')
+        # The local start command enters the beginning of the chosen board.
+        # This is a broad interval, not a native position or a pinned variant.
+        self.start_context=dict(level=level,slot=slot,low=0.,high=12.,time=None,started=None)
+
+    def advance_start_context(self,observation):
+        context=self.start_context
+        if context is None:return
+        now=observation['time']
+        if context['time']is None:
+            context['time']=context['started']=now
+            return
+        dt=now-context['time'];context['time']=now
+        if dt<0 or now-context['started']>8:
+            self.start_context=None
+            return
+        velocity=None
+        if dt<=.18 and observation.get('scene_motion_observed')and observation.get('scene_velocity_x')is not None:
+            scale=observation.get('scale_px',39.5)
+            velocity=(-observation['scene_velocity_x']+observation.get('vx',0))/scale
+        if velocity is not None and 0<=velocity<=40:
+            context['low']+=max(0,velocity-2)*dt
+            context['high']+=(velocity+2)*dt
+        else:
+            # Unknown motion widens the belief; it never invents confidence.
+            context['high']+=40*dt
 
     def recognition_prior(self, timestamp=None):
         # Shared empty entrance frames can suggest several different boards.
@@ -418,10 +457,17 @@ class BoardTracker:
         return p
 
     def observe(self, image, observation):
+        self.advance_start_context(observation)
         self.advance_odometry(observation)
         prediction = self.predict(observation)
+        self.atlas.start_context=self.start_context
         prior=prediction if prediction and prediction['std']<=1 else self.recognition_prior(observation['time'])
         candidates = self.atlas.match(image, observation, prior)
+        context=self.start_context
+        if context is not None:
+            candidates=[c for c in candidates if c['identity'][0]==context['level']
+                and c['identity'][2]==context['slot']and(c['progress']is None or
+                    context['low']-3*c['std']<=c['progress']<=context['high']+3*c['std'])]
         plausible = []
         for item in candidates:
             if item['progress'] is None or item['score'] < .42:
@@ -533,6 +579,7 @@ class BoardTracker:
         self.last = dict(identity=key, progress=progress, std=first['std'],
                          time=observation['time'], length=context['length'],loop=context.get('loop',False))
         self.registered_time=observation['time']
+        self.start_context=None
         self.state = dict(status='locked', identity=key, key=context['key'], visit=self.visit,
                           progress_x=progress, progress_std=first['std'], block_instance=block,
                           loop_cycle=self.cycle, absolute_progress=self.odometer_base+progress,
