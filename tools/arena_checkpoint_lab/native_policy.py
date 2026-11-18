@@ -18,7 +18,7 @@ def decision(observation):
     state=observation['state'];phase=state['physics'].split(':')[0].lower()
     prior=[observation.get(k,'').split(':')[0].lower()for k in ('last_physics','previous_physics')]
     used=observation.get('jumps_used')
-    if phase=='jump2'or phase=='fall'and 'jump2'in prior:used=2
+    if phase in ('jump2','fall2')or phase=='fall'and 'jump2'in prior:used=2
     role=observation.get('role',[])
     if not role:raise ValueError('The original hurt collider is required by the native policy')
     body=role[0];p=body['center'];r=body['extents']
@@ -48,7 +48,7 @@ def decision(observation):
         order=('jump','none','down');reason='anticipate_lower_hurt_volume'
     elif phase in ('runonground','slideonground')and above:
         order=('jump','down','none');reason='anticipate_ground_obstacle'
-    elif phase in ('fall','fallfromrun','jump','jump2'):
+    elif phase in ('fall','fall2','fallfromrun','jump','jump2'):
         if phase in ('jump','jump2')and threats and all(p['y']-r['y']>h['world_top']+.3 for h in threats):
             reason='original_jump_already_clears_native_volumes'
         elif above and threats[0]['ttc']<.4:

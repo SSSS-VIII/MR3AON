@@ -57,3 +57,13 @@ def test_second_jump_and_its_native_fall_history_do_not_request_a_third_jump():
     assert decision(obs)['order'][0]!='jump'and decision(obs)['jumps_used']==2
     obs['state']['physics']='fall: 15';obs['last_physics']='jump2: 16'
     assert decision(obs)['order'][0]!='jump'and decision(obs)['jumps_used']==2
+
+
+def test_native_second_fall_recovers_the_rope_instead_of_waiting_with_spent_jumps():
+    obs=observation('fall2: 17');obs.pop('jumps_used')
+    proposed=decision(obs)
+    assert proposed['jumps_used']==2
+    assert proposed['order'][0]=='down'
+    assert proposed['reason']=='recover_original_rope_jump_budget'
+    obs['hazards']=[hazard(2,1)]
+    assert decision(obs)['order'][0]!='jump'
