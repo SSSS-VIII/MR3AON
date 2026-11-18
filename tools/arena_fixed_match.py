@@ -316,10 +316,12 @@ class Atlas:
             for key,source in sources.items():
                 entry=entry_windows.get(key)
                 selected_static=static[np.isin(static[:,0],(1,2,4)if entry else(1,2))]
-                required=2 if entry else 3
+                context=self.contexts[key]
+                ordered=bool(action_window and action_window['key']==key and prior
+                             and identity(context)==prior['identity'])
+                required=2 if entry or ordered else 3
                 if len(selected_static)<required:continue
                 current=dict(landmarks=selected_static,landmark_count=len(selected_static))
-                context=self.contexts[key]
                 if sequence is not None and not sequence.permits(identity(context)):continue
                 if start_context is not None and (context['level']!=start_context['level']or context['slot']!=start_context['slot']):
                     continue
@@ -341,11 +343,13 @@ class Atlas:
                 for aligned in landmark_shifts(source,current):
                     progress=-aligned['dx']/39.5
                     if (aligned['count']<required or aligned['agreement']<.75 or not 0<=progress<=context['length']+1
-                            or entry is not None and not entry['low']<=progress<=entry['high']):
+                            or entry is not None and not entry['low']<=progress<=entry['high']
+                            or ordered and not action_window['low']<=progress<=action_window['high']):
                         continue
                     candidates.append(dict(row=context,identity=identity(context),progress=progress,
                         std=aligned['std'],score=min(1.,.55+.12*aligned['count'])*aligned['agreement']*(.9+.1*background),
                         registration=None,progress_source='original_static_layout',landmark_count=aligned['count'],
+                        ordered_static_pair=ordered,
                         temporal_entry_pair=bool(entry and len(selected_static)==2 and set(selected_static[:,0])=={2,4}
                             and any(static_box_anchor(d,observation)for d in observation.get('detections',[]))
                             and any(s.get('observations',0)>=3 for s in observation.get('visible_supports',[])))))
@@ -361,6 +365,7 @@ class Atlas:
                 for kind,x in anchors:
                     for point in endpoints:
                         if point[0]!=kind:continue
+                        if kind in (1,2) and not prior.get('tentative') and prior.get('std',0)>.2:continue
                         progress=x-float(point[1])/39.5
                         if abs(progress-prior['progress'])>max(.8,3*prior.get('std',0)):
                             continue
@@ -577,7 +582,9 @@ class BoardTracker:
             if prediction and item['identity'] == prediction['identity']:
                 margin = max(.8, 3*(prediction['std']+item['std']))
                 wraps = bool(loop_transition and 0 <= item['progress'] <= 4)
-                if abs(item['progress'] - prediction['progress']) > margin and not wraps:
+                ordered_pair=(item.get('ordered_static_pair') and self.action_window
+                              and self.action_allows(item['row']['key'],item['progress']))
+                if abs(item['progress'] - prediction['progress']) > margin and not wraps and not ordered_pair:
                     continue
                 item['wraps'] = bool(wraps)
             elif loop_transition and 0 <= item['progress'] <= 4:

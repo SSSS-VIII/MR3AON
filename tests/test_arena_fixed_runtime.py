@@ -39,6 +39,37 @@ def test_same_looking_repetitions_without_progress_are_ambiguous():
     assert value['status']=='ambiguous' and not value['localized']
 
 
+def test_ordered_static_pair_repairs_odometry_drift_without_choosing_a_distant_repeat(tmp_path,monkeypatch):
+    import json
+    context=dict(key=KEY,level=5,map=42,slot=1,stage=50012,length=100,fixed=True,
+                 anchors=[[2,32],[2,41],[2,64],[2,73]],support_anchors=[])
+    metadata=dict(schema=1,mode=6,contexts=[context],references=[dict(context,local_x=30)],
+        map_sequences=[dict(level=5,map=42,slots=[dict(slot=1,fixed=[50012],random=False)])])
+    (tmp_path/'index.json').write_text(json.dumps(metadata))
+    value=dict(coarse=np.ones(64,np.float32),points=np.zeros((128,2),np.float32),
+        descriptors=np.zeros((128,32),np.uint8),count=8,semantic=np.zeros(32,np.float32),
+        landmarks=np.zeros((48,3),np.float32),landmark_count=0)
+    np.savez_compressed(tmp_path/'features.npz',**{k:np.asarray([v])for k,v in value.items()})
+    query=deepcopy(value);query['landmark_count']=2
+    query['landmarks'][:2]=[[2,2*39.5,100],[2,11*39.5,100]]
+    monkeypatch.setattr(matching,'features',lambda *_:query)
+    monkeypatch.setattr(matching,'register',lambda *_:None)
+    bank=Atlas(tmp_path);tracker=BoardTracker(bank)
+    tracker.sequence.begin(5,1);tracker.sequence.accept(ID,28,100)
+    tracker.confirmed_identity=ID;tracker.visit=1
+    tracker.last=dict(identity=ID,progress=34,std=.7,time=1,length=100,loop=False)
+    tracker.last_velocity=10;tracker.positions.append((.5,28))
+    tracker.action_window=dict(key=KEY,visit=1,low=28,high=45,event=1)
+    value=tracker.observe(None,dict(observation(1.05),scene_motion_observed=False))
+    assert value['localized'] and abs(value['progress_x']-30)<.01
+    # A broad interval containing both copies supplies no unique correction.
+    tracker.last=dict(identity=ID,progress=34,std=.7,time=2,length=100,loop=False)
+    tracker.action_window['high']=70
+    value=tracker.observe(None,dict(observation(2.05),scene_motion_observed=False))
+    assert not value['localized'] and value['status']=='ambiguous'
+
+
+
 def test_photo_score_cannot_override_a_different_repetition_allowed_by_original_geometry():
     bank=Bank();tracker=BoardTracker(bank)
     bank.candidates=[dict(candidate(42,1),progress_source='static_foreground'),
@@ -288,7 +319,8 @@ def test_first_operation_can_use_a_trap_and_rope_joint_but_not_a_later_identical
     prior=dict(identity=ID,progress=20,std=.3,length=100,tentative=True)
     continued=[c for c in bank.match(None,{},prior)if c['progress']is not None]
     assert continued and all(abs(c['progress']-20)<.01 for c in continued)
-    continued=[c for c in bank.match(None,{},dict(prior,tentative=False))if c['progress']is not None]
+    assert not any(c['progress']is not None for c in bank.match(None,{},dict(prior,tentative=False)))
+    continued=[c for c in bank.match(None,{},dict(prior,tentative=False,std=.1))if c['progress']is not None]
     assert continued and all(abs(c['progress']-20)<.01 for c in continued)
     bank.entry_windows={}
     assert not any(c['progress']is not None for c in bank.match(None,{}))
