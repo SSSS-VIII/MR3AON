@@ -80,7 +80,8 @@ def _branch(gate,keys,event,shift,current,end_tick,start,board_code,whole_board)
             if moved and current['episodeFrame']!=event['tick']+shift:
                 return dict(passed=False,reason='perturbed_tick_not_reached_exactly',actual=current,actions=actions)
             actions.append(dict(index=key['index'],action=action,frame=current['episodeFrame'],
-                                x=current['position']['x'],target_x=key['x']))
+                                x=current['position']['x'],target_x=key['x'],
+                                before_physics=current.get('physics'),before_y=current['position'].get('y')))
             cursor+=1
         else:
             action='none'
@@ -91,6 +92,8 @@ def _branch(gate,keys,event,shift,current,end_tick,start,board_code,whole_board)
             else:ticks=min(5,limit-current['episodeFrame'])
             ticks=min(ticks,limit-current['episodeFrame'])
         job=gate.step(ticks,action);current=job['after'];steps+=1
+        if due:
+            actions[-1].update(after_physics=current.get('physics'),after_y=current['position'].get('y'))
         furthest=max(furthest,before['position']['x'],current['position']['x'],
                      *(s['position']['x']for s in job.get('samples',[])))
         if job.get('terminated')or current['health']!=start['health']:

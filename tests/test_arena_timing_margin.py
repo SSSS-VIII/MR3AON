@@ -57,6 +57,8 @@ def test_total_eighty_ms_and_each_key_variant_restores_its_own_nominal_snapshot(
     for r in result['checks'][5:]:
         assert r['actions'][0]['index']==1  # First key already in original snapshot.
     assert oracle.data==end
+    assert all('before_physics'in a and 'after_physics'in a
+               for check in result['checks']for a in check['actions'])
 
 
 def test_a_nominally_safe_last_moment_input_is_rejected_and_cannot_pollute_the_next_test():
