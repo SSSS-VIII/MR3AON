@@ -315,3 +315,14 @@ v21第二板169帧固定接管，v23的103→119m一段/二段跳保持原录制
 新增arena_fixed_live_batch只调现有arena_visual_runner，通过原arena InstanceSession独占控制，逐case固定原地图/板序/板子、三seed55200/55201/55202独立单板试跑。原生数据只在运行后交给arena_fixed_validate，不能进actor。记录按实际库/程序/源码/profile指纹和seed区分；已有graded或failed不反复空跑，库或源码改变再测，interrupted可重试。source bundle在开跑前后改变或被actor拒绝就不拿预期程序评分。超时先SIGINT给原runner恢复菜单/输入/评估，等待60秒后才回收失控子进程。与原生队列coverage内存状态分离，只写queue/validation及自身ledger，不能把native_passed写成视觉无伤。
 
 32项固定相关保护及后来补充的参考缓存对应检查合计33通过；mr3a-arena-fixed-live已启动。首两个51012、51013原实机均passed_with_damage，detector/live均False，正确保留为失败；其它逐板仍在进行。入口服务启动命令见systemd用户临时单元；结果在debug/arena-client/fixed-route-work/live-batch/ledger.json和runs，后续原生新通过经mr3a-arena-fixed-refresh原子编库后自动加入。范围只是单板入口，不能代替连续跨板或全部竞技场无伤；三板联调失败表仍有效。
+
+
+### 往起跳前回退与继续实机定位（11月18日中午续）
+
+v3再次在53012第31窗耗尽1200候选，真实回前窗980.58ms，已开始18区间前视的重试，未完成整板。进一步核对既有原生路线：382帧/134.55m/3.25高仍runOnGround；397帧已掉出平台，第一次跳拖到427帧、y=-5.42；457帧y=-5.59才二段跳，472帧y=-3.92且两段已用完。故只退457帧会在已经失去操作空间的空中重复枚举。保留模式现优先回到最近原生runOnLine/runOnLineDown/runOnGround/slideOnGround根，跳过中间空中根，所有撤回窗/参考图/节点同步清理，扩大前视最多24区间。仍为有限搜索启发，不是不可达的数学证明。延期死亡假oracle已验证一次跳过多个空中窗、恢复起跳前真根再改变输入，40项相关保护通过。
+
+当前加载该策略的是mr3a-arena-file-history-v4（旧v3受控结束/点已失），search/report.json保留backtrack_policy、skipped_attempts与实际worker SHA；原客户端实测仍在进行，未把新启发记为通过。audit入口现在也通过同一WorkQueue登记active/attempts/初始化诊断/完成或中断，避免现场明明在53012而coverage仍显示旧53061；即使有限搜索未到出口，也可做字段往返审核，但只有原出口无伤才进入native_passed。
+
+实机匹配另修正一个过硬的排除条件：多出参考图没有的动态类别，不能否定已由静态几何独立对齐的候选；只有无几何证据的纯背景候选继续硬排除，几何候选仍受语义不一致的置信惩罚。新增包含新动态类而3静态锚点一致/无几何仍拒绝的保护，固定相关34项通过。实机新版本成绩待队列。
+
+mr3a-arena-fixed-live-v2现续同一live-batch ledger；旧live服务SIGINT正常退出。指纹只跟踪actor入口及其静态导入的arena模块和profile/库，单改独立checkpoint实验不会再把整批视觉成绩作废重跑。首轮51042、50031有单板0伤，但识别/实际固定接管没有达到验收，仍False；其它已测有伤，未虚报为固定板完全跑通。原生计数仍11/407，原生、单板视觉与连续跨板验收分开保留。

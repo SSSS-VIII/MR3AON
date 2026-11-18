@@ -5,6 +5,7 @@ This grades individual board entries, not uninterrupted arena no-hit runs.
 The actor still gets pixels/own inputs only. Native samples are post-run grades.
 """
 import argparse
+import ast
 import hashlib
 import json
 from pathlib import Path
@@ -18,8 +19,26 @@ from arena_fixed_validate import review
 ROOT=Path(__file__).resolve().parents[1]
 
 
+def actor_sources():
+    seen=set()
+    todo=[ROOT/'tools'/name for name in ('arena_visual_runner.py','arena_fixed_policy.py','arena_fixed_match.py')]
+    while todo:
+        path=todo.pop()
+        if path in seen or not path.is_file():continue
+        seen.add(path)
+        try:tree=ast.parse(path.read_bytes())
+        except SyntaxError:continue  # The actor itself will retain this failure.
+        for node in ast.walk(tree):
+            modules=([a.name for a in node.names]if isinstance(node,ast.Import)else
+                     [node.module]if isinstance(node,ast.ImportFrom)and node.level==0 and node.module else [])
+            for module in modules:
+                name=module.split('.')[0]
+                if name.startswith('arena_'):todo.append(ROOT/'tools'/(name+'.py'))
+    return sorted(seen)
+
+
 def fingerprint(bundle,seed):
-    files=[bundle/'manifest.json',bundle/'programs.json',*sorted((ROOT/'tools').glob('arena_*.py')),
+    files=[bundle/'manifest.json',bundle/'programs.json',*actor_sources(),
            *sorted((ROOT/'arena').glob('vision-*.json'))]
     hashes=[(str(p),hashlib.sha256(p.read_bytes()).hexdigest())for p in files]
     return hashlib.sha256(json.dumps([hashes,seed]).encode()).hexdigest()

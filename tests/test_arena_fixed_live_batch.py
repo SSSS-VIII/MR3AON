@@ -24,6 +24,8 @@ def test_test_ledger_is_per_seed_and_exact_runtime_and_code_version(tmp_path,mon
     assert [j['key']for j in jobs]==['good','good']
     ledger={jobs[0]['job']:dict(status='graded'),jobs[1]['job']:dict(status='failed')}
     assert not batch.pending(bundle,cases,ledger,[1,2])
+    (tmp_path/'tools/arena_file_history_audit.py').write_text('unrelated checkpoint experiment')
+    assert not batch.pending(bundle,cases,ledger,[1,2])
     source.write_text('fixed input mapping')
     assert len(batch.pending(bundle,cases,ledger,[1,2]))==2
     newer=batch.pending(bundle,cases,{},[1,2])
