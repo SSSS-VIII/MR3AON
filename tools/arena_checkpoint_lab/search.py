@@ -32,6 +32,8 @@ return {map=l:GetType():GetField('_levelBaseInfo',f):GetValue(l)._levelID,
  stage_start=s and s.StageStartX or -1,god=n:IsGodMode(),mounted=n.IsMountState}
 """
 
+RESTING=frozenset(('runonline','runonlinedown','runonground','slideonground'))
+
 
 class BudgetExceeded(RuntimeError):
     pass
@@ -205,6 +207,7 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
                   horizon=horizon, commit=commit, max_trials=max_trials, start=start,
                   renderer=renderer, windows=[], route=[])
     report['retains_window_roots']=retain_history
+    if retain_history:report['backtrack_policy']='nearest_original_resting_root; finite search heuristic'
     process=getattr(gate.vm,'process',None)if hasattr(gate,'vm')else None
     if process is not None:
         with Path(f'/proc/{process.pid}/exe').open('rb')as stream:
@@ -247,23 +250,32 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
                 report['windows'].append(window)
                 if not window['found']:
                     if retain_history and history:
-                        previous=history.pop()
+                        abandoned_windows=[history.pop()]
+                        # An airborne root may already have spent both jumps.
+                        # Prefer the last original resting state so this retry
+                        # can change the takeoff, not just spam keys after it.
+                        while history and not abandoned_windows[-1]['resting']:
+                            abandoned_windows.append(history.pop())
+                        previous=abandoned_windows[-1]
                         restored=gate.restore(previous['root'])
                         # Drop public owners of the abandoned branch. Parent
                         # Arcs still preserve all ancestors of retained roots.
-                        abandoned={window['root'],*previous['points']}-{previous['root']}
+                        abandoned={window['root']}
+                        for old in abandoned_windows:abandoned.update([old['root'],*old['points']])
+                        abandoned.discard(previous['root'])
                         for identity in abandoned:gate.drop(identity)
                         if collector is not None:collector.rewind(previous['reference_count'])
                         report['backtracks'].append(dict(from_attempt=index,to_attempt=previous['attempt'],
-                            root=previous['root'],restore_ms=restored['ms'],reason=window['reason']))
-                        report['windows'][previous['attempt']]['backtracked']=True
+                            root=previous['root'],restore_ms=restored['ms'],reason=window['reason'],
+                            skipped_attempts=[old['attempt']for old in abandoned_windows]))
+                        for old in abandoned_windows:report['windows'][old['attempt']]['backtracked']=True
                         del report['route'][previous['route_length']:]
                         interval=previous['offset']
                         retry_root=previous['root']
                         # Keep the failed future in view after moving the root
                         # backward; otherwise an ineffective early key can
                         # merely commit us into the same later dead end again.
-                        retry_horizon=min(24,max(effective_horizon,previous['horizon'])+commit)
+                        retry_horizon=min(24,max(effective_horizon,previous['horizon'])+commit*len(abandoned_windows))
                         print(f'跨窗回退: 窗{index+1} → 窗{previous["attempt"]+1}，'
                               f'恢复{restored["ms"]:.2f}ms，换此前的输入前缀',flush=True)
                         (output/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
@@ -276,6 +288,7 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
                     history.append(dict(root=window['root'],route_length=len(report['route']),
                                         offset=interval,attempt=index,points=[r['point']for r in path],
                                         horizon=effective_horizon,
+                                        resting=path[0]['job']['before']['physics'].split(':')[0].lower()in RESTING,
                                         reference_count=len(collector.rows)if collector is not None else 0))
                     retry_root=None
                     retry_horizon=None

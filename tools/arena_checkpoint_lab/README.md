@@ -95,3 +95,18 @@ Binder/软件 GL 组合在准备时附加 `--android-primitives --software-gl --
 `base_save` 是一次性的全 RAM 基础快照；后续保存只复制脏页。恢复数据分为同一节点重试和跨分支跳转，均包含 CPU/设备恢复。合成 guest 执行、64MiB 全量 hash 和 fsync 的耗时单列，不算进恢复延迟。夹具没有把50ms游戏逻辑接入，因此这些数字不证明游戏已能回到50ms前。
 
 具体实验结果与客户端接入约束见 [开发记录](../../docs/records/archived/2026-11-17-arena-fast-checkpoint.md)。
+
+
+## 显式保留跨窗口的精确RAM历史
+
+在已按上述流程准备好的私有Nyx克隆内：
+
+```bash
+PYTHONPATH=agent:tools .venv/bin/python tools/arena_checkpoint_lab/install_file_ram.py --checkout debug/arena-client/rewind-research-v1/nyx-lite
+AWS_LC_SYS_CMAKE_BUILDER=0 CC=clang CXX=clang++ CARGO_BUILD_JOBS=1 cargo build --release --features arena-file-ram --manifest-path debug/arena-client/rewind-research-v1/nyx-lite/Cargo.toml --bin arena_checkpoint_file_worker --bin arena_file_snapshot_bench
+PYTHONPATH=agent:tools .venv/bin/python tools/arena_fixed_search_batch.py --queue debug/arena-client/fixed-route-work/batch-all --file-ram
+```
+
+该独立worker由arena-search的InstanceSession所有者启动，不能向已有持租约的worker另发命令。默认worker和滚动rebase模式保持原行为。RAM使用立即unlink的只读映射，页缓存可回收，**不是磁盘持久存档**；所有者/worker退出仍丢点。保留模式不每窗rebase，失败时回到最近原地面/绳子根改起跳，最多24区间前视、4个none前缀的真节点缓存；所有正式路线仍由原客户端逐段无伤检查，有限预算失败不会变成通过。废弃参考图从发布清单撤出、另存证据。没有修改游戏物理/陷阱，也没有用从头重放撤销。
+
+原客户端已通过50012整板和早根→异支→旧终点有限字段往返；53012真实跨窗回退已触发，但整板尚未通过。测试VM毫秒结果不能代替原游戏的慢尾：原场景曾有1.68/9.04秒远距离恢复，后续跨窗约.96/.98秒。完整证据和最新实验服务见docs/records/archived/2026-11-17-arena-fast-checkpoint.md，不能把这份入口说明当作全部生命周期或全部固定板验收。

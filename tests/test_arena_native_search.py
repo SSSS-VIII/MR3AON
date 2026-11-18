@@ -193,7 +193,8 @@ def test_cross_window_dead_end_restores_an_earlier_real_root_and_changes_its_inp
         def update(self):
             super().update()
             self.view['state'].update(fixedDeltaTime=.02,content='Running: 1',
-                position=dict(x=self.native['frame']*.37,y=.75))
+                position=dict(x=self.native['frame']*.37,y=.75),
+                physics='runOnLine: 1'if self.native['frame']<3 else'jump: 14')
         def call(self,op,**args):
             if op=='state':return deepcopy(self.view['state'])
             if args['code']=='renderer':return renderer
@@ -202,7 +203,7 @@ def test_cross_window_dead_end_restores_an_earlier_real_root_and_changes_its_inp
             before=deepcopy(self.view['state'])
             if action=='jump'and self.native['frame']<3:self.native['lifted']=True
             self.native['frame']+=ticks
-            if self.native['frame']>=13 and not self.native['lifted']:self.native['hp']-=250
+            if self.native['frame']>=18 and not self.native['lifted']:self.native['hp']-=250
             self.update()
             return dict(done=True,before=before,after=deepcopy(self.view['state']))
     oracle=HistoryOracle()
@@ -217,6 +218,7 @@ def test_cross_window_dead_end_restores_an_earlier_real_root_and_changes_its_inp
                       retain_history=True,collector=collector)
     assert result['complete']and result['no_health_loss']
     assert result['backtracks']and oracle.rebases==1
+    assert any(len(backtrack['skipped_attempts'])>1 for backtrack in result['backtracks'])
     assert any(window['horizon']>result['horizon']for window in result['windows'])
     assert any(row['action']=='jump'for row in result['route'])
     assert result['route'][0]['job']['before']['episodeFrame']==0
