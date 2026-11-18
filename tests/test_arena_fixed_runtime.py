@@ -491,6 +491,22 @@ def test_short_own_input_pair_needs_recent_ack_current_pose_and_bounded_position
     assert policy.choose(dict(obs,phase='rope_below'))==('jump','reactive')
 
 
+def test_ordered_flip_pair_uses_recent_measured_contact_not_a_forecast_contact_flag():
+    policy,_=controller()
+    first=dict(index=0,x=10,action='down',primitive='rope_down',before='rope_above',relative_tick=0)
+    second=dict(index=1,x=15,action='jump',primitive='rope_up',before='rope_below',relative_tick=14)
+    policy.programs[KEY]['events']=[first,second]
+    policy.visit=(KEY,1);policy.cursor=0;policy.proposed_event=first;policy.on_commit('down',1)
+    located=dict(key=KEY,visit=1,localized=False,status='identified',progress_x=14.95,progress_std=.6)
+    policy.tracker.projected=lambda _:located
+    obs=dict(observation(1.28,'rope_below'),decision_interval_seconds=.04,rope_contact_observed=True)
+    assert policy.choose(obs)==('jump','reactive')
+    policy.observed_contact=dict(time=1.25,phase='rope_below')
+    assert policy.choose(dict(obs,rope_contact_observed=False))==('jump','fixed_route_rope_up')
+    policy.observed_contact=dict(time=1.,phase='rope_below')
+    assert policy.choose(obs)==('jump','reactive')
+
+
 def test_short_action_clock_cannot_fire_an_early_key_in_another_visit():
     policy,_=controller()
     event=dict(index=1,x=11.85,relative_tick=55,before='flip_up')

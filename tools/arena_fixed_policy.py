@@ -94,6 +94,7 @@ class HybridAvoider:
         self.fixed_active = False
         self.last_fixed_commit = None
         self.failed_visits = set()
+        self.observed_contact = None
         self.decision = dict(mode='reactive', reason='no_visual_match')
 
     def __getattr__(self, name):
@@ -112,6 +113,10 @@ class HybridAvoider:
         return not self.fixed_active and getattr(self.reactive, 'revalidate_ground_down', False)
 
     def observe(self, pixels, observation):
+        if observation.get('rope_contact_observed')and not observation.get('player_predicted'):
+            self.observed_contact=dict(time=observation['time'],phase=observation['phase'])
+        else:
+            self.observed_contact=None
         # The next unacknowledged input bounds the spatial hypotheses. A
         # similar picture from a later repetition cannot advance this cursor.
         window=None
@@ -285,8 +290,10 @@ class HybridAvoider:
         ticks=event['relative_tick']-previous['event']['relative_tick']
         elapsed=observation['time']-previous['time']
         x=located['progress_x']
+        contact=self.observed_contact
         contact_pair=(previous['event']['primitive']in ('rope_down','rope_up','air_down','air_up')
-                      and event['before']in ('rope_above','rope_below')and observation.get('rope_contact_observed'))
+                      and event['before']in ('rope_above','rope_below')and contact is not None
+                      and contact['phase']==event['before']and 0<=observation['time']-contact['time']<=.15)
         if (event['index']!=previous['event']['index']+1 or not 0<ticks<=(60 if contact_pair else 11)
                 or not 0<=elapsed<=ticks*.02+.08 or abs(x-event['x'])>1.5
                 or event['before']not in ('flip_up','flip_down','air')and not contact_pair
