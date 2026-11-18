@@ -46,3 +46,20 @@ def test_timeout_first_interrupts_the_actor_so_its_menu_cleanup_can_run(tmp_path
     monkeypatch.setattr(batch.subprocess,'Popen',lambda *_a,**_k:Child())
     with pytest.raises(subprocess.TimeoutExpired):batch.execute(['actor'],tmp_path/'actor.log')
     assert events==[('wait',480),('signal',signal.SIGINT),('wait',60)]
+
+
+def test_baselines_cover_step_uniform_and_real_clocks_once_per_frozen_route(tmp_path,monkeypatch):
+    import hashlib
+    monkeypatch.setattr(batch,'baseline_signature',lambda:'auditor-v1')
+    route=tmp_path/'route.json';route.write_text(json.dumps(dict(start=dict(state=dict(seed=55)))))
+    program=dict(native_passed=True,source=str(route),source_sha256=hashlib.sha256(route.read_bytes()).hexdigest())
+    (tmp_path/'programs.json').write_text(json.dumps(dict(programs={'a':program})))
+    jobs=batch.baseline_pending(tmp_path,{'a':{}},{})
+    assert [(j['mode'],j['capture_fps'])for j in jobs]==[
+        ('source_intervals',60),('continuous_ticks',60),('continuous_ticks',0)]
+    ledger={j['job']:dict(status='graded',passed=False)for j in jobs}
+    assert not batch.baseline_pending(tmp_path,{'a':{}},ledger)
+    ledger[jobs[0]['job']]['status']='interrupted'
+    assert len(batch.baseline_pending(tmp_path,{'a':{}},ledger))==1
+    route.write_text('{}')
+    with pytest.raises(RuntimeError,match='changed'):batch.baseline_pending(tmp_path,{'a':{}},ledger)

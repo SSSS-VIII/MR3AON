@@ -59,6 +59,30 @@ def pending(bundle,cases,ledger,seeds):
     return sorted(work,key=lambda j:(cases[j['key']]['level']not in (5,6),seeds.index(j['seed']),j['key']))
 
 
+def baseline_signature():
+    paths=[ROOT/'tools/arena_fixed_oracle_audit.py',ROOT/'tools/arena_checkpoint_lab/oracle_route.lua',
+           ROOT/'arena/Local/environment.lua',ROOT/'arena/Local/native_selection.lua',ROOT/'arena/Local/vision_eval.lua']
+    return hashlib.sha256(json.dumps([(str(p),hashlib.sha256(p.read_bytes()).hexdigest())for p in paths]).encode()).hexdigest()
+
+
+def baseline_pending(bundle,cases,ledger):
+    programs=json.loads((bundle/'programs.json').read_text())['programs']
+    signature=baseline_signature()
+    work=[]
+    for key,program in sorted(programs.items()):
+        if not program.get('native_passed')or key not in cases:continue
+        source=Path(program['source']);raw=source.read_bytes()
+        if hashlib.sha256(raw).hexdigest()!=program['source_sha256']:
+            raise RuntimeError('The native program source changed after publication')
+        seed=json.loads(raw)['start']['state']['seed']
+        for mode,fps in (('source_intervals',60),('continuous_ticks',60),('continuous_ticks',0)):
+            job=f'{key}:{program["source_sha256"]}:{seed}:{mode}:{fps}:{signature}'
+            if ledger.get(job,{}).get('status')in ('graded','failed'):continue
+            work.append(dict(job=job,key=key,seed=seed,mode=mode,capture_fps=fps,
+                             route_sha256=program['source_sha256'],auditor_signature=signature))
+    return work
+
+
 def save(path,value):
     temporary=path.with_suffix('.tmp')
     temporary.write_text(json.dumps(value,ensure_ascii=False,indent=2))
@@ -95,9 +119,31 @@ def main():
     fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     ledger_path=args.output/'ledger.json'
     ledger=json.loads(ledger_path.read_text())if ledger_path.exists()else{}
+    baseline_path=args.output/'baseline-ledger.json'
+    baselines=json.loads(baseline_path.read_text())if baseline_path.exists()else{}
     cases={c['key']:c for c in json.loads((args.queue/'inventory.json').read_text())['contexts']}
     while True:
         bundle=(args.runtime/'current').resolve()
+        checks=baseline_pending(bundle,cases,baselines)
+        if checks:
+            from arena_fixed_oracle_audit import audit
+            check=checks[0]
+            folder=args.output/'baselines'/check['key']/str(time.time_ns())
+            entry=dict(check,status='running',output=str(folder),started_at=time.time())
+            baselines[check['job']]=entry;save(baseline_path,baselines)
+            print('无视觉跑法复验',check['key'],check['mode'],check['capture_fps'],flush=True)
+            try:
+                result=audit(args.queue,check['key'],folder,check['mode'],check['capture_fps'],check['seed'])
+                if result['route_sha256']!=check['route_sha256']or not result['sources_unchanged']:
+                    raise RuntimeError('Oracle evidence changed during the independent execution')
+                entry.update(status='graded',passed=result['passed'],no_damage=result['no_damage'],
+                             input_schedule_exact=result['input_schedule_exact'])
+            except KeyboardInterrupt:
+                entry.update(status='interrupted');save(baseline_path,baselines);raise
+            except Exception as error:entry.update(status='failed',error=repr(error))
+            finally:
+                entry['finished_at']=time.time();save(baseline_path,baselines)
+            continue
         work=pending(bundle,cases,ledger,[55200,55201,55202])
         if not work:
             if not args.watch:return
