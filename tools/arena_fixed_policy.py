@@ -242,6 +242,9 @@ def load(reactive, config=CONFIG, *, detector_sha256=None):
         raise ValueError('Unknown fixed-route runtime configuration')
     atlas = ROOT / value['atlas']
     programs = ROOT / value['programs']
+    if value.get('bundle')and (ROOT/value['bundle']).exists():
+        bundle=(ROOT/value['bundle']).resolve()
+        atlas,programs=bundle/'atlas',bundle/'programs.json'
     if not (atlas/'index.json').exists() or not programs.exists():
         return reactive
     programs=programs.resolve()

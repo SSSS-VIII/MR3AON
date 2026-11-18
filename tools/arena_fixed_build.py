@@ -239,6 +239,7 @@ def main():
     p.add_argument('--legacy-root', type=Path, action='append', default=[])
     p.add_argument('--references', type=Path, action='append', default=[])
     p.add_argument('--queue',type=Path)
+    p.add_argument('--cache',type=Path)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--weights', type=Path, default=DEFAULT_WEIGHTS)
     p.add_argument('--per-case', type=int, default=96)
@@ -259,7 +260,7 @@ def main():
     detector = make_perception(args.weights).detector
     result = build(samples(), args.output, detector, per_case=args.per_case,
                    detector_sha256=hashlib.sha256(args.weights.read_bytes()).hexdigest(),
-                   cache=args.output.parent/'feature-cache',declarations=declared_contexts(catalog))
+                   cache=args.cache or args.output.parent/'feature-cache',declarations=declared_contexts(catalog))
     print(json.dumps(dict(references=len(result['references']), contexts=len(result['contexts']))), flush=True)
 
 

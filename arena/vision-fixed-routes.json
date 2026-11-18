@@ -1,5 +1,6 @@
 {
   "schema": 1,
+  "bundle": "debug/arena-client/fixed-route-work/runtime/current",
   "atlas": "debug/arena-client/fixed-route-work/runtime/atlas",
   "programs": "debug/arena-client/fixed-route-work/runtime/programs.json"
 }
