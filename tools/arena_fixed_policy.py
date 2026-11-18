@@ -186,6 +186,11 @@ class HybridAvoider:
     def eligibility(self, observation):
         located = self.tracker.projected(observation)
         program = self.programs.get(located.get('key'))
+        certified = self.certified_positions(program,located,observation)
+        if certified is not None:
+            return program, certified
+        if program and program.get('timing_robust'):
+            return None, located
         if (not program or not program.get('monotone',True) or program.get('requires_phase_clock')
                 or not located.get('localized') or observation.get('player') is None
                 or observation.get('player_predicted')):
@@ -217,6 +222,44 @@ class HybridAvoider:
                 return None, located
         located['cursor'] = cursor
         return program, located
+
+    def certified_positions(self, program, located, observation):
+        """Replay proven keys by geometry, without requiring nominal pose labels.
+
+        A timing variant may still be landing when the nominal frame is on the
+        rope. Its native-tested key sequence remains valid. Admission needs
+        tight visual localization and an uninterrupted acknowledged prefix.
+        """
+        if (not program or not program.get('timing_robust') or not program.get('monotone',True)
+                or program.get('requires_phase_clock') or observation.get('player') is None
+                or located.get('status')=='action_order_conflict'):
+            return None
+        visit = (located.get('key'),located.get('visit'))
+        cursor = self.cursor if self.visit==visit else 0
+        events = program['events']
+        x = located.get('progress_x')
+        if x is None or not program['entry_x']-.2 <= x <= program['end_x']+.15:
+            return None
+        if cursor:
+            previous = self.last_fixed_commit
+            if (previous is None or previous['visit'] != visit or previous['event']['index'] != cursor-1
+                    or abs(self.last_action-previous['time']) > 1e-6):
+                return None
+        elif events and (x > events[0]['x']+.65
+                        or not compatible(events[0]['before'],observation,events[0].get('before_jumps'))):
+            return None
+        predicted = observation.get('player_predicted')
+        fresh_player = (not predicted or observation.get('player_prediction_reason') in ('short_gap','expected_above_view')
+                        and 0 <= observation.get('player_seen_age',float('inf')) <= .35)
+        std = located.get('progress_std',float('inf'))
+        can_submit = located.get('localized') and std <= .25 and fresh_player
+        # A weak odometer may justify waiting far before the next key; it may
+        # never authorize a submission or silently skip that operation.
+        can_wait = (cursor and cursor < len(events) and std <= 1
+                    and x+3*std < events[cursor]['x']-self.event_lead(observation))
+        if not can_submit and not can_wait:
+            return None
+        return dict(located,cursor=cursor,certified_positions=True,position_only_wait=not can_submit)
 
     def uses_search(self, observation):
         program, _ = self.eligibility(observation)
@@ -339,8 +382,11 @@ class HybridAvoider:
                     self.failed_visits.add(visit)
                     self.decision['reason'] = 'missed_fixed_input_window'
                     return self.reactive.choose(observation)
-                if self.input_due(event,observation,x):
-                    if compatible(event['before'], observation,event.get('before_jumps')):
+                due = (x>=event['x']-self.event_lead(observation) if located.get('certified_positions')
+                       else self.input_due(event,observation,x))
+                if due:
+                    if (located.get('certified_positions') and not located.get('position_only_wait')
+                            or compatible(event['before'], observation,event.get('before_jumps'))):
                         self.fixed_active = True
                         self.proposed_event = event
                         self.proposed_primitive = event['primitive']
@@ -351,6 +397,9 @@ class HybridAvoider:
             self.fixed_active = True
             self.decision['mode'] = 'fixed'
             return None, 'fixed_route_wait'
+        if self.programs.get(located.get('key'),{}).get('timing_robust'):
+            self.decision['reason']='certified_tape_requires_visual_localization'
+            return self.reactive.choose(observation)
         pair=self.short_combination(observation,located)
         if pair is not None:
             return pair

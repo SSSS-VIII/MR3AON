@@ -234,6 +234,40 @@ def test_future_position_uses_pre_input_pose_and_cursor_advances_only_on_ack():
     assert reactive.calls==0
 
 
+def test_certified_tape_uses_independent_positions_after_an_acknowledged_prefix():
+    policy,reactive=controller()
+    program=policy.programs[KEY];program['timing_robust']=True
+    program['events'].append(dict(index=1,x=14,action='jump',primitive='rope_up',
+        before='rope_below',before_jumps=0,relative_tick=50))
+    program['events'][0]['relative_tick']=0
+    assert policy.choose(dict(observation(1),test_progress=10))[0]=='down'
+    policy.on_commit('down',1);policy.last_action=1
+    # Native timing tests certify the keys, including contact-boundary poses.
+    # Neither a noisy instantaneous pose nor the prior key's one-second clock
+    # can delay a key whose independent visual position is now due.
+    obs=dict(observation(1.9,'jump2_falling'),test_progress=14,jumps=2)
+    assert policy.choose(obs)==('jump','fixed_route_rope_up')
+    assert policy.cursor==1 and reactive.calls==0
+    policy.last_action=1.5  # An intervening off-tape key breaks continuity.
+    assert policy.choose(obs)==('jump','reactive')
+
+
+def test_certified_tape_can_wait_with_uncertain_progress_but_cannot_submit_or_skip():
+    policy,reactive=controller();program=policy.programs[KEY];program['timing_robust']=True
+    program['events'][0]['relative_tick']=0
+    program['events'].append(dict(index=1,x=20,action='jump',primitive='rope_up',before='rope_below',before_jumps=0,relative_tick=50))
+    policy.choose(dict(observation(1),test_progress=10));policy.on_commit('down',1);policy.last_action=1
+    policy.tracker.projected=lambda obs:dict(key=KEY,visit=1,localized=False,status='identified',
+        progress_x=obs['test_progress'],progress_std=.7)
+    assert policy.choose(dict(observation(1.2,'flip_down'),test_progress=12))==(None,'fixed_route_wait')
+    assert policy.cursor==1 and reactive.calls==0
+    assert policy.choose(dict(observation(1.5,'rope_below'),test_progress=20))==('jump','reactive')
+    assert policy.cursor==1 and policy.proposed_event is None
+    # Initial takeover at a later position must still fail, even with a cert.
+    other,_=controller();other.programs[KEY]['timing_robust']=True
+    assert other.choose(dict(observation(1),test_progress=22))==('jump','reactive')
+
+
 def test_resting_pose_after_a_missed_input_cannot_skip_to_a_later_operation():
     policy,reactive=controller()
     program=policy.programs[KEY]
