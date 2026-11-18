@@ -84,6 +84,36 @@ def test_all_damaged_actions_leave_the_window_root_intact():
     assert oracle.native == dict(frame=0, hp=5000, lifted=False)
 
 
+@pytest.mark.parametrize('reject_jump,budget,expected_jump,late_required',[(False,100,True,False),(True,100,False,False),(False,4,False,False),(False,100,True,True)])
+def test_original_early_jump_rollout_is_preferred_before_a_deep_walkoff(reject_jump,budget,expected_jump,late_required):
+    class Cliff(Oracle):
+        def update(self):
+            super().update()
+            n=self.native
+            self.view['state'].update(position=dict(x=n['frame']*.37,
+                y=n.get('jump_y',4)+(n['frame']-n.get('jump_at',10))*.2 if n['lifted']else 3-(n['frame']-10)),
+                physics='jump: 14'if n['lifted']else'fallFromRun: 13',
+                colliders=[dict(name='Role',enabled=True,extents=dict(y=.5))])
+        def call(self,op,**args):
+            if op=='state':return deepcopy(self.view['state'])
+            return dict(map=42,stage_index=int(self.native['frame']>=30),mounted=False)
+        def step(self,ticks,action):
+            before=deepcopy(self.view['state'])
+            if action=='jump':
+                self.native.update(lifted=True,jump_at=self.native['frame'],jump_y=before['position']['y'])
+            if action=='jump'and reject_jump:self.native['hp']-=250
+            self.native['frame']+=ticks
+            if self.native['frame']>=(19 if late_required else 25)and not self.native['lifted']:self.native['hp']-=250
+            self.update()
+            return dict(done=True,before=before,after=deepcopy(self.view['state']))
+    oracle=Cliff();oracle.native['frame']=10;oracle.update()
+    result=search.search_window(oracle,start=start(oracle),offset=2,horizon=4,commit=2,early_jump=True,max_trials=budget)
+    assert result['found']and result['stats']['early_jump_hint']
+    assert result['path'][0]['action']==('jump'if expected_jump else'none')
+    assert oracle.native['hp']==5000
+    if expected_jump:assert oracle.view['state']['position']['y']>3
+
+
 def test_tick_overshoot_is_restored_and_excluded_even_when_health_is_unchanged():
     class Overshoot(Oracle):
         def step(self,ticks,action):

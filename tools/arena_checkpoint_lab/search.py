@@ -40,7 +40,7 @@ class BudgetExceeded(RuntimeError):
 
 
 def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200, on_trial=None, cache_prefix=0,
-                  root_point=None, forbidden_prefixes=()):
+                  root_point=None, forbidden_prefixes=(),early_jump=False):
     """Leave the guest at a chosen real checkpoint, or at this window's root.
 
     A 50ms nominal interval alternates 40/60ms original ticks. offset counts
@@ -54,6 +54,8 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
     stats = dict(trials=0, rejected_damage=0, restores_ms=[], action_limits_tried=[], seconds=0)
     stats['prefix_cache_hits']=0
     stats['rejected_invalid_interval']=0
+    stats['early_jump_hint']=False
+    force_first_jump=False
     prefix={}
     unsafe_actions = set()
     began = time.monotonic()
@@ -68,7 +70,7 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
         if depth >= horizon:
             return path, False
         ticks = 2 if (offset + depth) % 2 == 0 else 3
-        for action in ('none', 'down', 'jump'):
+        for action in (('jump',)if force_first_jump and depth==0 else('none','down','jump')):
             cost = int(action != 'none')
             if cost > remaining_actions or (point, action) in unsafe_actions:
                 continue
@@ -143,6 +145,30 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
             result = walk(root, 0, [], limit)
             if result is not None:
                 break
+        if early_jump and result is not None and offset>0:
+            path,crossed=result
+            before=path[0]['job']['before'];after=path[-1]['job']['after']
+            heights=[2*c['extents']['y']for c in before.get('colliders',[])
+                     if c.get('name')=='Role'and c.get('enabled')and c.get('extents',{}).get('y',0)>0]
+            y0=before.get('position',{}).get('y');y1=after.get('position',{}).get('y')
+            if (not crossed and heights
+                    and before['physics'].split(':')[0].lower()=='fallfromrun'
+                    and y0 is not None and y1 is not None and y0-y1>2*max(heights)):
+                # A no-input or late-input rollout can survive this horizon while
+                # already falling far below the ledge. Try one early native
+                # jump before accepting it; no analytical physics or damage
+                # override determines the candidate's safety.
+                stats['early_jump_hint']=True
+                force_first_jump=True
+                try:
+                    candidate=walk(root,0,[],1)
+                    if candidate is not None:
+                        proposed,exited=candidate
+                        if exited or proposed[-1]['job']['after']['position']['y']>y1+max(heights)/2:
+                            result=candidate
+                except BudgetExceeded:
+                    pass  # The already verified original rollout remains valid.
+                finally:force_first_jump=False
         if result is None:
             gate.restore(root)
             release({root})
@@ -244,7 +270,7 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
                 window = search_window(gate, start=start, offset=interval, horizon=effective_horizon,
                                        commit=commit, max_trials=max_trials, on_trial=save_trial,
                                        root_point=retry_root,forbidden_prefixes=forbidden.get(retry_root,()),
-                                       cache_prefix=4 if retain_history else 0)
+                                       cache_prefix=4 if retain_history else 0,early_jump=retain_history)
                 window['horizon']=effective_horizon
                 window.pop('trials')  # Complete per-candidate evidence is streamed above.
                 report['windows'].append(window)
