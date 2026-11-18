@@ -56,7 +56,8 @@ def pending(bundle,cases,ledger,seeds):
             if ledger.get(job,{}).get('status')in ('graded','failed'):
                 continue
             work.append(dict(job=job,key=key,seed=seed,version=version,program=program))
-    return sorted(work,key=lambda j:(cases[j['key']]['level']not in (5,6),seeds.index(j['seed']),j['key']))
+    return sorted(work,key=lambda j:(not j['program'].get('timing_robust',False),
+        cases[j['key']]['level']not in (5,6),seeds.index(j['seed']),j['key']))
 
 
 def baseline_signature():

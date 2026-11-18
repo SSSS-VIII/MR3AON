@@ -48,6 +48,15 @@ def test_timeout_first_interrupts_the_actor_so_its_menu_cleanup_can_run(tmp_path
     assert events==[('wait',480),('signal',signal.SIGINT),('wait',60)]
 
 
+def test_certified_routes_get_all_seeds_before_older_raw_candidates(tmp_path,monkeypatch):
+    monkeypatch.setattr(batch,'fingerprint',lambda bundle,seed:str(seed))
+    (tmp_path/'programs.json').write_text(json.dumps(dict(programs={
+        'a':dict(native_passed=True),'b':dict(native_passed=True,timing_robust=True)})))
+    cases={key:dict(level=5)for key in ('a','b')}
+    jobs=batch.pending(tmp_path,cases,{},[1,2,3])
+    assert [(j['key'],j['seed'])for j in jobs]==[('b',1),('b',2),('b',3),('a',1),('a',2),('a',3)]
+
+
 def test_baselines_cover_step_uniform_and_real_clocks_once_per_frozen_route(tmp_path,monkeypatch):
     import hashlib
     monkeypatch.setattr(batch,'baseline_signature',lambda:'auditor-v1')
