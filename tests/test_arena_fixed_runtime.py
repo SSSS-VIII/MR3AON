@@ -106,6 +106,18 @@ def test_tracked_generic_boxes_can_relocalize_a_known_board_without_rope_motion(
     second=tracker.observe(pixels,dict(obs,time=1.1))
     assert second['localized'] and abs(second['progress_x']-30.925)<.01
     assert not bank.static_flow.confirmed  # No circular single-anchor motion claim.
+    assert len(bank.static_tracks)==2  # The accepted pair now supplies an explicit source association.
+    # One of those same visual IDs can preserve absolute X when the other
+    # leaves view, even with no ORB features or independently measured flow.
+    d=detections[0];track=tracks[0]
+    d.box=Box(d.box.x-36.5375,d.box.y,d.box.w,d.box.h);track.box=d.box;track.seen=1.15
+    third=tracker.observe(pixels,dict(obs,time=1.15,tracks=[track],detections=[d]))
+    assert third['localized'] and abs(third['progress_x']-31.85)<.01
+    assert third['confidence']==.92
+    # A stale correspondence cannot be revived merely by reusing its ID.
+    track.seen=1.4
+    fourth=tracker.observe(pixels,dict(obs,time=1.4,tracks=[track],detections=[d]))
+    assert not fourth['localized']
 
 
 

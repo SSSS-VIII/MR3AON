@@ -208,6 +208,7 @@ class Atlas:
     def __init__(self, folder):
         self.folder = Path(folder).resolve()
         self.static_flow = StaticAnchorFlow()
+        self.static_tracks = {}
         self.meta = json.loads((self.folder / 'index.json').read_text())
         if self.meta.get('schema') != 1 or self.meta.get('mode') != 6:
             raise ValueError('Unknown Gale visual atlas schema')
@@ -254,7 +255,8 @@ class Atlas:
             observation=dict(observation,ordered_box_candidates=candidates)
         query = features(image, observation)
         self.last_query = query
-        if query['count'] < 8 and query['landmark_count'] < 2 or not len(self.rows):
+        if (query['count'] < 8 and query['landmark_count'] < 2 and not(prior and self.static_tracks)
+                or not len(self.rows)):
             return []
         indices = np.arange(len(self.rows))
         sequence=getattr(self,'sequence',None)
@@ -423,7 +425,49 @@ class Atlas:
                         candidates.append(dict(row=context,identity=identity(context),progress=progress,
                             std=.12,score=.7,registration=None,progress_source='prior_and_original_static_anchor',
                             landmark_count=1))
+        if prior and self.static_tracks and observation.get('time') is not None:
+            now=observation['time'];player=observation.get('player')
+            root=observation.get('root_screen_x')
+            if root is None and hasattr(player,'center'):root=player.center[0]-.052*observation.get('scale_px',39.5)
+            self.static_tracks={key:state for key,state in self.static_tracks.items()if 0<=now-state['time']<=.1}
+            if root is not None:
+                for track in observation.get('tracks',[]):
+                    key=(prior['identity'],track.id);old=self.static_tracks.get(key)
+                    if old is None or not 0<=now-track.seen<=.1:continue
+                    detection=next((d for d in observation.get('detections',[])if d.kind=='trap'
+                        and d.confidence>=.7 and abs(d.box.center[0]-track.box.center[0])<=5
+                        and abs(d.box.center[1]-track.box.center[1])<=8
+                        and blade_anchor_kind(d,observation)==old['kind']),None)
+                    if detection is None:continue
+                    progress=old['x']-(detection.box.center[0]-root)/39.5
+                    dt=now-old['time']
+                    if not 0<=dt<=.1 or not -.2<=progress-old['progress']<=40*dt+.4:continue
+                    old.update(time=now,progress=progress)
+                    context=self.contexts[old['key']]
+                    candidates.append(dict(row=context,identity=prior['identity'],progress=progress,std=.12,score=.92,
+                        registration=None,progress_source='tracked_original_static_anchor',landmark_count=1))
         return sorted(candidates, key=lambda c: c['score'], reverse=True)
+
+    def confirm_static_tracks(self, observation, context, progress):
+        """Associate visual track IDs only from an accepted original pattern."""
+        player=observation.get('player');now=observation.get('time')
+        root=observation.get('root_screen_x')
+        if root is None and hasattr(player,'center'):root=player.center[0]-.052*observation.get('scale_px',39.5)
+        if root is None or now is None:return
+        matches=[]
+        for d in observation.get('detections',[]):
+            if d.kind!='trap' or d.confidence<.7:continue
+            kind=blade_anchor_kind(d,observation)
+            anchors=[x for k,x in context.get('anchors',[])if k==kind
+                     and abs(x-(progress+(d.box.center[0]-root)/39.5))<=.15]
+            if len(anchors)!=1:continue
+            track=next((t for t in observation.get('tracks',[])if t.kind=='trap' and t.observations>=3
+                and 0<=now-t.seen<=.1 and abs(t.box.center[0]-d.box.center[0])<=5
+                and abs(t.box.center[1]-d.box.center[1])<=8),None)
+            if track is not None:matches.append((track,kind,anchors[0]))
+        if len({t.id for t,_,_ in matches})<2:return
+        for track,kind,x in matches:
+            self.static_tracks[(identity(context),track.id)]=dict(key=context['key'],kind=kind,x=x,time=now,progress=progress)
 
 
 class BoardTracker:
@@ -735,6 +779,9 @@ class BoardTracker:
             # turning every optimistic prediction into an irreversible floor.
             progress = max(self.positions[-1][1] if self.positions else 0, progress)
         self.positions.append((observation['time'], progress))
+        if (hasattr(self.atlas,'confirm_static_tracks') and first.get('progress_source') in (
+                'original_static_layout','static_foreground','tracked_original_static_anchor') and first['std']<=.25):
+            self.atlas.confirm_static_tracks(observation,context,progress)
         scale = observation.get('scale_px', 39.5)
         raw_v = observation.get('scene_velocity_x')
         if observation.get('scene_motion_observed') and raw_v is not None:
