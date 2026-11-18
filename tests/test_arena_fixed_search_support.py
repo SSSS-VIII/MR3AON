@@ -7,6 +7,7 @@ import subprocess
 import sys
 from copy import deepcopy
 import pytest
+from types import SimpleNamespace
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
@@ -15,6 +16,20 @@ from arena_fixed_goal import exit_kind
 
 spec=importlib.util.spec_from_file_location('route_collector',ROOT/'tools/arena_checkpoint_lab/collector.py')
 collector=importlib.util.module_from_spec(spec);spec.loader.exec_module(collector)
+
+
+def test_uncertain_restore_aborts_the_epoch_without_marking_other_cases_failed(tmp_path,monkeypatch):
+    monkeypatch.syspath_prepend(str(ROOT/'tools/arena_checkpoint_lab'))
+    import batch
+    queue=batch.WorkQueue.__new__(batch.WorkQueue)
+    queue.folder=tmp_path;queue.state=dict(cases={k:dict(native_passed=False,attempts=[])for k in ('a','b')})
+    queue.save=lambda:None
+    gate=SimpleNamespace(waiting=False,vm=SimpleNamespace(uncertain_operation='restore',process=SimpleNamespace(poll=lambda:None)))
+    def failed(*_):raise TimeoutError('restore transport timed out')
+    monkeypatch.setattr(batch,'initialize',failed)
+    with pytest.raises(TimeoutError):queue.run(gate,cases=[dict(key='a'),dict(key='b')])
+    assert len(queue.state['cases']['a']['attempts'])==1
+    assert queue.state['cases']['b']['attempts']==[]
 
 
 def test_native_exits_distinguish_board_map_and_new_loop_instance():

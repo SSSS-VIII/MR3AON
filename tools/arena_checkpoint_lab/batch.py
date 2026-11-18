@@ -177,7 +177,10 @@ class WorkQueue:
                 print(f'保留失败案例 {case["key"]}: {error}', flush=True)
                 # Never overwrite an unfinished gate command. Initialization
                 # restores its known VM point; search itself parks at a root.
-                if gate.waiting:
+                vm=getattr(gate,'vm',None)
+                process=getattr(vm,'process',None)
+                if (gate.waiting or getattr(vm,'uncertain_operation',None)
+                        or process is not None and process.poll()is not None):
                     raise
             finally:
                 attempt['finished_at'] = time.time()
