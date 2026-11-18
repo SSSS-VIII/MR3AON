@@ -97,6 +97,25 @@ def test_static_foreground_translation_retains_repeated_hypotheses():
     assert any(abs(r['dx']+20)<.1 and r['count']==3 for r in result)
 
 
+def test_an_extra_dynamic_hazard_does_not_erase_aligned_static_geometry(tmp_path,monkeypatch):
+    import json
+    context=dict(key=KEY,level=5,map=42,slot=1,stage=50012,length=64,fixed=False)
+    (tmp_path/'index.json').write_text(json.dumps(dict(schema=1,mode=6,contexts=[context],
+        references=[dict(context,local_x=10)])))
+    ref=dict(coarse=np.ones(64,np.float32),points=np.zeros((128,2),np.float32),
+        descriptors=np.zeros((128,32),np.uint8),count=22,semantic=np.zeros(32,np.float32),
+        landmarks=np.zeros((48,3),np.float32),landmark_count=3)
+    ref['landmarks'][:3]=[[3,-40,260],[3,40,260],[3,120,260]]
+    np.savez_compressed(tmp_path/'features.npz',**{k:np.asarray([v])for k,v in ref.items()})
+    query=deepcopy(ref);query['landmarks'][:3,1]-=20;query['semantic'][5*4]=1
+    monkeypatch.setattr(matching,'features',lambda *_:query)
+    monkeypatch.setattr(matching,'register',lambda *_:dict(inliers=22,ratio=1.,residual=0.,dx=0.,dy=0.))
+    bank=Atlas(tmp_path)
+    assert any(c['progress_source']=='static_foreground'and c['score']>=.42 for c in bank.match(None,{}))
+    query['landmark_count']=0
+    assert bank.match(None,{})==[]
+
+
 class Reactive:
     def __init__(self):self.last_action=0;self.calls=0
     def choose(self,obs):self.calls+=1;return 'jump','reactive'

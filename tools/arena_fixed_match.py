@@ -239,7 +239,11 @@ class Atlas:
                 continue
             a = self.data['semantic'][i]
             b = query['semantic']
-            if np.any((b.reshape(len(KINDS),4).sum(1)>0) & (a.reshape(len(KINDS),4).sum(1)==0)):
+            # A newly visible moving hazard cannot invalidate independently
+            # aligned static geometry. Keep the hard presence check for bare
+            # background guesses; geometry candidates retain the score penalty.
+            if (not shifts and np.any((b.reshape(len(KINDS),4).sum(1)>0) &
+                                      (a.reshape(len(KINDS),4).sum(1)==0))):
                 continue
             agreement = 1. - float(np.abs(a-b).sum()) / max(1., float((a+b).sum()))
             score = (min(1., match['inliers']/22)*match['ratio'] if match else .55) * (.5+.5*agreement)
