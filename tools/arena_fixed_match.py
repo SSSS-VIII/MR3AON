@@ -4,6 +4,8 @@ Only stored labelled images, current pixels and the existing visual observation
 enter this module. Evaluation telemetry and native instance IDs are not inputs.
 """
 from collections import deque
+import hashlib
+import inspect
 import json
 import math
 from pathlib import Path
@@ -14,6 +16,33 @@ SIZE = (320, 180)
 MAX_POINTS = 128
 MAX_LANDMARKS = 48
 KINDS = ('spider', 'eye_enemy', 'pinball', 'trap', 'projectile', 'bamboo', 'mace', 'other')
+
+
+def static_box_anchor(detection, observation):
+    """Coarse box detections need evidence before supplying static world X.
+
+    Stored references use declared static X, offline only. Live pixels use
+    repeated visual tracking relative to measured scene flow, never entity IDs.
+    Vertical trap animation does not invalidate its fixed horizontal anchor.
+    """
+    if (detection.kind!='trap' or detection.collider_shape!='BoxCollider'
+            or detection.confidence<.7):
+        return False
+    x,y=detection.box.center
+    reference=observation.get('reference_static_box_x')
+    if reference is not None:
+        return any(abs(x-expected)<=10 for expected in reference)
+    scene=observation.get('scene_velocity_x')
+    if not observation.get('scene_motion_observed')or scene is None:
+        return False
+    for track in observation.get('tracks',[]):
+        if (track.kind!='trap' or track.collider_shape!='BoxCollider' or track.observations<3
+                or not 0<=observation['time']-track.seen<=.1):
+            continue
+        tx,ty=track.box.center
+        if (abs(tx-x)<=5 and abs(ty-y)<=8 and abs(track.vx-scene)<=45):
+            return True
+    return False
 
 
 def semantic(observation):
@@ -59,7 +88,7 @@ def features(image, observation=None):
         for d in observation.get('detections', []):
             name = (d.resource or '').lower()
             group = (1 if d.kind == 'spider' and 'muppet' not in name else
-                     2 if 'hideblade' in name else None)
+                     2 if 'hideblade' in name or static_box_anchor(d,observation) else None)
             if group and d.confidence >= .4:
                 landmarks.append((group, d.box.center[0]-root, d.box.center[1]))
         for s in observation.get('visible_supports', []):
@@ -75,6 +104,11 @@ def features(image, observation=None):
         array[:n] = landmarks[:n]
     return dict(coarse=low, points=xy, descriptors=descriptors, count=count,
                 semantic=semantic(observation), landmarks=array, landmark_count=n)
+
+
+def feature_signature():
+    code=inspect.getsource(features)+inspect.getsource(semantic)+inspect.getsource(static_box_anchor)
+    return hashlib.sha256(code.encode()).hexdigest()
 
 
 def landmark_shifts(reference, current):
@@ -178,7 +212,7 @@ class Atlas:
             for i, row in enumerate(self.rows):
                 current = identity(row) == prior['identity']
                 following = row['level'] == prior['identity'][0] and row['map'] == prior['identity'][1] and row['slot'] == prior['identity'][2] + 1
-                near_exit = prior.get('progress') is not None and prior['progress'] >= prior['length'] - 18
+                near_exit = prior.get('near_exit',False) or prior.get('progress') is not None and prior['progress'] >= prior['length'] - 18
                 loop_pool = (row['level'],row['map'],row['slot']) == prior['identity'][:3]
                 loop_entry = (loop_pool and prior.get('loop') and prior.get('progress') is not None
                               and prior['progress'] >= prior['length'] and row['local_x']<8)
@@ -235,8 +269,9 @@ class Atlas:
                 if prior:
                     own=identity(context)==prior['identity']
                     following=place==prior['identity'][:2]and context['slot']==prior['identity'][2]+1
-                    if not own and not(following and prior.get('progress')is not None
-                                       and prior['progress']>=prior['length']-18):
+                    near_exit=prior.get('near_exit',False)or(prior.get('progress')is not None
+                                       and prior['progress']>=prior['length']-18)
+                    if not own and not(following and near_exit):
                         continue
                 if background<.25 and not(prior and place==prior['identity'][:2]):
                     continue
@@ -278,6 +313,7 @@ class BoardTracker:
         self.last_velocity = None
         self.positions = deque(maxlen=8)
         self.confirmed_identity = None
+        self.registered_time = None
         self.cycle = 0
         self.odometer_base = 0.
 
@@ -286,13 +322,18 @@ class BoardTracker:
         # Only an actual spatial registration may constrain later candidates;
         # a background-only suggestion must never trap recognition in a wrong
         # board for the rest of the run.
-        if (self.confirmed_identity is None or self.last is None or self.last['std']>1
-                or timestamp is not None and timestamp-self.last['time']>.18):
+        if self.confirmed_identity is None or self.last is None:
+            return None
+        # An expired position can still narrow a short board transition. The
+        # context also expires so a boss/map change cannot stay locked forever.
+        if timestamp is not None and self.registered_time is not None and timestamp-self.registered_time>8:
             return None
         level, world, slot, stage = self.confirmed_identity
         context = self.atlas.contexts[f'L{level}-M{world}-S{slot}-B{stage}']
-        return dict(identity=self.confirmed_identity, progress=self.last['progress'],std=self.last['std'],
-                    length=context['length'], loop=context.get('loop', False))
+        precise=(self.last['std']<=1 and (timestamp is None or timestamp-self.last['time']<=.18))
+        return dict(identity=self.confirmed_identity,progress=self.last['progress']if precise else None,
+                    std=self.last['std'],length=context['length'],loop=context.get('loop',False),
+                    near_exit=self.last['progress']>=context['length']-18)
 
     def advance_odometry(self, observation):
         """Keep a visit through short occlusions using measured scene motion.
@@ -375,7 +416,8 @@ class BoardTracker:
     def observe(self, image, observation):
         self.advance_odometry(observation)
         prediction = self.predict(observation)
-        candidates = self.atlas.match(image, observation, prediction or self.recognition_prior(observation['time']))
+        prior=prediction if prediction and prediction['std']<=1 else self.recognition_prior(observation['time'])
+        candidates = self.atlas.match(image, observation, prior)
         plausible = []
         for item in candidates:
             if item['progress'] is None or item['score'] < .42:
@@ -403,13 +445,20 @@ class BoardTracker:
                 first=visible[0]
                 following=(first['identity'][:2]==prediction['identity'][:2]
                            and first['identity'][2]==prediction['identity'][2]+1)
-                previous_context=self.atlas.contexts.get(self.state.get('key'),{})
-                if (following and prediction['std']<=.47 and previous_context.get('fixed') and observation.get('detections')
-                        and self.confirm(first['identity'],carry=prediction)):
-                    carried=self.coast(self.last,'next_board_visual_identity')
-                    if carried is not None:
-                        self.state=carried
-                        return self.state
+                level,world,slot,stage=prediction['identity']
+                previous_context=self.atlas.contexts.get(f'L{level}-M{world}-S{slot}-B{stage}',{})
+                if (following and prediction['std']<=.97 and previous_context.get('fixed') and observation.get('detections')
+                        ):
+                    confirmed=self.confirm(first['identity'],carry=prediction)
+                    if confirmed:
+                        carried=self.coast(self.last,'next_board_visual_identity')
+                        self.state=carried or dict(status='identified',identity=first['identity'],
+                            key=first['row']['key'],visit=self.visit,localized=False,
+                            progress_x=self.last['progress'],progress_std=self.last['std'])
+                    else:
+                        self.state=self.coast(prediction,'confirming_next_board')or dict(
+                            status='confirming',identity=first['identity'],key=first['row']['key'],localized=False)
+                    return self.state
             coast = self.coast(prediction, 'missing')
             if coast is not None:
                 self.state = coast
@@ -474,6 +523,7 @@ class BoardTracker:
         block = next((b['index'] for b in blocks if b['start_x'] <= progress < b['finish_x']), None)
         self.last = dict(identity=key, progress=progress, std=first['std'],
                          time=observation['time'], length=context['length'],loop=context.get('loop',False))
+        self.registered_time=observation['time']
         self.state = dict(status='locked', identity=key, key=context['key'], visit=self.visit,
                           progress_x=progress, progress_std=first['std'], block_instance=block,
                           loop_cycle=self.cycle, absolute_progress=self.odometer_base+progress,
@@ -483,9 +533,9 @@ class BoardTracker:
     def projected(self, observation):
         value = self.state.copy()
         predicted = self.predict(observation)
-        if predicted and self.state.get('status') in ('locked', 'tracked'):
+        if predicted and self.state.get('status') in ('locked', 'tracked','identified'):
             value.update(progress_x=predicted['progress'], progress_std=predicted['std'],
-                         localized=predicted['std'] <= .5)
+                         localized=self.state.get('status')!='identified'and predicted['std'] <= .5)
         else:
             value['localized'] = False
         return value

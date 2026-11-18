@@ -8,7 +8,8 @@ import numpy as np
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
 import arena_fixed_match as matching
 from arena_fixed_match import Atlas,BoardTracker,landmark_shifts
-from arena_fixed_policy import HybridAvoider
+from arena_fixed_match import static_box_anchor
+from arena_fixed_policy import HybridAvoider,compile_program,compatible
 
 ID=(5,42,1,50012)
 KEY='L5-M42-S1-B50012'
@@ -139,8 +140,36 @@ def test_live_native_ids_in_an_observation_cannot_override_visual_identity():
     assert policy.decision['board']['key']==KEY
 
 
+def test_original_first_jump_and_fall_keep_one_consumed_jump_until_rope_contact():
+    def state(x,physics):return dict(health=5000,position=dict(x=x,y=.75),physics=physics)
+    steps=[]
+    sequence=[('runOnLine: 1','jump','jump: 14'),('jump: 14','none','fall: 15'),
+              ('fall: 15','jump','jump2: 16'),('jump2: 16','none','fall: 15'),
+              ('runOnLine: 1','jump','jump: 14')]
+    for i,(before,action,after)in enumerate(sequence):
+        steps.append(dict(before=state(i,before),after=state(i+.5,after),action=action,relative_tick=i*3))
+    route=dict(complete=True,uses_restart_replay=False,start=dict(health=5000,board=dict(stage_start=0)),
+               steps=steps,end=dict(state=state(5,'jump: 14')))
+    program=compile_program(route,KEY)
+    assert [p['jumps']for p in program['poses']]==[0,1,1,2,0]
+    assert [e['before_jumps']for e in program['events']]==[0,1,0]
+    assert program['events'][1]['primitive']=='jump2'
+
+
+def test_visual_jump_phases_match_native_air_without_reactive_down_interruptions():
+    for name,jumps in [('jump1_rising',1),('jump1_falling',1),('jump2_rising',2),('jump2_falling',2),('air_falling',0)]:
+        assert compatible('air',dict(phase=name,jumps=jumps),jumps)
+        assert not compatible('air',dict(phase=name,jumps=jumps),jumps+1)
+    policy,reactive=controller()
+    policy.programs[KEY]['poses']=[dict(x=0,phase='air',jumps=1)]
+    policy.programs[KEY]['events']=[]
+    assert policy.choose(dict(observation(1,'jump1_falling'),test_progress=8,jumps=1))==(None,'fixed_route_wait')
+    assert reactive.calls==0
+
+
 def test_short_action_combination_uses_its_ack_clock_without_waiting_for_a_late_position():
     policy,_=controller()
+    policy.tracker.last_velocity=18.5
     first=dict(index=0,x=10,action='jump',primitive='rope_up',before='rope_below',
                before_jumps=0,relative_tick=50)
     second=dict(index=1,x=11.85,action='down',primitive='air_down',before='flip_up',
@@ -152,6 +181,134 @@ def test_short_action_combination_uses_its_ack_clock_without_waiting_for_a_late_
     assert policy.choose(obs)==('down','fixed_route_air_down')
     policy.on_commit('down',1.1)
     assert policy.cursor==2
+
+
+def test_vertical_pose_cannot_fire_down_before_the_recorded_spatial_boundary():
+    from arena_vision import Box
+    policy,_=controller()
+    policy.tracker.last_velocity=18.5
+    event=dict(index=1,x=11.85,action='down',before='flip_up',before_rope_height=-.2)
+    obs=dict(observation(1,'flip_up'),decision_interval_seconds=.04,
+             player=Box(170,245,16,30),rope=260,scale_px=40)
+    assert not policy.input_due(event,obs,10.5)
+    assert policy.input_due(event,obs,11.4)
+
+
+def test_generic_boxes_require_measured_static_horizontal_motion_to_anchor_live_progress():
+    from arena_vision import Box,Detection
+    detection=Detection(Box(300,150,10,80),'trap',.9,collider_shape='BoxCollider')
+    track=SimpleNamespace(kind='trap',collider_shape='BoxCollider',observations=4,
+        seen=1,box=detection.box,vx=-740)
+    obs=dict(time=1,scene_velocity_x=-741,scene_motion_observed=True,tracks=[track])
+    assert static_box_anchor(detection,obs)
+    track.vx=-1000
+    assert not static_box_anchor(detection,obs)
+    track.vx=-740;track.observations=1
+    assert not static_box_anchor(detection,obs)
+    assert not static_box_anchor(detection,dict(obs,scene_motion_observed=False))
+
+
+def test_offline_generic_box_reference_needs_a_declared_static_x_correspondence():
+    from arena_vision import Box,Detection
+    detection=Detection(Box(300,150,10,80),'trap',.9,collider_shape='BoxCollider')
+    assert static_box_anchor(detection,dict(reference_static_box_x=[307]))
+    assert not static_box_anchor(detection,dict(reference_static_box_x=[325]))
+    assert not static_box_anchor(detection,{})
+
+
+def test_runtime_rejects_a_bank_compiled_with_different_anchor_semantics(tmp_path,monkeypatch):
+    import json
+    import arena_fixed_policy as policy_module
+    atlas=tmp_path/'atlas';atlas.mkdir()
+    (atlas/'index.json').write_text('{}');(atlas/'features.npz').write_bytes(b'features')
+    programs=tmp_path/'programs.json';programs.write_text(json.dumps(dict(schema=1,programs={})))
+    config=tmp_path/'config.json';config.write_text(json.dumps(dict(schema=1,atlas=str(atlas),programs=str(programs))))
+    bank=SimpleNamespace(folder=atlas,meta=dict(detector_sha256='detector',feature_sha256='old'),contexts={})
+    monkeypatch.setattr(policy_module,'Atlas',lambda _:bank)
+    reactive=Reactive()
+    assert policy_module.load(reactive,config,detector_sha256='detector')is reactive
+    bank.meta['feature_sha256']=matching.feature_signature()
+    assert isinstance(policy_module.load(reactive,config,detector_sha256='detector'),HybridAvoider)
+
+
+def test_reference_box_features_and_cache_follow_the_offline_static_layout(tmp_path):
+    import cv2
+    from arena_vision import Box,Detection
+    from arena_fixed_build import build
+    image=tmp_path/'native.png'
+    gray=np.random.default_rng(4).integers(0,256,(360,640),dtype=np.uint8)
+    cv2.imwrite(str(image),np.repeat(gray[:,:,None],3,axis=2))
+    calls=[]
+    class Detector:
+        def detect(self,pixels):
+            calls.append(1)
+            return Box(172,210,16,40),[Detection(Box(300,150,10,80),'trap',.95,collider_shape='BoxCollider')],[]
+    sample=dict(key=KEY,level=5,map=42,slot=1,stage=50012,loop=False,fixed=True,
+        classification={},length=64,blocks=[],local_x=20,image=str(image),episode='native-reference',
+        anchors=[[2,20+(305-(180-.052*39.5))/39.5]])
+    build([sample],tmp_path/'first',Detector(),cache=tmp_path/'cache')
+    with np.load(tmp_path/'first/features.npz')as data:
+        assert data['landmark_count'][0]==1 and data['landmarks'][0,0,0]==2
+    changed=dict(sample,anchors=[[2,40]])
+    build([changed],tmp_path/'second',Detector(),cache=tmp_path/'cache')
+    with np.load(tmp_path/'second/features.npz')as data:assert data['landmark_count'][0]==0
+    assert len(calls)==2
+
+
+def test_visual_pose_bridge_uses_existing_flip_risk_and_does_not_consume_tape_events():
+    policy,reactive=controller()
+    policy.tracker.last_velocity=18.5
+    reactive._risk=lambda *_:(0,10,{})
+    obs=dict(observation(1,'rope_below'),test_progress=2,rope=260)
+    action,reason=policy.choose(obs)
+    assert (action,reason)==('jump','fixed_entry_sync_rope_up')
+    assert policy.proposed_primitive=='rope_up'and policy.proposed_event is None
+    policy.on_commit(action,1.02)
+    assert policy.cursor is None and policy.decision['mode']=='synchronizing'
+    reactive._risk=lambda *_:(100,.2,{1:object()})
+    assert policy.choose(obs)==('jump','reactive')
+    reactive._risk=lambda *_:(0,10,{})
+    assert policy.choose(dict(obs,test_progress=8))==('jump','reactive')
+    assert policy.choose(dict(obs,player_predicted=True))==('jump','reactive')
+
+
+def test_brief_place_loss_after_a_confirmed_jump_does_not_insert_reactive_down():
+    policy,reactive=controller()
+    first=dict(index=0,x=3,action='jump',primitive='jump1',before='rope_above',relative_tick=0)
+    second=dict(index=1,x=14,action='jump',primitive='jump2',before='air',before_jumps=1,relative_tick=30)
+    policy.programs[KEY]['events']=[first,second]
+    policy.visit=(KEY,1);policy.cursor=0;policy.proposed_event=first
+    policy.on_commit('jump',1)
+    policy.tracker.projected=lambda obs:dict(key=KEY,visit=1,localized=False,status='identified')
+    reactive._risk=lambda *_:(200,.4,{})
+    obs=dict(observation(1.2,'jump1_rising'),jumps=1)
+    assert policy.choose(obs)==(None,'fixed_route_relocalize_wait')
+    assert policy.cursor==1 and reactive.calls==0
+    reactive._risk=lambda *_:(200,.1,{})
+    assert policy.choose(obs)==('jump','reactive')
+    reactive._risk=lambda *_:(0,10,{})
+    assert policy.choose(dict(obs,time=1.55))==('jump','reactive')
+    assert policy.choose(dict(obs,time=2))==('jump','reactive')
+
+
+def test_short_own_input_pair_needs_recent_ack_current_pose_and_bounded_position():
+    policy,reactive=controller()
+    first=dict(index=0,x=10,action='jump',primitive='rope_up',before='rope_below',relative_tick=0)
+    second=dict(index=1,x=11.85,action='down',primitive='air_down',before='flip_up',relative_tick=5)
+    policy.programs[KEY]['events']=[first,second]
+    policy.visit=(KEY,1);policy.cursor=0;policy.proposed_event=first;policy.on_commit('jump',1)
+    policy.tracker.last_velocity=18.5
+    policy.tracker.projected=lambda obs:dict(key=KEY,visit=1,localized=False,status='identified',
+        progress_x=11.8,progress_std=obs.get('test_std',.65))
+    obs=dict(observation(1.1,'flip_up'),decision_interval_seconds=.04)
+    assert policy.choose(obs)==('down','fixed_route_air_down')
+    assert policy.cursor==1
+    policy.on_commit('down',1.11)
+    assert policy.cursor==2
+    policy.cursor=1;policy.last_fixed_commit=dict(event=first,time=1,visit=(KEY,1))
+    assert policy.choose(dict(obs,test_std=1.5))==('jump','reactive')
+    assert policy.choose(dict(obs,time=1.3))==('jump','reactive')
+    assert policy.choose(dict(obs,phase='rope_below'))==('jump','reactive')
 
 
 def test_short_action_clock_cannot_fire_an_early_key_in_another_visit():
@@ -207,4 +364,37 @@ def test_stale_absolute_position_cannot_seed_a_periodic_single_anchor():
     for t,x in ((0,20),(.05,20.5),(.1,21)):
         bank.candidates=[candidate(x)];tracker.observe(None,observation(t))
     assert tracker.recognition_prior(.15)is not None
-    assert tracker.recognition_prior(2)is None
+    stale=tracker.recognition_prior(2)
+    assert stale['identity']==ID and stale['progress']is None
+    assert not stale['near_exit']
+    assert tracker.recognition_prior(10)is None
+
+
+def test_loss_of_precise_progress_preserves_verified_board_order_without_periodic_position():
+    bank=Bank(length=64);tracker=BoardTracker(bank)
+    for t,x in ((0,60),(.05,60.5),(.1,61)):
+        bank.candidates=[candidate(x)];tracker.observe(None,observation(t))
+    tracker.last['std']=2
+    used=[]
+    def match(image,obs,prior):used.append(prior);return []
+    bank.match=match
+    assert not tracker.observe(None,observation(.15))['localized']
+    assert used[-1]['identity']==ID and used[-1]['near_exit']
+    assert used[-1]['progress']is None
+
+
+def test_uncertain_next_board_carry_cannot_control_until_new_spatial_registration():
+    bank=Bank(length=64);bank.contexts[KEY]['fixed']=True
+    next_key='L5-M42-S2-B50022';next_id=(5,42,2,50022)
+    bank.contexts[next_key]=dict(key=next_key,length=100,loop=False,blocks=[])
+    tracker=BoardTracker(bank)
+    for t,x in ((0,63),(.05,63.5),(.1,64)):
+        bank.candidates=[candidate(x)];tracker.observe(None,observation(t))
+    tracker.last['std']=.65
+    bank.candidates=[dict(row=dict(key=next_key),identity=next_id,progress=None,std=float('inf'),score=.95)]
+    for t in (.15,.2,.25):value=tracker.observe(None,dict(observation(t),detections=[object()]))
+    assert value['key']==next_key and not value['localized']
+    assert tracker.last['identity']==next_id and tracker.last['std']>.5
+    bank.candidates=[dict(row=dict(key=next_key),identity=next_id,progress=2,std=.1,score=.95)]
+    value=tracker.observe(None,observation(.3))
+    assert value['localized']and value['progress_x']==2

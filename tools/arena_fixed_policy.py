@@ -4,7 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from arena_fixed_match import Atlas, BoardTracker
+from arena_fixed_match import Atlas, BoardTracker,feature_signature
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / 'arena/vision-fixed-routes.json'
@@ -47,8 +47,10 @@ def compile_program(route, key):
         name = before['physics'].split(':')[0].lower()
         if current in ('rope_above','rope_below','ground'):
             jumps = 0
-        elif name in ('jump1','jump2'):
-            jumps = int(name[-1])
+        elif name in ('jump','jump1','jump2'):
+            # Original NinjaPhysicalState calls its first jump "jump: 14".
+            # The following "fall: 15" must retain that consumed jump.
+            jumps = 2 if name=='jump2'else 1
         if current in ('rope_above','rope_below'):
             rope_y=before['position']['y']-(.75 if current=='rope_above'else-.75)
         elif current=='ground':
@@ -73,7 +75,7 @@ def compile_program(route, key):
 def compatible(expected, observation, jumps=None):
     actual = observation.get('phase', 'unknown')
     if expected == 'air':
-        return actual.startswith('air_') and (jumps is None or observation.get('jumps')==jumps)
+        return actual.startswith(('air_','jump1_','jump2_')) and (jumps is None or observation.get('jumps')==jumps)
     return actual == expected
 
 
@@ -126,6 +128,9 @@ class HybridAvoider:
         return max(.08,velocity*(cadence/2+1/60))
 
     def input_due(self,event,observation,x,visit=None):
+        # Height/combination clocks are extra conditions, not permission to
+        # move a recorded input ahead of the obstacle it was meant to clear.
+        spatial_due=x>=event['x']-self.event_lead(observation)
         height=event.get('before_rope_height')
         player=observation.get('player')
         if (height is not None and observation.get('rope')is not None and hasattr(player,'center')
@@ -135,7 +140,7 @@ class HybridAvoider:
             # The short up/down combination must meet its original vertical
             # pose as well as its spatial neighborhood. Earlier first inputs
             # otherwise change the return height even at the same board X.
-            return actual>=height-min(.3,max(0,cadence)*4)
+            return spatial_due and actual>=height-min(.3,max(0,cadence)*4)
         previous=self.last_fixed_commit
         if previous is not None and previous['visit']==(self.visit if visit is None else visit):
             prior=previous['event']
@@ -144,8 +149,8 @@ class HybridAvoider:
                     and 0 < ticks <= 11 and abs(x-event['x'])<=1.5):
                 cadence=observation.get('decision_interval_seconds',0.)
                 lead=min(.06,max(0,cadence)/2+1/60)
-                return observation['time']+lead>=previous['time']+ticks*.02
-        return x>=event['x']-self.event_lead(observation)
+                return spatial_due and observation['time']+lead>=previous['time']+ticks*.02
+        return spatial_due
 
     def eligibility(self, observation):
         located = self.tracker.projected(observation)
@@ -190,6 +195,92 @@ class HybridAvoider:
         program, _ = self.eligibility(observation)
         return not bool(program) and bool(getattr(self.reactive, 'uses_search', lambda _:False)(observation))
 
+    def synchronize(self,observation,located):
+        """Rejoin a recorded resting pose using the existing safe flip model."""
+        import arena_motion as motion
+        program=self.programs.get(located.get('key'))
+        actual=observation.get('phase')
+        velocity=getattr(self.tracker,'last_velocity',None)
+        risk=getattr(self.reactive,'_risk',None)
+        if (not program or not program.get('monotone',True)or program.get('requires_phase_clock')
+                or not located.get('localized')or located.get('progress_std',1)>.3
+                or observation.get('player')is None or observation.get('player_predicted')
+                or actual not in ('rope_above','rope_below')or observation.get('rope')is None
+                or observation['time']-self.last_action<.25 or not velocity or velocity<=0 or risk is None):
+            return None
+        primitive='rope_up'if actual=='rope_below'else'rope_down'
+        target='rope_above'if actual=='rope_below'else'rope_below'
+        x=located['progress_x']
+        finish=x+velocity*(motion.duration(primitive)+.1)
+        if not program['entry_x']<=x<finish<=program['end_x']:
+            return None
+        if any(x-.15<=event['x']<=finish+1 for event in program['events']):
+            return None
+        poses=program['poses']
+        at=bisect.bisect_right([p['x']for p in poses],finish)-1
+        if at<0 or poses[at]['phase']!=target:
+            return None
+        cost,_,_=risk(observation,'flip')
+        if cost!=0:
+            return None
+        self.proposed_primitive=primitive
+        self.fixed_active=True
+        self.decision.update(mode='synchronizing',reason='safe_recorded_rest_pose',target_phase=target)
+        return ('jump'if primitive=='rope_up'else'down'),'fixed_entry_sync_'+primitive
+
+    def hold_recorded_motion(self,observation,located):
+        previous=self.last_fixed_commit
+        risk=getattr(self.reactive,'_risk',None)
+        if (previous is None or previous['visit']!=(located.get('key'),located.get('visit'))
+                or observation.get('player')is None or risk is None):
+            return False
+        event=previous['event']
+        jumps={'jump1':1,'jump2':2}.get(event['primitive'])
+        elapsed=observation['time']-previous['time']
+        if jumps is None or not 0<=elapsed<=.5 or not compatible('air',observation,jumps):
+            return False
+        program=self.programs.get(located.get('key'))
+        if program is None or self.cursor is None:
+            return False
+        if self.cursor<len(program['events']):
+            following=program['events'][self.cursor]
+            due=previous['time']+(following['relative_tick']-event['relative_tick'])*.02
+            if observation['time']+.1>=due:
+                return False
+        _,first,_=risk(observation,'none')
+        if first<=.16:
+            return False
+        self.fixed_active=True
+        self.decision.update(mode='recovering',reason='brief_place_uncertainty_after_own_jump')
+        return True
+
+    def short_combination(self,observation,located):
+        """Complete only a recent own-input pair during brief place uncertainty."""
+        previous=self.last_fixed_commit
+        program=self.programs.get(located.get('key'))
+        if (previous is None or previous['visit']!=(located.get('key'),located.get('visit'))
+                or program is None or self.cursor is None or self.cursor>=len(program['events'])
+                or observation.get('player')is None or observation.get('player_predicted')
+                or located.get('progress_std',float('inf'))>.75 or located.get('progress_x')is None):
+            return None
+        event=program['events'][self.cursor]
+        ticks=event['relative_tick']-previous['event']['relative_tick']
+        elapsed=observation['time']-previous['time']
+        x=located['progress_x']
+        if (event['index']!=previous['event']['index']+1 or not 0<ticks<=11
+                or not 0<=elapsed<=ticks*.02+.08 or abs(x-event['x'])>1.5
+                or event['before']not in ('flip_up','flip_down','air')
+                or not compatible(event['before'],observation,event.get('before_jumps'))):
+            return None
+        self.fixed_active=True
+        self.decision.update(mode='recovering',reason='recent_own_input_pair')
+        if not self.input_due(event,observation,x):
+            return None,'fixed_route_short_combo_wait'
+        self.proposed_event=event
+        self.proposed_primitive=event['primitive']
+        self.decision.update(mode='fixed',event=event['index'],short_pair=True)
+        return event['action'],'fixed_route_'+event['primitive']
+
     def choose(self, observation):
         self.proposed_event = None
         self.proposed_primitive = None
@@ -224,7 +315,13 @@ class HybridAvoider:
             self.fixed_active = True
             self.decision['mode'] = 'fixed'
             return None, 'fixed_route_wait'
-        return self.reactive.choose(observation)
+        pair=self.short_combination(observation,located)
+        if pair is not None:
+            return pair
+        if self.hold_recorded_motion(observation,located):
+            return None,'fixed_route_relocalize_wait'
+        sync=self.synchronize(observation,located)
+        return sync if sync is not None else self.reactive.choose(observation)
 
     def on_commit(self, action, stamp):
         if self.proposed_event is not None and action == self.proposed_event['action']:
@@ -254,6 +351,8 @@ def load(reactive, config=CONFIG, *, detector_sha256=None):
         raise ValueError('Unknown fixed input library schema')
     bank = Atlas(atlas)
     if detector_sha256 is None or bank.meta.get('detector_sha256') != detector_sha256:
+        return reactive
+    if bank.meta.get('feature_sha256')!=feature_signature():
         return reactive
     actor=HybridAvoider(reactive, bank, loaded['programs'])
     actor.runtime_assets={str(path):hashlib.sha256(path.read_bytes()).hexdigest()

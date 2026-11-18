@@ -7,7 +7,6 @@ import argparse
 import hashlib
 import json
 import os
-import inspect
 from functools import cache
 from pathlib import Path
 import time
@@ -15,7 +14,7 @@ import cv2
 import numpy as np
 
 from arena_fixed_catalog import CATALOG, DATASET, ROOT
-from arena_fixed_match import features, register
+from arena_fixed_match import features, register,feature_signature
 from arena_native_json import normalize_arrays
 from arena_fixed_static import enemy_categories,resolved_anchors,support_anchors,expand
 
@@ -156,8 +155,7 @@ def build(samples, output, detector, *, per_case=96, detector_sha256=None, cache
         selected.extend(group[i]for i in np.linspace(0,len(group)-1,min(per_case,len(group)),dtype=int))
     cache=Path(cache)if cache else None
     if cache is not None:cache.mkdir(parents=True,exist_ok=True)
-    feature_code=inspect.getsource(features)+inspect.getsource(__import__('arena_fixed_match').semantic)
-    feature_sha=hashlib.sha256(feature_code.encode()).hexdigest()
+    feature_sha=feature_signature()
     detector_sources={str(path.relative_to(ROOT)):hashlib.sha256(path.read_bytes()).hexdigest()
         for path in [*sorted((ROOT/'tools').glob('arena_*.py')),
                      *sorted((ROOT/'arena').glob('vision-*.json'))]}
@@ -168,7 +166,7 @@ def build(samples, output, detector, *, per_case=96, detector_sha256=None, cache
         raw=Path(sample['image']).read_bytes()
         image_sha=hashlib.sha256(raw).hexdigest()
         fingerprint=hashlib.sha256(json.dumps([image_sha,detector_sha256,feature_sha,detector_signature,
-            sample.get('root_screen_x')],sort_keys=True).encode()).hexdigest()
+            sample.get('root_screen_x'),sample.get('local_x'),sample.get('anchors')],sort_keys=True).encode()).hexdigest()
         cached=cache/(fingerprint+'.npz')if cache else None
         image = cv2.imread(sample['image'])
         if image is None:
@@ -184,6 +182,12 @@ def build(samples, output, detector, *, per_case=96, detector_sha256=None, cache
             observation = dict(player=found[0], detections=found[1],
                                visible_supports=found[2] if len(found)>2 else [],
                                root_screen_x=sample.get('root_screen_x'))
+            # This label-derived correspondence is frozen into the reference
+            # bank. It never enters a live observation or the visual actor.
+            root=sample.get('root_screen_x')
+            if root is None and found[0]is not None:root=found[0].center[0]-.052*39.5
+            observation['reference_static_box_x']=[root+(x-sample['local_x'])*39.5
+                for kind,x in sample.get('anchors',[])if kind==2]if root is not None else []
             value = features(rgb, observation)
             if cached is not None:np.savez_compressed(cached,**value)
         if value['count'] < 8:
