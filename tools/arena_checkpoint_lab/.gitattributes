@@ -1,0 +1,2 @@
+# Patch context/removals must preserve the private upstream source verbatim.
+*.patch -whitespace

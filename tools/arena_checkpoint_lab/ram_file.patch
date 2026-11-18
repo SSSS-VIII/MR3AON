@@ -1,0 +1,106 @@
+--- a/src/snapshot.rs
++++ b/src/snapshot.rs
+@@ -9,7 +9,13 @@
+     Incremental,
+     Base
+ }
++#[cfg(feature = "arena-file-ram")]
++#[path = "ram_file.rs"]
++pub(crate) mod ram_file;
++
+ pub enum MemorySnapshot{
++    #[cfg(feature = "arena-file-ram")]
++    Mapped(ram_file::FilePages),
+     Base(Vec<u8>),
+     Incremental(HashMap<u64, Vec<u8>>),
+ }
+@@ -17,12 +23,19 @@
+ impl MemorySnapshot{
+ 
+     pub fn is_incremental(&self) -> bool {
+-        matches!(self, Self::Incremental(_))
++        match self {
++            Self::Base(_)=>false,
++            Self::Incremental(_)=>true,
++            #[cfg(feature = "arena-file-ram")]
++            Self::Mapped(v)=>!v.base,
++        }
+     }
+ 
+     pub fn get_page(&self, paddr: usize) -> Option<&[u8]> {
+         let end = paddr + PAGE_SIZE as usize;
+         match self{
++            #[cfg(feature = "arena-file-ram")]
++            MemorySnapshot::Mapped(v) => v.page(paddr as u64),
+             MemorySnapshot::Base(vec) => { 
+                 if end <= vec.len() {
+                     // Get the slice and convert it into an array
+@@ -57,10 +70,12 @@
+         self.parent.as_ref().expect("Incremental Snapshots should always have a parent").get_page(paddr, callback)
+     }
+ 
+-    pub fn iter_delta(&self) -> impl Iterator<Item = (u64, &Vec<u8>)> {
+-       if let MemorySnapshot::Incremental(ref map) = self.memory {
+-        return map.iter().map(|(p,s)| (*p,s))
+-       }
+-       panic!("can't iter delta on a root snapshot");
++    pub fn iter_delta(&self) -> Box<dyn Iterator<Item = (u64, &[u8])> + '_> {
++        match &self.memory {
++            MemorySnapshot::Incremental(map) => Box::new(map.iter().map(|(p,s)| (*p,s.as_slice()))),
++            #[cfg(feature = "arena-file-ram")]
++            MemorySnapshot::Mapped(v) if !v.base => Box::new(v.iter()),
++            _ => panic!("can't iter delta on a root snapshot"),
++        }
+     }
+ }
+--- a/src/nyx_vm.rs
++++ b/src/nyx_vm.rs
+@@ -208,6 +208,20 @@
+             });
+             MemorySnapshot::Incremental(map)
+         }};
++
++        #[cfg(feature = "arena-file-ram")]
++        let memory = if let Some(directory)=std::env::var_os("NYX_RAM_BACKING_DIR") {
++            let mut input:Vec<(u64,&[u8])>=match &memory {
++                MemorySnapshot::Base(bytes)=>vec![(0,bytes.as_slice())],
++                MemorySnapshot::Incremental(pages)=>pages.iter().map(|(p,v)|(*p,v.as_slice())).collect(),
++                MemorySnapshot::Mapped(_)=>unreachable!(),
++            };
++            input.sort_by_key(|(address,_)|*address);
++            match crate::snapshot::ram_file::FilePages::create(std::path::Path::new(&directory), !memory.is_incremental(), &input) {
++                Ok(mapped)=>MemorySnapshot::Mapped(mapped),
++                Err(error)=>{eprintln!("VM RAM backing unavailable: {error}");memory},
++            }
++        } else { memory };
+ 
+         vmm.guest_memory().reset_dirty();
+         vmm.reset_dirty_bitmap();
+@@ -415,7 +429,7 @@
+         }
+         // once they are on the same depth we can walk both of them upwards until they meet and we reset all pages to the LCA
+         while !Arc::ptr_eq(&active_ancestor, &snap_ancestor){
+-            assert_eq!(active.depth, snap_ancestor.depth);
++            assert_eq!(active_ancestor.depth, snap_ancestor.depth);
+             active_ancestor = reset_active_pages(active_ancestor, &mut pages_reset);
+             snap_ancestor =reset_snap_pages(snap_ancestor, &mut pages_reset);
+         }
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -45,3 +45,16 @@
+ [[bin]]
+ name = "arena_checkpoint_worker"
+ path = "src/arena_checkpoint_worker.rs"
++
++[features]
++arena-file-ram = []
++
++[[bin]]
++name = "arena_checkpoint_file_worker"
++path = "src/arena_checkpoint_file_worker.rs"
++required-features = ["arena-file-ram"]
++
++[[bin]]
++name = "arena_file_snapshot_bench"
++path = "src/arena_file_snapshot_bench.rs"
++required-features = ["arena-file-ram"]

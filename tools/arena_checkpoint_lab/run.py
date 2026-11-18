@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import time
@@ -43,7 +44,10 @@ def run(binary, output, rounds=300):
         raise ValueError('rounds must be 1..10000')
     start = time.monotonic()
     report = dict(schema=1, scope=manifest['scope'], game_rollback_complete=False,
-                  benchmark_binary_sha256=sha(binary), rounds=rounds)
+                  benchmark_binary_sha256=sha(binary), rounds=rounds,
+                  guest_memory_mib=config['machine-config'].get('mem_size_mib'),
+                  benchmark_environment={name:os.environ[name]for name in
+                      ('NYX_BENCH_HISTORY','NYX_RAM_RESTORE','NYX_RAM_BACKING_DIR')if name in os.environ})
     log = output / 'benchmark.log'
     with log.open('xb') as stream:
         try:

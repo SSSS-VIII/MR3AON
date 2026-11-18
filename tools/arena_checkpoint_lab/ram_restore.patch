@@ -1,0 +1,99 @@
+--- a/src/nyx_vm.rs
++++ b/src/nyx_vm.rs
+@@ -435,6 +435,54 @@
+         }
+     }
+ 
++    /// Resolve each affected RAM page once, newest target delta first. This
++    /// avoids a target-parent walk per dirty page on long retained histories.
++    #[cfg(feature = "arena-file-ram")]
++    fn apply_batched_memory(vmm: &mut Vmm, active: &Arc<NyxSnapshot>, snapshot: &Arc<NyxSnapshot>) {
++        let mut needed = HashSet::new();
++        Self::iter_dirty_pages(vmm, |region, address| {
++            needed.insert(region.start_addr().0 + address as u64);
++        });
++        let mut left = active.clone();
++        let mut right = snapshot.clone();
++        let collect = |point: &NyxSnapshot, pages: &mut HashSet<u64>| {
++            pages.extend(point.iter_delta().map(|(address, _)| address));
++        };
++        while left.depth > right.depth {
++            collect(&left, &mut needed);
++            left = left.parent.as_ref().expect("incremental parent").clone();
++        }
++        while right.depth > left.depth {
++            collect(&right, &mut needed);
++            right = right.parent.as_ref().expect("incremental parent").clone();
++        }
++        while !Arc::ptr_eq(&left, &right) {
++            assert_eq!(left.depth, right.depth);
++            collect(&left, &mut needed);
++            collect(&right, &mut needed);
++            left = left.parent.as_ref().expect("shared RAM root").clone();
++            right = right.parent.as_ref().expect("shared RAM root").clone();
++        }
++        let mem = vmm.get_mem();
++        let mut source = snapshot.as_ref();
++        while !needed.is_empty() && source.memory.is_incremental() {
++            for (address, bytes) in source.iter_delta() {
++                if needed.remove(&address) {
++                    mem.write_slice(bytes, GuestAddress(address)).unwrap();
++                }
++            }
++            source = source.parent.as_deref().expect("incremental parent");
++        }
++        // File offsets of the base image match RAM addresses. Read remaining
++        // pages in address order instead of faulting through a random HashSet.
++        let mut remaining: Vec<u64> = needed.into_iter().collect();
++        remaining.sort_unstable();
++        for address in remaining {
++            let bytes = source.memory.get_page(address as usize).expect("base RAM page");
++            mem.write_slice(bytes, GuestAddress(address)).unwrap();
++        }
++    }
++
+     pub fn apply_snapshot(&mut self, snapshot: &Arc<NyxSnapshot>) {
+         let mut vmm = self.vmm.lock().unwrap();
+ 
+@@ -443,19 +491,28 @@
+ 
+         let fast_path = Arc::ptr_eq(snapshot, active_snapshot);
+ 
+-        Self::iter_dirty_pages(&mut vmm, |region, page_addr|{
+-            let target_addr = MemoryRegionAddress(page_addr.try_into().unwrap());
+-            snapshot.get_page(page_addr, |slice| { 
+-                region.write_slice(slice, target_addr).unwrap();
+-                if !fast_path{
+-                    pages_reset.insert(page_addr as u64);
+-                }
+-            } );
+-        });
+-
+-        if !fast_path {
+-            Self::apply_deltas_to_least_common_ancestor(&mut vmm, &mut pages_reset, active_snapshot.clone(), snapshot.clone());
+-        } 
++        #[cfg(feature = "arena-file-ram")]
++        let batched = matches!(&snapshot.memory, MemorySnapshot::Mapped(_))
++            && std::env::var_os("NYX_RAM_RESTORE").as_deref() != Some(std::ffi::OsStr::new("legacy"));
++        #[cfg(not(feature = "arena-file-ram"))]
++        let batched = false;
++        if batched {
++            #[cfg(feature = "arena-file-ram")]
++            Self::apply_batched_memory(&mut vmm, active_snapshot, snapshot);
++        } else {
++            Self::iter_dirty_pages(&mut vmm, |region, page_addr|{
++                let target_addr = MemoryRegionAddress(page_addr.try_into().unwrap());
++                snapshot.get_page(page_addr, |slice| {
++                    region.write_slice(slice, target_addr).unwrap();
++                    if !fast_path {
++                        pages_reset.insert(page_addr as u64);
++                    }
++                });
++            });
++            if !fast_path {
++                Self::apply_deltas_to_least_common_ancestor(&mut vmm, &mut pages_reset, active_snapshot.clone(), snapshot.clone());
++            }
++        }
+ 
+         self.active_snapshot = Some(snapshot.clone());
+         vmm.guest_memory().reset_dirty();
