@@ -164,10 +164,14 @@ function E.vision_evaluation()
     local ground=n._GroundCollider
     local index=ground and ground.BelongToStageIndex or -1
     local stages=get(level,'_stageList')
-    local id=index>=0 and index<stages.Count and get(stages[index],'_stageBaseInfo')._stageID or 0
+    local stage=index>=0 and index<stages.Count and stages[index]or nil
+    if index>=stages.Count then stage=get(level,'_currLoopStage')end
+    local id=stage and get(stage,'_stageBaseInfo')._stageID or 0
     local result={tick=CS.GameManager.Instance.GameInfo._totalFrameCount,frame=U.Time.frameCount,
         time=U.Time.realtimeSinceStartup,health=n.CurrentHp,maxHealth=n.MaxHp,
         physics=tostring(get(n,'__ninjaPhysicsState')),stageIndex=index,stageID=id,stageCount=stages.Count,
+        stageStartX=stage and stage.StageStartX or nil,
+        stageInstance=stage and stage:GetHashCode()or nil,
         x=n.transform.position.x,y=n.transform.position.y,god=n:IsGodMode(),
         scale=U.Time.timeScale,fixedDeltaTime=U.Time.fixedDeltaTime,map=get(level,'_levelBaseInfo')._levelID,
         damage=E.visionEvalDamage or 0,minHealth=E.visionEvalMinHealth or n.CurrentHp,

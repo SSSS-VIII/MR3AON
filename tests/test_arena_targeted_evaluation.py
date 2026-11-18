@@ -33,3 +33,11 @@ def test_map_transition_cannot_complete_boards_beyond_the_original_map():
 def test_unknown_map_count_does_not_treat_an_index_reset_as_success():
     initial=dict(stageIndex=9,map=41,health=5000,damage=0,minHealth=5000)
     assert not evaluation_goal_reached(initial,dict(initial,map=2,stageIndex=0),10)
+
+
+def test_loop_exit_needs_a_new_native_instance_and_forward_origin():
+    initial=dict(map=71,stageIndex=1,stageCount=1,stageStartX=64,stageInstance=10)
+    assert not evaluation_goal_reached(initial,initial,2)
+    assert not evaluation_goal_reached(initial,dict(initial,stageStartX=128),2)
+    assert not evaluation_goal_reached(initial,dict(initial,stageInstance=11),2)
+    assert evaluation_goal_reached(initial,dict(initial,stageStartX=128,stageInstance=11),2)

@@ -168,6 +168,12 @@ def lua(value):
 
 def evaluation_goal_reached(initial,current,goal):
     if current.get('map')==initial.get('map'):
+        if (initial.get('stageCount') is not None and initial['stageIndex']>=initial['stageCount']
+                and goal==initial['stageIndex']+1):
+            return bool(current.get('stageStartX')is not None and initial.get('stageStartX')is not None
+                        and current['stageStartX']>initial['stageStartX']+.01
+                        and current.get('stageInstance')is not None
+                        and current['stageInstance']!=initial.get('stageInstance'))
         return current['stageIndex']>=goal
     # The last normal board enters the native boss map. The new map's stage
     # index restarts, so the original index can never reach its old goal.
@@ -212,16 +218,17 @@ def run(args):
     else:
         perception=Perception();detector_info=None
     policy=MpcAvoider() if detector_weights else Avoider()
+    from arena_fixed_policy import load as load_fixed_routes
+    policy=load_fixed_routes(policy,detector_sha256=detector_info.get('sha256')if detector_info else None)
     policy_samples={False:deque(maxlen=32),True:deque(maxlen=32)}
     policy_times,compute_priors=[],[]
     decision_cadence=DecisionCadence()
     start_board=getattr(args,'start',1)
     capture_type=FastCapture
-    if getattr(args,'render_capture',False):
+    if getattr(args,'render_capture',False) or getattr(policy,'runtime_assets',None):
         from arena_render_capture import RenderCapture
         capture_type=RenderCapture
     goal=start_board-1+args.boards
-    initial = prepare(client, args.seed, args.level, args.map, pins,start=start_board)
     sources=('tools/arena_vision.py','tools/arena_policy.py','tools/arena_terrain.py',
              'tools/arena_motion.py','arena/vision-motion-priors.json','arena/Local/vision_eval.lua',
              'tools/arena_capture.py','arena/Capture/FrameServer.java','tools/arena_yolo_detector.py',
@@ -231,6 +238,7 @@ def run(args):
              'tools/arena_rope_transfer.py',
              'arena/vision-object-priors.json','arena/vision-detector.json','tools/arena_oriented.py',
              'tools/arena_obb_detector.py','tools/arena_support.py','tools/arena_object_support.py',
+             'tools/arena_fixed_policy.py','tools/arena_fixed_match.py','arena/vision-fixed-routes.json',
              'tools/arena_support_refiner.py',
              'tools/arena_bamboo_motion.py','tools/arena_bamboo_geometry.py','arena/vision-bamboo-projectiles.json',
              'tools/arena_bamboo_point.py','tools/arena_bamboo_instances.py','tools/arena_scene_motion.py','tools/arena_arrow_motion.py','tools/arena_mace_motion.py',
@@ -241,10 +249,12 @@ def run(args):
     if capture_type is not FastCapture:
         sources+=('tools/arena_render_capture.py','arena/Local/render_capture.lua','arena/Capture/RenderRelay.java')
     source_hashes={name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest()for name in sources}
+    initial = prepare(client, args.seed, args.level, args.map, pins,start=start_board)
     (args.output / 'setup.json').write_text(json.dumps(dict(seed=args.seed, level=args.level,
         map=args.map, start=start_board,goal_stage_index=goal,pins=pins, observe=args.observe_only, initial=initial,sources=source_hashes,
         capture_source=getattr(capture_type,'source_name','android_display'),
-        detector=detector_info,policy=dict(continuous_collision=getattr(policy,'continuous_collision',False),
+        detector=detector_info,fixed_route_assets=getattr(policy,'runtime_assets',None),
+        policy=dict(continuous_collision=getattr(policy,'continuous_collision',False),
         line_camera_recovery=getattr(getattr(perception,'supports',None),'line_camera_recovery',False),
         texture_camera_recovery=getattr(getattr(perception,'supports',None),'texture_camera_recovery',False),
         ground_texture_type=type(getattr(perception,'ground_texture',None)).__name__,
@@ -312,6 +322,8 @@ def run(args):
                                 if timeline is not None else perception.observe(frame.array(),stamp))
                         capture_request=frame.request_ns
                         previous_crc=crc;fresh+=1
+                        if hasattr(policy,'observe'):
+                            policy.observe(frame.array(),latest)
                     now=(time.perf_counter_ns()-clock['offset_ns'])/1e9
                     cadence=decision_cadence.observe(now)
                     age=(now-latest['time'])*1000
@@ -322,7 +334,7 @@ def run(args):
                     # measured pixel age. Neither number is a photon-time guarantee.
                     # Budget the remaining policy computation too; its expensive
                     # search samples must not be diluted by cheap reactive frames.
-                    expensive=isinstance(policy,MpcAvoider)and policy.uses_search(latest)
+                    expensive=bool(getattr(policy,'uses_search',lambda _:False)(latest))
                     samples=policy_samples[expensive]
                     compute_prior=percentile(samples,90)/1000 if samples else (.01 if expensive else 0.)
                     timeline=getattr(perception,'input_timeline',None)
@@ -343,7 +355,7 @@ def run(args):
                     proposed_action=action
                     submission_check=None
                     if action and not args.observe_only:
-                        primitive=selected_primitive(action,reason)
+                        primitive=getattr(policy,'proposed_primitive',None)or selected_primitive(action,reason)
                         if getattr(policy,'revalidate_ground_down',False):
                             check_start=time.perf_counter()
                             project=(lambda stamp:timeline.project(stamp,include_tracks=False))if timeline is not None else None
@@ -358,6 +370,8 @@ def run(args):
                         committed=commit_action(perception,latest,action,ack,
                                                 primitive=primitive,planned=obs)
                         policy.last_action=committed['committed_time']
+                        if hasattr(policy,'on_commit'):
+                            policy.on_commit(action,committed['committed_time'])
                         action_times.append(ack.request_ms)
                         key='down'if action in ('slide','down')else'jump'
                         sent_keys[key]+=1
@@ -365,7 +379,9 @@ def run(args):
                             key=key,key_count=sent_keys[key],request_ns=ack.request_ns,
                             capture_request_ns=capture_request,planned_time=obs['time'],**committed))
                     row = serializable(obs)
-                    row['control_step_seconds']=policy.control_step(obs)if isinstance(policy,MpcAvoider)else None
+                    row['control_step_seconds']=getattr(policy,'control_step',lambda _:None)(obs)
+                    if hasattr(policy,'decision'):
+                        row['fixed_route']=policy.decision
                     row['measured_control_step']=bool(getattr(policy,'measured_control_step',False))
                     measured={key:latest.get(key)for key in (
                         'time','phase','jumps','player','player_predicted','motion','rope',
