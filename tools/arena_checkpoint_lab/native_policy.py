@@ -16,6 +16,9 @@ def support_y(observation,x):
 
 def decision(observation):
     state=observation['state'];phase=state['physics'].split(':')[0].lower()
+    prior=[observation.get(k,'').split(':')[0].lower()for k in ('last_physics','previous_physics')]
+    used=observation.get('jumps_used')
+    if phase=='jump2'or phase=='fall'and 'jump2'in prior:used=2
     role=observation.get('role',[])
     if not role:raise ValueError('The original hurt collider is required by the native policy')
     body=role[0];p=body['center'];r=body['extents']
@@ -49,7 +52,7 @@ def decision(observation):
         if phase in ('jump','jump2')and threats and all(p['y']-r['y']>h['world_top']+.3 for h in threats):
             reason='original_jump_already_clears_native_volumes'
         elif above and threats[0]['ttc']<.4:
-            order=(('down','none','jump')if observation.get('jumps_used',0)>=2 else('jump','down','none'))
+            order=(('none','down','jump')if used is not None and used>=2 else('jump','down','none'))
             reason='airborne_native_threat'
         elif observation.get('support',{}).get('is_line')and not above and not below:
             order=('down','none','jump');reason='recover_original_rope_jump_budget'
@@ -58,4 +61,4 @@ def decision(observation):
         order=('jump','none','down');reason='anticipate_original_support_end'
     if phase.startswith(('rollto','airup')):order=('none','jump','down');reason='let_original_transfer_finish'
     return dict(order=list(order),reason=reason,phase=phase,nearest=threats[:4],
-                jumps_used=observation.get('jumps_used'),uses_original_colliders=True)
+                jumps_used=used,uses_original_colliders=True)

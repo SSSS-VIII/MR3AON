@@ -86,6 +86,19 @@ def test_privileged_policy_replaces_the_minimum_input_order_and_acts_before_the_
     assert result['stats']['native_decisions'][0]['reason']=='anticipate_ground_obstacle'
 
 
+def test_guided_search_prunes_input_gaps_that_cannot_preserve_the_eighty_ms_window(monkeypatch):
+    monkeypatch.syspath_prepend(str(SOURCE.parent))
+    import native_policy
+    monkeypatch.setattr(native_policy,'read',lambda _:None)
+    monkeypatch.setattr(native_policy,'decision',lambda _:dict(order=['jump','none','down']))
+    oracle=Oracle()
+    result=search.search_window(oracle,start=start(oracle),offset=0,horizon=4,commit=2,guided=True,last_input_frame=-1)
+    assert result['found']and result['stats']['timing_spacing_pruned']>0
+    times=[r['job']['before']['episodeFrame']for r in result['path']if r['action']!='none']
+    assert times and times[0]>=2
+    assert all(b-a>=3 for a,b in zip([-1,*times],times))
+
+
 def test_budget_exhaustion_restores_the_real_root_without_a_partial_success():
     oracle = Oracle()
     result = search.search_window(oracle, start=start(oracle), offset=0, horizon=4, commit=2, max_trials=2)

@@ -40,7 +40,8 @@ class BudgetExceeded(RuntimeError):
 
 
 def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200, on_trial=None, cache_prefix=0,
-                  root_point=None, forbidden_prefixes=(),early_jump=False,guided=False,retain_forecast=False):
+                  root_point=None, forbidden_prefixes=(),early_jump=False,guided=False,retain_forecast=False,
+                  last_input_frame=None):
     """Leave the guest at a chosen real checkpoint, or at this window's root.
 
     A 50ms nominal interval alternates 40/60ms original ticks. offset counts
@@ -61,6 +62,7 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
     unsafe_actions = set()
     decisions={}
     stats['native_decisions']=[]
+    stats['timing_spacing_pruned']=0
     began = time.monotonic()
 
     def release(keep):
@@ -82,6 +84,12 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
             order=tuple(decisions[point]['order'])
         for action in (('jump',)if force_first_jump and depth==0 else order):
             cost = int(action != 'none')
+            if guided and cost:
+                previous=next((r['job']['before']['episodeFrame']for r in reversed(path)if r['action']!='none'),last_input_frame)
+                current=path[-1]['job']['after']['episodeFrame']if path else gate.view['state']['episodeFrame']
+                if previous is not None and current-previous<=2:
+                    stats['timing_spacing_pruned']+=1
+                    continue
             if cost > remaining_actions or (point, action) in unsafe_actions:
                 continue
             cached=prefix.get(point)if action=='none'else None

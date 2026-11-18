@@ -42,6 +42,10 @@ function E.native_search_observation()
     end
     local jumps=field(n,'_jumpTimes')
     if type(jumps)=='number'then out.jumps_used=jumps end
+    local previous=field(n,'_lastNinjaPhysicsState')
+    if previous then out.last_physics=tostring(previous)end
+    previous=field(n,'__ninjaPrePhysicsState')
+    if previous then out.previous_physics=tostring(previous)end
     local support=n._GroundCollider
     if support then
         out.support={start=vector(support.PointStart),finish=vector(support.PointEnd),

@@ -7,9 +7,10 @@ def window(gate,*,searcher,history,initial_point,initial_state,board_code,**kwar
     budget=kwargs.pop('max_trials',1200)
     root=kwargs.pop('root_point',None)
     audits=[];used=0
+    previous=next((r['job']['before']['episodeFrame']for r in reversed(history)if r['action']!='none'),None)
     while used<budget:
         result=searcher(gate,**kwargs,max_trials=budget-used,root_point=root,
-                        forbidden_prefixes=forbidden,guided=True,retain_forecast=True)
+                        forbidden_prefixes=forbidden,guided=True,retain_forecast=True,last_input_frame=previous)
         root=result['root'];used+=result['stats']['trials']
         if not result['found']:
             result['timing_attempts']=audits

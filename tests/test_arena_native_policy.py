@@ -50,3 +50,10 @@ def test_air_return_uses_the_actual_rope_and_spent_jump_state():
     assert decision(obs)['order'][0]=='none'
     obs['role']=[]
     with pytest.raises(ValueError):decision(obs)
+
+
+def test_second_jump_and_its_native_fall_history_do_not_request_a_third_jump():
+    obs=observation('jump2: 16');obs['hazards']=[hazard(2,1)]
+    assert decision(obs)['order'][0]!='jump'and decision(obs)['jumps_used']==2
+    obs['state']['physics']='fall: 15';obs['last_physics']='jump2: 16'
+    assert decision(obs)['order'][0]!='jump'and decision(obs)['jumps_used']==2
