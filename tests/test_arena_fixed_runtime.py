@@ -259,6 +259,11 @@ def test_first_operation_can_use_a_trap_and_rope_joint_but_not_a_later_identical
     bank=Atlas(tmp_path);bank.entry_windows={KEY:dict(low=0,high=30)}
     positions=[c['progress']for c in bank.match(None,{})if c['progress']is not None]
     assert positions and all(abs(x-20)<.01 for x in positions)
+    query['landmark_count']=1  # The joint leaves view after the initial pair.
+    assert not any(c['progress']is not None for c in bank.match(None,{}))
+    prior=dict(identity=ID,progress=20,std=.3,length=100,tentative=True)
+    continued=[c for c in bank.match(None,{},prior)if c['progress']is not None]
+    assert continued and all(abs(c['progress']-20)<.01 for c in continued)
     bank.entry_windows={}
     assert not any(c['progress']is not None for c in bank.match(None,{}))
 

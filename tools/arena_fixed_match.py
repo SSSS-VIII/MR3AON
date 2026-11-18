@@ -344,17 +344,18 @@ class Atlas:
         # motion error without confusing this boundary with one 32m earlier.
         if prior and prior.get('progress')is not None and prior.get('std',0)<=1:
             endpoints=query['landmarks'][:query['landmark_count']]
-            endpoints=endpoints[endpoints[:,0]==4]
+            endpoints=endpoints[np.isin(endpoints[:,0],(1,2,4)if prior.get('tentative')else(4,))]
             for context in self.contexts.values():
                 if identity(context)!=prior['identity']:continue
-                for kind,x in context.get('support_anchors',[]):
+                anchors=context.get('support_anchors',[])+(context.get('anchors',[])if prior.get('tentative')else[])
+                for kind,x in anchors:
                     for point in endpoints:
                         if point[0]!=kind:continue
                         progress=x-float(point[1])/39.5
                         if abs(progress-prior['progress'])>max(.8,3*prior.get('std',0)):
                             continue
                         candidates.append(dict(row=context,identity=identity(context),progress=progress,
-                            std=.12,score=.7,registration=None,progress_source='prior_and_original_support',
+                            std=.12,score=.7,registration=None,progress_source='prior_and_original_static_anchor',
                             landmark_count=1))
         return sorted(candidates, key=lambda c: c['score'], reverse=True)
 
@@ -533,6 +534,17 @@ class BoardTracker:
         self.atlas.sequence=self.sequence
         self.atlas.entry_windows=self.entry_windows
         prior=prediction if prediction and prediction['std']<=1 else self.recognition_prior(observation['time'])
+        pending=self.spatial_pending
+        if (prior is None and pending is not None and pending['identity']and self.entry_windows
+                and 0<observation['time']-pending['time']<=.18
+                and observation.get('scene_motion_observed')and observation.get('scene_velocity_x')is not None):
+            level,world,slot,stage=pending['identity']
+            key=f'L{level}-M{world}-S{slot}-B{stage}'
+            velocity=(-observation['scene_velocity_x']+observation.get('vx',0))/observation.get('scale_px',39.5)
+            if key in self.entry_windows and 0<=velocity<=40:
+                context=self.atlas.contexts[key]
+                prior=dict(identity=pending['identity'],progress=pending['x']+velocity*(observation['time']-pending['time']),
+                           std=.3,length=context['length'],loop=context.get('loop',False),tentative=True)
         candidates = self.atlas.match(image, observation, prior)
         candidates=[c for c in candidates if self.atlas.contexts[c['row']['key']].get('fixed',True)
                     and (self.sequence is None or self.sequence.permits(c['identity']))]
