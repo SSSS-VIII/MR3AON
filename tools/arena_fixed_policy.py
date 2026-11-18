@@ -144,10 +144,10 @@ class HybridAvoider:
         velocity=getattr(self.tracker,'last_velocity',None)
         if velocity is None:
             return .08
-        # A key submitted only after the boundary has been seen is on average
-        # half a decision interval late. Android/Unity may consume it in either
-        # of the next render frames; budget that one-frame uncertainty too.
-        return max(.08,velocity*(cadence/2+1/60))
+        # The observation is already projected to expected Unity consumption.
+        # Center the discrete decision interval without adding that render
+        # frame a second time; doing so systematically starts jumps early.
+        return max(.08,velocity*cadence/2)
 
     def input_due(self,event,observation,x,visit=None):
         # Height/combination clocks are extra conditions, not permission to
@@ -167,10 +167,10 @@ class HybridAvoider:
         if previous is not None and previous['visit']==(self.visit if visit is None else visit):
             prior=previous['event']
             ticks=event.get('relative_tick',-1000)-prior.get('relative_tick',0)
-            if (event['index']==prior['index']+1 and event['before'] in ('flip_up','flip_down','air')
-                    and 0 < ticks <= 11 and abs(x-event['x'])<=1.5):
+            if (event['index']==prior['index']+1 and event['before'] in ('flip_up','flip_down','air','rope_above','rope_below')
+                    and 0 < ticks <= 60 and abs(x-event['x'])<=1.5):
                 cadence=observation.get('decision_interval_seconds',0.)
-                lead=min(.06,max(0,cadence)/2+1/60)
+                lead=min(.06,max(0,cadence)/2)
                 return spatial_due and observation['time']+lead>=previous['time']+ticks*.02
         return spatial_due
 
@@ -285,9 +285,11 @@ class HybridAvoider:
         ticks=event['relative_tick']-previous['event']['relative_tick']
         elapsed=observation['time']-previous['time']
         x=located['progress_x']
-        if (event['index']!=previous['event']['index']+1 or not 0<ticks<=11
+        contact_pair=(previous['event']['primitive']in ('rope_down','rope_up','air_down','air_up')
+                      and event['before']in ('rope_above','rope_below')and observation.get('rope_contact_observed'))
+        if (event['index']!=previous['event']['index']+1 or not 0<ticks<=(60 if contact_pair else 11)
                 or not 0<=elapsed<=ticks*.02+.08 or abs(x-event['x'])>1.5
-                or event['before']not in ('flip_up','flip_down','air')
+                or event['before']not in ('flip_up','flip_down','air')and not contact_pair
                 or not compatible(event['before'],observation,event.get('before_jumps'))):
             return None
         self.fixed_active=True

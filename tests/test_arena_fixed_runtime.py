@@ -304,6 +304,8 @@ def test_short_action_combination_uses_its_ack_clock_without_waiting_for_a_late_
     policy.visit=(KEY,1);policy.cursor=0;policy.proposed_event=first
     policy.on_commit('jump',1.)
     obs=dict(observation(1.09,'flip_up'),test_progress=11.2,decision_interval_seconds=.04)
+    assert policy.choose(obs)==(None,'fixed_route_short_combo_wait')
+    obs['test_progress']=11.6
     assert policy.choose(obs)==('down','fixed_route_air_down')
     policy.on_commit('down',1.1)
     assert policy.cursor==2
@@ -317,7 +319,16 @@ def test_vertical_pose_cannot_fire_down_before_the_recorded_spatial_boundary():
     obs=dict(observation(1,'flip_up'),decision_interval_seconds=.04,
              player=Box(170,245,16,30),rope=260,scale_px=40)
     assert not policy.input_due(event,obs,10.5)
-    assert policy.input_due(event,obs,11.4)
+    assert not policy.input_due(event,obs,11.4)
+    assert policy.input_due(event,obs,11.5)
+
+
+def test_second_jump_keeps_its_recorded_frame_gap_after_the_own_first_jump():
+    policy,_=controller();policy.visit=(KEY,1)
+    policy.last_fixed_commit=dict(visit=policy.visit,time=1.,event=dict(index=0,relative_tick=100))
+    second=dict(index=1,x=20,relative_tick=128,before='air')
+    assert not policy.input_due(second,dict(observation(1.3),decision_interval_seconds=.04),20)
+    assert policy.input_due(second,dict(observation(1.55),decision_interval_seconds=.04),20)
 
 
 def test_generic_boxes_require_measured_static_horizontal_motion_to_anchor_live_progress():
