@@ -2,6 +2,7 @@
 import hashlib
 import json
 from pathlib import Path
+from arena_fixed_goal import exit_kind
 
 
 def export(reports, destination):
@@ -28,7 +29,7 @@ def export(reports, destination):
             raise ValueError('Native states or board contexts do not match at the report seam')
         if result['complete']:
             raise ValueError('A route already reached its board exit')
-        for row in report['route']:
+        for index, row in enumerate(report['route']):
             job = row['job']
             before, after = job['before'], job['after']
             ticks = row['ticks']
@@ -48,12 +49,16 @@ def export(reports, destination):
             expected = after
             board = row['board']
             if board['map'] != result['start']['board']['map'] or board['mounted']:
-                raise ValueError('Native route left its original unmounted map context')
+                allowed_exit = (not board['mounted'] and index == len(report['route']) - 1
+                                and report.get('complete') and exit_kind(result['start']['board'], board))
+                if not allowed_exit:
+                    raise ValueError('Native route left its original unmounted map context')
         if report.get('complete'):
-            if (board['stage_index'] <= result['start']['board']['stage_index']
+            if (exit_kind(result['start']['board'], board) is None
                     or report['end']['state'] != expected or report['end']['board'] != board):
                 raise ValueError('Completed report does not actually reach the next native board')
             result['complete'] = True
+            result['exit_kind'] = exit_kind(result['start']['board'], board)
         sources.append(dict(path=str(path), sha256=hashlib.sha256(raw).hexdigest(),
                             first_tick=start['state']['episodeFrame'], last_tick=expected['episodeFrame']))
     result['end'] = dict(state=expected, board=board)

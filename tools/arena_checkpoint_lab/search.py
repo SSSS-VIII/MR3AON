@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 import shutil
 import time
+from arena_fixed_goal import exit_kind
 
 LOADED_SOURCE = Path(__file__).read_bytes()
 
@@ -21,8 +22,10 @@ local g=n._GroundCollider
 local i=g and g.BelongToStageIndex or -1
 local ss=l:GetType():GetField('_stageList',f):GetValue(l)
 local s=i>=0 and i<ss.Count and ss[i]or nil
+if i>=ss.Count then s=l:GetType():GetField('_currLoopStage',f):GetValue(l)end
 return {map=l:GetType():GetField('_levelBaseInfo',f):GetValue(l)._levelID,
- stage_index=i,block_index=g and g.BelongToBlockIndex or -1,
+ stage_index=i,stage_count=ss.Count,loop=i>=ss.Count,instance=s and s:GetHashCode()or nil,
+ block_index=g and g.BelongToBlockIndex or -1,
  stage_id=s and s:GetType():GetField('_stageBaseInfo',f):GetValue(s)._stageID or -1,
  stage_start=s and s.StageStartX or -1,god=n:IsGodMode(),mounted=n.IsMountState}
 """
@@ -71,14 +74,15 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
                 unsafe_actions.add((point, action))
                 continue
             board = gate.call('exec', code=BOARD)
-            if board['mounted'] or board['map'] != start['board']['map']:
+            goal = exit_kind(start['board'], board)
+            if board['mounted'] or (board['map'] != start['board']['map'] and goal is None):
                 # Different native gameplay contexts require another route.
                 continue
             child = gate.snapshot()['result']['id']
             owned.append(child)
             row = dict(action=action, ticks=ticks, job=job, board=board, point=child)
             advanced = path + [row]
-            crossed = board['stage_index'] > start['board']['stage_index']
+            crossed = goal is not None
             if crossed:
                 return advanced, True
             result = walk(child, depth + 1, advanced, remaining_actions - cost)
@@ -124,7 +128,7 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
         stats['seconds'] = time.monotonic() - began
 
 
-def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120):
+def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120, collector=None):
     """Find one board exit from the current native starting point, if possible.
 
     Rebase preserves the currently committed guest, releases old RAM history
@@ -137,6 +141,8 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120)
     output.mkdir(parents=True, exist_ok=False)
     sources = {name: (LOADED_SOURCE if name == 'search.py' else (Path(__file__).parent / name).read_bytes())
                for name in ('search.py', 'render.py', 'gate.py', 'game_gate.lua', 'worker.rs')}
+    if collector is not None:
+        sources['collector.py'] = (Path(__file__).parent / 'collector.py').read_bytes()
     for name, data in sources.items():
         (output / name).write_bytes(data)
     initial = gate.call('state')
@@ -154,14 +160,20 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120)
     started = time.monotonic()
     try:
         report['initial_ram_root'] = gate.rebase()
+        if collector is not None:
+            collector.begin(gate, report['initial_ram_root']['result']['id'], start)
         with (output / 'trials.jsonl').open('w') as trial_log:
             for index in range(max_windows):
+                damage_count = 0
                 def save_trial(row):
+                    nonlocal damage_count
                     trial_log.write(json.dumps(dict(window=index, **row), ensure_ascii=False) + '\n')
                     trial_log.flush()
                     if not row['safe']:
-                        print(f'搜索分支受伤，回溯: 窗{index + 1} 深{row["depth"]} '
-                              f'{row["action"]} 帧{row["job"]["after"]["episodeFrame"]}', flush=True)
+                        damage_count += 1
+                        if damage_count == 1 or damage_count % 25 == 0:
+                            print(f'搜索回溯: 窗{index + 1} 已拒{damage_count}个扣血分支，'
+                                  f'帧{row["job"]["after"]["episodeFrame"]}', flush=True)
                 window = search_window(gate, start=start, offset=interval, horizon=horizon,
                                        commit=commit, max_trials=max_trials, on_trial=save_trial)
                 window.pop('trials')  # Complete per-candidate evidence is streamed above.
@@ -171,16 +183,22 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120)
                     break
                 path = window['path']
                 effective = gate.call('exec', code=RENDER_INFO)
-                if effective != renderer['requested']:
+                if effective != renderer['requested'] and not window['crossed']:
                     raise RuntimeError('Original scene changed the search renderer size or interval')
                 window['renderer'] = effective
                 report['route'].extend({key: value for key, value in row.items() if key != 'point'} for row in path)
+                if collector is not None:
+                    collector.window(gate, path, index)
+                    if gate.call('state') != path[-1]['job']['after']:
+                        raise RuntimeError('Reference capture did not restore the committed native state')
+                    report['references'] = collector.status()
                 interval += len(path)
                 state = gate.view['state']
                 print(f'原生搜索 {index + 1}: 帧{state["episodeFrame"]} 血{state["health"]} '
                       f'x={state["position"]["x"]:.2f}，试{window["stats"]["trials"]}分支', flush=True)
                 if window['crossed']:
                     report['complete'] = True
+                    report['exit_kind'] = exit_kind(start['board'], path[-1]['board'])
                     break
                 window['rebase'] = gate.rebase()
                 (output / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2))
