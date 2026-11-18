@@ -329,7 +329,11 @@ class Atlas:
                                        and prior['progress']>=prior['length']-18)
                     if not own and not(following and near_exit)and not(sequence is not None and sequence.permits(identity(context))):
                         continue
-                if background<.25 and not(prior and place==prior['identity'][:2]):
+                # A foreground animation can occlude the current background
+                # registration. The independently confirmed map sequence is
+                # still valid; exact static geometry must supply board/X.
+                known_map = sequence is not None and sequence.place == place
+                if background<.25 and not known_map and not(prior and place==prior['identity'][:2]):
                     continue
                 for aligned in landmark_shifts(source,current):
                     progress=-aligned['dx']/39.5
