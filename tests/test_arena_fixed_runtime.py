@@ -6,7 +6,8 @@ import sys
 import numpy as np
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
-from arena_fixed_match import BoardTracker, landmark_shifts
+import arena_fixed_match as matching
+from arena_fixed_match import Atlas,BoardTracker,landmark_shifts
 from arena_fixed_policy import HybridAvoider
 
 ID=(5,42,1,50012)
@@ -82,7 +83,7 @@ def test_an_already_identified_board_can_localize_a_brief_distinctive_pattern():
     for t in (0,.05,.1):
         bank.candidates=[dict(candidate(0),progress=None)]
         tracker.observe(None,observation(t))
-    assert tracker.state['status']=='identified'
+    assert tracker.state['status']=='tentative'and tracker.state['identity']is None
     bank.candidates=[];tracker.observe(None,observation(.15))
     bank.candidates=[candidate(47.8)]
     assert tracker.observe(None,observation(.2))['localized']
@@ -159,3 +160,51 @@ def test_short_action_clock_cannot_fire_an_early_key_in_another_visit():
     policy.visit=(KEY,2)
     policy.last_fixed_commit=dict(visit=(KEY,1),time=1.,event=dict(index=0,relative_tick=50))
     assert not policy.input_due(event,dict(observation(1.2),decision_interval_seconds=.04),11.2)
+
+
+def test_original_static_layout_localizes_a_pattern_without_a_nearby_reference_photo(tmp_path,monkeypatch):
+    import json
+    anchors=[(1,40),(1,44.7),(1,49.1),(1,55.3),(1,61.8)]
+    context=dict(key=KEY,level=5,map=42,slot=1,stage=50012,length=212,fixed=True,anchors=anchors)
+    # The only photograph is the empty beginning; geometry is the recovered
+    # whole-board declaration, not another saved image of this pose.
+    (tmp_path/'index.json').write_text(json.dumps(dict(schema=1,mode=6,
+        contexts=[context],references=[dict(context,local_x=8)])))
+    value=dict(coarse=np.ones(64,np.float32),points=np.zeros((128,2),np.float32),
+        descriptors=np.zeros((128,32),np.uint8),count=8,semantic=np.zeros(32,np.float32),
+        landmarks=np.zeros((48,3),np.float32),landmark_count=0)
+    np.savez_compressed(tmp_path/'features.npz',**{k:np.asarray([v])for k,v in value.items()})
+    query=deepcopy(value);query['landmark_count']=len(anchors)
+    query['landmarks'][:len(anchors)]=[[kind,(x-50)*39.5,100]for kind,x in anchors]
+    monkeypatch.setattr(matching,'features',lambda *_:query)
+    monkeypatch.setattr(matching,'register',lambda *_:dict(inliers=22,ratio=1.,residual=0.,dx=0.,dy=0.))
+    bank=Atlas(tmp_path)
+    found=bank.match(None,{})
+    assert any(c['progress_source']=='original_static_layout'and abs(c['progress']-50)<.01 for c in found)
+    assert all(c['progress']is None for c in found if c['progress_source']!='original_static_layout')
+    query['landmarks'][:len(anchors),0]=3  # Platforms cannot impersonate these enemy anchors.
+    assert not any(c['progress_source']=='original_static_layout'for c in bank.match(None,{}))
+
+
+def test_visual_next_board_keeps_odometry_instead_of_resetting_to_an_unknown_origin():
+    bank=Bank(length=64);bank.contexts[KEY]['fixed']=True
+    next_key='L5-M42-S2-B50022';next_identity=(5,42,2,50022)
+    bank.contexts[next_key]=dict(key=next_key,length=278,fixed=True,blocks=[])
+    tracker=BoardTracker(bank)
+    for t,x in ((0,62.8),(.05,63.3),(.1,63.8)):
+        bank.candidates=[candidate(x)];tracker.observe(None,observation(t))
+    visit=tracker.visit
+    bank.candidates=[dict(row=dict(key=next_key),identity=next_identity,progress=None,std=.1,score=.95)]
+    for t in (.15,.2,.25):
+        value=tracker.observe(None,dict(observation(t),detections=[object()]))
+    assert value['key']==next_key and value['visit']==visit+1
+    assert abs(value['progress_x']-1.3)<1e-6
+    assert value['localized']
+
+
+def test_stale_absolute_position_cannot_seed_a_periodic_single_anchor():
+    bank=Bank();tracker=BoardTracker(bank)
+    for t,x in ((0,20),(.05,20.5),(.1,21)):
+        bank.candidates=[candidate(x)];tracker.observe(None,observation(t))
+    assert tracker.recognition_prior(.15)is not None
+    assert tracker.recognition_prior(2)is None

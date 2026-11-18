@@ -153,6 +153,9 @@ class Atlas:
             self.data = {name: archive[name] for name in archive.files}
         self.coarse = self.data['coarse']
         self.contexts = {c['key']: c for c in self.meta['contexts']}
+        self.layout_features={key:dict(landmarks=np.asarray([[kind,x*39.5,0]for kind,x in c['anchors']],np.float32),
+                                      landmark_count=len(c['anchors']))
+                              for key,c in self.contexts.items()if c.get('fixed')and len(c.get('anchors',[]))>=3}
         # OpenCV/BLAS lazy initialization belongs before gameplay resumes.
         warm = features(np.random.default_rng(0).integers(0,256,(180,320,3),dtype=np.uint8))
         register(warm, warm)
@@ -190,6 +193,7 @@ class Atlas:
         coarse = self.coarse[indices] @ query['coarse']
         selected = indices[np.argsort(coarse)[-min(24, len(indices)):][::-1]]
         candidates = []
+        background_scores={}
         for i in selected:
             row = self.rows[int(i)]
             stored = self.feature(int(i))
@@ -205,11 +209,14 @@ class Atlas:
                 continue
             agreement = 1. - float(np.abs(a-b).sum()) / max(1., float((a+b).sum()))
             score = (min(1., match['inliers']/22)*match['ratio'] if match else .55) * (.5+.5*agreement)
+            if match:
+                place=(row['level'],row['map'])
+                background_scores[place]=max(background_scores.get(place,0),score)
             scale = self.contexts[row['key']].get('background_scale')
             if shifts:
                 for shifted in shifts:
                     candidates.append(dict(row=row, identity=identity(row),
-                        score=score*(.65+.35*shifted['agreement']),
+                        score=score*(.65+.35*shifted['agreement'])*min(1.,shifted['count']/3),
                         progress=row['local_x']-shifted['dx']/39.5, std=shifted['std'],
                         registration=match, progress_source='static_foreground', landmark_count=shifted['count']))
             else:
@@ -217,6 +224,46 @@ class Atlas:
                 std = (match['residual']+.4)/scale+.03 if scale and match else float('inf')
                 candidates.append(dict(row=row, identity=identity(row), score=score,
                                        progress=progress, std=std, registration=match,progress_source='background'))
+        static=query['landmarks'][:query['landmark_count']]
+        static=static[np.isin(static[:,0],(1,2))]
+        if len(static)>=3:
+            current=dict(landmarks=static,landmark_count=len(static))
+            for key,source in self.layout_features.items():
+                context=self.contexts[key]
+                place=(context['level'],context['map'])
+                background=background_scores.get(place,0)
+                if prior:
+                    own=identity(context)==prior['identity']
+                    following=place==prior['identity'][:2]and context['slot']==prior['identity'][2]+1
+                    if not own and not(following and prior.get('progress')is not None
+                                       and prior['progress']>=prior['length']-18):
+                        continue
+                if background<.25 and not(prior and place==prior['identity'][:2]):
+                    continue
+                for aligned in landmark_shifts(source,current):
+                    progress=-aligned['dx']/39.5
+                    if aligned['count']<3 or aligned['agreement']<.75 or not 0<=progress<=context['length']+1:
+                        continue
+                    candidates.append(dict(row=context,identity=identity(context),progress=progress,
+                        std=aligned['std'],score=min(1.,.55+.12*aligned['count'])*aligned['agreement']*(.9+.1*background),
+                        registration=None,progress_source='original_static_layout',landmark_count=aligned['count']))
+        # A single periodic rope endpoint cannot establish an absolute place.
+        # Once the board and progress are known, it can correct accumulated
+        # motion error without confusing this boundary with one 32m earlier.
+        if prior and prior.get('progress')is not None and prior.get('std',0)<=1:
+            endpoints=query['landmarks'][:query['landmark_count']]
+            endpoints=endpoints[endpoints[:,0]==4]
+            for context in self.contexts.values():
+                if identity(context)!=prior['identity']:continue
+                for kind,x in context.get('support_anchors',[]):
+                    for point in endpoints:
+                        if point[0]!=kind:continue
+                        progress=x-float(point[1])/39.5
+                        if abs(progress-prior['progress'])>max(.8,3*prior.get('std',0)):
+                            continue
+                        candidates.append(dict(row=context,identity=identity(context),progress=progress,
+                            std=.12,score=.7,registration=None,progress_source='prior_and_original_support',
+                            landmark_count=1))
         return sorted(candidates, key=lambda c: c['score'], reverse=True)
 
 
@@ -234,12 +281,17 @@ class BoardTracker:
         self.cycle = 0
         self.odometer_base = 0.
 
-    def recognition_prior(self):
-        if self.confirmed_identity is None:
+    def recognition_prior(self, timestamp=None):
+        # Shared empty entrance frames can suggest several different boards.
+        # Only an actual spatial registration may constrain later candidates;
+        # a background-only suggestion must never trap recognition in a wrong
+        # board for the rest of the run.
+        if (self.confirmed_identity is None or self.last is None or self.last['std']>1
+                or timestamp is not None and timestamp-self.last['time']>.18):
             return None
         level, world, slot, stage = self.confirmed_identity
         context = self.atlas.contexts[f'L{level}-M{world}-S{slot}-B{stage}']
-        return dict(identity=self.confirmed_identity, progress=None,
+        return dict(identity=self.confirmed_identity, progress=self.last['progress'],std=self.last['std'],
                     length=context['length'], loop=context.get('loop', False))
 
     def advance_odometry(self, observation):
@@ -283,7 +335,7 @@ class BoardTracker:
                     loop_cycle=self.cycle, absolute_progress=self.odometer_base+progress,
                     localized=True, confidence=None, visual_match=status)
 
-    def confirm(self, key):
+    def confirm(self, key,carry=None):
         if self.confirmed_identity == key:
             self.pending = key
             return True
@@ -298,6 +350,12 @@ class BoardTracker:
             self.positions.clear()
             self.cycle = 0
             self.odometer_base = 0.
+            if carry is not None:
+                level,world,slot,stage=key
+                context=self.atlas.contexts[f'L{level}-M{world}-S{slot}-B{stage}']
+                self.last=dict(carry,identity=key,progress=carry['progress']-carry['length'],
+                               length=context['length'],loop=context.get('loop',False),std=carry['std']+.03)
+                self.positions.append((carry['time'],self.last['progress']))
         return True
 
     def predict(self, observation):
@@ -317,7 +375,7 @@ class BoardTracker:
     def observe(self, image, observation):
         self.advance_odometry(observation)
         prediction = self.predict(observation)
-        candidates = self.atlas.match(image, observation, prediction or self.recognition_prior())
+        candidates = self.atlas.match(image, observation, prediction or self.recognition_prior(observation['time']))
         plausible = []
         for item in candidates:
             if item['progress'] is None or item['score'] < .42:
@@ -338,18 +396,34 @@ class BoardTracker:
         if any(c.get('wraps') for c in plausible):
             plausible = [c for c in plausible if c.get('wraps')]
         if not plausible:
+            visible = [c for c in candidates if c['score'] >= .42]
+            distinctive=bool(visible and not any(c['identity']!=visible[0]['identity']and
+                visible[0]['score']-c['score']<.09 for c in visible[1:]))
+            if distinctive and prediction and prediction['progress']>=prediction['length']:
+                first=visible[0]
+                following=(first['identity'][:2]==prediction['identity'][:2]
+                           and first['identity'][2]==prediction['identity'][2]+1)
+                previous_context=self.atlas.contexts.get(self.state.get('key'),{})
+                if (following and prediction['std']<=.47 and previous_context.get('fixed') and observation.get('detections')
+                        and self.confirm(first['identity'],carry=prediction)):
+                    carried=self.coast(self.last,'next_board_visual_identity')
+                    if carried is not None:
+                        self.state=carried
+                        return self.state
             coast = self.coast(prediction, 'missing')
             if coast is not None:
                 self.state = coast
                 return self.state
-            visible = [c for c in candidates if c['score'] >= .42]
-            if visible and not any(c['identity'] != visible[0]['identity'] and
-                                   visible[0]['score']-c['score'] < .09 for c in visible[1:]):
+            if distinctive:
                 first = visible[0]
                 confirmed = self.confirm(first['identity'])
-                self.state = dict(status='identified' if confirmed else 'confirming',
-                                  identity=first['identity'], key=first['row']['key'],
-                                  visit=self.visit, localized=False, confidence=first['score'])
+                if self.last is None:
+                    self.state=dict(status='tentative',identity=None,suggested_identity=first['identity'],
+                                    localized=False,confidence=first['score'])
+                else:
+                    self.state = dict(status='identified' if confirmed else 'confirming',
+                                      identity=first['identity'], key=first['row']['key'],
+                                      visit=self.visit, localized=False, confidence=first['score'])
             else:
                 self.pending=None;self.pending_count=0
                 self.state = dict(status='unknown', identity=None, localized=False)

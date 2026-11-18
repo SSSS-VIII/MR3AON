@@ -8,14 +8,48 @@ import hashlib
 import json
 import os
 import inspect
+from functools import cache
 from pathlib import Path
 import time
 import cv2
 import numpy as np
 
-from arena_fixed_catalog import CATALOG, ROOT
+from arena_fixed_catalog import CATALOG, DATASET, ROOT
 from arena_fixed_match import features, register
 from arena_native_json import normalize_arrays
+from arena_fixed_static import enemy_categories,resolved_anchors,support_anchors,expand
+
+
+@cache
+def anchor_types():
+    rows=json.loads((ROOT/'debug/arena-client/nconfig-all/CfgGameEnemyInfo.json').read_text())
+    return enemy_categories(rows)
+
+
+def layout_anchors(layout):
+    return resolved_anchors(normalize_arrays(layout),anchor_types())
+
+
+def declared_contexts(catalog):
+    result=[]
+    for level in catalog['levels']:
+        for world in level['maps']:
+            raw=catalog['maps'][str(world['id'])]
+            pools=[s['pool']for s in raw['slots']]+([raw['loop']]if raw['loop']else[])
+            for slot,pool in enumerate(pools,1):
+                for variant in pool:
+                    if variant['classification']['layout']!='fixed':continue
+                    path=DATASET/f"stage_endless_gale_{variant['id']}.json"
+                    source=path.read_bytes();layout=expand(json.loads(source))
+                    anchors=layout_anchors(layout)
+                    supports=support_anchors(layout)
+                    if not layout['finite']or len(anchors)+len(supports)<3:continue
+                    meta=context(catalog,world['id'],slot,variant['id'])
+                    result.append(dict(meta,length=layout['length'],blocks=[
+                        {k:b[k]for k in ('index','start_x','finish_x')}for b in layout['blocks']],
+                        anchors=anchors,support_anchors=supports,layout_origin='source_declaration',
+                        anchor_source=dict(path=str(path),sha256=hashlib.sha256(source).hexdigest())))
+    return result
 
 
 def context(catalog, map_id, slot, stage):
@@ -85,6 +119,7 @@ def legacy_samples(folder, catalog, step=5.):
                 continue
             seen.add(cell)
             yield dict(meta, image=str(image), local_x=local, length=length,
+                anchors=layout_anchors(layout),
                 episode=str(folder), blocks=[dict(index=b['index'], start_x=b['start_x']-layout['stage_start'],
                     finish_x=b['finish_x']-layout['stage_start']) for b in layout['blocks']],
                 native_tick=row.get('tick'), native_phase=row.get('physics'),
@@ -100,16 +135,17 @@ def search_samples(path, catalog):
             continue
         layout = row['layout']
         yield dict(meta, image=str(path.parent/row['image']), local_x=row['local_x'],
+            anchors=layout_anchors(layout),
             length=max(b['finish_x'] for b in layout['blocks'])-layout['stage_start'],
             episode=str(path.parent), native_tick=row.get('tick'), native_phase=row['state']['physics'],
             blocks=[dict(index=b['index'], start_x=b['start_x']-layout['stage_start'],
                          finish_x=b['finish_x']-layout['stage_start']) for b in layout['blocks']])
 
 
-def build(samples, output, detector, *, per_case=96, detector_sha256=None, cache=None):
+def build(samples, output, detector, *, per_case=96, detector_sha256=None, cache=None, declarations=()):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
-    rows, values, contexts = [], [], {}
+    rows, values, contexts = [], [], {c['key']:c for c in declarations}
     grouped={}
     for sample in samples:
         grouped.setdefault(sample['key'],[]).append(sample)
@@ -152,11 +188,15 @@ def build(samples, output, detector, *, per_case=96, detector_sha256=None, cache
             if cached is not None:np.savez_compressed(cached,**value)
         if value['count'] < 8:
             continue
-        row = {k: v for k, v in sample.items() if k not in ('blocks', 'length')}
+        row = {k: v for k, v in sample.items() if k not in ('blocks', 'length','anchors')}
         row['image_sha256'] = image_sha
         rows.append(row)
         values.append(value)
         contexts.setdefault(key, {k: sample[k] for k in ('key','level','map','slot','stage','loop','fixed','classification','length','blocks')})
+        if contexts[key].get('layout_origin')=='source_declaration':
+            contexts[key].update(length=sample['length'],blocks=sample['blocks'],layout_origin='native_reference')
+        if sample.get('anchors')and sample['fixed']:
+            contexts[key].setdefault('anchors',sample['anchors'])
         if len(rows) % 100 == 0:
             print(f'视觉参考编译 {len(rows)}帧 / {len(contexts)}场景', flush=True)
     # Calibrate the actual parallax layer from labelled movement in the same
@@ -219,7 +259,7 @@ def main():
     detector = make_perception(args.weights).detector
     result = build(samples(), args.output, detector, per_case=args.per_case,
                    detector_sha256=hashlib.sha256(args.weights.read_bytes()).hexdigest(),
-                   cache=args.output.parent/'feature-cache')
+                   cache=args.output.parent/'feature-cache',declarations=declared_contexts(catalog))
     print(json.dumps(dict(references=len(result['references']), contexts=len(result['contexts']))), flush=True)
 
 

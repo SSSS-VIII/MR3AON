@@ -23,7 +23,7 @@ def review(folder, case, program):
     times=[row['monotonic'] for row in native]
     estimates=[json.loads(line) for line in (folder/'vision.jsonl').read_text().splitlines()]
     target=(case['map'],case['slot']-1,case['stage'])
-    seen=identified=localized=wrong_identity=control_frames=control_localized=0
+    seen=identified=localized=wrong_identity=control_frames=control_localized=control_identified=0
     errors=[]
     for estimate in estimates:
         timestamp=estimate.get('time')
@@ -49,6 +49,7 @@ def review(folder, case, program):
         if identity is not None:
             if tuple(identity)==(case['level'],case['map'],case['slot'],case['stage']):
                 identified+=1
+                control_identified+=int(in_control_span)
             else:
                 wrong_identity+=1
         if not board.get('localized'):
@@ -67,7 +68,7 @@ def review(folder, case, program):
     fixed_keys=sum(a.get('reason','').startswith('fixed_route_')for a in report['actions'])
     executed=(fixed_keys>0 if program['events'] else any(
         row.get('fixed_route',{}).get('mode')=='fixed' for row in estimates))
-    detector_verified=bool(seen>=20 and identified/seen>=.95 and control_frames>=20
+    detector_verified=bool(seen>=20 and control_frames>=20 and control_identified/control_frames>=.95
                            and control_localized/control_frames>=.95
                            and wrong_identity==0 and len(errors)>=20 and percentile(errors,.95)<=.5)
     final=report['final']
@@ -92,6 +93,7 @@ def review(folder, case, program):
                 native_grade='Post-run evaluation only; never supplied to the policy',
                 sampled_frames=seen,identified_frames=identified,localized_frames=localized,
                 control_frames=control_frames,control_localized_frames=control_localized,
+                control_identified_frames=control_identified,
                 incorrect_identity_frames=wrong_identity,progress_samples=len(errors),
                 progress_error_m=dict(median=percentile(errors,.5),p95=percentile(errors,.95),
                                       max=max(errors)if errors else None),

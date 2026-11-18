@@ -108,6 +108,11 @@ class HybridAvoider:
     def observe(self, pixels, observation):
         return self.tracker.observe(pixels, observation)
 
+    def warm(self,pixels,found):
+        observation=dict(player=found[0],detections=found[1],
+                         visible_supports=found[2]if len(found)>2 else [])
+        return len(self.tracker.atlas.match(pixels,observation))
+
     def event_lead(self, observation):
         cadence=observation.get('decision_interval_seconds',0.)
         if not 0 < cadence < .15:

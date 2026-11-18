@@ -296,6 +296,15 @@ def run(args):
             evaluator=Evaluator(session,initial)
             fresh=0
             try:
+                if hasattr(policy,'warm'):
+                    warmup=[]
+                    for _ in range(3):
+                        pixels=cap.capture().array()
+                        started=time.perf_counter()
+                        found=perception.detector.detect(pixels)
+                        matches=policy.warm(pixels,found)
+                        warmup.append(dict(ms=(time.perf_counter()-started)*1000,matches=matches))
+                    (args.output/'fixed-warmup.json').write_text(json.dumps(warmup))
                 recorder.thread.start();evaluator.thread.start()
                 resumed = True
                 client.execute('return MR3A.resume()',lease_held=True)
