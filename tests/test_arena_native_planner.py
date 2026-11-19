@@ -1,6 +1,7 @@
 """Native rollout rankings must guide choices without certifying heuristic safety."""
 from copy import deepcopy
 from pathlib import Path
+import random
 import sys
 
 import pytest
@@ -153,3 +154,24 @@ def test_cached_transition_must_match_its_actual_saved_native_observation():
         planner.search_window(g,**kwargs)
     assert g.data==g.points[root]
     cache.close(g)
+
+
+@pytest.mark.parametrize('width',[1,2,3])
+def test_streamed_diverse_beam_selection_matches_ranking_every_candidate_together(width):
+    rng=random.Random(12)
+    for _ in range(80):
+        pool=[];candidates=[]
+        for i in range(20):
+            node=dict(integral=rng.random(),peak=0,inputs=0,progress=0,
+                quality=dict(risk=0,mobility=0,drop=0,phase=rng.choice(['runonground','fall']),jumps_used=rng.randrange(3)),
+                path=[dict(action=rng.choice(['none','jump','down']))])
+            candidates.append(node);pool=planner.select(pool+[node],width)
+            assert list(map(id,pool))==list(map(id,planner.select(candidates,width)))
+
+
+def test_noncompetitive_native_rollouts_do_not_write_unneeded_vm_snapshots():
+    g=Oracle();result=planner.search_window(g,start=start(g),offset=0,horizon=8,commit=2)
+    assert result['found']and g.data['health']==5000
+    assert result['stats']['snapshots_avoided']>0
+    assert g.serial==result['stats']['snapshots_created']+1
+    assert all(r['point']in g.points for r in result['forecast_path'])

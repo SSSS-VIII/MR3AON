@@ -40,7 +40,8 @@ def _window(gate,*,searcher,history,initial_point,initial_state,board_code,tree_
     def finish(result):
         stats=result['stats']
         for name in ('seconds','rejected_damage','rejected_invalid_interval','prefix_cache_hits',
-                     'decision_cache_hits','timing_spacing_pruned','redundant_restores_skipped'):
+                     'decision_cache_hits','timing_spacing_pruned','redundant_restores_skipped',
+                     'snapshots_created','snapshots_avoided'):
             stats[name]=sum(s.get(name,0)for s in proposal_stats)
         stats['restores_ms']=[v for s in proposal_stats for v in s.get('restores_ms',[])]
         stats['native_decisions']=[v for s in proposal_stats for v in s.get('native_decisions',[])]

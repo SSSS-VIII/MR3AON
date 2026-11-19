@@ -77,6 +77,7 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
     owned=set();started=time.monotonic();trials=[]
     stats=dict(trials=0,seconds=0,restores_ms=[],rejected_damage=0,rejected_invalid_interval=0,
                prefix_cache_hits=0,decision_cache_hits=0,timing_spacing_pruned=0,
+               snapshots_created=0,snapshots_avoided=0,
                native_decisions=[],beam_trace=[],planner='native_trajectory_beam',beam_width=beam_width)
     observations=tree_cache.observations if tree_cache is not None else{}
     proposals=tree_cache.decisions if tree_cache is not None else{}
@@ -107,7 +108,7 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
         frontier=[dict(point=root,path=[],quality=q,integral=0.,peak=0.,inputs=0,progress=0.)]
         exits=[]
         for depth in range(horizon):
-            children=[];ticks=2 if(offset+depth)%2==0 else 3
+            children=[];alternatives=0;ticks=2 if(offset+depth)%2==0 else 3
             for node in frontier:
                 point=node['point'];obs=observations[point];p=proposal(point)
                 order=tuple(p['order'])
@@ -127,11 +128,13 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
                 for action in order:
                     if excluded(actions+(action,))or(point,action)in unsafe:continue
                     row=tree_cache.transitions.get((point,action))if tree_cache is not None else None
+                    cached=row is not None
                     if row is not None:
                         stats['prefix_cache_hits']+=1;child=row['point']
                         if child not in observations:restore(child);observe(child)
                         if observations[child]['state']!=row['job']['after']:
                             raise RuntimeError('Cached native trajectory differs from its original step state')
+                        future=observations[child]
                     else:
                         if stats['trials']>=max_trials:return failure('Native trajectory beam trial budget exhausted')
                         restore(point);error=None
@@ -151,18 +154,26 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
                         future=read(gate)
                         if future['state']!=job['after']:
                             raise RuntimeError('Native trajectory observation changed the exact step boundary')
-                        child=gate.snapshot()['result']['id'];owned.add(child);observations[child]=future
-                        row=dict(action=action,ticks=ticks,job=job,board=board,point=child)
-                        if tree_cache is not None:tree_cache.remember(point,action,row)
-                    future=observations[child];q=quality(future,obs)
-                    item=dict(point=child,path=node['path']+[row],quality=q,
+                        row=dict(action=action,ticks=ticks,job=job,board=board,point=None)
+                    q=quality(future,obs)
+                    item=dict(point=row['point'],path=node['path']+[row],quality=q,
                               integral=node['integral']+q['risk']*ticks*.02,
                               peak=max(node['peak'],q['risk']),inputs=node['inputs']+int(action!='none'),
                               progress=future['state']['position']['x']-x0)
-                    if exit_kind(start['board'],row['board'])is not None:exits.append(item)
-                    else:children.append(item)
-            frontier=select(children,beam_width)
-            stats['beam_trace'].append(dict(depth=depth,alternatives=len(children),
+                    goal=exit_kind(start['board'],row['board'])is not None
+                    if not goal:alternatives+=1
+                    retained=select((exits if goal else children)+[item],1 if goal else beam_width)
+                    if all(n is not item for n in retained):
+                        stats['snapshots_avoided']+=int(not cached)
+                        continue
+                    if not cached:
+                        child=gate.snapshot()['result']['id'];owned.add(child);observations[child]=future
+                        row['point']=item['point']=child;stats['snapshots_created']+=1
+                        if tree_cache is not None:tree_cache.remember(point,action,row)
+                    if goal:exits=retained
+                    else:children=retained
+            frontier=children
+            stats['beam_trace'].append(dict(depth=depth,alternatives=alternatives,
                 retained=[dict(point=n['point'],score=rank(n),**n['quality'])for n in frontier]))
             keep={r['point']for n in frontier+exits for r in n['path']}
             release(keep)
