@@ -60,6 +60,45 @@ def test_margin_feedback_records_exact_prior_keys_and_does_not_attribute_failure
     assert len(cache.margin_feedback)==1
 
 
+def test_noop_prefix_stops_at_the_failed_operation_and_keeps_earlier_alternatives():
+    plan=rows(['none','none','jump','none','down','none'])
+    audit=dict(failure=dict(reason='nominal_operation_has_no_effect',event=dict(row_index=7)))
+    rejected=guided_search.rejected_prefix(plan,5,audit)
+    assert rejected==('none','none','jump')
+    assert tuple(['none','none','jump','jump'])[:len(rejected)]==rejected
+    assert tuple(['none','none','down','none'])[:len(rejected)]!=rejected
+    # An invalid or historical row cannot justify banning a current prefix.
+    for row in (4,100,None):
+        audit['failure']['event']['row_index']=row
+        assert guided_search.rejected_prefix(plan,5,audit)==tuple(r['action']for r in plan)
+
+
+def test_noop_repair_skips_irrelevant_suffix_variants_in_the_guided_loop(monkeypatch):
+    candidates=[['none','none','jump',*suffix,'none']for suffix in
+                [('none','none'),('down','none'),('jump','none'),
+                 ('none','down'),('none','jump'),('down','jump')]]
+    candidates.append(['none','none','down','none','none','none'])
+    calls=[];checked=[]
+    def searcher(gate,**kwargs):
+        forbidden=kwargs['forbidden_prefixes'];calls.append(set(forbidden))
+        actions=next(a for a in candidates if not any(tuple(a[:len(p)])==p for p in forbidden))
+        plan=rows(actions,10*len(calls))
+        return dict(found=True,root=10,stats=dict(trials=1),path=plan[:2],forecast_path=plan)
+    def verify(gate,plan,**kwargs):
+        checked.append(tuple(r['action']for r in plan))
+        if plan[2]['action']=='jump':
+            return dict(passed=False,checks=[],failure=dict(reason='nominal_operation_has_no_effect',
+                        event=dict(row_index=2)))
+        return dict(passed=True,checks=[])
+    monkeypatch.setattr(guided_search,'verify',verify)
+    result=guided_search.window(SimpleNamespace(restore=lambda _:None,drop=lambda _:None),
+        searcher=searcher,history=[],initial_point=10,initial_state={},board_code='board',start={},max_trials=10)
+    assert result['found']and len(calls)==len(checked)==2
+    assert ('none','none','jump')in calls[1]
+    assert ('none','none')not in calls[1]
+    assert checked[-1][2]=='down'
+
+
 def test_a_future_key_at_the_horizon_is_not_rejected_for_lacking_a_later_forecast(monkeypatch):
     def verify(*args,**kwargs):raise AssertionError('No complete later-side window is available')
     monkeypatch.setattr(guided_search,'verify',verify)

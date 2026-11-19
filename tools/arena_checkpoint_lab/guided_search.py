@@ -11,7 +11,12 @@ def rejected_prefix(forecast,history_length,audit):
     # that damage. Include every earlier row (also non-monotone X paths),
     # and the perturbed key itself; leave later alternatives available.
     end=len(forecast)-1
-    if (failure.get('reason')=='native_damage'and 'max_world_x'in failure
+    if failure.get('reason')=='nominal_operation_has_no_effect':
+        # A later suffix cannot make an already recorded no-op meaningful.
+        # These prefixes are local to this exact VM root and input history.
+        row=(failure.get('event')or{}).get('row_index')
+        if type(row)is int and 0<=row-history_length<len(forecast):end=row-history_length
+    elif (failure.get('reason')=='native_damage'and 'max_world_x'in failure
             and isfinite(failure['max_world_x'])):
         reachable=[i for i,row in enumerate(forecast)
                    if row['job']['before']['position']['x']<=failure['max_world_x']+1e-5]
