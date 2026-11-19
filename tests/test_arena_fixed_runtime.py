@@ -462,6 +462,20 @@ def test_visual_jump_phases_match_native_air_without_reactive_down_interruptions
     assert reactive.calls==0
 
 
+def test_jump_from_an_original_ledge_fall_compiles_as_jump_one():
+    def state(x,physics):return dict(health=5000,position=dict(x=x,y=.75),physics=physics)
+    sequence=[('runOnGround: 5','none','fallFromRun: 13'),
+              ('fallFromRun: 13','jump','jump: 14'),('jump: 14','none','fall: 15'),
+              ('fall: 15','jump','jump2: 16')]
+    steps=[dict(before=state(i,before),after=state(i+.5,after),action=action,relative_tick=i*3)
+           for i,(before,action,after)in enumerate(sequence)]
+    route=dict(complete=True,uses_restart_replay=False,start=dict(health=5000,board=dict(stage_start=0)),
+               steps=steps,end=dict(state=state(4,'jump2: 16')))
+    program=compile_program(route,KEY)
+    assert [event['primitive']for event in program['events']]==['jump1','jump2']
+    assert [event['before_jumps']for event in program['events']]==[0,1]
+
+
 def test_short_action_combination_uses_its_ack_clock_without_waiting_for_a_late_position():
     policy,_=controller()
     policy.tracker.last_velocity=18.5

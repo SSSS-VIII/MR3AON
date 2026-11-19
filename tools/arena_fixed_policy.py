@@ -26,7 +26,7 @@ def primitive(before, action, after):
     if action == 'down':
         return 'slide' if phase(before)=='ground' else 'rope_down' if phase(before)=='rope_above' else 'air_down'
     target = after.split(':')[0].lower()
-    if target == 'jump1': return 'jump1'
+    if target in ('jump','jump1'): return 'jump1'
     if target == 'jump2': return 'jump2'
     if phase(before) == 'rope_below': return 'rope_up'
     if phase(before) in ('flip_down', 'air'): return 'air_up'
