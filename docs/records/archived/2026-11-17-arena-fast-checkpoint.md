@@ -808,3 +808,6 @@ v17及finish-v17均已停止：搜索在下一原生指令之前协作退出，�
 第一次v19启动在boot_client早期am attach-agent阶段退出，worker.log明确Unknown process，尚未进入game gate/搜索。原句柄已终止且finish记无合格产物后正常退出。随后仅做一次新的冷初始化（v20），临时入口recover-search-v20.py在相同命名租约内为早期attach失败增加日志收集，没有改变客户端/物理/搜索源码或重试正在进行的VM操作。v20已成功连接game gate，当前等待原生准入及原选关完成；search-v20 PID25141、finish-v20 PID25146，进程已核实存活，启动清单fresh-v20-restart.json。CUDA可用、默认vision-fixed-routes.json与重启前SHA一致。
 
 finish-reboot-v20.py沿用有限收尾流程，只有新v3合格产物才编入runtime-transport-v3-reboot并在live-transport-v3-reboot做三seed各3轮实机验收，随后退出；默认库和旧watch均不恢复。不把启动、自检或旧25窗当作无伤成果，稳定可用仍0/407。
+
+
+22:14恢复实证：v20准入report为version3、三场景通过、root_restored=true，实际偏移0/−50.003/+49.999ms；随后原选关240.55秒进入53042，入口帧529/5000血、map43/stage_index3、god=false/mounted=false。新run为batch-transport-v3-reboot-20261119/runs/L5-M43-S4-B53042/1795097321113866988，首3窗已提交至板内14.1168m/5000血、132候选/无回退无错误。arena_input_transport、arena_timing_certificate、arena_action_contract、native_planner、guided_search、endpoint_rollout、timing_margin七项冻结源码逐项等于当前磁盘版本，证据补入fresh-v20-restart.json；这是恢复后的实际搜索，不是旧进度续报，整板和实机成绩仍待。
