@@ -779,3 +779,10 @@ b512260仅延续软评分建议：沿已实际提交的输入帧/动作前缀剥
 更新在第39窗入口生效：只换新guided窗口与native_planner.timing_cost，267个VM点和gate元数据保留、无客体请求，原native search body及验证器未替换。冻结源码/manifest在本run `search/runtime-updates/1795082398508147805`，margin-carry-update.json为applied。实际继承窗口/反馈次数与端到端耗时收益仍待后续stats证明；不能把加载或单测当作已提速。当前主路线38窗/210.80m/5000血/10键、无跨窗回退或失效区间，局部审计累计6次拒绝；第38窗名义效果未成立的候选也已拒绝并换方案继续。整板/实机稳定无伤仍0，只有本case，finish-v17继续等待本轮结束。
 
 18:10已观测到首次真实继承：第42窗先在原帧1186的ground→jump提前端点处发现实际仍fall2/5000血而拒绝，第二提案通过；第43窗stats为inherited_margin_feedback=1、timing_feedback_seen=1，单提案/129次新原生候选、9个局部场景全过，主路线到238.55m/5000血。其名义前视改为1179的fall2→rollToGround下翻，再在1191从ground首跳，未重提单独1186起跳。**这证明反馈跨窗到达评分器，不是提速的因果A/B**；最终选中轨迹timing_cost=0且改变了更早输入，不能声称仅靠这一罚分造成选择。原始report摘要/动作/统计已补入margin-feedback-carry-repair-v17.json的first_live_inheritance。仍无完整新板或9轮实机稳定产物。
+
+
+### 从头搜索首次进入完整整板复验（11月19日）
+
+v17第70窗候选已抵达原生出口。完整VM入口重新执行的名义场景记录为563步、30个有序输入、native_exit、5000血，输出在本run search/timing-validation.jsonl的attempt69/scenario0；这是原生名义结果，尚不是容差合格路线或实机无伤。只读owner探针已确认timing_margin.verify处于whole_board_suffix、operations30，并继续场景1；整板单键两端、连续/相邻组合与新入口复验尚未完成，不能只根据局部端点或名义出口放行。整板审计内report仍保留最后69个已提交窗/382.84m/28键，日志已有第70窗及名义场景，暂不更新不等于搜索停滞。
+
+本次仍只搜索53042，原v16及旧watch不恢复。独立有限finish-v17仅当新队列native_passed、timing_robust且有route时编库和三seed各3轮实机验收，否则记录跳过；默认库未改。新整板合格及稳定视觉数量仍为0，后续以完整证书和实机回执更新。
