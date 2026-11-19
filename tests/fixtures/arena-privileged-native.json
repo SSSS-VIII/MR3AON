@@ -1,0 +1,985 @@
+{
+  "terrain": [
+    {
+      "death_offset_y": 0,
+      "speed": 18.5,
+      "stage_index": 0,
+      "start": {
+        "x": 32,
+        "z": 0,
+        "y": 0
+      },
+      "kind": "line: 0",
+      "id": "resolved:0:1",
+      "finish": {
+        "x": 64,
+        "z": 0,
+        "y": 0
+      },
+      "block_index": 1,
+      "hidden": false
+    },
+    {
+      "death_offset_y": 0,
+      "speed": 18.5,
+      "stage_index": 0,
+      "start": {
+        "x": 63.97003173828125,
+        "z": 0,
+        "y": 0
+      },
+      "kind": "line: 0",
+      "id": "resolved:0:2",
+      "finish": {
+        "x": 95.97003173828125,
+        "z": 0,
+        "y": 0
+      },
+      "block_index": 2,
+      "hidden": false
+    },
+    {
+      "death_offset_y": 0,
+      "speed": 18.5,
+      "stage_index": 0,
+      "start": {
+        "x": 96,
+        "z": 0,
+        "y": 0
+      },
+      "kind": "line: 0",
+      "id": "resolved:0:3",
+      "finish": {
+        "x": 128,
+        "z": 0,
+        "y": 0
+      },
+      "block_index": 3,
+      "hidden": false
+    },
+    {
+      "death_offset_y": 0,
+      "speed": 18.5,
+      "stage_index": 0,
+      "start": {
+        "x": 127.780029296875,
+        "z": 0,
+        "y": 0
+      },
+      "kind": "line: 0",
+      "id": "resolved:0:4",
+      "finish": {
+        "x": 159.780029296875,
+        "z": 0,
+        "y": 0
+      },
+      "block_index": 4,
+      "hidden": false
+    }
+  ],
+  "schema": 1,
+  "camera": {
+    "real_right": {
+      "x": 64.55686950683594,
+      "z": 0,
+      "y": 5.556349277496338
+    },
+    "right": {
+      "x": 66.45669555664062,
+      "z": -11,
+      "y": 7
+    },
+    "position": {
+      "x": 56.45669174194336,
+      "z": 0,
+      "y": 1
+    }
+  },
+  "enemies": [
+    {
+      "name": "EnemyStraightBat(Clone)(Clone)",
+      "speed": 0,
+      "colliders": [
+        {
+          "parent_active": true,
+          "active": true,
+          "radius": 0.28999999165534973,
+          "damage_owner": -520576,
+          "trigger": true,
+          "position": {
+            "x": 46.69308853149414,
+            "z": 0,
+            "y": 0.760009765625
+          },
+          "local_center": {
+            "x": -0.30000001192092896,
+            "z": 0,
+            "y": 0
+          },
+          "damage_kind": "enemy_callback",
+          "name": "Bat",
+          "extents": {
+            "x": 0.4146995544433594,
+            "z": 0.4146999716758728,
+            "y": 0.4147000014781952
+          },
+          "tag": "Enemy",
+          "rotation_z": 0,
+          "enabled": true,
+          "id": -520584,
+          "type": "SphereCollider",
+          "center": {
+            "x": 46.26408767700195,
+            "z": 0,
+            "y": 0.760009765625
+          },
+          "scale": {
+            "x": 1.4299999475479126,
+            "z": 1.100000023841858,
+            "y": 1.100000023841858
+          }
+        },
+        {
+          "parent_active": true,
+          "active": false,
+          "name": "BatBone",
+          "extents": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "local_center": {
+            "x": -0.30000001192092896,
+            "z": 0,
+            "y": 0
+          },
+          "rotation_z": 0,
+          "damage_kind": "enemy_callback",
+          "center": {
+            "x": 46.26408767700195,
+            "z": 0,
+            "y": 0.760009765625
+          },
+          "radius": 0.28999999165534973,
+          "tag": "Enemy",
+          "scale": {
+            "x": 1.4299999475479126,
+            "z": 1.100000023841858,
+            "y": 1.100000023841858
+          },
+          "enabled": true,
+          "id": -520596,
+          "type": "SphereCollider",
+          "position": {
+            "x": 46.69308853149414,
+            "z": 0,
+            "y": 0.760009765625
+          },
+          "trigger": true
+        }
+      ],
+      "controllers": {},
+      "info": {
+        "createPlayerUID": 0,
+        "baseID": 0,
+        "_overAutoDiffCtrl": false,
+        "_level": 50,
+        "generateDistance": 15,
+        "generateDistanceY": 20,
+        "_enemyType": "EnemyStraightBat: 201"
+      },
+      "scale": {
+        "x": 1.2999999523162842,
+        "z": 1,
+        "y": 1
+      },
+      "custom": {
+        "_render": -1,
+        "_rushSpeed": 10,
+        "_stayTime": 0.30000001192092896,
+        "_rushTargetY": 0,
+        "_followNinjaY": false,
+        "_hangOnFruit": 0,
+        "_renderType": "Bat: 0",
+        "_randomRangeY": 0,
+        "_rushDistance": 4.5,
+        "_pointToNinja": false
+      },
+      "custom_type": "EnemyStraightBatDataStruct",
+      "id": -520576,
+      "type": "EnemyStraightBat",
+      "position": {
+        "x": 46.5175895690918,
+        "z": 0,
+        "y": 0.760009765625
+      },
+      "fields": {
+        "_dead": false,
+        "_isRecycled": false,
+        "_currState": "rushToNinja: 4",
+        "_currStateTime": -0.019999969750642776,
+        "_hideOffsetX": 14,
+        "_rushDir": {
+          "x": -1,
+          "z": 0,
+          "y": 0
+        },
+        "_oriScale": {
+          "x": 1,
+          "z": 1,
+          "y": 1
+        },
+        "_rushDistance": 4.5,
+        "_lastFixedUpdateTime": 58.81999969482422,
+        "m_index": 1,
+        "_lastPosition": {
+          "x": 46.3389892578125,
+          "z": 0,
+          "y": 0.760009765625
+        },
+        "_secondLastPosition": {
+          "x": 46.53899002075195,
+          "z": 0,
+          "y": 0.760009765625
+        }
+      }
+    },
+    {
+      "name": "EnemyStraightBat(Clone)(Clone)",
+      "speed": 0,
+      "colliders": [
+        {
+          "parent_active": true,
+          "active": true,
+          "radius": 0.28999999165534973,
+          "damage_owner": -520098,
+          "trigger": true,
+          "position": {
+            "x": 60.39148712158203,
+            "z": 0,
+            "y": 1.9000244140625
+          },
+          "local_center": {
+            "x": -0.30000001192092896,
+            "z": 0,
+            "y": 0
+          },
+          "damage_kind": "enemy_callback",
+          "name": "Bat",
+          "extents": {
+            "x": 0.319000244140625,
+            "z": 0.3190000057220459,
+            "y": 0.3190000057220459
+          },
+          "tag": "Enemy",
+          "rotation_z": 0,
+          "enabled": true,
+          "id": -520106,
+          "type": "SphereCollider",
+          "center": {
+            "x": 60.06148910522461,
+            "z": 0,
+            "y": 1.9000244140625
+          },
+          "scale": {
+            "x": 1.100000023841858,
+            "z": 1.100000023841858,
+            "y": 1.100000023841858
+          }
+        },
+        {
+          "parent_active": true,
+          "active": false,
+          "name": "BatBone",
+          "extents": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "local_center": {
+            "x": -0.30000001192092896,
+            "z": 0,
+            "y": 0
+          },
+          "rotation_z": 0,
+          "damage_kind": "enemy_callback",
+          "center": {
+            "x": 60.06148910522461,
+            "z": 0,
+            "y": 1.9000244140625
+          },
+          "radius": 0.28999999165534973,
+          "tag": "Enemy",
+          "scale": {
+            "x": 1.100000023841858,
+            "z": 1.100000023841858,
+            "y": 1.100000023841858
+          },
+          "enabled": true,
+          "id": -520118,
+          "type": "SphereCollider",
+          "position": {
+            "x": 60.39148712158203,
+            "z": 0,
+            "y": 1.9000244140625
+          },
+          "trigger": true
+        }
+      ],
+      "controllers": {},
+      "info": {
+        "createPlayerUID": 0,
+        "baseID": 0,
+        "_overAutoDiffCtrl": false,
+        "_level": 50,
+        "generateDistance": 15,
+        "generateDistanceY": 20,
+        "_enemyType": "EnemyStraightBat: 201"
+      },
+      "scale": {
+        "x": 1,
+        "z": 1,
+        "y": 1
+      },
+      "custom": {
+        "_render": -1,
+        "_rushSpeed": 10,
+        "_stayTime": 0.30000001192092896,
+        "_rushTargetY": 0,
+        "_followNinjaY": false,
+        "_hangOnFruit": 0,
+        "_renderType": "Bat: 0",
+        "_randomRangeY": 0,
+        "_rushDistance": 4.5,
+        "_pointToNinja": false
+      },
+      "custom_type": "EnemyStraightBatDataStruct",
+      "id": -520098,
+      "type": "EnemyStraightBat",
+      "position": {
+        "x": 60.25648880004883,
+        "z": 0,
+        "y": 1.9000244140625
+      },
+      "fields": {
+        "_dead": false,
+        "_isRecycled": false,
+        "_currState": "ready: 3",
+        "_currStateTime": 0.040000028908252716,
+        "_hideOffsetX": 14,
+        "_rushDir": {
+          "x": -1,
+          "z": 0,
+          "y": 0
+        },
+        "_oriScale": {
+          "x": 1,
+          "z": 1,
+          "y": 1
+        },
+        "_rushDistance": 4.5,
+        "_lastFixedUpdateTime": 58.81999969482422,
+        "m_index": 2,
+        "_lastPosition": {
+          "x": 60.58689880371094,
+          "z": 0,
+          "y": 1.9000244140625
+        },
+        "_secondLastPosition": {
+          "x": 60.21689987182617,
+          "z": 0,
+          "y": 1.9000244140625
+        }
+      }
+    },
+    {
+      "name": "EnemyStraightBat(Clone)(Clone)",
+      "speed": 0,
+      "colliders": [
+        {
+          "parent_active": true,
+          "active": true,
+          "radius": 0.28999999165534973,
+          "damage_owner": -519620,
+          "trigger": true,
+          "position": {
+            "x": 64.39363098144531,
+            "z": 0,
+            "y": -0.8499755859375
+          },
+          "local_center": {
+            "x": -0.30000001192092896,
+            "z": 0,
+            "y": 0
+          },
+          "damage_kind": "enemy_callback",
+          "name": "Bat",
+          "extents": {
+            "x": 0.319000244140625,
+            "z": 0.3190000057220459,
+            "y": 0.3190000057220459
+          },
+          "tag": "Enemy",
+          "rotation_z": 0,
+          "enabled": true,
+          "id": -519628,
+          "type": "SphereCollider",
+          "center": {
+            "x": 64.06362915039062,
+            "z": 0,
+            "y": -0.8499755859375
+          },
+          "scale": {
+            "x": 1.100000023841858,
+            "z": 1.100000023841858,
+            "y": 1.100000023841858
+          }
+        },
+        {
+          "parent_active": true,
+          "active": false,
+          "name": "BatBone",
+          "extents": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "local_center": {
+            "x": -0.30000001192092896,
+            "z": 0,
+            "y": 0
+          },
+          "rotation_z": 0,
+          "damage_kind": "enemy_callback",
+          "center": {
+            "x": 64.06362915039062,
+            "z": 0,
+            "y": -0.8499755859375
+          },
+          "radius": 0.28999999165534973,
+          "tag": "Enemy",
+          "scale": {
+            "x": 1.100000023841858,
+            "z": 1.100000023841858,
+            "y": 1.100000023841858
+          },
+          "enabled": true,
+          "id": -519640,
+          "type": "SphereCollider",
+          "position": {
+            "x": 64.39363098144531,
+            "z": 0,
+            "y": -0.8499755859375
+          },
+          "trigger": true
+        }
+      ],
+      "controllers": {},
+      "info": {
+        "createPlayerUID": 0,
+        "baseID": 0,
+        "_overAutoDiffCtrl": false,
+        "_level": 50,
+        "generateDistance": 15,
+        "generateDistanceY": 20,
+        "_enemyType": "EnemyStraightBat: 201"
+      },
+      "scale": {
+        "x": 1,
+        "z": 1,
+        "y": 1
+      },
+      "custom": {
+        "_render": -1,
+        "_rushSpeed": 10,
+        "_stayTime": 0.30000001192092896,
+        "_rushTargetY": 0,
+        "_followNinjaY": false,
+        "_hangOnFruit": 0,
+        "_renderType": "Bat: 0",
+        "_randomRangeY": 0,
+        "_rushDistance": 4.5,
+        "_pointToNinja": false
+      },
+      "custom_type": "EnemyStraightBatDataStruct",
+      "id": -519620,
+      "type": "EnemyStraightBat",
+      "position": {
+        "x": 64.25862884521484,
+        "z": 0,
+        "y": -0.8499755859375
+      },
+      "fields": {
+        "_dead": false,
+        "_isRecycled": false,
+        "_currState": "enterScreen: 1",
+        "_currStateTime": 0,
+        "_hideOffsetX": 14,
+        "_rushDir": {
+          "x": 0,
+          "z": 0,
+          "y": 0
+        },
+        "_oriScale": {
+          "x": 1,
+          "z": 1,
+          "y": 1
+        },
+        "_rushDistance": 4.5,
+        "_lastFixedUpdateTime": 58.81999969482422,
+        "m_index": 3,
+        "_lastPosition": {
+          "x": 64.08003234863281,
+          "z": 0,
+          "y": -0.8499755859375
+        },
+        "_secondLastPosition": {
+          "x": 64.280029296875,
+          "z": 0,
+          "y": -0.8499755859375
+        }
+      }
+    },
+    {
+      "name": "EnemyStraightBat(Clone)(Clone)",
+      "speed": 0,
+      "colliders": [
+        {
+          "parent_active": true,
+          "active": true,
+          "radius": 0.28999999165534973,
+          "damage_owner": -519072,
+          "trigger": true,
+          "position": {
+            "x": 67.42498016357422,
+            "z": 0,
+            "y": 0.760009765625
+          },
+          "local_center": {
+            "x": -0.30000001192092896,
+            "z": 0,
+            "y": 0
+          },
+          "damage_kind": "enemy_callback",
+          "name": "Bat",
+          "extents": {
+            "x": 0.319000244140625,
+            "z": 0.3190000057220459,
+            "y": 0.3190000057220459
+          },
+          "tag": "Enemy",
+          "rotation_z": 0,
+          "enabled": true,
+          "id": -519080,
+          "type": "SphereCollider",
+          "center": {
+            "x": 67.09497833251953,
+            "z": 0,
+            "y": 0.760009765625
+          },
+          "scale": {
+            "x": 1.100000023841858,
+            "z": 1.100000023841858,
+            "y": 1.100000023841858
+          }
+        },
+        {
+          "parent_active": true,
+          "active": false,
+          "name": "BatBone",
+          "extents": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "local_center": {
+            "x": -0.30000001192092896,
+            "z": 0,
+            "y": 0
+          },
+          "rotation_z": 0,
+          "damage_kind": "enemy_callback",
+          "center": {
+            "x": 67.09497833251953,
+            "z": 0,
+            "y": 0.760009765625
+          },
+          "radius": 0.28999999165534973,
+          "tag": "Enemy",
+          "scale": {
+            "x": 1.100000023841858,
+            "z": 1.100000023841858,
+            "y": 1.100000023841858
+          },
+          "enabled": true,
+          "id": -519092,
+          "type": "SphereCollider",
+          "position": {
+            "x": 67.42498016357422,
+            "z": 0,
+            "y": 0.760009765625
+          },
+          "trigger": true
+        }
+      ],
+      "controllers": {},
+      "info": {
+        "createPlayerUID": 0,
+        "baseID": 0,
+        "_overAutoDiffCtrl": false,
+        "_level": 50,
+        "generateDistance": 15,
+        "generateDistanceY": 20,
+        "_enemyType": "EnemyStraightBat: 201"
+      },
+      "scale": {
+        "x": 1,
+        "z": 1,
+        "y": 1
+      },
+      "custom": {
+        "_render": -1,
+        "_rushSpeed": 10,
+        "_stayTime": 0.30000001192092896,
+        "_rushTargetY": 0,
+        "_followNinjaY": false,
+        "_hangOnFruit": 0,
+        "_renderType": "Bat: 0",
+        "_randomRangeY": 0,
+        "_rushDistance": 4.5,
+        "_pointToNinja": false
+      },
+      "custom_type": "EnemyStraightBatDataStruct",
+      "id": -519072,
+      "type": "EnemyStraightBat",
+      "position": {
+        "x": 67.28997802734375,
+        "z": 0,
+        "y": 0.760009765625
+      },
+      "fields": {
+        "_dead": false,
+        "_isRecycled": false,
+        "_currState": "none: 0",
+        "_currStateTime": 0,
+        "_hideOffsetX": 14,
+        "_rushDir": {
+          "x": 0,
+          "z": 0,
+          "y": 0
+        },
+        "_oriScale": {
+          "x": 1,
+          "z": 1,
+          "y": 1
+        },
+        "_rushDistance": 4.5,
+        "_lastFixedUpdateTime": 58.81999969482422,
+        "m_index": 4,
+        "_lastPosition": {
+          "x": 67.28997802734375,
+          "z": 0,
+          "y": 0.760009765625
+        },
+        "_secondLastPosition": {
+          "x": 67.28997802734375,
+          "z": 0,
+          "y": 0.760009765625
+        }
+      }
+    }
+  ],
+  "role": {
+    "velocity": {
+      "x": 18.499990463256836,
+      "z": 0,
+      "y": 0
+    },
+    "gravity": 0,
+    "data": {
+      "_jumpForce4": 8.5,
+      "_downGravity2": -9.800000190734863,
+      "_jumpForce2": 12.5,
+      "_glideMaxSpeed": 2.5,
+      "_downGravity3": -9.800000190734863,
+      "_moveSpeed": 18.5,
+      "_glideAccSpeed": 1,
+      "_glideMinSpeed": -2,
+      "_ninjaFootPoint": 0.75,
+      "_normalGravity": -19.799999237060547,
+      "_rollAirDownUpSpeed": 28,
+      "_driveForce": 5,
+      "_upGravity2": -9.800000190734863,
+      "_upGravity1": -25,
+      "_downGravity1": -9,
+      "_jumpForce3": 12,
+      "_glideUpForce": 5,
+      "_ninjaHeight": 1,
+      "_upGravity3": -9.800000190734863,
+      "_jumpForce1": 23.5,
+      "_rollDownUpSpeed": 8,
+      "_downGravity4": -9.800000190734863,
+      "_upGravity4": -9.800000190734863,
+      "_climbDistance": 0.800000011920929
+    },
+    "collider_parameters": {
+      "_jumpColliderHeight": 1.2000000476837158,
+      "_jumpColliderOffset": {
+        "x": 0.10000000149011612,
+        "z": 0,
+        "y": 0.30000001192092896
+      },
+      "_normalColliderHeight": 1.7999999523162842,
+      "_rollColliderHeight": 0.10000000149011612,
+      "_rollColliderOffset": {
+        "x": 0.05000000074505806,
+        "z": 0,
+        "y": 0
+      },
+      "_normalColliderRadius": 0.20000000298023224,
+      "_slideColliderOffset": {
+        "x": 0.05000000074505806,
+        "z": 0,
+        "y": -0.30000001192092896
+      },
+      "_rollColliderRadius": 0.10000000149011612,
+      "_normalColliderOffset": {
+        "x": 0.10000000149011612,
+        "z": 0,
+        "y": 0
+      }
+    },
+    "colliders": [
+      {
+        "parent_active": true,
+        "active": true,
+        "radius": 0.20000000298023224,
+        "height": 1.7999999523162842,
+        "trigger": true,
+        "position": {
+          "x": 52.689579010009766,
+          "z": 0,
+          "y": -0.75
+        },
+        "direction": 1,
+        "name": "Role",
+        "extents": {
+          "x": 0.20000076293945312,
+          "z": 0.20000003278255463,
+          "y": 0.4679999351501465
+        },
+        "tag": "Player_Ninja",
+        "rotation_z": 180,
+        "enabled": true,
+        "id": -526828,
+        "type": "CapsuleCollider",
+        "center": {
+          "x": 52.7415771484375,
+          "z": 0,
+          "y": -0.75
+        },
+        "scale": {
+          "x": 0.5199999809265137,
+          "z": 1,
+          "y": 0.5199999809265137
+        }
+      }
+    ],
+    "god": false,
+    "mounted": false
+  },
+  "supports": [
+    {
+      "info": {
+        "_posZ": 0,
+        "isNeedShowSpeedUp": true,
+        "_cameraOffsetAnchorY": 0,
+        "_hideGround": false,
+        "_infiniteLoop": false,
+        "_ninjaSpeed": 18.5,
+        "_repeatTimesMax": 1,
+        "_canClimb": true,
+        "_groundType": "line: 0",
+        "_isDeadBlockOffsetY": 0,
+        "_initialDeadBlockOffsetY": 0,
+        "_repeatTimesMin": 1
+      },
+      "is_line": true,
+      "stage_index": 0,
+      "is_ground": false,
+      "id": -495380,
+      "finish": {
+        "x": 96,
+        "z": 0,
+        "y": 0
+      },
+      "block_index": 2,
+      "start": {
+        "x": 64,
+        "z": 0,
+        "y": 0
+      }
+    },
+    {
+      "info": {
+        "_posZ": 0,
+        "isNeedShowSpeedUp": true,
+        "_cameraOffsetAnchorY": 0,
+        "_hideGround": false,
+        "_infiniteLoop": false,
+        "_ninjaSpeed": 18.5,
+        "_repeatTimesMax": 1,
+        "_canClimb": true,
+        "_groundType": "line: 0",
+        "_isDeadBlockOffsetY": 0,
+        "_initialDeadBlockOffsetY": 0,
+        "_repeatTimesMin": 1
+      },
+      "is_line": true,
+      "stage_index": 0,
+      "is_ground": false,
+      "id": -495366,
+      "finish": {
+        "x": 64,
+        "z": 0,
+        "y": 0
+      },
+      "block_index": 1,
+      "start": {
+        "x": 32,
+        "z": 0,
+        "y": 0
+      }
+    }
+  ],
+  "board": {
+    "stage_start": 0,
+    "map_id": 41,
+    "stage_index": 0,
+    "block_index": 1,
+    "stage_id": 51012
+  },
+  "support_id": -495366,
+  "state": {
+    "healthMultiplier": 50,
+    "speed": 18.5,
+    "physics": "runOnLineDown: 2",
+    "distance": 7645.2890625,
+    "content": "Running: 1",
+    "score": 1484528.020954132,
+    "offline": true,
+    "colliders": [
+      {
+        "trigger": true,
+        "name": "Role",
+        "extents": {
+          "x": 0.20000076293945312,
+          "z": 0.20000003278255463,
+          "y": 0.4679999351501465
+        },
+        "localCenter": {
+          "x": 0.10000000149011612,
+          "z": 0,
+          "y": 0
+        },
+        "radius": 0.20000000298023224,
+        "enabled": true,
+        "center": {
+          "x": 52.7415771484375,
+          "z": 0,
+          "y": -0.75
+        },
+        "height": 1.7999999523162842,
+        "direction": 1,
+        "type": "CapsuleCollider"
+      },
+      {
+        "trigger": true,
+        "name": "ColliderForItem",
+        "enabled": false,
+        "center": {
+          "x": 52.689579010009766,
+          "z": 0,
+          "y": -0.75
+        },
+        "type": "SphereCollider",
+        "extents": {
+          "x": 0,
+          "z": 0,
+          "y": 0
+        }
+      },
+      {
+        "trigger": true,
+        "name": "ColliderForItem",
+        "extents": {
+          "x": 0.4199981689453125,
+          "z": 0.42000001668930054,
+          "y": 0.6499999761581421
+        },
+        "localCenter": {
+          "x": 0,
+          "z": 0,
+          "y": 0
+        },
+        "radius": 0.41999998688697815,
+        "enabled": true,
+        "center": {
+          "x": 52.689579010009766,
+          "z": 0,
+          "y": -0.75
+        },
+        "height": 2.5,
+        "direction": 1,
+        "type": "CapsuleCollider"
+      },
+      {
+        "trigger": true,
+        "name": "ColliderAtMount",
+        "extents": {
+          "x": 0,
+          "z": 0,
+          "y": 0
+        },
+        "localCenter": {
+          "x": 0.8299999833106995,
+          "z": 0,
+          "y": -0.36000001430511475
+        },
+        "radius": 0.6800000071525574,
+        "enabled": false,
+        "center": {
+          "x": 52.689579010009766,
+          "z": 0,
+          "y": -0.75
+        },
+        "height": 6.460000038146973,
+        "direction": 1,
+        "type": "CapsuleCollider"
+      }
+    ],
+    "seed": 73121,
+    "coins": 0,
+    "episodeTime": 2.879997968673706,
+    "fixedDeltaTime": 0.019999999552965164,
+    "state": "Game: 8",
+    "health": 5000,
+    "only": true,
+    "position": {
+      "x": 52.689579010009766,
+      "z": 0,
+      "y": -0.75
+    },
+    "maxHealth": 5000,
+    "episodeFrame": 144,
+    "chapter": 1,
+    "level": 5,
+    "time": 58.822139739990234,
+    "mode": 6,
+    "timeScale": 0,
+    "frame": 49259,
+    "combatFamily": 3
+  },
+  "platforms": {},
+  "privileged": true
+}

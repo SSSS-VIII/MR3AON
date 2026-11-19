@@ -1,0 +1,202 @@
+[
+  {
+    "enemy": {
+      "position": {
+        "x": 45.95001220703125,
+        "z": 0,
+        "y": 9.535369873046875
+      },
+      "custom": {
+        "_render": 0,
+        "_upSpeed": 0,
+        "_initHeight": 10,
+        "_activateDistance": 16,
+        "_leaveSpeed": 0,
+        "_randomRangeY": 0,
+        "_downSpeed": 30
+      },
+      "type": "EnemySpider",
+      "fields": {
+        "_enemyState": "moveToNinja: 0",
+        "_targetY": -1.420013427734375,
+        "_lastPosition": {
+          "x": 45.95001220703125,
+          "z": 0,
+          "y": 9.399999618530273
+        },
+        "_secondLastPosition": {
+          "x": 45.95001220703125,
+          "z": 0,
+          "y": 10
+        },
+        "_lastFixedUpdateTime": 191.63999938964844,
+        "_curSpeed": 4,
+        "_accUpFlag": true
+      }
+    },
+    "stamp": 191.65548706054688,
+    "tick": 0.019999999552965164,
+    "seconds": 0.0999908447265625,
+    "expected_y": 6.535368919372559
+  },
+  {
+    "enemy": {
+      "position": {
+        "x": 45.95001220703125,
+        "z": 0,
+        "y": 0.53582763671875
+      },
+      "custom": {
+        "_render": 0,
+        "_upSpeed": 0,
+        "_initHeight": 10,
+        "_activateDistance": 16,
+        "_leaveSpeed": 0,
+        "_randomRangeY": 0,
+        "_downSpeed": 30
+      },
+      "type": "EnemySpider",
+      "fields": {
+        "_enemyState": "moveToNinja: 0",
+        "_targetY": -1.420013427734375,
+        "_lastPosition": {
+          "x": 45.95001220703125,
+          "z": 0,
+          "y": 0.3999999761581421
+        },
+        "_secondLastPosition": {
+          "x": 45.95001220703125,
+          "z": 0,
+          "y": 0.9999999403953552
+        },
+        "_lastFixedUpdateTime": 191.94000244140625,
+        "_curSpeed": 4,
+        "_accUpFlag": true
+      }
+    },
+    "stamp": 191.95547485351562,
+    "tick": 0.019999999552965164,
+    "seconds": 0.100006103515625,
+    "expected_y": -1.667816162109375
+  },
+  {
+    "enemy": {
+      "position": {
+        "x": 45.95001220703125,
+        "z": 0,
+        "y": -1.667816162109375
+      },
+      "custom": {
+        "_render": 0,
+        "_upSpeed": 0,
+        "_initHeight": 10,
+        "_activateDistance": 16,
+        "_leaveSpeed": 0,
+        "_randomRangeY": 0,
+        "_downSpeed": 30
+      },
+      "type": "EnemySpider",
+      "fields": {
+        "_enemyState": "flex: 2",
+        "_targetY": -1.420013427734375,
+        "_lastPosition": {
+          "x": 45.95001220703125,
+          "z": 0,
+          "y": -1.7400133609771729
+        },
+        "_secondLastPosition": {
+          "x": 45.95001220703125,
+          "z": 0,
+          "y": -1.420013427734375
+        },
+        "_lastFixedUpdateTime": 192.0399932861328,
+        "_curSpeed": 3.200000047683716,
+        "_accUpFlag": true
+      }
+    },
+    "stamp": 192.05548095703125,
+    "tick": 0.019999999552965164,
+    "seconds": 0.100006103515625,
+    "expected_y": -2.158062696456909
+  },
+  {
+    "enemy": {
+      "position": {
+        "x": 45.95001220703125,
+        "z": 0,
+        "y": -1.838710069656372
+      },
+      "custom": {
+        "_render": 0,
+        "_upSpeed": 0,
+        "_initHeight": 10,
+        "_activateDistance": 16,
+        "_leaveSpeed": 0,
+        "_randomRangeY": 0,
+        "_downSpeed": 30
+      },
+      "type": "EnemySpider",
+      "fields": {
+        "_enemyState": "flex: 2",
+        "_targetY": -1.420013427734375,
+        "_lastPosition": {
+          "x": 45.95001220703125,
+          "z": 0,
+          "y": -1.7551934719085693
+        },
+        "_secondLastPosition": {
+          "x": 45.95001220703125,
+          "z": 0,
+          "y": -1.870213508605957
+        },
+        "_lastFixedUpdateTime": 192.1999969482422,
+        "_curSpeed": 5.75100040435791,
+        "_accUpFlag": false
+      }
+    },
+    "stamp": 192.20547485351562,
+    "tick": 0.019999999552965164,
+    "seconds": 0.100006103515625,
+    "expected_y": -1.420013427734375
+  },
+  {
+    "enemy": {
+      "position": {
+        "x": 50.6099853515625,
+        "z": 0,
+        "y": 0.7488857507705688
+      },
+      "custom": {
+        "_render": 0,
+        "_upSpeed": 0,
+        "_initHeight": 10,
+        "_activateDistance": 16,
+        "_leaveSpeed": 0,
+        "_randomRangeY": 0,
+        "_downSpeed": 30
+      },
+      "type": "EnemySpider",
+      "fields": {
+        "_enemyState": "flex: 2",
+        "_targetY": 1.42999267578125,
+        "_lastPosition": {
+          "x": 50.6099853515625,
+          "z": 0,
+          "y": 0.8519926071166992
+        },
+        "_secondLastPosition": {
+          "x": 50.6099853515625,
+          "z": 0,
+          "y": 0.7099926471710205
+        },
+        "_lastFixedUpdateTime": 192.3000030517578,
+        "_curSpeed": 7.099999904632568,
+        "_accUpFlag": false
+      }
+    },
+    "stamp": 192.30548095703125,
+    "tick": 0.019999999552965164,
+    "seconds": 0.100006103515625,
+    "expected_y": 1.3145267963409424
+  }
+]

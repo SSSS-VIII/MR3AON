@@ -1,0 +1,977 @@
+{
+  "terrain": [
+    {
+      "death_offset_y": 0,
+      "speed": 18.5,
+      "stage_index": 0,
+      "start": {
+        "x": 32,
+        "z": 0,
+        "y": 0
+      },
+      "kind": "line: 0",
+      "id": "resolved:0:1",
+      "finish": {
+        "x": 64,
+        "z": 0,
+        "y": 0
+      },
+      "block_index": 1,
+      "hidden": false
+    },
+    {
+      "death_offset_y": 0,
+      "speed": 18.5,
+      "stage_index": 0,
+      "start": {
+        "x": 64,
+        "z": 0,
+        "y": 0
+      },
+      "kind": "line: 0",
+      "id": "resolved:0:2",
+      "finish": {
+        "x": 96,
+        "z": 0,
+        "y": 0
+      },
+      "block_index": 2,
+      "hidden": false
+    },
+    {
+      "death_offset_y": 0,
+      "speed": 18.5,
+      "stage_index": 0,
+      "start": {
+        "x": 96,
+        "z": 0,
+        "y": 0
+      },
+      "kind": "line: 0",
+      "id": "resolved:0:3",
+      "finish": {
+        "x": 128,
+        "z": 0,
+        "y": 0
+      },
+      "block_index": 3,
+      "hidden": false
+    },
+    {
+      "death_offset_y": 0,
+      "speed": 18.5,
+      "stage_index": 0,
+      "start": {
+        "x": 128,
+        "z": 0,
+        "y": 0
+      },
+      "kind": "line: 0",
+      "id": "resolved:0:4",
+      "finish": {
+        "x": 160,
+        "z": 0,
+        "y": 0
+      },
+      "block_index": 4,
+      "hidden": false
+    }
+  ],
+  "schema": 1,
+  "camera": {
+    "real_right": {
+      "x": 70.10684967041016,
+      "z": 0,
+      "y": 6.556349277496338
+    },
+    "right": {
+      "x": 72.00666809082031,
+      "z": -11,
+      "y": 8
+    },
+    "position": {
+      "x": 62.00667190551758,
+      "z": 0,
+      "y": 2
+    }
+  },
+  "enemies": [
+    {
+      "name": "EnemyFlyBamboo(Clone)(Clone)",
+      "speed": 0,
+      "colliders": [
+        {
+          "parent_active": true,
+          "active": true,
+          "size": {
+            "x": 1,
+            "z": 1,
+            "y": 0.10000000149011612
+          },
+          "damage_owner": -731954,
+          "quad": [
+            {
+              "x": 67.34906005859375,
+              "z": 0,
+              "y": -1.4724829196929932
+            },
+            {
+              "x": 72.34906005859375,
+              "z": 0,
+              "y": -1.4724829196929932
+            },
+            {
+              "x": 72.34906005859375,
+              "z": 0,
+              "y": -1.3674829006195068
+            },
+            {
+              "x": 67.34906005859375,
+              "z": 0,
+              "y": -1.3674829006195068
+            }
+          ],
+          "trigger": true,
+          "position": {
+            "x": 69.34906005859375,
+            "z": 0,
+            "y": -1.41998291015625
+          },
+          "local_center": {
+            "x": 0.10000000149011612,
+            "z": 0,
+            "y": 0
+          },
+          "damage_kind": "enemy_callback",
+          "name": "AimLine",
+          "extents": {
+            "x": 2.5,
+            "z": 0.5,
+            "y": 0.052500009536743164
+          },
+          "tag": "Enemy",
+          "center": {
+            "x": 69.84906005859375,
+            "z": 0,
+            "y": -1.41998291015625
+          },
+          "enabled": true,
+          "id": -732032,
+          "type": "BoxCollider",
+          "rotation_z": 0,
+          "scale": {
+            "x": 5,
+            "z": 1,
+            "y": 1.0500001907348633
+          }
+        },
+        {
+          "parent_active": true,
+          "active": false,
+          "size": {
+            "x": 3,
+            "z": 1,
+            "y": 0.20000000298023224
+          },
+          "damage_owner": -731954,
+          "quad": [
+            {
+              "x": 67.61532592773438,
+              "z": 0,
+              "y": -1.5195465087890625
+            },
+            {
+              "x": 70.61532592773438,
+              "z": 0,
+              "y": -1.5195465087890625
+            },
+            {
+              "x": 70.61532592773438,
+              "z": 0,
+              "y": -1.3195464611053467
+            },
+            {
+              "x": 67.61532592773438,
+              "z": 0,
+              "y": -1.3195464611053467
+            }
+          ],
+          "trigger": true,
+          "position": {
+            "x": 69.18305969238281,
+            "z": 0,
+            "y": -1.41998291015625
+          },
+          "local_center": {
+            "x": -0.0677337646484375,
+            "z": 0,
+            "y": 0.00043642520904541016
+          },
+          "damage_kind": "enemy_callback",
+          "name": "Attack",
+          "extents": {
+            "x": 1.5,
+            "z": 0.5,
+            "y": 0.10000002384185791
+          },
+          "tag": "Enemy",
+          "center": {
+            "x": 69.11532592773438,
+            "z": 0,
+            "y": -1.4195464849472046
+          },
+          "enabled": true,
+          "id": -732044,
+          "type": "BoxCollider",
+          "rotation_z": 0,
+          "scale": {
+            "x": 1,
+            "z": 1,
+            "y": 1
+          }
+        },
+        {
+          "parent_active": false,
+          "active": false,
+          "size": {
+            "x": 1,
+            "z": 1,
+            "y": 0.10000000149011612
+          },
+          "damage_owner": -731954,
+          "quad": [
+            {
+              "x": 67.3630599975586,
+              "z": 0,
+              "y": -1.519982933998108
+            },
+            {
+              "x": 72.3630599975586,
+              "z": 0,
+              "y": -1.519982933998108
+            },
+            {
+              "x": 72.3630599975586,
+              "z": 0,
+              "y": -1.319982886314392
+            },
+            {
+              "x": 67.3630599975586,
+              "z": 0,
+              "y": -1.319982886314392
+            }
+          ],
+          "trigger": true,
+          "position": {
+            "x": 69.3630599975586,
+            "z": 0,
+            "y": -1.41998291015625
+          },
+          "local_center": {
+            "x": 0.10000000149011612,
+            "z": 0,
+            "y": 0
+          },
+          "damage_kind": "enemy_callback",
+          "name": "AimLine",
+          "extents": {
+            "x": 2.5,
+            "z": 0.5,
+            "y": 0.10000002384185791
+          },
+          "tag": "Enemy",
+          "center": {
+            "x": 69.8630599975586,
+            "z": 0,
+            "y": -1.41998291015625
+          },
+          "enabled": true,
+          "id": -732128,
+          "type": "BoxCollider",
+          "rotation_z": 0,
+          "scale": {
+            "x": 5,
+            "z": 1,
+            "y": 2
+          }
+        },
+        {
+          "parent_active": false,
+          "active": false,
+          "size": {
+            "x": 23.670000076293945,
+            "z": 1,
+            "y": 0.30000001192092896
+          },
+          "damage_owner": -731954,
+          "quad": [
+            {
+              "x": 67.55805969238281,
+              "z": 0,
+              "y": -1.5695464611053467
+            },
+            {
+              "x": 91.22805786132812,
+              "z": 0,
+              "y": -1.5695464611053467
+            },
+            {
+              "x": 91.22805786132812,
+              "z": 0,
+              "y": -1.2695465087890625
+            },
+            {
+              "x": 67.55805969238281,
+              "z": 0,
+              "y": -1.2695465087890625
+            }
+          ],
+          "trigger": true,
+          "position": {
+            "x": 69.73306274414062,
+            "z": 0,
+            "y": -1.41998291015625
+          },
+          "local_center": {
+            "x": 9.65999984741211,
+            "z": 0,
+            "y": 0.00043642520904541016
+          },
+          "damage_kind": "enemy_callback",
+          "name": "Attack",
+          "extents": {
+            "x": 11.834999084472656,
+            "z": 0.5,
+            "y": 0.1499999761581421
+          },
+          "tag": "Enemy",
+          "center": {
+            "x": 79.39305877685547,
+            "z": 0,
+            "y": -1.4195464849472046
+          },
+          "enabled": true,
+          "id": -732140,
+          "type": "BoxCollider",
+          "rotation_z": 0,
+          "scale": {
+            "x": 1,
+            "z": 1,
+            "y": 1
+          }
+        },
+        {
+          "parent_active": false,
+          "active": false,
+          "size": {
+            "x": 1,
+            "z": 1,
+            "y": 0.10000000149011612
+          },
+          "damage_owner": -731954,
+          "quad": [
+            {
+              "x": 67.47306060791016,
+              "z": 0,
+              "y": -1.519982933998108
+            },
+            {
+              "x": 72.47306060791016,
+              "z": 0,
+              "y": -1.519982933998108
+            },
+            {
+              "x": 72.47306060791016,
+              "z": 0,
+              "y": -1.319982886314392
+            },
+            {
+              "x": 67.47306060791016,
+              "z": 0,
+              "y": -1.319982886314392
+            }
+          ],
+          "trigger": true,
+          "position": {
+            "x": 69.47306060791016,
+            "z": 0,
+            "y": -1.41998291015625
+          },
+          "local_center": {
+            "x": 0.10000000149011612,
+            "z": 0,
+            "y": 0
+          },
+          "damage_kind": "enemy_callback",
+          "name": "AimLine",
+          "extents": {
+            "x": 2.5,
+            "z": 0.5,
+            "y": 0.10000002384185791
+          },
+          "tag": "Enemy",
+          "center": {
+            "x": 69.97306060791016,
+            "z": 0,
+            "y": -1.41998291015625
+          },
+          "enabled": true,
+          "id": -732228,
+          "type": "BoxCollider",
+          "rotation_z": 0,
+          "scale": {
+            "x": 5,
+            "z": 1,
+            "y": 2
+          }
+        },
+        {
+          "parent_active": false,
+          "active": false,
+          "size": {
+            "x": 3,
+            "z": 1,
+            "y": 0.10999999940395355
+          },
+          "damage_owner": -731954,
+          "quad": [
+            {
+              "x": 66.83306121826172,
+              "z": 0,
+              "y": -1.4745464324951172
+            },
+            {
+              "x": 69.83306121826172,
+              "z": 0,
+              "y": -1.4745464324951172
+            },
+            {
+              "x": 69.83306121826172,
+              "z": 0,
+              "y": -1.364546537399292
+            },
+            {
+              "x": 66.83306121826172,
+              "z": 0,
+              "y": -1.364546537399292
+            }
+          ],
+          "trigger": true,
+          "position": {
+            "x": 69.18305969238281,
+            "z": 0,
+            "y": -1.41998291015625
+          },
+          "local_center": {
+            "x": -0.8500000238418579,
+            "z": 0,
+            "y": 0.00043642520904541016
+          },
+          "damage_kind": "enemy_callback",
+          "name": "Attack",
+          "extents": {
+            "x": 1.5,
+            "z": 0.5,
+            "y": 0.0549999475479126
+          },
+          "tag": "Enemy",
+          "center": {
+            "x": 68.33306121826172,
+            "z": 0,
+            "y": -1.4195464849472046
+          },
+          "enabled": true,
+          "id": -732240,
+          "type": "BoxCollider",
+          "rotation_z": 0,
+          "scale": {
+            "x": 1,
+            "z": 1,
+            "y": 1
+          }
+        },
+        {
+          "parent_active": false,
+          "active": false,
+          "size": {
+            "x": 1,
+            "z": 1,
+            "y": 0.10000000149011612
+          },
+          "damage_owner": -731954,
+          "quad": [
+            {
+              "x": 67.32305908203125,
+              "z": 0,
+              "y": -1.519982933998108
+            },
+            {
+              "x": 72.32305908203125,
+              "z": 0,
+              "y": -1.519982933998108
+            },
+            {
+              "x": 72.32305908203125,
+              "z": 0,
+              "y": -1.319982886314392
+            },
+            {
+              "x": 67.32305908203125,
+              "z": 0,
+              "y": -1.319982886314392
+            }
+          ],
+          "trigger": true,
+          "position": {
+            "x": 69.32305908203125,
+            "z": 0,
+            "y": -1.41998291015625
+          },
+          "local_center": {
+            "x": 0.10000000149011612,
+            "z": 0,
+            "y": 0
+          },
+          "damage_kind": "enemy_callback",
+          "name": "AimLine",
+          "extents": {
+            "x": 2.5,
+            "z": 0.5,
+            "y": 0.10000002384185791
+          },
+          "tag": "Enemy",
+          "center": {
+            "x": 69.82305908203125,
+            "z": 0,
+            "y": -1.41998291015625
+          },
+          "enabled": true,
+          "id": -732348,
+          "type": "BoxCollider",
+          "rotation_z": 0,
+          "scale": {
+            "x": 5,
+            "z": 1,
+            "y": 2
+          }
+        },
+        {
+          "parent_active": false,
+          "active": false,
+          "size": {
+            "x": 3,
+            "z": 1,
+            "y": 0.20000000298023224
+          },
+          "damage_owner": -731954,
+          "quad": [
+            {
+              "x": 67.61532592773438,
+              "z": 0,
+              "y": -1.5195465087890625
+            },
+            {
+              "x": 70.61532592773438,
+              "z": 0,
+              "y": -1.5195465087890625
+            },
+            {
+              "x": 70.61532592773438,
+              "z": 0,
+              "y": -1.3195464611053467
+            },
+            {
+              "x": 67.61532592773438,
+              "z": 0,
+              "y": -1.3195464611053467
+            }
+          ],
+          "trigger": true,
+          "position": {
+            "x": 69.18305969238281,
+            "z": 0,
+            "y": -1.41998291015625
+          },
+          "local_center": {
+            "x": -0.0677337646484375,
+            "z": 0,
+            "y": 0.00043642520904541016
+          },
+          "damage_kind": "enemy_callback",
+          "name": "Attack",
+          "extents": {
+            "x": 1.5,
+            "z": 0.5,
+            "y": 0.10000002384185791
+          },
+          "tag": "Enemy",
+          "center": {
+            "x": 69.11532592773438,
+            "z": 0,
+            "y": -1.4195464849472046
+          },
+          "enabled": true,
+          "id": -732360,
+          "type": "BoxCollider",
+          "rotation_z": 0,
+          "scale": {
+            "x": 1,
+            "z": 1,
+            "y": 1
+          }
+        }
+      ],
+      "controllers": {
+        "_flyBambooController": {
+          "fields": {
+            "_blinkIndex": 0,
+            "_blinkTime": 0,
+            "_initialized": true,
+            "blinkGapTime": 0.10000000149011612
+          },
+          "type": "EnemyFlyBambooController"
+        }
+      },
+      "info": {
+        "createPlayerUID": 0,
+        "baseID": 0,
+        "_overAutoDiffCtrl": false,
+        "_level": 50,
+        "generateDistance": 15,
+        "generateDistanceY": 20,
+        "_enemyType": "EnemyFlyBamboo: 102"
+      },
+      "scale": {
+        "x": 1,
+        "z": 1,
+        "y": 1
+      },
+      "custom": {
+        "_render": -1,
+        "_randomRangeY": 0,
+        "_aimLockTime": 0.5,
+        "_renderType": "Bamboo: 0",
+        "_followNinja": false,
+        "_aimTime": 2
+      },
+      "custom_type": "EnemyFlyBambooDataStruct",
+      "id": -731954,
+      "type": "EnemyFlyBamboo",
+      "position": {
+        "x": 69.18305969238281,
+        "z": 0,
+        "y": -1.41998291015625
+      },
+      "fields": {
+        "_dead": false,
+        "_isRecycled": false,
+        "_enemyState": "aimLock: 1",
+        "_currStateTime": 0.5,
+        "_flySpeed": 60,
+        "_lastAimLinePos": {
+          "x": 69.43267822265625,
+          "z": 0,
+          "y": -1.41998291015625
+        }
+      }
+    }
+  ],
+  "role": {
+    "collider_parameters": {
+      "_jumpColliderHeight": 1.2000000476837158,
+      "_jumpColliderOffset": {
+        "x": 0.10000000149011612,
+        "z": 0,
+        "y": 0.30000001192092896
+      },
+      "_normalColliderHeight": 1.7999999523162842,
+      "_rollColliderHeight": 0.10000000149011612,
+      "_rollColliderOffset": {
+        "x": 0.05000000074505806,
+        "z": 0,
+        "y": 0
+      },
+      "_normalColliderRadius": 0.20000000298023224,
+      "_slideColliderOffset": {
+        "x": 0.05000000074505806,
+        "z": 0,
+        "y": -0.30000001192092896
+      },
+      "_rollColliderRadius": 0.10000000149011612,
+      "_normalColliderOffset": {
+        "x": 0.10000000149011612,
+        "z": 0,
+        "y": 0
+      }
+    },
+    "colliders": [
+      {
+        "parent_active": true,
+        "active": true,
+        "radius": 0.18000000715255737,
+        "height": 1.7999999523162842,
+        "trigger": true,
+        "position": {
+          "x": 58.48635482788086,
+          "z": 0,
+          "y": 0.75
+        },
+        "local_center": {
+          "x": 0.10000000149011612,
+          "z": 0,
+          "y": 0
+        },
+        "direction": 1,
+        "name": "Role",
+        "extents": {
+          "x": 0.18000030517578125,
+          "z": 0.18000000715255737,
+          "y": 0.4679999351501465
+        },
+        "tag": "Player_Ninja",
+        "rotation_z": 0,
+        "enabled": true,
+        "id": -737868,
+        "type": "CapsuleCollider",
+        "center": {
+          "x": 58.538352966308594,
+          "z": 0,
+          "y": 0.75
+        },
+        "scale": {
+          "x": 0.5199999809265137,
+          "z": 1,
+          "y": 0.5199999809265137
+        }
+      }
+    ],
+    "god": false,
+    "mounted": false,
+    "velocity": {
+      "x": 18.499990463256836,
+      "z": 0,
+      "y": 0
+    },
+    "data": {
+      "_jumpForce4": 8.5,
+      "_downGravity2": -9.800000190734863,
+      "_jumpForce2": 12.5,
+      "_glideMaxSpeed": 2.5,
+      "_downGravity3": -9.800000190734863,
+      "_moveSpeed": 18.5,
+      "_glideAccSpeed": 1,
+      "_glideMinSpeed": -2,
+      "_ninjaFootPoint": 0.75,
+      "_normalGravity": -19.799999237060547,
+      "_rollAirDownUpSpeed": 28,
+      "_driveForce": 5,
+      "_upGravity2": -9.800000190734863,
+      "_upGravity1": -25,
+      "_downGravity1": -9,
+      "_jumpForce3": 12,
+      "_glideUpForce": 5,
+      "_ninjaHeight": 1,
+      "_upGravity3": -9.800000190734863,
+      "_jumpForce1": 23.5,
+      "_rollDownUpSpeed": 8,
+      "_downGravity4": -9.800000190734863,
+      "_upGravity4": -9.800000190734863,
+      "_climbDistance": 0.800000011920929
+    },
+    "gravity": 0
+  },
+  "supports": [
+    {
+      "info": {
+        "_posZ": 0,
+        "isNeedShowSpeedUp": true,
+        "_cameraOffsetAnchorY": 0,
+        "_hideGround": false,
+        "_infiniteLoop": false,
+        "_ninjaSpeed": 18.5,
+        "_repeatTimesMax": 1,
+        "_canClimb": true,
+        "_groundType": "line: 0",
+        "_isDeadBlockOffsetY": 0,
+        "_initialDeadBlockOffsetY": 0,
+        "_repeatTimesMin": 1
+      },
+      "is_line": true,
+      "stage_index": 0,
+      "is_ground": false,
+      "id": -695990,
+      "finish": {
+        "x": 96,
+        "z": 0,
+        "y": 0
+      },
+      "block_index": 2,
+      "start": {
+        "x": 64,
+        "z": 0,
+        "y": 0
+      }
+    },
+    {
+      "info": {
+        "_posZ": 0,
+        "isNeedShowSpeedUp": true,
+        "_cameraOffsetAnchorY": 0,
+        "_hideGround": false,
+        "_infiniteLoop": false,
+        "_ninjaSpeed": 18.5,
+        "_repeatTimesMax": 1,
+        "_canClimb": true,
+        "_groundType": "line: 0",
+        "_isDeadBlockOffsetY": 0,
+        "_initialDeadBlockOffsetY": 0,
+        "_repeatTimesMin": 1
+      },
+      "is_line": true,
+      "stage_index": 0,
+      "is_ground": false,
+      "id": -695976,
+      "finish": {
+        "x": 64,
+        "z": 0,
+        "y": 0
+      },
+      "block_index": 1,
+      "start": {
+        "x": 32,
+        "z": 0,
+        "y": 0
+      }
+    }
+  ],
+  "board": {
+    "stage_start": 0,
+    "map_id": 42,
+    "stage_index": 0,
+    "block_index": 1,
+    "stage_id": 50013
+  },
+  "support_id": -695976,
+  "state": {
+    "healthMultiplier": 50,
+    "speed": 18.5,
+    "physics": "runOnLine: 1",
+    "distance": 7650.8408203125,
+    "content": "Running: 1",
+    "score": 1485083.0193519592,
+    "offline": true,
+    "colliders": [
+      {
+        "trigger": true,
+        "name": "Role",
+        "extents": {
+          "x": 0.18000030517578125,
+          "z": 0.18000000715255737,
+          "y": 0.4679999351501465
+        },
+        "localCenter": {
+          "x": 0.10000000149011612,
+          "z": 0,
+          "y": 0
+        },
+        "radius": 0.18000000715255737,
+        "enabled": true,
+        "center": {
+          "x": 58.538352966308594,
+          "z": 0,
+          "y": 0.75
+        },
+        "height": 1.7999999523162842,
+        "direction": 1,
+        "type": "CapsuleCollider"
+      },
+      {
+        "trigger": true,
+        "name": "ColliderForItem",
+        "enabled": false,
+        "center": {
+          "x": 58.48635482788086,
+          "z": 0,
+          "y": 0.75
+        },
+        "type": "SphereCollider",
+        "extents": {
+          "x": 0,
+          "z": 0,
+          "y": 0
+        }
+      },
+      {
+        "trigger": true,
+        "name": "ColliderForItem",
+        "extents": {
+          "x": 0.4199981689453125,
+          "z": 0.41999998688697815,
+          "y": 0.6499999761581421
+        },
+        "localCenter": {
+          "x": 0,
+          "z": 0,
+          "y": 0
+        },
+        "radius": 0.41999998688697815,
+        "enabled": true,
+        "center": {
+          "x": 58.48635482788086,
+          "z": 0,
+          "y": 0.75
+        },
+        "height": 2.5,
+        "direction": 1,
+        "type": "CapsuleCollider"
+      },
+      {
+        "trigger": true,
+        "name": "ColliderAtMount",
+        "extents": {
+          "x": 0,
+          "z": 0,
+          "y": 0
+        },
+        "localCenter": {
+          "x": 0.8299999833106995,
+          "z": 0,
+          "y": -0.36000001430511475
+        },
+        "radius": 0.6800000071525574,
+        "enabled": false,
+        "center": {
+          "x": 58.48635482788086,
+          "z": 0,
+          "y": 0.75
+        },
+        "height": 6.460000038146973,
+        "direction": 1,
+        "type": "CapsuleCollider"
+      }
+    ],
+    "seed": 73122,
+    "coins": 0,
+    "episodeTime": 3.179997682571411,
+    "fixedDeltaTime": 0.019999999552965164,
+    "state": "Game: 8",
+    "health": 5000,
+    "only": true,
+    "position": {
+      "x": 58.48635482788086,
+      "z": 0,
+      "y": 0.75
+    },
+    "maxHealth": 5000,
+    "episodeFrame": 159,
+    "chapter": 1,
+    "level": 5,
+    "time": 77.95547485351562,
+    "mode": 6,
+    "timeScale": 0,
+    "frame": 63137,
+    "combatFamily": 3
+  },
+  "platforms": {},
+  "privileged": true
+}

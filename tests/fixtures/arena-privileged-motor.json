@@ -1,0 +1,2647 @@
+[
+  {
+    "before": {
+      "terrain": [
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:0",
+          "finish": {
+            "x": 32,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 0,
+          "hidden": false
+        },
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 32,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:1",
+          "finish": {
+            "x": 64,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 1,
+          "hidden": false
+        },
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 64,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:2",
+          "finish": {
+            "x": 96,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 2,
+          "hidden": false
+        },
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 96,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:3",
+          "finish": {
+            "x": 128,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 3,
+          "hidden": false
+        }
+      ],
+      "schema": 1,
+      "camera": {
+        "real_right": {
+          "x": 45.318321228027344,
+          "z": 0,
+          "y": 6.556349277496338
+        },
+        "reflection_right": {
+          "x": 44.8482666015625,
+          "z": -11,
+          "y": 6.5
+        },
+        "position": {
+          "x": 37.218143463134766,
+          "z": 0,
+          "y": 2
+        },
+        "direction": 1,
+        "right": {
+          "x": 47.218143463134766,
+          "z": -11,
+          "y": 8
+        }
+      },
+      "enemies": [],
+      "role": {
+        "collider_parameters": {
+          "_jumpColliderHeight": 1.2000000476837158,
+          "_jumpColliderOffset": {
+            "x": 0.10000000149011612,
+            "z": 0,
+            "y": 0.30000001192092896
+          },
+          "_normalColliderHeight": 1.7999999523162842,
+          "_rollColliderHeight": 0.10000000149011612,
+          "_rollColliderOffset": {
+            "x": 0.05000000074505806,
+            "z": 0,
+            "y": 0
+          },
+          "_normalColliderRadius": 0.20000000298023224,
+          "_slideColliderOffset": {
+            "x": 0.05000000074505806,
+            "z": 0,
+            "y": -0.30000001192092896
+          },
+          "_rollColliderRadius": 0.10000000149011612,
+          "_normalColliderOffset": {
+            "x": 0.10000000149011612,
+            "z": 0,
+            "y": 0
+          }
+        },
+        "colliders": [
+          {
+            "parent_active": true,
+            "active": true,
+            "radius": 0.18000000715255737,
+            "height": 1.7999999523162842,
+            "trigger": true,
+            "position": {
+              "x": 33.449806213378906,
+              "z": 0,
+              "y": 0.75
+            },
+            "local_center": {
+              "x": 0.10000000149011612,
+              "z": 0,
+              "y": 0
+            },
+            "direction": 1,
+            "name": "Role",
+            "extents": {
+              "x": 0.18000030517578125,
+              "z": 0.18000000715255737,
+              "y": 0.4679999351501465
+            },
+            "tag": "Player_Ninja",
+            "rotation_z": 0,
+            "enabled": true,
+            "id": -1012212,
+            "type": "CapsuleCollider",
+            "center": {
+              "x": 33.50180435180664,
+              "z": 0,
+              "y": 0.75
+            },
+            "scale": {
+              "x": 0.5199999809265137,
+              "z": 1,
+              "y": 0.5199999809265137
+            }
+          }
+        ],
+        "god": false,
+        "mounted": false,
+        "velocity": {
+          "x": 18.49928092956543,
+          "z": 0,
+          "y": 0
+        },
+        "data": {
+          "_jumpForce4": 8.5,
+          "_downGravity2": -9.800000190734863,
+          "_jumpForce2": 12.5,
+          "_glideMaxSpeed": 2.5,
+          "_downGravity3": -9.800000190734863,
+          "_moveSpeed": 18.5,
+          "_glideAccSpeed": 1,
+          "_glideMinSpeed": -2,
+          "_ninjaFootPoint": 0.75,
+          "_normalGravity": -19.799999237060547,
+          "_rollAirDownUpSpeed": 28,
+          "_driveForce": 5,
+          "_upGravity2": -9.800000190734863,
+          "_upGravity1": -25,
+          "_downGravity1": -9,
+          "_jumpForce3": 12,
+          "_glideUpForce": 5,
+          "_ninjaHeight": 1,
+          "_upGravity3": -9.800000190734863,
+          "_jumpForce1": 23.5,
+          "_rollDownUpSpeed": 8,
+          "_downGravity4": -9.800000190734863,
+          "_upGravity4": -9.800000190734863,
+          "_climbDistance": 0.800000011920929
+        },
+        "gravity": 0,
+        "fields": {
+          "_lastFixedUpdateTime": 118.81999969482422
+        }
+      },
+      "supports": [
+        {
+          "info": {
+            "_posZ": 0,
+            "isNeedShowSpeedUp": true,
+            "_cameraOffsetAnchorY": 0,
+            "_hideGround": false,
+            "_infiniteLoop": false,
+            "_ninjaSpeed": 18.5,
+            "_repeatTimesMax": 1,
+            "_canClimb": true,
+            "_groundType": "line: 0",
+            "_isDeadBlockOffsetY": 0,
+            "_initialDeadBlockOffsetY": 0,
+            "_repeatTimesMin": 1
+          },
+          "is_line": true,
+          "stage_index": 0,
+          "is_ground": false,
+          "id": -980780,
+          "finish": {
+            "x": 64,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 1,
+          "start": {
+            "x": 32,
+            "z": 0,
+            "y": 0
+          }
+        },
+        {
+          "info": {
+            "_posZ": 0,
+            "isNeedShowSpeedUp": true,
+            "_cameraOffsetAnchorY": 0,
+            "_hideGround": false,
+            "_infiniteLoop": false,
+            "_ninjaSpeed": 18.5,
+            "_repeatTimesMax": 1,
+            "_canClimb": true,
+            "_groundType": "line: 0",
+            "_isDeadBlockOffsetY": 0,
+            "_initialDeadBlockOffsetY": 0,
+            "_repeatTimesMin": 1
+          },
+          "is_line": true,
+          "stage_index": 0,
+          "is_ground": false,
+          "id": -980766,
+          "finish": {
+            "x": 32,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 0,
+          "start": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          }
+        }
+      ],
+      "board": {
+        "stage_start": 0,
+        "map_id": 41,
+        "stage_index": 0,
+        "block_index": 1,
+        "stage_id": 51012
+      },
+      "support_id": -980780,
+      "state": {
+        "healthMultiplier": 50,
+        "speed": 18.5,
+        "physics": "runOnLine: 1",
+        "distance": 7626.04296875,
+        "content": "Running: 1",
+        "score": 1482604.035282135,
+        "offline": true,
+        "colliders": [
+          {
+            "trigger": true,
+            "name": "Role",
+            "extents": {
+              "x": 0.18000030517578125,
+              "z": 0.18000000715255737,
+              "y": 0.4679999351501465
+            },
+            "localCenter": {
+              "x": 0.10000000149011612,
+              "z": 0,
+              "y": 0
+            },
+            "radius": 0.18000000715255737,
+            "enabled": true,
+            "center": {
+              "x": 33.50180435180664,
+              "z": 0,
+              "y": 0.75
+            },
+            "height": 1.7999999523162842,
+            "direction": 1,
+            "type": "CapsuleCollider"
+          },
+          {
+            "trigger": true,
+            "name": "ColliderForItem",
+            "enabled": false,
+            "center": {
+              "x": 33.449806213378906,
+              "z": 0,
+              "y": 0.75
+            },
+            "type": "SphereCollider",
+            "extents": {
+              "x": 0,
+              "z": 0,
+              "y": 0
+            }
+          },
+          {
+            "trigger": true,
+            "name": "ColliderForItem",
+            "extents": {
+              "x": 0.4199981689453125,
+              "z": 0.41999998688697815,
+              "y": 0.6499999761581421
+            },
+            "localCenter": {
+              "x": 0,
+              "z": 0,
+              "y": 0
+            },
+            "radius": 0.41999998688697815,
+            "enabled": true,
+            "center": {
+              "x": 33.449806213378906,
+              "z": 0,
+              "y": 0.75
+            },
+            "height": 2.5,
+            "direction": 1,
+            "type": "CapsuleCollider"
+          },
+          {
+            "trigger": true,
+            "name": "ColliderAtMount",
+            "extents": {
+              "x": 0,
+              "z": 0,
+              "y": 0
+            },
+            "localCenter": {
+              "x": 0.8299999833106995,
+              "z": 0,
+              "y": -0.36000001430511475
+            },
+            "radius": 0.6800000071525574,
+            "enabled": false,
+            "center": {
+              "x": 33.449806213378906,
+              "z": 0,
+              "y": 0.75
+            },
+            "height": 6.460000038146973,
+            "direction": 1,
+            "type": "CapsuleCollider"
+          }
+        ],
+        "seed": 73121,
+        "coins": 0,
+        "episodeTime": 1.8399988412857056,
+        "fixedDeltaTime": 0.019999999552965164,
+        "state": "Game: 8",
+        "health": 5000,
+        "only": true,
+        "position": {
+          "x": 33.449806213378906,
+          "z": 0,
+          "y": 0.75
+        },
+        "maxHealth": 5000,
+        "episodeFrame": 92,
+        "chapter": 1,
+        "level": 5,
+        "time": 118.8221435546875,
+        "mode": 6,
+        "timeScale": 0,
+        "frame": 112611,
+        "combatFamily": 3
+      },
+      "platforms": {},
+      "privileged": true
+    },
+    "action": "down",
+    "after": {
+      "healthMultiplier": 50,
+      "speed": 18.5,
+      "physics": "rollToLineDown: 3",
+      "distance": 7626.783203125,
+      "content": "Running: 1",
+      "score": 1482678.0327796936,
+      "offline": true,
+      "colliders": [
+        {
+          "trigger": true,
+          "name": "Role",
+          "extents": {
+            "x": 0.100006103515625,
+            "z": 0.10000000149011612,
+            "y": 0.10000252723693848
+          },
+          "localCenter": {
+            "x": 0.05000000074505806,
+            "z": 0,
+            "y": 0
+          },
+          "radius": 0.10000000149011612,
+          "enabled": true,
+          "center": {
+            "x": 34.387672424316406,
+            "z": 0,
+            "y": 0.6303755640983582
+          },
+          "height": 0.10000000149011612,
+          "direction": 1,
+          "type": "CapsuleCollider"
+        },
+        {
+          "trigger": true,
+          "name": "ColliderForItem",
+          "enabled": true,
+          "center": {
+            "x": 34.374671936035156,
+            "z": 0,
+            "y": 0.65289306640625
+          },
+          "type": "SphereCollider",
+          "extents": {
+            "x": 0.40000152587890625,
+            "z": 0.4000000059604645,
+            "y": 0.3999999761581421
+          }
+        },
+        {
+          "trigger": true,
+          "name": "ColliderForItem",
+          "extents": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "localCenter": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "radius": 0.41999998688697815,
+          "enabled": false,
+          "center": {
+            "x": 34.374671936035156,
+            "z": 0,
+            "y": 0.65289306640625
+          },
+          "height": 2.5,
+          "direction": 1,
+          "type": "CapsuleCollider"
+        },
+        {
+          "trigger": true,
+          "name": "ColliderAtMount",
+          "extents": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "localCenter": {
+            "x": 0.8299999833106995,
+            "z": 0,
+            "y": -0.36000001430511475
+          },
+          "radius": 0.6800000071525574,
+          "enabled": false,
+          "center": {
+            "x": 34.374671936035156,
+            "z": 0,
+            "y": 0.65289306640625
+          },
+          "height": 6.460000038146973,
+          "direction": 1,
+          "type": "CapsuleCollider"
+        }
+      ],
+      "seed": 73121,
+      "coins": 0,
+      "episodeTime": 1.879998803138733,
+      "fixedDeltaTime": 0.019999999552965164,
+      "state": "Game: 8",
+      "health": 5000,
+      "only": true,
+      "position": {
+        "x": 34.374671936035156,
+        "z": 0,
+        "y": 0.65289306640625
+      },
+      "maxHealth": 5000,
+      "episodeFrame": 94,
+      "chapter": 1,
+      "level": 5,
+      "time": 118.87213897705078,
+      "mode": 6,
+      "timeScale": 0,
+      "frame": 112626,
+      "combatFamily": 3
+    }
+  },
+  {
+    "before": {
+      "terrain": [
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 32,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:1",
+          "finish": {
+            "x": 64,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 1,
+          "hidden": false
+        },
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 64,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:2",
+          "finish": {
+            "x": 96,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 2,
+          "hidden": false
+        },
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 96,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:3",
+          "finish": {
+            "x": 128,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 3,
+          "hidden": false
+        },
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 128,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:4",
+          "finish": {
+            "x": 160,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 4,
+          "hidden": false
+        }
+      ],
+      "schema": 1,
+      "camera": {
+        "real_right": {
+          "x": 68.9968490600586,
+          "z": 0,
+          "y": 5.556349277496338
+        },
+        "reflection_right": {
+          "x": 68.52667236328125,
+          "z": -11,
+          "y": 5.5
+        },
+        "position": {
+          "x": 60.89667510986328,
+          "z": 0,
+          "y": 1
+        },
+        "direction": 1,
+        "right": {
+          "x": 70.89667510986328,
+          "z": -11,
+          "y": 7
+        }
+      },
+      "enemies": [],
+      "role": {
+        "collider_parameters": {
+          "_jumpColliderHeight": 1.2000000476837158,
+          "_jumpColliderOffset": {
+            "x": 0.10000000149011612,
+            "z": 0,
+            "y": 0.30000001192092896
+          },
+          "_normalColliderHeight": 1.7999999523162842,
+          "_rollColliderHeight": 0.10000000149011612,
+          "_rollColliderOffset": {
+            "x": 0.05000000074505806,
+            "z": 0,
+            "y": 0
+          },
+          "_normalColliderRadius": 0.20000000298023224,
+          "_slideColliderOffset": {
+            "x": 0.05000000074505806,
+            "z": 0,
+            "y": -0.30000001192092896
+          },
+          "_rollColliderRadius": 0.10000000149011612,
+          "_normalColliderOffset": {
+            "x": 0.10000000149011612,
+            "z": 0,
+            "y": 0
+          }
+        },
+        "colliders": [
+          {
+            "parent_active": true,
+            "active": true,
+            "radius": 0.20000000298023224,
+            "height": 1.7999999523162842,
+            "trigger": true,
+            "position": {
+              "x": 57.19131851196289,
+              "z": 0,
+              "y": -0.75
+            },
+            "local_center": {
+              "x": 0.10000000149011612,
+              "z": 0,
+              "y": 0
+            },
+            "direction": 1,
+            "name": "Role",
+            "extents": {
+              "x": 0.20000076293945312,
+              "z": 0.20000003278255463,
+              "y": 0.4679999351501465
+            },
+            "tag": "Player_Ninja",
+            "rotation_z": 180,
+            "enabled": true,
+            "id": -1012212,
+            "type": "CapsuleCollider",
+            "center": {
+              "x": 57.243316650390625,
+              "z": 0,
+              "y": -0.75
+            },
+            "scale": {
+              "x": 0.5199999809265137,
+              "z": 1,
+              "y": 0.5199999809265137
+            }
+          }
+        ],
+        "god": false,
+        "mounted": false,
+        "velocity": {
+          "x": 18.499990463256836,
+          "z": 0,
+          "y": 0
+        },
+        "data": {
+          "_jumpForce4": 8.5,
+          "_downGravity2": -9.800000190734863,
+          "_jumpForce2": 12.5,
+          "_glideMaxSpeed": 2.5,
+          "_downGravity3": -9.800000190734863,
+          "_moveSpeed": 18.5,
+          "_glideAccSpeed": 1,
+          "_glideMinSpeed": -2,
+          "_ninjaFootPoint": 0.75,
+          "_normalGravity": -19.799999237060547,
+          "_rollAirDownUpSpeed": 28,
+          "_driveForce": 5,
+          "_upGravity2": -9.800000190734863,
+          "_upGravity1": -25,
+          "_downGravity1": -9,
+          "_jumpForce3": 12,
+          "_glideUpForce": 5,
+          "_ninjaHeight": 1,
+          "_upGravity3": -9.800000190734863,
+          "_jumpForce1": 23.5,
+          "_rollDownUpSpeed": 8,
+          "_downGravity4": -9.800000190734863,
+          "_upGravity4": -9.800000190734863,
+          "_climbDistance": 0.800000011920929
+        },
+        "gravity": 0,
+        "fields": {
+          "_lastFixedUpdateTime": 120.0999984741211
+        }
+      },
+      "supports": [
+        {
+          "info": {
+            "_posZ": 0,
+            "isNeedShowSpeedUp": true,
+            "_cameraOffsetAnchorY": 0,
+            "_hideGround": false,
+            "_infiniteLoop": false,
+            "_ninjaSpeed": 18.5,
+            "_repeatTimesMax": 1,
+            "_canClimb": true,
+            "_groundType": "line: 0",
+            "_isDeadBlockOffsetY": 0,
+            "_initialDeadBlockOffsetY": 0,
+            "_repeatTimesMin": 1
+          },
+          "is_line": true,
+          "stage_index": 0,
+          "is_ground": false,
+          "id": -980794,
+          "finish": {
+            "x": 96,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 2,
+          "start": {
+            "x": 64,
+            "z": 0,
+            "y": 0
+          }
+        },
+        {
+          "info": {
+            "_posZ": 0,
+            "isNeedShowSpeedUp": true,
+            "_cameraOffsetAnchorY": 0,
+            "_hideGround": false,
+            "_infiniteLoop": false,
+            "_ninjaSpeed": 18.5,
+            "_repeatTimesMax": 1,
+            "_canClimb": true,
+            "_groundType": "line: 0",
+            "_isDeadBlockOffsetY": 0,
+            "_initialDeadBlockOffsetY": 0,
+            "_repeatTimesMin": 1
+          },
+          "is_line": true,
+          "stage_index": 0,
+          "is_ground": false,
+          "id": -980780,
+          "finish": {
+            "x": 64,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 1,
+          "start": {
+            "x": 32,
+            "z": 0,
+            "y": 0
+          }
+        }
+      ],
+      "board": {
+        "stage_start": 0,
+        "map_id": 41,
+        "stage_index": 0,
+        "block_index": 1,
+        "stage_id": 51012
+      },
+      "support_id": -980780,
+      "state": {
+        "healthMultiplier": 50,
+        "speed": 18.5,
+        "physics": "runOnLineDown: 2",
+        "distance": 7649.73046875,
+        "content": "Running: 1",
+        "score": 1484972.0196723938,
+        "offline": true,
+        "colliders": [
+          {
+            "trigger": true,
+            "name": "Role",
+            "extents": {
+              "x": 0.20000076293945312,
+              "z": 0.20000003278255463,
+              "y": 0.4679999351501465
+            },
+            "localCenter": {
+              "x": 0.10000000149011612,
+              "z": 0,
+              "y": 0
+            },
+            "radius": 0.20000000298023224,
+            "enabled": true,
+            "center": {
+              "x": 57.243316650390625,
+              "z": 0,
+              "y": -0.75
+            },
+            "height": 1.7999999523162842,
+            "direction": 1,
+            "type": "CapsuleCollider"
+          },
+          {
+            "trigger": true,
+            "name": "ColliderForItem",
+            "enabled": false,
+            "center": {
+              "x": 57.19131851196289,
+              "z": 0,
+              "y": -0.75
+            },
+            "type": "SphereCollider",
+            "extents": {
+              "x": 0,
+              "z": 0,
+              "y": 0
+            }
+          },
+          {
+            "trigger": true,
+            "name": "ColliderForItem",
+            "extents": {
+              "x": 0.4199981689453125,
+              "z": 0.42000001668930054,
+              "y": 0.6499999761581421
+            },
+            "localCenter": {
+              "x": 0,
+              "z": 0,
+              "y": 0
+            },
+            "radius": 0.41999998688697815,
+            "enabled": true,
+            "center": {
+              "x": 57.19131851196289,
+              "z": 0,
+              "y": -0.75
+            },
+            "height": 2.5,
+            "direction": 1,
+            "type": "CapsuleCollider"
+          },
+          {
+            "trigger": true,
+            "name": "ColliderAtMount",
+            "extents": {
+              "x": 0,
+              "z": 0,
+              "y": 0
+            },
+            "localCenter": {
+              "x": 0.8299999833106995,
+              "z": 0,
+              "y": -0.36000001430511475
+            },
+            "radius": 0.6800000071525574,
+            "enabled": false,
+            "center": {
+              "x": 57.19131851196289,
+              "z": 0,
+              "y": -0.75
+            },
+            "height": 6.460000038146973,
+            "direction": 1,
+            "type": "CapsuleCollider"
+          }
+        ],
+        "seed": 73121,
+        "coins": 0,
+        "episodeTime": 3.11999773979187,
+        "fixedDeltaTime": 0.019999999552965164,
+        "state": "Game: 8",
+        "health": 5000,
+        "only": true,
+        "position": {
+          "x": 57.19131851196289,
+          "z": 0,
+          "y": -0.75
+        },
+        "maxHealth": 5000,
+        "episodeFrame": 156,
+        "chapter": 1,
+        "level": 5,
+        "time": 120.10547637939453,
+        "mode": 6,
+        "timeScale": 0,
+        "frame": 113054,
+        "combatFamily": 3
+      },
+      "platforms": {},
+      "privileged": true
+    },
+    "action": "jump",
+    "after": {
+      "healthMultiplier": 50,
+      "speed": 18.5,
+      "physics": "rollToLineOn: 4",
+      "distance": 7650.470703125,
+      "content": "Running: 1",
+      "score": 1485046.0194587708,
+      "offline": true,
+      "colliders": [
+        {
+          "trigger": true,
+          "name": "Role",
+          "extents": {
+            "x": 0.100006103515625,
+            "z": 0.10000000149011612,
+            "y": 0.10000252723693848
+          },
+          "localCenter": {
+            "x": 0.05000000074505806,
+            "z": 0,
+            "y": 0
+          },
+          "radius": 0.10000000149011612,
+          "enabled": true,
+          "center": {
+            "x": 58.12936019897461,
+            "z": 0,
+            "y": -0.6486735939979553
+          },
+          "height": 0.10000000149011612,
+          "direction": 1,
+          "type": "CapsuleCollider"
+        },
+        {
+          "trigger": true,
+          "name": "ColliderForItem",
+          "enabled": true,
+          "center": {
+            "x": 58.116355895996094,
+            "z": 0,
+            "y": -0.62615966796875
+          },
+          "type": "SphereCollider",
+          "extents": {
+            "x": 0.40000152587890625,
+            "z": 0.4000000059604645,
+            "y": 0.3999999761581421
+          }
+        },
+        {
+          "trigger": true,
+          "name": "ColliderForItem",
+          "extents": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "localCenter": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "radius": 0.41999998688697815,
+          "enabled": false,
+          "center": {
+            "x": 58.116355895996094,
+            "z": 0,
+            "y": -0.62615966796875
+          },
+          "height": 2.5,
+          "direction": 1,
+          "type": "CapsuleCollider"
+        },
+        {
+          "trigger": true,
+          "name": "ColliderAtMount",
+          "extents": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "localCenter": {
+            "x": 0.8299999833106995,
+            "z": 0,
+            "y": -0.36000001430511475
+          },
+          "radius": 0.6800000071525574,
+          "enabled": false,
+          "center": {
+            "x": 58.116355895996094,
+            "z": 0,
+            "y": -0.62615966796875
+          },
+          "height": 6.460000038146973,
+          "direction": 1,
+          "type": "CapsuleCollider"
+        }
+      ],
+      "seed": 73121,
+      "coins": 0,
+      "episodeTime": 3.1599977016448975,
+      "fixedDeltaTime": 0.019999999552965164,
+      "state": "Game: 8",
+      "health": 5000,
+      "only": true,
+      "position": {
+        "x": 58.116355895996094,
+        "z": 0,
+        "y": -0.62615966796875
+      },
+      "maxHealth": 5000,
+      "episodeFrame": 158,
+      "chapter": 1,
+      "level": 5,
+      "time": 120.15547943115234,
+      "mode": 6,
+      "timeScale": 0,
+      "frame": 113068,
+      "combatFamily": 3
+    }
+  },
+  {
+    "before": {
+      "terrain": [
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 32,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:1",
+          "finish": {
+            "x": 64,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 1,
+          "hidden": false
+        },
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 64,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:2",
+          "finish": {
+            "x": 96,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 2,
+          "hidden": false
+        },
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 96,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:3",
+          "finish": {
+            "x": 128,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 3,
+          "hidden": false
+        },
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 128,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:4",
+          "finish": {
+            "x": 160,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 4,
+          "hidden": false
+        }
+      ],
+      "schema": 1,
+      "camera": {
+        "real_right": {
+          "x": 78.98683166503906,
+          "z": 0,
+          "y": 6.556349277496338
+        },
+        "reflection_right": {
+          "x": 78.51665496826172,
+          "z": -11,
+          "y": 6.5
+        },
+        "position": {
+          "x": 70.88665771484375,
+          "z": 0,
+          "y": 2
+        },
+        "direction": 1,
+        "right": {
+          "x": 80.88665771484375,
+          "z": -11,
+          "y": 8
+        }
+      },
+      "enemies": [],
+      "role": {
+        "collider_parameters": {
+          "_jumpColliderHeight": 1.2000000476837158,
+          "_jumpColliderOffset": {
+            "x": 0.10000000149011612,
+            "z": 0,
+            "y": 0.30000001192092896
+          },
+          "_normalColliderHeight": 1.7999999523162842,
+          "_rollColliderHeight": 0.10000000149011612,
+          "_rollColliderOffset": {
+            "x": 0.05000000074505806,
+            "z": 0,
+            "y": 0
+          },
+          "_normalColliderRadius": 0.20000000298023224,
+          "_slideColliderOffset": {
+            "x": 0.05000000074505806,
+            "z": 0,
+            "y": -0.30000001192092896
+          },
+          "_rollColliderRadius": 0.10000000149011612,
+          "_normalColliderOffset": {
+            "x": 0.10000000149011612,
+            "z": 0,
+            "y": 0
+          }
+        },
+        "colliders": [
+          {
+            "parent_active": true,
+            "active": true,
+            "radius": 0.20000000298023224,
+            "height": 1.7999999523162842,
+            "trigger": true,
+            "position": {
+              "x": 67.36636352539062,
+              "z": 0,
+              "y": 0.75
+            },
+            "local_center": {
+              "x": 0.10000000149011612,
+              "z": 0,
+              "y": 0
+            },
+            "direction": 1,
+            "name": "Role",
+            "extents": {
+              "x": 0.1999969482421875,
+              "z": 0.20000000298023224,
+              "y": 0.4679999351501465
+            },
+            "tag": "Player_Ninja",
+            "rotation_z": 0,
+            "enabled": true,
+            "id": -1012212,
+            "type": "CapsuleCollider",
+            "center": {
+              "x": 67.41836547851562,
+              "z": 0,
+              "y": 0.75
+            },
+            "scale": {
+              "x": 0.5199999809265137,
+              "z": 1,
+              "y": 0.5199999809265137
+            }
+          }
+        ],
+        "god": false,
+        "mounted": false,
+        "velocity": {
+          "x": 18.499990463256836,
+          "z": 0,
+          "y": 0
+        },
+        "data": {
+          "_jumpForce4": 8.5,
+          "_downGravity2": -9.800000190734863,
+          "_jumpForce2": 12.5,
+          "_glideMaxSpeed": 2.5,
+          "_downGravity3": -9.800000190734863,
+          "_moveSpeed": 18.5,
+          "_glideAccSpeed": 1,
+          "_glideMinSpeed": -2,
+          "_ninjaFootPoint": 0.75,
+          "_normalGravity": -19.799999237060547,
+          "_rollAirDownUpSpeed": 28,
+          "_driveForce": 5,
+          "_upGravity2": -9.800000190734863,
+          "_upGravity1": -25,
+          "_downGravity1": -9,
+          "_jumpForce3": 12,
+          "_glideUpForce": 5,
+          "_ninjaHeight": 1,
+          "_upGravity3": -9.800000190734863,
+          "_jumpForce1": 23.5,
+          "_rollDownUpSpeed": 8,
+          "_downGravity4": -9.800000190734863,
+          "_upGravity4": -9.800000190734863,
+          "_climbDistance": 0.800000011920929
+        },
+        "gravity": 0,
+        "fields": {
+          "_lastFixedUpdateTime": 120.63999938964844
+        }
+      },
+      "supports": [
+        {
+          "info": {
+            "_posZ": 0,
+            "isNeedShowSpeedUp": true,
+            "_cameraOffsetAnchorY": 0,
+            "_hideGround": false,
+            "_infiniteLoop": false,
+            "_ninjaSpeed": 18.5,
+            "_repeatTimesMax": 1,
+            "_canClimb": true,
+            "_groundType": "line: 0",
+            "_isDeadBlockOffsetY": 0,
+            "_initialDeadBlockOffsetY": 0,
+            "_repeatTimesMin": 1
+          },
+          "is_line": true,
+          "stage_index": 0,
+          "is_ground": false,
+          "id": -980794,
+          "finish": {
+            "x": 96,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 2,
+          "start": {
+            "x": 64,
+            "z": 0,
+            "y": 0
+          }
+        },
+        {
+          "info": {
+            "_posZ": 0,
+            "isNeedShowSpeedUp": true,
+            "_cameraOffsetAnchorY": 0,
+            "_hideGround": false,
+            "_infiniteLoop": false,
+            "_ninjaSpeed": 18.5,
+            "_repeatTimesMax": 1,
+            "_canClimb": true,
+            "_groundType": "line: 0",
+            "_isDeadBlockOffsetY": 0,
+            "_initialDeadBlockOffsetY": 0,
+            "_repeatTimesMin": 1
+          },
+          "is_line": true,
+          "stage_index": 0,
+          "is_ground": false,
+          "id": -980780,
+          "finish": {
+            "x": 64,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 1,
+          "start": {
+            "x": 32,
+            "z": 0,
+            "y": 0
+          }
+        }
+      ],
+      "board": {
+        "stage_start": 0,
+        "map_id": 41,
+        "stage_index": 0,
+        "block_index": 2,
+        "stage_id": 51012
+      },
+      "support_id": -980794,
+      "state": {
+        "healthMultiplier": 50,
+        "speed": 18.5,
+        "physics": "runOnLine: 1",
+        "distance": 7659.7236328125,
+        "content": "Running: 1",
+        "score": 1485971.0202217102,
+        "offline": true,
+        "colliders": [
+          {
+            "trigger": true,
+            "name": "Role",
+            "extents": {
+              "x": 0.1999969482421875,
+              "z": 0.20000000298023224,
+              "y": 0.4679999351501465
+            },
+            "localCenter": {
+              "x": 0.10000000149011612,
+              "z": 0,
+              "y": 0
+            },
+            "radius": 0.20000000298023224,
+            "enabled": true,
+            "center": {
+              "x": 67.41836547851562,
+              "z": 0,
+              "y": 0.75
+            },
+            "height": 1.7999999523162842,
+            "direction": 1,
+            "type": "CapsuleCollider"
+          },
+          {
+            "trigger": true,
+            "name": "ColliderForItem",
+            "enabled": false,
+            "center": {
+              "x": 67.36636352539062,
+              "z": 0,
+              "y": 0.75
+            },
+            "type": "SphereCollider",
+            "extents": {
+              "x": 0,
+              "z": 0,
+              "y": 0
+            }
+          },
+          {
+            "trigger": true,
+            "name": "ColliderForItem",
+            "extents": {
+              "x": 0.4199981689453125,
+              "z": 0.41999998688697815,
+              "y": 0.6499999761581421
+            },
+            "localCenter": {
+              "x": 0,
+              "z": 0,
+              "y": 0
+            },
+            "radius": 0.41999998688697815,
+            "enabled": true,
+            "center": {
+              "x": 67.36636352539062,
+              "z": 0,
+              "y": 0.75
+            },
+            "height": 2.5,
+            "direction": 1,
+            "type": "CapsuleCollider"
+          },
+          {
+            "trigger": true,
+            "name": "ColliderAtMount",
+            "extents": {
+              "x": 0,
+              "z": 0,
+              "y": 0
+            },
+            "localCenter": {
+              "x": 0.8299999833106995,
+              "z": 0,
+              "y": -0.36000001430511475
+            },
+            "radius": 0.6800000071525574,
+            "enabled": false,
+            "center": {
+              "x": 67.36636352539062,
+              "z": 0,
+              "y": 0.75
+            },
+            "height": 6.460000038146973,
+            "direction": 1,
+            "type": "CapsuleCollider"
+          }
+        ],
+        "seed": 73121,
+        "coins": 0,
+        "episodeTime": 3.6599972248077393,
+        "fixedDeltaTime": 0.019999999552965164,
+        "state": "Game: 8",
+        "health": 5000,
+        "only": true,
+        "position": {
+          "x": 67.36636352539062,
+          "z": 0,
+          "y": 0.75
+        },
+        "maxHealth": 5000,
+        "episodeFrame": 183,
+        "chapter": 1,
+        "level": 5,
+        "time": 120.65547943115234,
+        "mode": 6,
+        "timeScale": 0,
+        "frame": 113264,
+        "combatFamily": 3
+      },
+      "platforms": {},
+      "privileged": true
+    },
+    "action": "jump",
+    "after": {
+      "healthMultiplier": 50,
+      "speed": 18.5,
+      "physics": "jump: 14",
+      "distance": 7660.833984375,
+      "content": "Running: 1",
+      "score": 1486082.0210456848,
+      "offline": true,
+      "colliders": [
+        {
+          "trigger": true,
+          "name": "Role",
+          "extents": {
+            "x": 0.1999969482421875,
+            "z": 0.20000000298023224,
+            "y": 0.312000036239624
+          },
+          "localCenter": {
+            "x": 0.10000000149011612,
+            "z": 0,
+            "y": 0.30000001192092896
+          },
+          "radius": 0.20000000298023224,
+          "enabled": true,
+          "center": {
+            "x": 68.34333038330078,
+            "z": 0,
+            "y": 1.4505581855773926
+          },
+          "height": 1.2000000476837158,
+          "direction": 1,
+          "type": "CapsuleCollider"
+        },
+        {
+          "trigger": true,
+          "name": "ColliderForItem",
+          "enabled": false,
+          "center": {
+            "x": 68.29132843017578,
+            "z": 0,
+            "y": 1.294558048248291
+          },
+          "type": "SphereCollider",
+          "extents": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          }
+        },
+        {
+          "trigger": true,
+          "name": "ColliderForItem",
+          "extents": {
+            "x": 0.4199981689453125,
+            "z": 0.41999998688697815,
+            "y": 0.6499999761581421
+          },
+          "localCenter": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "radius": 0.41999998688697815,
+          "enabled": true,
+          "center": {
+            "x": 68.29132843017578,
+            "z": 0,
+            "y": 1.294558048248291
+          },
+          "height": 2.5,
+          "direction": 1,
+          "type": "CapsuleCollider"
+        },
+        {
+          "trigger": true,
+          "name": "ColliderAtMount",
+          "extents": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "localCenter": {
+            "x": 0.8299999833106995,
+            "z": 0,
+            "y": -0.36000001430511475
+          },
+          "radius": 0.6800000071525574,
+          "enabled": false,
+          "center": {
+            "x": 68.29132843017578,
+            "z": 0,
+            "y": 1.294558048248291
+          },
+          "height": 6.460000038146973,
+          "direction": 1,
+          "type": "CapsuleCollider"
+        }
+      ],
+      "seed": 73121,
+      "coins": 0,
+      "episodeTime": 3.7199971675872803,
+      "fixedDeltaTime": 0.019999999552965164,
+      "state": "Game: 8",
+      "health": 5000,
+      "only": true,
+      "position": {
+        "x": 68.29132843017578,
+        "z": 0,
+        "y": 1.294558048248291
+      },
+      "maxHealth": 5000,
+      "episodeFrame": 186,
+      "chapter": 1,
+      "level": 5,
+      "time": 120.70547485351562,
+      "mode": 6,
+      "timeScale": 0,
+      "frame": 113279,
+      "combatFamily": 3
+    }
+  },
+  {
+    "before": {
+      "terrain": [
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 64,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:2",
+          "finish": {
+            "x": 96,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 2,
+          "hidden": false
+        },
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 96,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:3",
+          "finish": {
+            "x": 128,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 3,
+          "hidden": false
+        },
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 128,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:4",
+          "finish": {
+            "x": 160,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 4,
+          "hidden": false
+        },
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 160,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:5",
+          "finish": {
+            "x": 212,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 5,
+          "hidden": false
+        }
+      ],
+      "schema": 1,
+      "camera": {
+        "real_right": {
+          "x": 97.48696899414062,
+          "z": 0,
+          "y": 6.556349277496338
+        },
+        "reflection_right": {
+          "x": 97.01679229736328,
+          "z": -11,
+          "y": 6.5
+        },
+        "position": {
+          "x": 89.38679504394531,
+          "z": 0,
+          "y": 2
+        },
+        "direction": 1,
+        "right": {
+          "x": 99.38679504394531,
+          "z": -11,
+          "y": 8
+        }
+      },
+      "enemies": [],
+      "role": {
+        "collider_parameters": {
+          "_jumpColliderHeight": 1.2000000476837158,
+          "_jumpColliderOffset": {
+            "x": 0.10000000149011612,
+            "z": 0,
+            "y": 0.30000001192092896
+          },
+          "_normalColliderHeight": 1.7999999523162842,
+          "_rollColliderHeight": 0.10000000149011612,
+          "_rollColliderOffset": {
+            "x": 0.05000000074505806,
+            "z": 0,
+            "y": 0
+          },
+          "_normalColliderRadius": 0.20000000298023224,
+          "_slideColliderOffset": {
+            "x": 0.05000000074505806,
+            "z": 0,
+            "y": -0.30000001192092896
+          },
+          "_rollColliderRadius": 0.10000000149011612,
+          "_normalColliderOffset": {
+            "x": 0.10000000149011612,
+            "z": 0,
+            "y": 0
+          }
+        },
+        "colliders": [
+          {
+            "parent_active": true,
+            "active": true,
+            "radius": 0.20000000298023224,
+            "height": 1.7999999523162842,
+            "trigger": true,
+            "position": {
+              "x": 85.86650085449219,
+              "z": 0,
+              "y": 0.75
+            },
+            "local_center": {
+              "x": 0.10000000149011612,
+              "z": 0,
+              "y": 0
+            },
+            "direction": 1,
+            "name": "Role",
+            "extents": {
+              "x": 0.1999969482421875,
+              "z": 0.20000000298023224,
+              "y": 0.4679999351501465
+            },
+            "tag": "Player_Ninja",
+            "rotation_z": 0,
+            "enabled": true,
+            "id": -1012212,
+            "type": "CapsuleCollider",
+            "center": {
+              "x": 85.91850280761719,
+              "z": 0,
+              "y": 0.75
+            },
+            "scale": {
+              "x": 0.5199999809265137,
+              "z": 1,
+              "y": 0.5199999809265137
+            }
+          }
+        ],
+        "god": false,
+        "mounted": false,
+        "velocity": {
+          "x": 18.499990463256836,
+          "z": 0,
+          "y": 0
+        },
+        "data": {
+          "_jumpForce4": 8.5,
+          "_downGravity2": -9.800000190734863,
+          "_jumpForce2": 12.5,
+          "_glideMaxSpeed": 2.5,
+          "_downGravity3": -9.800000190734863,
+          "_moveSpeed": 18.5,
+          "_glideAccSpeed": 1,
+          "_glideMinSpeed": -2,
+          "_ninjaFootPoint": 0.75,
+          "_normalGravity": -19.799999237060547,
+          "_rollAirDownUpSpeed": 28,
+          "_driveForce": 5,
+          "_upGravity2": -9.800000190734863,
+          "_upGravity1": -25,
+          "_downGravity1": -9,
+          "_jumpForce3": 12,
+          "_glideUpForce": 5,
+          "_ninjaHeight": 1,
+          "_upGravity3": -9.800000190734863,
+          "_jumpForce1": 23.5,
+          "_rollDownUpSpeed": 8,
+          "_downGravity4": -9.800000190734863,
+          "_upGravity4": -9.800000190734863,
+          "_climbDistance": 0.800000011920929
+        },
+        "gravity": 0,
+        "fields": {
+          "_lastFixedUpdateTime": 121.63999938964844
+        }
+      },
+      "supports": [
+        {
+          "info": {
+            "_posZ": 0,
+            "isNeedShowSpeedUp": true,
+            "_cameraOffsetAnchorY": 0,
+            "_hideGround": false,
+            "_infiniteLoop": false,
+            "_ninjaSpeed": 18.5,
+            "_repeatTimesMax": 1,
+            "_canClimb": true,
+            "_groundType": "line: 0",
+            "_isDeadBlockOffsetY": 0,
+            "_initialDeadBlockOffsetY": 0,
+            "_repeatTimesMin": 1
+          },
+          "is_line": true,
+          "stage_index": 0,
+          "is_ground": false,
+          "id": -980794,
+          "finish": {
+            "x": 96,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 2,
+          "start": {
+            "x": 64,
+            "z": 0,
+            "y": 0
+          }
+        },
+        {
+          "info": {
+            "_posZ": 0,
+            "isNeedShowSpeedUp": true,
+            "_cameraOffsetAnchorY": 0,
+            "_hideGround": false,
+            "_infiniteLoop": false,
+            "_ninjaSpeed": 18.5,
+            "_repeatTimesMax": 1,
+            "_canClimb": true,
+            "_groundType": "line: 0",
+            "_isDeadBlockOffsetY": 0,
+            "_initialDeadBlockOffsetY": 0,
+            "_repeatTimesMin": 1
+          },
+          "is_line": true,
+          "stage_index": 0,
+          "is_ground": false,
+          "id": -980766,
+          "finish": {
+            "x": 128,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 3,
+          "start": {
+            "x": 96,
+            "z": 0,
+            "y": 0
+          }
+        }
+      ],
+      "board": {
+        "stage_start": 0,
+        "map_id": 41,
+        "stage_index": 0,
+        "block_index": 2,
+        "stage_id": 51012
+      },
+      "support_id": -980794,
+      "state": {
+        "healthMultiplier": 50,
+        "speed": 18.5,
+        "physics": "runOnLine: 1",
+        "distance": 7678.2294921875,
+        "content": "Running: 1",
+        "score": 1487821.0339546204,
+        "offline": true,
+        "colliders": [
+          {
+            "trigger": true,
+            "name": "Role",
+            "extents": {
+              "x": 0.1999969482421875,
+              "z": 0.20000000298023224,
+              "y": 0.4679999351501465
+            },
+            "localCenter": {
+              "x": 0.10000000149011612,
+              "z": 0,
+              "y": 0
+            },
+            "radius": 0.20000000298023224,
+            "enabled": true,
+            "center": {
+              "x": 85.91850280761719,
+              "z": 0,
+              "y": 0.75
+            },
+            "height": 1.7999999523162842,
+            "direction": 1,
+            "type": "CapsuleCollider"
+          },
+          {
+            "trigger": true,
+            "name": "ColliderForItem",
+            "enabled": false,
+            "center": {
+              "x": 85.86650085449219,
+              "z": 0,
+              "y": 0.75
+            },
+            "type": "SphereCollider",
+            "extents": {
+              "x": 0,
+              "z": 0,
+              "y": 0
+            }
+          },
+          {
+            "trigger": true,
+            "name": "ColliderForItem",
+            "extents": {
+              "x": 0.4199981689453125,
+              "z": 0.41999998688697815,
+              "y": 0.6499999761581421
+            },
+            "localCenter": {
+              "x": 0,
+              "z": 0,
+              "y": 0
+            },
+            "radius": 0.41999998688697815,
+            "enabled": true,
+            "center": {
+              "x": 85.86650085449219,
+              "z": 0,
+              "y": 0.75
+            },
+            "height": 2.5,
+            "direction": 1,
+            "type": "CapsuleCollider"
+          },
+          {
+            "trigger": true,
+            "name": "ColliderAtMount",
+            "extents": {
+              "x": 0,
+              "z": 0,
+              "y": 0
+            },
+            "localCenter": {
+              "x": 0.8299999833106995,
+              "z": 0,
+              "y": -0.36000001430511475
+            },
+            "radius": 0.6800000071525574,
+            "enabled": false,
+            "center": {
+              "x": 85.86650085449219,
+              "z": 0,
+              "y": 0.75
+            },
+            "height": 6.460000038146973,
+            "direction": 1,
+            "type": "CapsuleCollider"
+          }
+        ],
+        "seed": 73121,
+        "coins": 0,
+        "episodeTime": 4.659996509552002,
+        "fixedDeltaTime": 0.019999999552965164,
+        "state": "Game: 8",
+        "health": 5000,
+        "only": true,
+        "position": {
+          "x": 85.86650085449219,
+          "z": 0,
+          "y": 0.75
+        },
+        "maxHealth": 5000,
+        "episodeFrame": 233,
+        "chapter": 1,
+        "level": 5,
+        "time": 121.65547943115234,
+        "mode": 6,
+        "timeScale": 0,
+        "frame": 113694,
+        "combatFamily": 3
+      },
+      "platforms": {},
+      "privileged": true
+    },
+    "action": "down",
+    "after": {
+      "healthMultiplier": 50,
+      "speed": 18.5,
+      "physics": "rollToLineDown: 3",
+      "distance": 7679.33984375,
+      "content": "Running: 1",
+      "score": 1487932.034778595,
+      "offline": true,
+      "colliders": [
+        {
+          "trigger": true,
+          "name": "Role",
+          "extents": {
+            "x": 0.100006103515625,
+            "z": 0.10000000149011612,
+            "y": 0.10000251233577728
+          },
+          "localCenter": {
+            "x": 0.05000000074505806,
+            "z": 0,
+            "y": 0
+          },
+          "radius": 0.10000000149011612,
+          "enabled": true,
+          "center": {
+            "x": 86.77845764160156,
+            "z": 0,
+            "y": 0.5236632227897644
+          },
+          "height": 0.10000000149011612,
+          "direction": 1,
+          "type": "CapsuleCollider"
+        },
+        {
+          "trigger": true,
+          "name": "ColliderForItem",
+          "enabled": true,
+          "center": {
+            "x": 86.79146575927734,
+            "z": 0,
+            "y": 0.5461769104003906
+          },
+          "type": "SphereCollider",
+          "extents": {
+            "x": 0.40000152587890625,
+            "z": 0.4000000059604645,
+            "y": 0.3999999761581421
+          }
+        },
+        {
+          "trigger": true,
+          "name": "ColliderForItem",
+          "extents": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "localCenter": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "radius": 0.41999998688697815,
+          "enabled": false,
+          "center": {
+            "x": 86.79146575927734,
+            "z": 0,
+            "y": 0.5461769104003906
+          },
+          "height": 2.5,
+          "direction": 1,
+          "type": "CapsuleCollider"
+        },
+        {
+          "trigger": true,
+          "name": "ColliderAtMount",
+          "extents": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "localCenter": {
+            "x": 0.8299999833106995,
+            "z": 0,
+            "y": -0.36000001430511475
+          },
+          "radius": 0.6800000071525574,
+          "enabled": false,
+          "center": {
+            "x": 86.79146575927734,
+            "z": 0,
+            "y": 0.5461769104003906
+          },
+          "height": 6.460000038146973,
+          "direction": 1,
+          "type": "CapsuleCollider"
+        }
+      ],
+      "seed": 73121,
+      "coins": 0,
+      "episodeTime": 4.719996452331543,
+      "fixedDeltaTime": 0.019999999552965164,
+      "state": "Game: 8",
+      "health": 5000,
+      "only": true,
+      "position": {
+        "x": 86.79146575927734,
+        "z": 0,
+        "y": 0.5461769104003906
+      },
+      "maxHealth": 5000,
+      "episodeFrame": 236,
+      "chapter": 1,
+      "level": 5,
+      "time": 121.70547485351562,
+      "mode": 6,
+      "timeScale": 0,
+      "frame": 113707,
+      "combatFamily": 3
+    }
+  },
+  {
+    "before": {
+      "terrain": [
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 64,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:2",
+          "finish": {
+            "x": 96,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 2,
+          "hidden": false
+        },
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 96,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:3",
+          "finish": {
+            "x": 128,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 3,
+          "hidden": false
+        },
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 128,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:4",
+          "finish": {
+            "x": 160,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 4,
+          "hidden": false
+        },
+        {
+          "death_offset_y": 0,
+          "speed": 18.5,
+          "stage_index": 0,
+          "start": {
+            "x": 160,
+            "z": 0,
+            "y": 0
+          },
+          "kind": "line: 0",
+          "id": "resolved:0:5",
+          "finish": {
+            "x": 212,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 5,
+          "hidden": false
+        }
+      ],
+      "schema": 1,
+      "camera": {
+        "real_right": {
+          "x": 102.66700744628906,
+          "z": 0,
+          "y": 5.556349277496338
+        },
+        "reflection_right": {
+          "x": 102.19683074951172,
+          "z": -11,
+          "y": 5.5
+        },
+        "position": {
+          "x": 94.56683349609375,
+          "z": 0,
+          "y": 1
+        },
+        "direction": 1,
+        "right": {
+          "x": 104.56683349609375,
+          "z": -11,
+          "y": 7
+        }
+      },
+      "enemies": [],
+      "role": {
+        "collider_parameters": {
+          "_jumpColliderHeight": 1.2000000476837158,
+          "_jumpColliderOffset": {
+            "x": 0.10000000149011612,
+            "z": 0,
+            "y": 0.30000001192092896
+          },
+          "_normalColliderHeight": 1.7999999523162842,
+          "_rollColliderHeight": 0.10000000149011612,
+          "_rollColliderOffset": {
+            "x": 0.05000000074505806,
+            "z": 0,
+            "y": 0
+          },
+          "_normalColliderRadius": 0.20000000298023224,
+          "_slideColliderOffset": {
+            "x": 0.05000000074505806,
+            "z": 0,
+            "y": -0.30000001192092896
+          },
+          "_rollColliderRadius": 0.10000000149011612,
+          "_normalColliderOffset": {
+            "x": 0.10000000149011612,
+            "z": 0,
+            "y": 0
+          }
+        },
+        "colliders": [
+          {
+            "parent_active": true,
+            "active": true,
+            "radius": 0.20000000298023224,
+            "height": 1.7999999523162842,
+            "trigger": true,
+            "position": {
+              "x": 91.10821533203125,
+              "z": 0,
+              "y": -0.75
+            },
+            "local_center": {
+              "x": 0.10000000149011612,
+              "z": 0,
+              "y": 0
+            },
+            "direction": 1,
+            "name": "Role",
+            "extents": {
+              "x": 0.1999969482421875,
+              "z": 0.20000003278255463,
+              "y": 0.4679999351501465
+            },
+            "tag": "Player_Ninja",
+            "rotation_z": 180,
+            "enabled": true,
+            "id": -1012212,
+            "type": "CapsuleCollider",
+            "center": {
+              "x": 91.16021728515625,
+              "z": 0,
+              "y": -0.75
+            },
+            "scale": {
+              "x": 0.5199999809265137,
+              "z": 1,
+              "y": 0.5199999809265137
+            }
+          }
+        ],
+        "god": false,
+        "mounted": false,
+        "velocity": {
+          "x": 18.499990463256836,
+          "z": 0,
+          "y": 0
+        },
+        "data": {
+          "_jumpForce4": 8.5,
+          "_downGravity2": -9.800000190734863,
+          "_jumpForce2": 12.5,
+          "_glideMaxSpeed": 2.5,
+          "_downGravity3": -9.800000190734863,
+          "_moveSpeed": 18.5,
+          "_glideAccSpeed": 1,
+          "_glideMinSpeed": -2,
+          "_ninjaFootPoint": 0.75,
+          "_normalGravity": -19.799999237060547,
+          "_rollAirDownUpSpeed": 28,
+          "_driveForce": 5,
+          "_upGravity2": -9.800000190734863,
+          "_upGravity1": -25,
+          "_downGravity1": -9,
+          "_jumpForce3": 12,
+          "_glideUpForce": 5,
+          "_ninjaHeight": 1,
+          "_upGravity3": -9.800000190734863,
+          "_jumpForce1": 23.5,
+          "_rollDownUpSpeed": 8,
+          "_downGravity4": -9.800000190734863,
+          "_upGravity4": -9.800000190734863,
+          "_climbDistance": 0.800000011920929
+        },
+        "gravity": 0,
+        "fields": {
+          "_lastFixedUpdateTime": 121.91999816894531
+        }
+      },
+      "supports": [
+        {
+          "info": {
+            "_posZ": 0,
+            "isNeedShowSpeedUp": true,
+            "_cameraOffsetAnchorY": 0,
+            "_hideGround": false,
+            "_infiniteLoop": false,
+            "_ninjaSpeed": 18.5,
+            "_repeatTimesMax": 1,
+            "_canClimb": true,
+            "_groundType": "line: 0",
+            "_isDeadBlockOffsetY": 0,
+            "_initialDeadBlockOffsetY": 0,
+            "_repeatTimesMin": 1
+          },
+          "is_line": true,
+          "stage_index": 0,
+          "is_ground": false,
+          "id": -980794,
+          "finish": {
+            "x": 96,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 2,
+          "start": {
+            "x": 64,
+            "z": 0,
+            "y": 0
+          }
+        },
+        {
+          "info": {
+            "_posZ": 0,
+            "isNeedShowSpeedUp": true,
+            "_cameraOffsetAnchorY": 0,
+            "_hideGround": false,
+            "_infiniteLoop": false,
+            "_ninjaSpeed": 18.5,
+            "_repeatTimesMax": 1,
+            "_canClimb": true,
+            "_groundType": "line: 0",
+            "_isDeadBlockOffsetY": 0,
+            "_initialDeadBlockOffsetY": 0,
+            "_repeatTimesMin": 1
+          },
+          "is_line": true,
+          "stage_index": 0,
+          "is_ground": false,
+          "id": -980766,
+          "finish": {
+            "x": 128,
+            "z": 0,
+            "y": 0
+          },
+          "block_index": 3,
+          "start": {
+            "x": 96,
+            "z": 0,
+            "y": 0
+          }
+        }
+      ],
+      "board": {
+        "stage_start": 0,
+        "map_id": 41,
+        "stage_index": 0,
+        "block_index": 2,
+        "stage_id": 51012
+      },
+      "support_id": -980794,
+      "state": {
+        "healthMultiplier": 50,
+        "speed": 18.5,
+        "physics": "runOnLineDown: 2",
+        "distance": 7683.4111328125,
+        "content": "Running: 1",
+        "score": 1488339.0377998352,
+        "offline": true,
+        "colliders": [
+          {
+            "trigger": true,
+            "name": "Role",
+            "extents": {
+              "x": 0.1999969482421875,
+              "z": 0.20000003278255463,
+              "y": 0.4679999351501465
+            },
+            "localCenter": {
+              "x": 0.10000000149011612,
+              "z": 0,
+              "y": 0
+            },
+            "radius": 0.20000000298023224,
+            "enabled": true,
+            "center": {
+              "x": 91.16021728515625,
+              "z": 0,
+              "y": -0.75
+            },
+            "height": 1.7999999523162842,
+            "direction": 1,
+            "type": "CapsuleCollider"
+          },
+          {
+            "trigger": true,
+            "name": "ColliderForItem",
+            "enabled": false,
+            "center": {
+              "x": 91.10821533203125,
+              "z": 0,
+              "y": -0.75
+            },
+            "type": "SphereCollider",
+            "extents": {
+              "x": 0,
+              "z": 0,
+              "y": 0
+            }
+          },
+          {
+            "trigger": true,
+            "name": "ColliderForItem",
+            "extents": {
+              "x": 0.4199981689453125,
+              "z": 0.42000001668930054,
+              "y": 0.6499999761581421
+            },
+            "localCenter": {
+              "x": 0,
+              "z": 0,
+              "y": 0
+            },
+            "radius": 0.41999998688697815,
+            "enabled": true,
+            "center": {
+              "x": 91.10821533203125,
+              "z": 0,
+              "y": -0.75
+            },
+            "height": 2.5,
+            "direction": 1,
+            "type": "CapsuleCollider"
+          },
+          {
+            "trigger": true,
+            "name": "ColliderAtMount",
+            "extents": {
+              "x": 0,
+              "z": 0,
+              "y": 0
+            },
+            "localCenter": {
+              "x": 0.8299999833106995,
+              "z": 0,
+              "y": -0.36000001430511475
+            },
+            "radius": 0.6800000071525574,
+            "enabled": false,
+            "center": {
+              "x": 91.10821533203125,
+              "z": 0,
+              "y": -0.75
+            },
+            "height": 6.460000038146973,
+            "direction": 1,
+            "type": "CapsuleCollider"
+          }
+        ],
+        "seed": 73121,
+        "coins": 0,
+        "episodeTime": 4.939996242523193,
+        "fixedDeltaTime": 0.019999999552965164,
+        "state": "Game: 8",
+        "health": 5000,
+        "only": true,
+        "position": {
+          "x": 91.10821533203125,
+          "z": 0,
+          "y": -0.75
+        },
+        "maxHealth": 5000,
+        "episodeFrame": 247,
+        "chapter": 1,
+        "level": 5,
+        "time": 121.93881225585938,
+        "mode": 6,
+        "timeScale": 0,
+        "frame": 113812,
+        "combatFamily": 3
+      },
+      "platforms": {},
+      "privileged": true
+    },
+    "action": "jump",
+    "after": {
+      "healthMultiplier": 50,
+      "speed": 18.5,
+      "physics": "rollToLineOn: 4",
+      "distance": 7684.521484375,
+      "content": "Running: 1",
+      "score": 1488450.0386238098,
+      "offline": true,
+      "colliders": [
+        {
+          "trigger": true,
+          "name": "Role",
+          "extents": {
+            "x": 0.100006103515625,
+            "z": 0.10000000149011612,
+            "y": 0.10000251233577728
+          },
+          "localCenter": {
+            "x": 0.05000000074505806,
+            "z": 0,
+            "y": 0
+          },
+          "radius": 0.10000000149011612,
+          "enabled": true,
+          "center": {
+            "x": 92.02018737792969,
+            "z": 0,
+            "y": -0.5420187711715698
+          },
+          "height": 0.10000000149011612,
+          "direction": 1,
+          "type": "CapsuleCollider"
+        },
+        {
+          "trigger": true,
+          "name": "ColliderForItem",
+          "enabled": true,
+          "center": {
+            "x": 92.03318786621094,
+            "z": 0,
+            "y": -0.5195045471191406
+          },
+          "type": "SphereCollider",
+          "extents": {
+            "x": 0.40000152587890625,
+            "z": 0.4000000059604645,
+            "y": 0.3999999761581421
+          }
+        },
+        {
+          "trigger": true,
+          "name": "ColliderForItem",
+          "extents": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "localCenter": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "radius": 0.41999998688697815,
+          "enabled": false,
+          "center": {
+            "x": 92.03318786621094,
+            "z": 0,
+            "y": -0.5195045471191406
+          },
+          "height": 2.5,
+          "direction": 1,
+          "type": "CapsuleCollider"
+        },
+        {
+          "trigger": true,
+          "name": "ColliderAtMount",
+          "extents": {
+            "x": 0,
+            "z": 0,
+            "y": 0
+          },
+          "localCenter": {
+            "x": 0.8299999833106995,
+            "z": 0,
+            "y": -0.36000001430511475
+          },
+          "radius": 0.6800000071525574,
+          "enabled": false,
+          "center": {
+            "x": 92.03318786621094,
+            "z": 0,
+            "y": -0.5195045471191406
+          },
+          "height": 6.460000038146973,
+          "direction": 1,
+          "type": "CapsuleCollider"
+        }
+      ],
+      "seed": 73121,
+      "coins": 0,
+      "episodeTime": 4.999996185302734,
+      "fixedDeltaTime": 0.019999999552965164,
+      "state": "Game: 8",
+      "health": 5000,
+      "only": true,
+      "position": {
+        "x": 92.03318786621094,
+        "z": 0,
+        "y": -0.5195045471191406
+      },
+      "maxHealth": 5000,
+      "episodeFrame": 250,
+      "chapter": 1,
+      "level": 5,
+      "time": 121.98880767822266,
+      "mode": 6,
+      "timeScale": 0,
+      "frame": 113825,
+      "combatFamily": 3
+    }
+  }
+]
