@@ -43,6 +43,7 @@ def _window(gate,*,searcher,history,initial_point,initial_state,board_code,tree_
                      'decision_cache_hits','timing_spacing_pruned','redundant_restores_skipped'):
             stats[name]=sum(s.get(name,0)for s in proposal_stats)
         stats['restores_ms']=[v for s in proposal_stats for v in s.get('restores_ms',[])]
+        stats['native_decisions']=[v for s in proposal_stats for v in s.get('native_decisions',[])]
         stats['trials']=stats['total_candidate_trials']=used
         stats['proposals']=len(proposal_stats)
         result['timing_attempts']=audits

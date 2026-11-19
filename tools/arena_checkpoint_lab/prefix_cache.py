@@ -9,6 +9,7 @@ class PrefixCache:
         self.points=set()
         self.unsafe=set()
         self.decisions={}
+        self.observations={}
 
     def bind(self,root,start,offset,horizon,last_input_frame):
         context=(root,id(start),offset,horizon,last_input_frame)
@@ -24,4 +25,4 @@ class PrefixCache:
 
     def close(self,gate,keep=()):
         for point in self.points-set(keep):gate.drop(point)
-        self.points.clear();self.transitions.clear();self.unsafe.clear();self.decisions.clear()
+        self.points.clear();self.transitions.clear();self.unsafe.clear();self.decisions.clear();self.observations.clear()

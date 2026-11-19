@@ -284,7 +284,8 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
     if native_decision and not retain_history:raise ValueError('Timing repair needs retained original checkpoints')
     names=('search.py','render.py','gate.py','game_gate.lua')+(
         ('worker_file.rs','ram_file.rs','ram_file.patch','ram_restore.patch','restore_trace.patch')if retain_history else('worker.rs',))
-    if native_decision:names+=('native_policy.py','native_observation.lua','timing_margin.py','guided_search.py')
+    if native_decision:names+=('native_policy.py','native_observation.lua','native_planner.py',
+                              'prefix_cache.py','timing_margin.py','guided_search.py')
     sources = {name: (LOADED_SOURCE if name == 'search.py' else (Path(__file__).parent / name).read_bytes())
                for name in names}
     if collector is not None:
@@ -317,7 +318,7 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
         report['worker_capabilities']=gate.vm.request('status')['result']
         report['source_scope']='Editor source snapshot; the executable SHA identifies the actual running backend'
     if retain_history:report['algorithm']='Original-engine input-count DFS with whole-VM cross-window backtracking'
-    if native_decision:report['algorithm']='Native-policy limited-discrepancy search with exact-engine lookahead and independent 80ms operation windows'
+    if native_decision:report['algorithm']='Native trajectory beam with scored original-engine states and independent +/-40ms endpoints'
     report['backtracks']=[]
     history=[]
     nominal=[]
@@ -375,7 +376,8 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
                     early_jump=retain_history and not native_decision)
                 if native_decision:
                     from guided_search import window as guided_window
-                    window=guided_window(gate,searcher=search_window,history=nominal,
+                    from native_planner import search_window as plan_window
+                    window=guided_window(gate,searcher=plan_window,history=nominal,
                         initial_point=report['initial_ram_root']['result']['id'],initial_state=start['state'],
                         board_code=BOARD,**arguments)
                 else:window=search_window(gate,**arguments)

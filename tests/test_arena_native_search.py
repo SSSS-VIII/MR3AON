@@ -431,7 +431,8 @@ def test_cross_window_dead_end_restores_an_earlier_real_root_and_changes_its_inp
     monkeypatch.syspath_prepend(str(SOURCE.parent))
     checks=[]
     if quality:
-        import guided_search,timing_margin
+        import guided_search,timing_margin,native_planner
+        monkeypatch.setattr(native_planner,'search_window',search.search_window)
         def proposed(gate,*,searcher,history,initial_point,initial_state,board_code,**kwargs):
             return searcher(gate,**kwargs)
         def verify(gate,rows,**kwargs):
