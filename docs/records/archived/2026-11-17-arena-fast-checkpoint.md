@@ -786,3 +786,16 @@ b512260仅延续软评分建议：沿已实际提交的输入帧/动作前缀剥
 v17第70窗候选已抵达原生出口。完整VM入口重新执行的名义场景记录为563步、30个有序输入、native_exit、5000血，输出在本run search/timing-validation.jsonl的attempt69/scenario0；这是原生名义结果，尚不是容差合格路线或实机无伤。只读owner探针已确认timing_margin.verify处于whole_board_suffix、operations30，并继续场景1；整板单键两端、连续/相邻组合与新入口复验尚未完成，不能只根据局部端点或名义出口放行。整板审计内report仍保留最后69个已提交窗/382.84m/28键，日志已有第70窗及名义场景，暂不更新不等于搜索停滞。
 
 本次仍只搜索53042，原v16及旧watch不恢复。独立有限finish-v17仅当新队列native_passed、timing_robust且有route时编库和三seed各3轮实机验收，否则记录跳过；默认库未改。新整板合格及稳定视觉数量仍为0，后续以完整证书和实机回执更新。
+
+
+### 真实按键发送限制未进入原生容差验证（11月19日）
+
+跟进v17整板检查时补查FrameServer.Keys发现独立缺口：普通K/S脉冲保持80ms，slide保持S 500ms；held.containsKey(code)时直接return，而协议仍返回正常入队ACK。原生gate直接调用原UI输入，因此可能执行一组真实Android发送器会合并的同键操作。53042候选含约133ms的连跳，两键相向偏移可把间隔压至约33ms；“固定策略没有额外连按计时”只说明策略分支，不能推广到发送端。此前未发现额外限制的表述不完整。**此处尚无证据把早上50022的350伤害归因于吞键**，原真实时钟/物理前缀反例与本缺口分别成立。
+
+v17及finish-v17均已停止：搜索在下一原生指令之前协作退出，最后70窗/30键，complete=false/interrupted=true，已完成的30项整板场景保留；它们没有形成合格证书，不作为可用跑法继续发布。停止实录在该run search/transport-stop-partial.json，旧队列不续用。
+
+5ac2ec0保持实际80/500ms脉冲和原物理/按键桥/陷阱不变，只增加宿主发送契约。planner沿当前真实历史按K/S分别查上一次同键，预留按住时长、一帧松键可见时间以及两端渲染取整的误差半径；不同键不互相套此保持限制。单键/连续原生复验按各次实际Unity输入时间检查，普通同键至少96.667ms，slide后的S至少516.667ms，不满足就拒绝且按实际失败键剪枝。提案的额外间隔只是搜索指导，真实前缀测量仍是验收依据。证书升级v3，必须带发送profile、规范动作与实际前提及完整原有时钟/有序操作证据；编库/运行时均拒绝旧证书，新增源码进入冻结及实机fingerprint。FrameServer只把原常量命名，build_server检查它们与发送profile一致，未改变运行时脉冲行为。
+
+214项针对回归及Android DEX构建通过；原Java Keys类体抽取后用模拟Android注入接口运行，立即同键重发只产生1次Down，释放后再发累计2次，报告fixed-route-work/key-transport-java/report.json。这是原发送器逻辑的隔离验证，**不是实机Unity收键实验**。独立arena-search原生对照在transport-recheck-1795091907617776225：短双跳名义、单键端点和其余连续模式均能执行，第9个场景[+40,−40]的实际间隔66.665649ms，在HP5000时按input_transport_repeat_too_close拒绝；宽间隔双跳9场景全过。两组完整VM入口状态均恢复相等，manifest passed=true，研究进程正常退出。此短安全片段不计无伤整板或视觉成绩，也不证明所有按住/松开行为、负载或时相均已覆盖。
+
+修复后从新的batch-transport-v3-fresh-20261119启动v18（PID989942），只53042/max-cases=1，不沿用v17任何路径、warm缓存或证书；初始记录fresh-v18-restart.json包含旧搜索停止、反例/正例、Java测试和源码提交。新原生准入、板头及实际产物尚待跟进。独立finish-v18只待本轮结束，合格才一次编入runtime-transport-v3-fresh，并在live-transport-v3-fresh做三seed各3轮有限实机验收；没有合格产物则记录跳过后退出，无长期watch、无下一case、无默认库晋升。当前稳定可用仍0/407。
