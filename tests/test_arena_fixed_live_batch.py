@@ -72,3 +72,30 @@ def test_baselines_cover_step_uniform_and_real_clocks_once_per_frozen_route(tmp_
     assert len(batch.baseline_pending(tmp_path,{'a':{}},ledger))==1
     route.write_text('{}')
     with pytest.raises(RuntimeError,match='changed'):batch.baseline_pending(tmp_path,{'a':{}},ledger)
+
+
+def test_stability_needs_every_repeat_and_new_actor_versions_cannot_inherit_old_passes(tmp_path,monkeypatch):
+    monkeypatch.setattr(batch,'fingerprint',lambda b,s:'v1-'+str(s))
+    (tmp_path/'programs.json').write_text(json.dumps(dict(programs={'a':dict(native_passed=True,timing_robust=True)})))
+    cases={'a':dict(level=5)};jobs=batch.pending(tmp_path,cases,{},[1,2,3],repeats=3)
+    assert len(jobs)==9 and len({j['job']for j in jobs})==9
+    ledger={j['job']:dict(status='graded',grade=dict(live_runner_verified=True))for j in jobs}
+    assert batch.stability(tmp_path,cases,ledger,[1,2,3],repeats=3)['cases']['a']['stable_no_damage']
+    ledger[jobs[3]['job']]['grade']['live_runner_verified']=False
+    assert not batch.stability(tmp_path,cases,ledger,[1,2,3],repeats=3)['cases']['a']['stable_no_damage']
+    ledger.pop(jobs[3]['job'])
+    state=batch.stability(tmp_path,cases,ledger,[1,2,3],repeats=3)['cases']['a']
+    assert not state['stable_no_damage']and state['pending']==1
+    monkeypatch.setattr(batch,'fingerprint',lambda b,s:'v2-'+str(s))
+    assert batch.stability(tmp_path,cases,ledger,[1,2,3],repeats=3)['cases']['a']['pending']==9
+
+
+def test_frozen_bank_config_is_explicit_and_cannot_follow_a_later_symlink(tmp_path):
+    first=tmp_path/'bundles/first';second=tmp_path/'bundles/second';first.mkdir(parents=True);second.mkdir()
+    current=tmp_path/'current';current.symlink_to(first)
+    output=tmp_path/'checks';path=batch.frozen_config(current,output)
+    current.unlink();current.symlink_to(second)
+    assert json.loads(path.read_text())['bundle']==str(first.resolve())
+    assert batch.frozen_config(current,output)!=path
+    path.write_text('{}')
+    with pytest.raises(RuntimeError,match='changed'):batch.frozen_config(first,output)

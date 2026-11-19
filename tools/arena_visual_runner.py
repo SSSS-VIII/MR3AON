@@ -219,7 +219,10 @@ def run(args):
         perception=Perception();detector_info=None
     policy=MpcAvoider() if detector_weights else Avoider()
     from arena_fixed_policy import load as load_fixed_routes
-    policy=load_fixed_routes(policy,detector_sha256=detector_info.get('sha256')if detector_info else None)
+    fixed_config=getattr(args,'fixed_routes',None)
+    fixed_options={'config':fixed_config}if fixed_config is not None else{}
+    policy=load_fixed_routes(policy,**fixed_options,
+                            detector_sha256=detector_info.get('sha256')if detector_info else None)
     policy_samples={False:deque(maxlen=32),True:deque(maxlen=32)}
     policy_times,compute_priors=[],[]
     decision_cadence=DecisionCadence()
@@ -249,11 +252,14 @@ def run(args):
     if capture_type is not FastCapture:
         sources+=('tools/arena_render_capture.py','arena/Local/render_capture.lua','arena/Capture/RenderRelay.java')
     source_hashes={name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest()for name in sources}
+    if fixed_config is not None:
+        source_hashes[str(fixed_config.resolve())]=hashlib.sha256(fixed_config.read_bytes()).hexdigest()
     initial = prepare(client, args.seed, args.level, args.map, pins,start=start_board)
     (args.output / 'setup.json').write_text(json.dumps(dict(seed=args.seed, level=args.level,
         map=args.map, start=start_board,goal_stage_index=goal,pins=pins, observe=args.observe_only, initial=initial,sources=source_hashes,
         capture_source=getattr(capture_type,'source_name','android_display'),
         detector=detector_info,fixed_route_assets=getattr(policy,'runtime_assets',None),
+        fixed_route_config=str(fixed_config.resolve())if fixed_config is not None else None,
         policy=dict(continuous_collision=getattr(policy,'continuous_collision',False),
         line_camera_recovery=getattr(getattr(perception,'supports',None),'line_camera_recovery',False),
         texture_camera_recovery=getattr(getattr(perception,'supports',None),'texture_camera_recovery',False),
@@ -518,6 +524,7 @@ def main():
     p.add_argument('--boards', type=int, default=3, help='Number of complete boards to evaluate from --start')
     p.add_argument('--fps', type=int, default=40)
     p.add_argument('--observe-only', action='store_true')
+    p.add_argument('--fixed-routes',type=Path,help='Frozen fixed-route bank configuration for this run')
     p.add_argument('--detector-weights',type=Path,default=DEFAULT_WEIGHTS,
                    help='Fine-tuned standard YOLO checkpoint; defaults to reviewed profile')
     p.add_argument('--output', type=Path,default=ROOT/'debug/arena-client/visual-runs'/str(time.time_ns()))

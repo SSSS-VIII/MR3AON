@@ -4,6 +4,7 @@ import bisect
 import hashlib
 import json
 import math
+from collections import Counter
 from pathlib import Path
 
 
@@ -12,6 +13,33 @@ def percentile(values, fraction):
         return None
     ordered=sorted(values)
     return ordered[min(len(ordered)-1, math.ceil(fraction*len(ordered))-1)]
+
+
+def sequence_review(estimates,actions,program,key):
+    """Require every tape event to have one acknowledged, ordered submission."""
+    recorded=[]
+    for row in estimates:
+        control=row.get('fixed_route',{});commit=row.get('action_commit')or{}
+        if (not row.get('action')or control.get('mode')!='fixed'
+                or not row.get('reason','').startswith('fixed_route_')):continue
+        recorded.append(dict(index=control.get('event'),action=row['action'],
+            time=commit.get('committed_time'),key=control.get('board',{}).get('key')))
+    fixed=[a for a in actions if a.get('reason','').startswith('fixed_route_')]
+    expected=program['events']
+    ordered=([r['index']for r in recorded]==list(range(len(expected)))
+             and all(r['action']==e['action']and r['key']==key
+                     and type(r['time'])in(int,float)and math.isfinite(r['time'])
+                     for r,e in zip(recorded,expected)))
+    matched=(Counter((r['time'],r['action'])for r in recorded)==
+             Counter((a.get('committed_time'),a.get('action'))for a in fixed))
+    off_tape=[a for a in actions if not a.get('reason','').startswith('fixed_route_')]
+    locked=any(row.get('fixed_route',{}).get('mode')=='fixed'
+               and row.get('fixed_route',{}).get('board',{}).get('key')==key for row in estimates)
+    return dict(complete=bool(ordered and matched and len(fixed)==len(expected)
+                              and not off_tape and (expected or locked)),
+                expected=len(expected),recorded_indices=[r['index']for r in recorded],
+                acknowledged_fixed_keys=len(fixed),ordered=ordered,
+                report_matches_frames=matched,off_tape_keys=len(off_tape))
 
 
 def review(folder, case, program):
@@ -66,8 +94,12 @@ def review(folder, case, program):
     # Require actual fixed execution. Merely loading a library, or passing
     # under the old reactive policy, does not validate a fixed input program.
     fixed_keys=sum(a.get('reason','').startswith('fixed_route_')for a in report['actions'])
-    executed=(fixed_keys>0 if program['events'] else any(
-        row.get('fixed_route',{}).get('mode')=='fixed' for row in estimates))
+    sequence=sequence_review(estimates,report['actions'],program,case['key'])
+    executed=sequence['complete']
+    expected_keys=Counter('jump'if e['action']=='jump'else'down'for e in program['events'])
+    received=report['final'].get('keys',{})
+    native_keys_match=all(type(received.get(key))is int and received[key]==expected_keys[key]
+                          for key in('jump','down'))
     detector_verified=bool(seen>=20 and control_frames>=20 and control_identified/control_frames>=.95
                            and control_localized/control_frames>=.95
                            and wrong_identity==0 and len(errors)>=20 and percentile(errors,.95)<=.5)
@@ -81,7 +113,10 @@ def review(folder, case, program):
                     and final['stageStartX']>initial['stageStartX']+.01
                     and final.get('stageInstance')is not None
                     and final['stageInstance']!=initial.get('stageInstance'))
-    live_verified=bool(selection_ok and detector_verified and executed and exited
+    target_samples=[row for row in native if (row['map'],row['stageIndex'],row['stageID'])==target]
+    unprotected=bool(setup['initial'].get('god')is False and setup['initial'].get('health')==5000
+        and target_samples and all(row.get('god')is False for row in target_samples))
+    live_verified=bool(selection_ok and detector_verified and executed and exited and unprotected and native_keys_match
                        and setup.get('fixed_route_assets') and not final.get('god',True)
                        and report['status']=='passed' and not report['had_damage']
                        and not report.get('evaluation_error') and report['final']['health']>0
@@ -98,7 +133,9 @@ def review(folder, case, program):
                 progress_error_m=dict(median=percentile(errors,.5),p95=percentile(errors,.95),
                                       max=max(errors)if errors else None),
                 progress_grade='Interpolated native samples; not exact per-frame ground truth',
-                fixed_keys=fixed_keys,status=report['status'],had_damage=report['had_damage'])
+                fixed_keys=fixed_keys,fixed_sequence=sequence,unprotected_samples=unprotected,
+                native_key_totals_match=native_keys_match,
+                status=report['status'],had_damage=report['had_damage'])
     own_context=folder/'fixed-start-context.json'
     if own_context.exists():
         result['initial_context']=json.loads(own_context.read_text())
