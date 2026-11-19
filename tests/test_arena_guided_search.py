@@ -61,9 +61,11 @@ def test_margin_feedback_records_exact_prior_keys_and_does_not_attribute_failure
     assert len(cache.margin_feedback)==1
 
 
-def test_noop_prefix_stops_at_the_failed_operation_and_keeps_earlier_alternatives():
+@pytest.mark.parametrize('reason',['nominal_operation_has_no_effect',
+    'operation_prerequisite_mismatch','operation_effect_mismatch'])
+def test_semantic_prefix_stops_at_the_failed_operation_and_keeps_earlier_alternatives(reason):
     plan=rows(['none','none','jump','none','down','none'])
-    audit=dict(failure=dict(reason='nominal_operation_has_no_effect',event=dict(row_index=7)))
+    audit=dict(failure=dict(reason=reason,event=dict(row_index=7)))
     rejected=guided_search.rejected_prefix(plan,5,audit)
     assert rejected==('none','none','jump')
     assert tuple(['none','none','jump','jump'])[:len(rejected)]==rejected
@@ -74,7 +76,9 @@ def test_noop_prefix_stops_at_the_failed_operation_and_keeps_earlier_alternative
         assert guided_search.rejected_prefix(plan,5,audit)==tuple(r['action']for r in plan)
 
 
-def test_noop_repair_skips_irrelevant_suffix_variants_in_the_guided_loop(monkeypatch):
+@pytest.mark.parametrize('reason',['nominal_operation_has_no_effect',
+    'operation_prerequisite_mismatch','operation_effect_mismatch'])
+def test_semantic_repair_skips_irrelevant_suffix_variants_in_the_guided_loop(monkeypatch,reason):
     candidates=[['none','none','jump',*suffix,'none']for suffix in
                 [('none','none'),('down','none'),('jump','none'),
                  ('none','down'),('none','jump'),('down','jump')]]
@@ -88,7 +92,7 @@ def test_noop_repair_skips_irrelevant_suffix_variants_in_the_guided_loop(monkeyp
     def verify(gate,plan,**kwargs):
         checked.append(tuple(r['action']for r in plan))
         if plan[2]['action']=='jump':
-            return dict(passed=False,checks=[],failure=dict(reason='nominal_operation_has_no_effect',
+            return dict(passed=False,checks=[],failure=dict(reason=reason,
                         event=dict(row_index=2)))
         return dict(passed=True,checks=[])
     monkeypatch.setattr(guided_search,'verify',verify)
@@ -98,6 +102,18 @@ def test_noop_repair_skips_irrelevant_suffix_variants_in_the_guided_loop(monkeyp
     assert ('none','none','jump')in calls[1]
     assert ('none','none')not in calls[1]
     assert checked[-1][2]=='down'
+
+
+@pytest.mark.parametrize('reason',['operation_prerequisite_mismatch','operation_effect_mismatch'])
+def test_shifted_operation_failure_keeps_rescues_between_the_shift_and_failed_key(reason):
+    plan=rows(['jump','none','down','none','jump','none'])
+    audit=dict(failure=dict(reason=reason,event=dict(row_index=9),
+        perturbed_event=dict(row_index=5),repair_row_index=5,shift_ms=40))
+    rejected=guided_search.rejected_prefix(plan,5,audit)
+    assert rejected==('jump','none','down','none','jump')
+    assert ('jump',)!=rejected
+    rescue=('jump','none','none','none','jump','none')
+    assert rescue[:len(rejected)]!=rejected
 
 
 def test_a_future_key_at_the_horizon_is_not_rejected_for_lacking_a_later_forecast(monkeypatch):

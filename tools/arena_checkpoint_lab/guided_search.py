@@ -11,8 +11,9 @@ def rejected_prefix(forecast,history_length,audit):
     # that damage. Include every earlier row (also non-monotone X paths),
     # and the perturbed key itself; leave later alternatives available.
     end=len(forecast)-1
-    if failure.get('reason')=='nominal_operation_has_no_effect':
-        # A later suffix cannot make an already recorded no-op meaningful.
+    if failure.get('reason')in('nominal_operation_has_no_effect',
+                              'operation_prerequisite_mismatch','operation_effect_mismatch'):
+        # A later suffix cannot change an already failed operation check.
         # These prefixes are local to this exact VM root and input history.
         row=(failure.get('event')or{}).get('row_index')
         if type(row)is int and 0<=row-history_length<len(forecast):end=row-history_length
