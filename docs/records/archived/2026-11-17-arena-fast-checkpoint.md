@@ -696,3 +696,17 @@ f7fd7f9收紧了实机验收：每一个原程序事件都须依次出现在视�
 独立arena-search原生复验已完成：`debug/arena-client/fixed-route-work/timing-v2-native-1795064766894394768/native-repair-report.json`。Unity真实时间再次实测1/2/3渲染帧约16.6664/33.3328/49.9992ms。旧50022已知反例的名义与提前端点通过；第16键延后约49.999ms后，第17键仍fall2、HP5000，新验证以operation_prerequisite_mismatch拒绝，修复目标指回row161。诊断后完整入口state恢复相等。该有限反例复验只证明对应缺口能被检出，不是整板/全部初态/视觉无伤证明。
 
 复验进程正常结束后启动`mr3a-arena-fixed-search-v16.service`，Restart=no；沿用新队列batch-clock-v2-20261119保留失败历史，仍只`--case L5-M43-S4-B53042 --max-cases 1`。新进程先做原生安全起跳三分支自检，再重新选板，从板头建立全新搜索根，不读取v15的238m路径或旧名义跑法作热启动。汇总证据在`fixed-route-work/stop-recheck-restart-2026-11-19.json`；现已核实本轮准入三分支0/−49.999/+50.003ms均通过，root_restored=true；全新run 1795065721772718068以原帧529/板内0.9103m/5000血/无保护未骑乘开始，已实际提交3窗到14.20m，未报错。refresh-v10与live-v14重新监视新证据，后者等待新库；v9只是一次无源编库检查后正常退出，没有发布库。当前合格整板与稳定视觉成果均0。
+
+
+### 继续观察：滑行验收与原生一段跳编译映射（11月19日）
+
+v16继续原VM推进，未重开或恢复旧路径。原53042资源前段主要是坡地，首组敌人配置从约135.53m开始；前段零按键与此相符，不能据此认定决策器未工作。已观察到板内89.66m原生runOnGround→slideOnGround，以及后续fallFromRun→jump→jump2的真实已提交动作链，均维持5000血。第23窗首提案−40ms端点在尚为runOnGround时不满足原候选的落下起跳前提，HP5000即拒绝、回指row132；同根重提案后通过，尚无跨窗回退。这次拒绝发生在以下滑行检查补强生效之前，不归因为新检查。
+
+检查上述实录时发现并用纯函数反例复现两处具体问题：
+
+- 旧arena_action_contract把跑地面和滑行都归为ground，名义runOnGround→slideOnGround的下翻，在实际仍runOnGround时effect_matches仍返回True；已经滑行的状态也可替代名义起始跑步状态。7ab63c9对滑行动作严格核原生前/后状态，保留原上下绳转移可提前完成的兼容；人工忽略滑行的无伤oracle反例现在以operation_effect_mismatch拒绝。
+- 编译器仅识别jump1别名，遗漏原生一段跳状态jump，导致当前fallFromRun起跳被标成air_up。34c4069把jump/jump1均映射jump1，保持jump2及上下翻映射。当前真实已提交三键逐项检查已得到slide/jump1/jump2，未将未完成report伪装为完整跑法或发布库。224项相关回归通过。
+
+滑行修复在v16下一次新verify入口只替换两个宿主纯验证函数，不发任何客体请求或改变游戏参数；同PID611410、270个VM点与gate元数据保持，既往9处已通过滑行输入记录按新检查复核全部正确。源码与manifest保存在本run search/runtime-updates/1795067001206114103，slide-contract-update.json已为applied；之后的新提案端点检查继续通过并实际提交。此前局部预筛仍非整板证书，最终整板必须用已加载的新检查从原始完整入口重新验证。
+
+本次最新取样25窗/约138.76m/5000血、3键，错误为None；refresh-v10与live-v14真实进程仍活，等待首个合格v2库。新版一段跳映射将在首次编库/新的视觉子进程加载，尚无编库或实机跑法成绩。最新只读观察在fixed-route-work/goal-observation-clock-v2-2026-11-19.json，包含report SHA、进程状态、补强manifest及验收计数；整板/稳定视觉仍0，继续观察当前case。
