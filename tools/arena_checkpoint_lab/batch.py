@@ -205,6 +205,11 @@ class WorkQueue:
             finally:
                 attempt['finished_at'] = time.time()
                 self.save()
+            stop=self.folder/'stop-after-current.json'
+            if stop.exists()and json.loads(stop.read_text()).get('case')==case['key']:
+                self.state['stopped_after_case']=case['key']
+                print(f'当前板子收尾，按请求停止队列: {case["key"]}',flush=True)
+                break
         self.state['active'] = None
         self.save()
         return self.state['counts']

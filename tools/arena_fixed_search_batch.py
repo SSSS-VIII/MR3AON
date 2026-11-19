@@ -21,6 +21,9 @@ def main():
     parser.add_argument('--file-ram',action='store_true')
     parser.add_argument('--case',action='append',default=[],help='Prioritize a canonical case before the remaining queue')
     args=parser.parse_args()
+    if(args.queue/'stop-after-current.json').exists():
+        print('This queue has a retained stop-after-current request; not starting another search epoch.',flush=True)
+        return
     session=InstanceSession('arena-search')
     binary=ROOT/'debug/arena-client/rewind-research-v1/nyx-lite/target/release/arena_checkpoint_worker'
     if args.file_ram:

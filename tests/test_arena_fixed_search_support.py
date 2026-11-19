@@ -46,6 +46,25 @@ def test_native_timeout_aborts_even_after_a_known_root_was_restored(tmp_path,mon
     assert queue.state['cases']['b']['attempts']==[]
 
 
+def test_stop_after_current_finishes_the_case_without_initializing_another(tmp_path,monkeypatch):
+    monkeypatch.syspath_prepend(str(ROOT/'tools/arena_checkpoint_lab'))
+    import batch
+    queue=batch.WorkQueue.__new__(batch.WorkQueue)
+    queue.folder=tmp_path;queue.state=dict(cases={k:dict(native_passed=False,attempts=[])for k in('a','b')},counts={})
+    queue.save=lambda:None
+    (tmp_path/'stop-after-current.json').write_text(json.dumps(dict(case='a')))
+    initialized=[];accepted=[]
+    monkeypatch.setattr(batch,'initialize',lambda gate,case,progress:initialized.append(case['key']))
+    monkeypatch.setattr(batch,'install_observer',lambda gate:'observer')
+    monkeypatch.setattr(batch.search,'run',lambda *a,**kw:dict(complete=True))
+    queue.accept=lambda case,*args:accepted.append(case['key'])or True
+    queue.run(SimpleNamespace(),cases=[dict(key='a'),dict(key='b')])
+    assert initialized==accepted==['a']
+    assert queue.state['active']is None and queue.state['stopped_after_case']=='a'
+    assert queue.state['cases']['a']['attempts'][0]['status']=='native_passed'
+    assert not queue.state['cases']['b']['attempts']
+
+
 def test_native_exits_distinguish_board_map_and_new_loop_instance():
     before=dict(map=42,stage_index=1,stage_count=3)
     assert exit_kind(before,dict(map=42,stage_index=2))=='stage_advance'
