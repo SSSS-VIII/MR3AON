@@ -20,11 +20,16 @@ def contract(before,action,after):
 
 
 def prerequisite(expected,physics):
+    # Sliding changes the hurt collider; ground contact alone is insufficient.
+    if expected.get('native_after')=='slideonground'and expected['action']=='down':
+        if physics.split(':')[0].lower()!=expected['native_before']:return False
     phase,jumps=native_pose(physics)
     return phase==expected['before']and (expected['before_jumps']is None or jumps==expected['before_jumps'])
 
 
 def effect_matches(expected,physics):
+    if expected.get('native_after')=='slideonground'and expected['action']=='down':
+        return physics.split(':')[0].lower()=='slideonground'
     phase,jumps=native_pose(physics)
     # A flip can finish inside the original 50ms recording interval. Its
     # intermediate state is an accepted effect, whereas a spent jump is not.

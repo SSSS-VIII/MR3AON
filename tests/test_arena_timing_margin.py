@@ -102,6 +102,16 @@ def test_nominal_input_with_no_effect_is_not_accepted_as_a_successful_key():
     assert not result['passed']and result['failure']['reason']=='nominal_operation_has_no_effect'
 
 
+def test_ground_running_cannot_stand_in_for_a_slide_that_never_started():
+    oracle=Oracle();oracle.data['phase']='runOnGround: 5';args=baseline(oracle)
+    args['rows'][6]['job']['after']['physics']='slideOnGround: 7'
+    result=verify(oracle,selected_rows={6},**args)
+    assert not result['passed']
+    assert result['failure']['reason']=='operation_effect_mismatch'
+    assert result['failure']['actual']['physics']=='runOnGround: 5'
+    assert result['failure']['actual']['health']==5000
+
+
 def test_different_game_counter_phase_does_not_change_the_measured_window():
     class DifferentCounter(Oracle):
         def state(self):
