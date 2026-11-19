@@ -107,6 +107,13 @@ class Motor:
     lead_mode: str = ''
     transfer_speed: float = 0.
     collider_delay: float = 0.
+    vx: float = 0.
+    offset_field: float = 0.
+    offset_render: float = 0.
+    slide_ticks: int = 0
+    ground_source: bool = False
+    physical_y: float = 0.
+    previous_y: float = 0.
 
 
 class PlayerModel:
@@ -128,6 +135,16 @@ class PlayerModel:
         used = 2 if mode in ('jump2', 'fall2') else 1 if mode in ('jump', 'fall') else 0
         self.initial = Motor(state['position']['x'], state['position']['y'],
                              role['velocity']['y'], mode, used, observation.get('support_id'))
+        self.initial.vx=role['velocity']['x']
+        self.initial.offset_field=role.get('fields',{}).get('_currRoleObjOffset',{}).get('x',0.)*self.scale['x']
+        self.initial.offset_render=body['position']['x']-state['position']['x'] if 'position' in body else 0.
+        if mode=='slideonground':
+            self.initial.slide_ticks=timer_ticks(role['fields']['_slideRemainTime'],self.tick,False)
+            self.initial.ground_source=True
+        elif mode=='runonground' and (abs(self.initial.offset_field)>1e-6 or abs(self.initial.offset_render)>1e-6):
+            self.initial.ground_source=True
+        self.initial.physical_y=role.get('fields',{}).get('_lastPosition',state['position'])['y']
+        self.initial.previous_y=role.get('fields',{}).get('_secondLastPosition',state['position'])['y']
         current_platform = next((p for p in rows(observation['platforms']) if p['is_current']),None)
         if current_platform is not None:
             self.initial.support = current_platform['id']
@@ -138,8 +155,8 @@ class PlayerModel:
             self.unsupported.append('role:'+mode)
         if role.get('mounted') or role.get('god'):
             self.unsupported.append('protected_or_mounted_role')
-        if mode == 'slideonground':
-            self.unsupported.append('native_slide_root_carry')
+        if mode == 'slideonground' and 'slide_seconds' not in self.rules:
+            self.unsupported.append('native_slide_parameters_missing')
         if role.get('air_ground') and role['air_ground'].get('_transparent'):
             self.unsupported.append('transparent_current_platform')
         for row in rows(observation['platforms']):
@@ -151,6 +168,10 @@ class PlayerModel:
                 self.unsupported.append('terrain:'+row['kind'])
         if observation.get('camera',{}).get('direction',1) != 1:
             self.unsupported.append('reverse_running_direction')
+        for item in rows(observation.get('mechanism_items')):
+            dx=item['position']['x']-self.initial.x
+            if -1<dx<self.speed*1.8+3:
+                self.unsupported.append('item:'+item['type'])
 
     def surface(self, motor, t):
         available = [s for s in self.surfaces if s.contains(motor.x, t)]
@@ -173,6 +194,11 @@ class PlayerModel:
         age = (self.clock_age+t)%self.tick
         entry_delay = 2*self.tick-age
         if action == 'jump':
+            if motor.mode=='slideonground':
+                # Current reducer validates a complete slide/recovery. Native
+                # jump interruption still needs an independent source probe.
+                return False
+            motor.ground_source=False
             if motor.mode in ('runonlinedown', 'rolltolinedown') and s and s.rope:
                 motor.mode = 'rolltolineon'; motor.delay = entry_delay
                 fast = motor.y > s.height(motor.x,t)+self.foot
@@ -196,9 +222,11 @@ class PlayerModel:
                        and motor.y>s.y+self.foot+self.rules['reverse_fast_offset'])
                 motor.transfer_speed = self.data['_rollAirDownUpSpeed' if fast else '_rollDownUpSpeed']
             elif motor.mode == 'runonground':
-                # Slide root carry/recovery is not represented by a guessed
-                # constant speed; it needs its own validated native reducer.
-                return False
+                if 'slide_seconds' not in self.rules:
+                    return False
+                motor.mode='slideonground';motor.delay=entry_delay
+                motor.slide_ticks=timer_ticks(self.rules['slide_seconds'],self.tick,False)
+                motor.ground_source=True
             else:
                 return False
         else:
@@ -213,18 +241,22 @@ class PlayerModel:
     def body_at(self, m):
         p, scale = self.parameters, self.scale
         mode = m.lead_mode if m.collider_delay > 1e-8 else m.mode
+        if mode=='slideonground':
+            offset=p['_slideColliderOffset']
+            radius=p['_normalColliderRadius']*max(abs(scale['x']),abs(scale['z']))
+            return (m.x+m.offset_render+offset['x']*scale['x'],m.y+offset['y']*scale['y'],radius,0.)
         if mode in TRANSFER or mode == 'jump2':
             radius = p['_rollColliderRadius']*max(abs(scale['x']), abs(scale['z']))
             # The original roll rotates its offset center. Bound that native
             # local offset instead of assuming its center stays at the root.
             off = p['_rollColliderOffset']
             radius += math.hypot(off['x']*scale['x'], off['y']*scale['y'])
-            return (m.x, m.y, radius, 0.)
+            return (m.x+m.offset_render, m.y, radius, 0.)
         jumping = mode == 'jump'
         offset = p['_jumpColliderOffset' if jumping else '_normalColliderOffset']
         height = p['_jumpColliderHeight' if jumping else '_normalColliderHeight']*abs(scale['y'])
         radius = p['_normalColliderRadius']*max(abs(scale['x']), abs(scale['z']))
-        return (m.x+offset['x']*scale['x'], m.y+offset['y']*scale['y'], radius, max(0., height/2-radius))
+        return (m.x+m.offset_render+offset['x']*scale['x'], m.y+offset['y']*scale['y'], radius, max(0., height/2-radius))
 
     def trajectory(self, times, operations=()):
         motor = replace(self.initial)
@@ -241,11 +273,53 @@ class PlayerModel:
                 if s and s.id == self.initial.support and motor.mode in REST and self.native_slope_ratio is not None:
                     ratio = self.native_slope_ratio
                 vx = self.speed*ratio
+                old_fixed=int(math.floor((self.clock_age+times[index-1]+1e-8)/self.tick))
+                new_fixed=int(math.floor((self.clock_age+t+1e-8)/self.tick))
+                slide_entered=motor.mode=='slideonground' and motor.delay<=dt+1e-8
+                if slide_entered:
+                    for _ in range(new_fixed-old_fixed):
+                        # Original cubic speed target and Lerp(dt*5), not a
+                        # fitted constant slide speed or ordinary run speed.
+                        speed=np.float32(self.speed)
+                        a=np.float32(np.float32(speed*np.float32(.00325))*speed)
+                        b=np.float32(speed*np.float32(-.167))
+                        target=np.float32(speed*np.float32(np.float32(a+b)+np.float32(3.14)))
+                        motor.vx=float(np.float32(np.float32(motor.vx)+np.float32(
+                            np.float32(target-np.float32(motor.vx))*np.float32(self.tick*5))))
+                        motor.slide_ticks-=1
+                    vx=motor.vx*ratio
+                    if motor.slide_ticks<=0:
+                        motor.mode='runonground'
+                elif motor.ground_source and not new_fixed-old_fixed:
+                    vx=motor.vx
+                else:
+                    motor.vx=vx
+                for _ in range(new_fixed-old_fixed):
+                    # Ninja.MyFixedUpdate positions the collider parent from
+                    # the preceding offset before MoveLogic changes its field.
+                    motor.offset_render=motor.offset_field
+                    if motor.mode=='slideonground' and slide_entered:
+                        target=self.rules['slide_offset']['x']*self.scale['x'];gain=self.tick*5
+                    elif motor.mode in REST:
+                        target=0.;gain=self.tick*self.speed/10
+                    else:
+                        continue
+                    motor.offset_field=float(np.float32(np.float32(motor.offset_field)+np.float32(
+                        np.float32(target-motor.offset_field)*np.float32(gain))))
                 motor.x += vx*dt
                 s = self.surface(motor, t)
                 if motor.mode in REST:
                     if s:
-                        motor.y = s.height(motor.x, t) + (-self.foot if motor.mode == 'runonlinedown' else self.foot)
+                        contact=(-self.foot if motor.mode=='runonlinedown' else self.foot-.25 if
+                                 motor.mode=='slideonground' and slide_entered else self.foot)
+                        target_y=s.height(motor.x,t)+contact
+                        if motor.ground_source:
+                            for _ in range(new_fixed-old_fixed):
+                                motor.previous_y=motor.physical_y;motor.physical_y=target_y
+                            alpha=np.clip((self.clock_age+t-new_fixed*self.tick)/self.tick,0.,1.)
+                            motor.y=motor.previous_y+(motor.physical_y-motor.previous_y)*alpha
+                        else:
+                            motor.y=target_y
                         motor.support = s.id; motor.used = 0; motor.vy = vx*s.slope+s.vy
                     else:
                         motor.mode = 'fallfromrun'; motor.vy = vx*slope
@@ -322,6 +396,7 @@ class Hazard:
     source: str
     approximate: bool = False
     geometry: str = 'aabb'
+    quads: np.ndarray | None = None
 
 
 def spider_positions(enemy, times, *, stamp, tick):
@@ -450,21 +525,50 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                 unsupported.append(dict(id=enemy['id'], type=kind, reason='camera_spawn_missing')); continue
             active = times >= launch
             source = 'EnemyFlyBamboo.ProcessState; native aim/lock/ready remaining timer, real camera edge and flySpeed'
-        elif kind in ('EnemySpider', 'EnemyMuppetBomb'):
+        elif kind in ('EnemySpider', 'EnemyMuppetBomb','EnemyEliteSpider'):
+            if kind=='EnemyEliteSpider' and f.get('_positionIndex',0)>0:
+                unsupported.append(dict(id=enemy['id'],type=kind,reason='elite_damage_relocation'));continue
             if mode not in ('movetoninja', 'stay', 'flex', 'bite'):
                 unsupported.append(dict(id=enemy['id'], type=kind, reason='unmapped_phase:'+mode)); continue
             delta[:, 1] = spider_positions(enemy, times,stamp=observation['state']['time'],tick=tick)-enemy['position']['y']
             source = 'EnemySpider.ProcessState; native targetY/downSpeed/curSpeed/accUpFlag and original flex reducer'
             approximate = mode in ('movetoninja', 'flex', 'bite')
         else:
-            unsupported.append(dict(id=enemy['id'], type=kind, reason='motion_model_missing')); continue
+            from arena_privileged_families import forecast
+            try:
+                predicted, reason = forecast(enemy, times, observation, player)
+            except KeyError as error:
+                predicted, reason = None, 'native_field_missing:'+str(error)
+            if predicted is None:
+                unsupported.append(dict(id=enemy['id'], type=kind, reason=reason)); continue
+            delta, angles, source = predicted[:3]
+            if len(predicted)>3 and predicted[3] is not None:
+                active = predicted[3]
+            if kind=='EnemyHideBlade':
+                colliders = [c for c in rows(enemy['grown_colliders']) if c.get('damage_kind')]
         for c in colliders:
-            if kind not in ('EnemyFlyBamboo',) and not c['active']:
+            if kind not in ('EnemyFlyBamboo','EnemyHideBlade') and not c['active']:
                 continue
             center = xy(c['center'])[None, :]+delta
             extent = np.tile(xy(c['extents']), (len(times), 1))*growth[:, None]
+            if kind in ('EnemyPinball','EnemyBlowFish') and len(predicted)>4:
+                root_scale=np.array([enemy['scale'][a] for a in ('x','y','z')])
+                child_scale=np.array([c['scale'][a] for a in ('x','y','z')])/root_scale
+                radius=c['radius']*np.max(np.abs(predicted[4]*child_scale),axis=1)
+                extent=np.tile(radius[:,None],(1,2))
+            quads = None
+            if kind not in ('EnemyStraightBat','EnemyFlyBamboo','EnemySpider','EnemyMuppetBomb','EnemyEliteSpider'):
+                pivot = xy(enemy['position'])
+                rot = np.stack((np.stack((np.cos(angles),-np.sin(angles)),axis=-1),
+                                np.stack((np.sin(angles),np.cos(angles)),axis=-1)),axis=1)
+                center = np.einsum('nij,j->ni', rot, xy(c['center'])-pivot)+pivot+delta
+                if c.get('quad'):
+                    quad = np.array([xy(p) for p in c['quad']])-pivot
+                    quads = np.einsum('nij,kj->nki',rot,quad)+pivot+delta[:,None,:]
+                    center = quads.mean(axis=1)
+                    extent = (quads.max(axis=1)-quads.min(axis=1))/2
             result.append(Hazard(c['id'], enemy['id'], kind, center, extent, active, source, approximate,
-                                 'sphere' if c['type']=='SphereCollider' else 'aabb'))
+                                 'sphere' if c['type']=='SphereCollider' else 'obb' if quads is not None else 'aabb', quads))
     return result, unsupported
 
 
@@ -474,6 +578,9 @@ def clearance(body, hazard):
     Original OBBs are currently enclosed by their native world AABB. Rounding
     is retained for SphereCollider/role capsules; no visual boxes are involved.
     """
+    if hazard.quads is not None:
+        from arena_privileged_geometry import capsule_quad
+        return capsule_quad(body,hazard.quads,hazard.active)
     relative = hazard.centers-body[:, :2]
     core = body[:, 3]
     if hazard.geometry == 'sphere':

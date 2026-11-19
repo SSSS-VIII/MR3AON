@@ -83,6 +83,8 @@ def forecast_error(before, after, action):
 def evaluate(client, output, *, seconds=30., coast=False):
     output.mkdir(parents=True, exist_ok=False)
     source_files = ['arena_privileged_state.lua', 'arena_privileged_model.py',
+                    'arena_privileged_families.py',
+                    'arena_privileged_geometry.py','arena_privileged_pinball.py',
                     'arena_privileged_policy.py', 'arena_privileged_runner.py',
                     'arena_checkpoint_lab/clock_step.lua']
     frozen = output/'sources'; frozen.mkdir()

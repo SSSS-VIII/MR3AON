@@ -71,10 +71,37 @@ local function shape(c)
     if owner then out.damage_owner=owner:GetInstanceID()end
     return out
 end
+local function grownShape(c,tween)
+    -- Evaluate the original tween target TRS without changing a Transform.
+    -- A hidden blade has zero Y scale: its current bounds cannot describe
+    -- tomorrow's attack volume, nor can that singular matrix be inverted.
+    if c:GetType().Name~='BoxCollider'then return nil end
+    local root=tween.transform;local chain={};local t=c.transform
+    for depth=1,32 do
+        if t==root then break end
+        if not t then return nil end
+        chain[#chain+1]=t;t=t.parent
+    end
+    if t~=root then return nil end
+    local target=field(tween,'to')
+    if not target then return nil end
+    local matrix=root.parent.localToWorldMatrix*U.Matrix4x4.TRS(root.localPosition,root.localRotation,target)
+    for i=#chain,1,-1 do local v=chain[i]
+        matrix=matrix*U.Matrix4x4.TRS(v.localPosition,v.localRotation,v.localScale)
+    end
+    local out=shape(c);out.quad={};out.grown_target=true
+    local lo,hi=U.Vector3(1e9,1e9,1e9),U.Vector3(-1e9,-1e9,-1e9)
+    for _,sign in ipairs({{-1,-1},{1,-1},{1,1},{-1,1}})do
+        local p=matrix:MultiplyPoint3x4(c.center+U.Vector3(sign[1]*c.size.x/2,sign[2]*c.size.y/2,0))
+        out.quad[#out.quad+1]=vector(p);lo=U.Vector3.Min(lo,p);hi=U.Vector3.Max(hi,p)
+    end
+    out.center=vector((hi+lo)/2);out.extents=vector((hi-lo)/2)
+    return out
+end
 function E.privileged_state()
     assert(not E.busy and U.Time.timeScale==0,'Read internal state at a paused original boundary')
     local n=CS.NinjaController.Instance.NinjaScript;local p=n.transform.position
-    local out={schema=1,privileged=true,state=E.state(),role={},enemies={},supports={},platforms={}}
+    local out={schema=1,privileged=true,state=E.state(),role={},enemies={},supports={},platforms={},mechanism_items={}}
     local camera=CS.CameraController.Instance
     out.camera={right=vector(camera:GetScreenRightTopPos()),real_right=vector(camera:GetRealScreenRightTopPos()),
         reflection_right=vector(camera:GetScreenRightTopPos_Reflection(0)),
@@ -86,6 +113,9 @@ function E.privileged_state()
     local reverseOffset=ninjaType:GetField('InAirOffsetWhenEnterRollToLineDown',staticFlags)
     assert(reverseFlag and reverseOffset,'Original reversal rules missing')
     out.role.rules={reverse_fast_enabled=reverseFlag:GetValue(nil),reverse_fast_offset=reverseOffset:GetValue(nil)}
+    out.role.rules.slide_seconds=field(CS.NinjaController.Instance,'_slideTime')
+    local slideOffset=field(CS.NinjaController.Instance,'_slideOffset')
+    if slideOffset then out.role.rules.slide_offset=vector(slideOffset)end
     out.role.data=values(field(n,'_ninjaData'));out.role.collider_parameters=values(field(n,'_ninjiaCollider'))
     out.role.colliders={};out.role.god=n:IsGodMode();out.role.mounted=n.IsMountState
     local cols=n.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
@@ -120,8 +150,15 @@ function E.privileged_state()
             local info=field(o,'_enemyInfo');local custom=info and field(info,'_enemyInfoCustom')
             local row={id=o:GetInstanceID(),type=o:GetType().Name,name=o.name,position=vector(o.transform.position),
                 fields=values(o),info=values(info),custom=values(custom),custom_type=custom and custom:GetType().Name or nil,
-                speed=o.CurrentSpeed,scale=vector(o.transform.lossyScale),colliders={}}
+                speed=o.CurrentSpeed,attack=o.Attack,scale=vector(o.transform.lossyScale),rotation_z=o.transform.eulerAngles.z,colliders={}}
             row.info_identity=info and info:GetHashCode()or nil
+            local at=field(o,'privateAtLevelBlock')
+            if at then row.native_support={id=at:GetInstanceID(),start=vector(at.PointStart),finish=vector(at.PointEnd),
+                is_line=at.IsLine,is_ground=at.IsGround}end
+            if row.type=='EnemyHook' or row.type=='EnemyBambooThorn'then
+                local last,previous=field(o,'_lastRotation'),field(o,'_secondLastRotation')
+                if last and previous then row.rotation_samples={last=last.eulerAngles.z,previous=previous.eulerAngles.z}end
+            end
             row.controllers={}
             for _,f in ipairs(fields(o))do
                 if string.find(f.FieldType.Name,'Controller',1,true)then
@@ -133,7 +170,25 @@ function E.privileged_state()
             for j=0,cs.Length-1 do local c=cs[j];local owner=c:GetComponentInParent(typeof(CS.EnemyBase))
                 if owner and owner:GetInstanceID()==row.id then row.colliders[#row.colliders+1]=shape(c)end
             end
+            local tween=field(o,'_tweener')
+            if tween and o:GetType().Name=='EnemyHideBlade'then
+                row.tween=values(tween);row.grown_colliders={}
+                for j=0,cs.Length-1 do local c=cs[j];local grown=grownShape(c,tween)
+                    if grown and grown.damage_owner==row.id then row.grown_colliders[#row.grown_colliders+1]=grown end
+                end
+            end
             out.enemies[#out.enemies+1]=row
+        end
+    end
+    local physicalItems={ItemSpring=true,ItemHorn=true,ItemSkull=true,ItemShell=true,ItemShieldBall=true,
+        ItemBossController=true,ItemSpecialTaskStart=true,ItemSpecialTaskEnd=true,ItemEvent=true}
+    local items=U.Object.FindObjectsOfType(typeof(CS.ItemBase))
+    for i=0,items.Length-1 do local o=items[i];local kind=o:GetType().Name
+        if physicalItems[kind] and o.gameObject.activeInHierarchy and o.isActive and
+                o.transform.position.x>p.x-2 and o.transform.position.x<p.x+80 then
+            local info=field(o,'_itemInfo');local custom=info and field(info,'_itemInfoCustom')
+            out.mechanism_items[#out.mechanism_items+1]={id=o:GetInstanceID(),type=kind,
+                position=vector(o.transform.position),fields=values(o),info=values(info),custom=values(custom)}
         end
     end
     local level=CS.LevelManager.Instance.GameLevelInfo

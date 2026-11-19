@@ -84,9 +84,12 @@ class CheckpointClient:
 
     def load_environment(self):
         modules = ('environment', 'native_mount', 'native_selection', 'native_boss', 'native_menu')
-        code = ';'.join("assert(load(CS.System.IO.File.ReadAllText(" +
-                        json.dumps(f'/checkpoint-payload/{name}.lua') +
-                        "),'@mr3a-" + name + "'))()" for name in modules)
+        # The provisioned resource image is immutable and can contain older
+        # control scripts. Load the current host tools through the existing
+        # pre-gate file bridge; never silently ignore initialization/clock fixes.
+        source = Path(__file__).resolve().parents[2] / 'arena/Local'
+        code = ';'.join('assert(load(' + json.dumps((source / f'{name}.lua').read_text(),ensure_ascii=False) +
+                        ",'@mr3a-" + name + "'))()" for name in modules)
         return self.execute(code + ';return MR3A.state()')
 
     def screenshot(self):

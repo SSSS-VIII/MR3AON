@@ -17,7 +17,7 @@ class Proposal:
 
 
 class InternalController:
-    def __init__(self, *, horizon=1.8, timing_radius=.04):
+    def __init__(self, *, horizon=1.8, timing_radius=.04, collect_alternatives=False):
         if horizon < 1. or not 0. <= timing_radius <= .05:
             raise ValueError('Use a full action horizon and a <=100ms total timing window')
         self.horizon = horizon
@@ -25,6 +25,7 @@ class InternalController:
         self.last_input = -math.inf
         self.last_inputs = dict(jump=-math.inf,down=-math.inf)
         self.scheduled = None
+        self.collect_alternatives = collect_alternatives
 
     def delivered(self, action, stamp):
         if action != 'none':
@@ -122,6 +123,15 @@ class InternalController:
         if player.unsupported or unknown_near:
             return finish('none', 0., None, baseline, 'unsupported_native_mechanism')
         pending = self.scheduled
+        if pending and pending.get('search_choice') and stamp < pending['due']-1/60-.001:
+            delay = pending['due']-stamp
+            checks = [evaluate(((max(0., delay+d), pending['action']),))
+                      for d in (-self.timing_radius, 0., self.timing_radius)]
+            if all(r['safe'] for r in checks):
+                return finish('none', delay, tuple(v-stamp for v in pending['window']),
+                              checks[1], 'approach_selected_internal_window')
+            self.scheduled = None
+            return finish('none', 0., None, baseline, 'selected_internal_window_invalidated')
         if pending and pending['due']-1/60-.001 <= stamp <= pending['due']+self.timing_radius:
             nominal = evaluate(((0.,pending['action']),))
             late = evaluate(((self.timing_radius,pending['action']),))
@@ -181,6 +191,20 @@ class InternalController:
                 options.append(dict(action=action, delay=center, window=(lo, hi),
                                     result=nominal, margin=margin, endpoints=endpoints,
                                     survival=min(r['first_contact'] for r in [nominal]+endpoints)))
+                if self.collect_alternatives:
+                    # Search branches are physically safe windows from this
+                    # model, not every key at every 50ms interval. Different
+                    # centers can lead to different future jump budgets.
+                    for candidate in (lo+self.timing_radius, hi-self.timing_radius):
+                        if abs(candidate-center) < .06:
+                            continue
+                        middle = evaluate(((candidate,action),))
+                        ends = [evaluate(((candidate+d,action),))
+                                for d in (-self.timing_radius,self.timing_radius)]
+                        if middle['safe'] and all(r['safe'] for r in ends):
+                            options.append(dict(action=action,delay=candidate,window=(lo,hi),result=middle,
+                                margin=min(r['clearance'] for r in [middle]+ends),endpoints=ends,
+                                survival=min(r['first_contact'] for r in [middle]+ends)))
         if not options:
             self.scheduled = None
             reason = 'no_safe_action_window' if not baseline['safe'] else 'coast_preserves_safety'
@@ -188,10 +212,14 @@ class InternalController:
         # Prefer returning to support with jump budget, then geometric margin
         # and a broad window. A tiny gain in obstacle clearance must not select
         # an endless sequence of unnecessary jumps in an otherwise clear lane.
-        best = min(options, key=lambda o: (o['result']['reserve'],
+        options.sort(key=lambda o: (o['result']['reserve'],
                    o['result']['recovered_at'] if player.initial.used >= 2 and o['result']['recovered_at'] is not None else self.horizon,
                    -min(.5, o['margin']), -min(self.horizon, o['result']['first_contact']),
                    -(o['window'][1]-o['window'][0]), o['delay']))
+        best = options[0]
+        if self.collect_alternatives:
+            evidence['alternatives'] = [dict(action=o['action'],delay=o['delay'],window=o['window'],
+                margin=o['margin'],first_contact=o['result']['first_contact']) for o in options]
         earlier_recovery = (best['result']['recovered_at'] is not None and baseline['recovered_at'] is not None
                             and best['result']['recovered_at'] < baseline['recovered_at']-.1)
         if baseline['safe'] and best['result']['reserve'] >= baseline['reserve'] and not earlier_recovery:
