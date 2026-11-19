@@ -4,7 +4,7 @@ import time
 
 from arena_checkpoint_errors import NativeIntervalError
 from arena_fixed_goal import exit_kind
-from arena_action_contract import native_pose
+from arena_action_contract import contract, meaningful, native_pose
 from native_policy import REST, decision, read, support_y
 from search import BOARD
 
@@ -124,7 +124,7 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
     root=gate.snapshot()['result']['id']if root_point is None else root_point
     if tree_cache is not None:tree_cache.bind(root,start,offset,horizon,last_input_frame)
     owned=set();started=time.monotonic();trials=[]
-    stats=dict(trials=0,seconds=0,restores_ms=[],rejected_damage=0,rejected_invalid_interval=0,
+    stats=dict(trials=0,seconds=0,restores_ms=[],rejected_damage=0,rejected_invalid_interval=0,rejected_no_effect=0,
                prefix_cache_hits=0,decision_cache_hits=0,timing_spacing_pruned=0,
                snapshots_created=0,snapshots_avoided=0,
                native_decisions=[],beam_trace=[],planner='native_trajectory_beam',beam_width=beam_width)
@@ -193,6 +193,9 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
                         if observations[child]['state']!=row['job']['after']:
                             raise RuntimeError('Cached native trajectory differs from its original step state')
                         future=observations[child]
+                        if action!='none'and not meaningful(contract(
+                                row['job']['before']['physics'],action,row['job']['after']['physics'])):
+                            stats['rejected_no_effect']+=1;unsafe.add((point,action));continue
                     else:
                         if stats['trials']>=max_trials:return failure('Native trajectory beam trial budget exhausted')
                         restore(point);error=None
@@ -200,8 +203,12 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
                         except NativeIntervalError as e:job=e.job;error=str(e);stats['rejected_invalid_interval']+=1
                         stats['trials']+=1
                         safe=error is None and not job.get('terminated')and job['after']['health']==start['health']
+                        no_effect=(safe and action!='none'and not meaningful(contract(
+                            job['before']['physics'],action,job['after']['physics'])))
+                        if no_effect:safe=False;stats['rejected_no_effect']+=1
                         trial=dict(depth=depth,action=action,ticks=ticks,safe=safe,job=job)
                         if error:trial['interval_error']=error
+                        if no_effect:trial['rejection_reason']='nominal_operation_has_no_effect'
                         trials.append(trial)
                         if on_trial:on_trial(trial)
                         if not safe:

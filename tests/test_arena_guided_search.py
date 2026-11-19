@@ -18,7 +18,7 @@ def test_future_operation_is_checked_before_committing_waits_without_banning_its
     def searcher(gate,**kwargs):
         calls.append(kwargs)
         plan=rows(['none','none','jump'if len(calls)==1 else'down','none'],10*len(calls))
-        return dict(found=True,root=10,stats=dict(trials=1),path=plan[:2],forecast_path=plan)
+        return dict(found=True,root=10,stats=dict(trials=1,rejected_no_effect=len(calls)),path=plan[:2],forecast_path=plan)
     def verify(gate,plan,**kwargs):
         checked.append(kwargs['selected_rows'])
         if len(checked)==1:
@@ -34,6 +34,7 @@ def test_future_operation_is_checked_before_committing_waits_without_banning_its
     assert ('none','none')not in calls[1]['forbidden_prefixes']
     assert len(result['timing_attempts'])==2
     assert result['stats']['trials']==2 and result['stats']['proposals']==2
+    assert result['stats']['rejected_no_effect']==3
     assert set(dropped)=={11,12,13,14,23,24}
 
 

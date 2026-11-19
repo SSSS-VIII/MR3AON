@@ -18,13 +18,13 @@ class Oracle:
     def state(self):
         d=self.data
         return dict(episodeFrame=d['frame'],health=d['health'],speed=18.5,
-                    physics={'ground':'runOnGround: 5','air':'jump: 14','slide':'slideOnGround: 6'}[d['mode']],
-                    position=dict(x=d['frame']*.37,y=2.8 if d['mode']=='air'else .75,z=0))
+                    physics={'ground':'runOnGround: 5','air':'jump: 14','air2':'jump2: 16','slide':'slideOnGround: 6'}[d['mode']],
+                    position=dict(x=d['frame']*.37,y=2.8 if d['mode']in('air','air2')else .75,z=0))
     def update(self):self.view=dict(state=self.state())
     def observation(self):
         s=self.state()
         return dict(state=s,role=[dict(center=s['position'],extents=dict(x=.18,y=.468))],
-            jumps_used=int(self.data['mode']=='air'),
+            jumps_used=2 if self.data['mode']=='air2'else int(self.data['mode']=='air'),
             support=dict(start=dict(x=-10,y=0),finish=dict(x=100,y=0),continues=True,is_ground=True),
             hazards=[dict(id=1,center=dict(x=4.,y=.75),extents=dict(x=.3,y=.8),enabled=True)])
     def snapshot(self):
@@ -38,7 +38,7 @@ class Oracle:
     def step(self,ticks,action):
         before=self.state();d=self.data
         if action=='jump':
-            d['early']=d['early']or d['frame']<=2;d['mode']='air'
+            d['early']=d['early']or d['frame']<=2;d['mode']='air2'if d['mode']=='air'else'air'
         elif action=='down':d['mode']='slide'
         d['frame']+=ticks;d['secret']+=ticks*7
         if self.impossible or d['frame']>=10 and not d['early']:d['health']=4750
@@ -80,6 +80,39 @@ def test_real_damage_rejects_every_action_even_if_heuristics_look_safe():
     result=planner.search_window(g,start=start(g),offset=0,horizon=8,commit=2)
     assert not result['found']and result['stats']['rejected_damage']>0
     assert g.data==before
+
+
+def test_noop_input_is_rejected_before_observation_snapshot_and_forecast(monkeypatch):
+    class IgnoredJump(Oracle):
+        def step(self,ticks,action):
+            job=super().step(ticks,'none'if action=='jump'else action)
+            if action=='jump':self.data['secret']+=1000
+            return job
+        def observation(self):
+            assert self.data['secret']<1000,'Ignored input reached the expensive child observer'
+            return super().observation()
+    monkeypatch.setattr(planner,'decision',lambda _:dict(order=['jump','none','down'],reason='probe',nearest=[]))
+    g=IgnoredJump();g.data['early']=True;g.update();entry=start(g)
+    root=g.snapshot()['result']['id'];cache=PrefixCache();logged=[]
+    result=planner.search_window(g,start=entry,offset=0,horizon=4,commit=2,
+                                root_point=root,tree_cache=cache,on_trial=logged.append)
+    assert result['found']and result['stats']['rejected_no_effect']>0
+    rejected=[t for t in logged if t.get('rejection_reason')=='nominal_operation_has_no_effect']
+    assert rejected and all(not t['safe']and t['job']['after']['health']==5000 for t in rejected)
+    assert (root,'jump')in cache.unsafe and (root,'jump')not in cache.transitions
+    assert all(row['action']=='none'for row in result['forecast_path'])
+    assert g.data['secret']==17+g.data['frame']*7
+    cache.close(g,{r['point']for r in result['forecast_path']})
+
+
+def test_ground_slide_with_unchanged_contact_phase_remains_an_effective_input(monkeypatch):
+    monkeypatch.setattr(planner,'decision',lambda o:dict(order=['down']if o['state']['physics'].startswith('runOnGround')else['none'],
+                        reason='probe',nearest=[]))
+    g=Oracle();g.data['early']=True;g.update()
+    result=planner.search_window(g,start=start(g),offset=0,horizon=4,commit=2)
+    assert result['found']and result['path'][0]['action']=='down'
+    assert result['path'][0]['job']['after']['physics'].startswith('slideOnGround')
+    assert result['stats']['rejected_no_effect']==0
 
 
 def test_rejected_operation_prefix_is_not_returned_as_a_native_exit():

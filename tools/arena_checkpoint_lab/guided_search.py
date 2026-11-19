@@ -54,7 +54,7 @@ def _window(gate,*,searcher,history,initial_point,initial_state,board_code,tree_
     audits=[];used=0;proposal_stats=[]
     def finish(result):
         stats=result['stats']
-        for name in ('seconds','rejected_damage','rejected_invalid_interval','prefix_cache_hits',
+        for name in ('seconds','rejected_damage','rejected_invalid_interval','rejected_no_effect','prefix_cache_hits',
                      'decision_cache_hits','timing_spacing_pruned','redundant_restores_skipped',
                      'snapshots_created','snapshots_avoided'):
             stats[name]=sum(s.get(name,0)for s in proposal_stats)
