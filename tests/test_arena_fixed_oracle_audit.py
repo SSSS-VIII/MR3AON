@@ -8,7 +8,7 @@ import pytest
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
-from arena_fixed_oracle_audit import plan,entry_comparison,delay_events
+from arena_fixed_oracle_audit import plan,entry_comparison,delay_events,schedule_exact
 
 
 def route():
@@ -46,6 +46,16 @@ def test_delay_experiment_preserves_source_timing_and_cannot_reorder_keys():
     assert original['events'][0]['relative_tick']==3
     with pytest.raises(ValueError):delay_events(original,{0:3})
     with pytest.raises(ValueError):delay_events(original,{2:1})
+
+
+def test_schedule_accuracy_uses_requested_offset_without_rewriting_source():
+    spec=delay_events(dict(events=[dict(relative_tick=3,action='jump'),
+                                  dict(relative_tick=8,action='down')]),{0:1})
+    actions=[dict(actual_tick=4,target_tick=3),dict(actual_tick=8,target_tick=8)]
+    assert schedule_exact(actions,spec['events'])
+    assert actions[0]['target_tick']==3
+    assert not schedule_exact([dict(actual_tick=3),dict(actual_tick=8)],spec['events'])
+    assert not schedule_exact(actions[:1],spec['events'])
 
 
 @pytest.mark.parametrize('stride',[1,2])

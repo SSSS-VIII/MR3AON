@@ -55,6 +55,13 @@ def delay_events(specification,delays):
     return dict(specification,events=events)
 
 
+def schedule_exact(actions,events):
+    """Compare execution with the requested perturbation, preserving source ticks."""
+    return (len(actions)==len(events)and all(
+        action['actual_tick']==event['relative_tick']
+        for action,event in zip(actions,events)))
+
+
 def interval_execution(client,route,output):
     rows=[]
     first_divergence=None
@@ -122,8 +129,7 @@ def audit(queue,key,output,mode,capture_fps,seed=None,delays=None):
                 client.execute('return MR3A.run_fixed_oracle(json.parse('+json.dumps(json.dumps(spec))+'))')
                 result['execution']=wait_job(client,'MR3A.fixedOracleAudit',timeout=140)
             final=result['execution']['evaluation'];result['final']=final
-            result['input_schedule_exact']=(len(result['execution']['actions'])==len(specification['events'])
-                and all(a['actual_tick']==a['target_tick']for a in result['execution']['actions']))if mode!='source_intervals'else(
+            result['input_schedule_exact']=schedule_exact(result['execution']['actions'],specification['events'])if mode!='source_intervals'else(
                     result['execution']['intervals_executed']==len(route['steps']))
             result['no_damage']=bool(final['health']==5000 and final['minHealth']==5000 and final['damage']==0)
             result['exit']=bool(final['map']!=case['map']or final['stageIndex']>=case['slot'])
