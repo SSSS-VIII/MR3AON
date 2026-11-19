@@ -76,7 +76,9 @@ def compile_program(route, key):
                 poses=poses, events=events, native_passed=True, visual_execution_verified=False,
                 monotone=monotone, requires_phase_clock=clock_required,
                 input_order='Acknowledged event cursor; no automatic skipping after takeover',
-                tick_seconds=.02,timing_robust=robust,timing_window_ms=80 if robust else None)
+                tick_seconds=.02,timing_robust=robust,timing_window_ms=80 if robust else None,
+                timing_certificate_version=2 if robust else None,
+                timing_evidence='finite_native_scenarios'if robust else None)
 
 
 def compatible(expected, observation, jumps=None):
@@ -224,11 +226,10 @@ class HybridAvoider:
         return program, located
 
     def certified_positions(self, program, located, observation):
-        """Replay proven keys by geometry, without requiring nominal pose labels.
+        """Localize an acknowledged tape; every submission still needs its pose.
 
-        A timing variant may still be landing when the nominal frame is on the
-        rope. Its native-tested key sequence remains valid. Admission needs
-        tight visual localization and an uninterrupted acknowledged prefix.
+        Finite endpoint evidence cannot authorize a jump with spent jumps or
+        replace the current role's contact state with its nominal recorded pose.
         """
         if (not program or not program.get('timing_robust') or not program.get('monotone',True)
                 or program.get('requires_phase_clock') or observation.get('player') is None
@@ -385,15 +386,16 @@ class HybridAvoider:
                 due = (x>=event['x']-self.event_lead(observation) if located.get('certified_positions')
                        else self.input_due(event,observation,x))
                 if due:
-                    if (located.get('certified_positions') and not located.get('position_only_wait')
-                            or compatible(event['before'], observation,event.get('before_jumps'))):
+                    if (not located.get('position_only_wait')and
+                            compatible(event['before'], observation,event.get('before_jumps'))):
                         self.fixed_active = True
                         self.proposed_event = event
                         self.proposed_primitive = event['primitive']
                         self.decision.update(mode='fixed', event=event['index'])
                         return event['action'], 'fixed_route_'+event['primitive']
                     self.decision['reason'] = 'fixed_input_pose_mismatch'
-                    return self.reactive.choose(observation)
+                    self.fixed_active=True
+                    return None,'fixed_route_wait_for_pose'
             self.fixed_active = True
             self.decision['mode'] = 'fixed'
             return None, 'fixed_route_wait'
@@ -439,7 +441,11 @@ def load(reactive, config=CONFIG, *, detector_sha256=None):
         return reactive
     if bank.meta.get('feature_sha256')!=feature_signature():
         return reactive
-    actor=HybridAvoider(reactive, bank, loaded['programs'])
+    # Old counter-clock certificates and nominal-only routes are retained as
+    # research artifacts, not silently admitted into the new runtime bank.
+    programs_validated={key:p for key,p in loaded['programs'].items()
+        if p.get('timing_robust')and p.get('timing_certificate_version')==2}
+    actor=HybridAvoider(reactive, bank, programs_validated)
     actor.runtime_assets={str(path):hashlib.sha256(path.read_bytes()).hexdigest()
                           for path in (bank.folder/'index.json',bank.folder/'features.npz')}
     actor.runtime_assets[str(programs)]=hashlib.sha256(program_bytes).hexdigest()

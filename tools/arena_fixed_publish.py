@@ -20,6 +20,8 @@ def publish(coverage, inventory, destination):
                 case['map'], case['slot'], case['stage']):
             raise ValueError('A program source belongs to another board context')
         program = compile_program(route, key)
+        if not program.get('timing_robust'):
+            continue
         program.update(source=str(source), source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
                        classification=inventory['stages'][str(case['stage'])]['classification'])
         programs[key] = program

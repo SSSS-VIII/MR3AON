@@ -293,7 +293,7 @@ def test_future_position_uses_pre_input_pose_and_cursor_advances_only_on_ack():
     assert reactive.calls==0
 
 
-def test_certified_tape_uses_independent_positions_after_an_acknowledged_prefix():
+def test_endpoint_evidence_cannot_bypass_the_current_contact_and_jump_budget():
     policy,reactive=controller()
     program=policy.programs[KEY];program['timing_robust']=True
     program['events'].append(dict(index=1,x=14,action='jump',primitive='rope_up',
@@ -301,12 +301,12 @@ def test_certified_tape_uses_independent_positions_after_an_acknowledged_prefix(
     program['events'][0]['relative_tick']=0
     assert policy.choose(dict(observation(1),test_progress=10))[0]=='down'
     policy.on_commit('down',1);policy.last_action=1
-    # Native timing tests certify the keys, including contact-boundary poses.
-    # Neither a noisy instantaneous pose nor the prior key's one-second clock
-    # can delay a key whose independent visual position is now due.
+    # Position alignment cannot turn two spent jumps into a rope contact.
     obs=dict(observation(1.9,'jump2_falling'),test_progress=14,jumps=2)
-    assert policy.choose(obs)==('jump','fixed_route_rope_up')
+    assert policy.choose(obs)==(None,'fixed_route_wait_for_pose')
     assert policy.cursor==1 and reactive.calls==0
+    assert policy.proposed_event is None
+    assert policy.choose(dict(obs,phase='rope_below',jumps=0))==('jump','fixed_route_rope_up')
     policy.last_action=1.5  # An intervening off-tape key breaks continuity.
     assert policy.choose(obs)==('jump','reactive')
 
@@ -561,6 +561,12 @@ def test_runtime_rejects_a_bank_compiled_with_different_anchor_semantics(tmp_pat
     assert policy_module.load(reactive,config,detector_sha256='detector')is reactive
     bank.meta['feature_sha256']=matching.feature_signature()
     assert isinstance(policy_module.load(reactive,config,detector_sha256='detector'),HybridAvoider)
+    programs.write_text(json.dumps(dict(schema=1,programs={
+        'old':dict(timing_robust=True),
+        'nominal':dict(timing_robust=False,timing_certificate_version=2),
+        'new':dict(timing_robust=True,timing_certificate_version=2)})))
+    actor=policy_module.load(reactive,config,detector_sha256='detector')
+    assert set(actor.programs)=={'new'}
 
 
 def test_reference_box_features_and_cache_follow_the_offline_static_layout(tmp_path):
