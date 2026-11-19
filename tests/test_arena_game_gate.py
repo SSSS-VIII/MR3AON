@@ -177,3 +177,25 @@ def test_render_clock_rejects_a_stopped_clock_and_a_wrong_stopped_state():
         gate=module.GameGate(VM([reply(state=stopped or after,last=dict(ok=True,result=job))]))
         gate.view=dict(schema=1,state=before)
         with pytest.raises(RuntimeError,match='render-clock'):gate.render_step(1)
+
+
+def test_completed_paused_physics_stall_keeps_its_evidence_for_real_parent_restore():
+    from arena_checkpoint_errors import NativeIntervalError
+    before=dict(episodeFrame=624,timeScale=0,health=5000)
+    after=dict(episodeFrame=626,timeScale=0,health=5000)
+    job=dict(done=True,error='mr3a-environment:131: Physics ticks stopped advancing',
+             before=before,after=after,samples=[after])
+    gate=module.GameGate(VM([reply(state=after,last=dict(ok=True,result=job))]))
+    gate.view=dict(schema=1,state=before)
+    with pytest.raises(NativeIntervalError)as caught:gate.step(3)
+    assert caught.value.job==job
+
+
+def test_a_still_running_or_inconsistent_stall_is_not_a_recoverable_candidate():
+    from arena_checkpoint_errors import NativeIntervalError
+    after=dict(episodeFrame=626,timeScale=1)
+    job=dict(done=True,error='Physics ticks stopped advancing',before=dict(episodeFrame=624),after=after)
+    gate=module.GameGate(VM([reply(state=after,last=dict(ok=True,result=job))]))
+    gate.view=dict(schema=1)
+    with pytest.raises(RuntimeError)as caught:gate.step(3)
+    assert not isinstance(caught.value,NativeIntervalError)

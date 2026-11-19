@@ -268,3 +268,18 @@ def test_two_endpoint_spacing_reserves_real_time_for_release_and_does_not_use_co
         last_input_frame=0,last_input_time=0.,on_trial=observed.append)
     assert result['found']and result['stats']['timing_spacing_pruned']>=2
     assert {r['action']for r in observed if r['depth']==0}=={'none'}
+
+
+def test_a_completed_stalled_candidate_is_rejected_without_aborting_or_poisoning_its_parent():
+    from arena_checkpoint_errors import NativeIntervalError
+    class Stalling(Oracle):
+        def step(self,ticks,action):
+            if self.data['frame']>=7 and action=='none'and self.data['mode']=='ground':
+                before=self.state();self.data['frozen']=True
+                raise NativeIntervalError('Physics ticks stopped advancing',dict(
+                    done=True,error='Physics ticks stopped advancing',before=before,after=self.state()))
+            return super().step(ticks,action)
+    g=Stalling();result=planner.search_window(g,start=start(g),offset=0,horizon=8,commit=2,max_trials=240)
+    assert result['found']and result['stats']['rejected_invalid_interval']>0
+    assert g.data['health']==5000 and not g.data.get('frozen')
+    assert all(not row['job'].get('error')for row in result['path'])

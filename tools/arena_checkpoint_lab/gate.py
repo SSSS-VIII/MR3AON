@@ -65,6 +65,14 @@ class GameGate:
             raise ValueError('Use original ticks and an original input action')
         result = self.call('step', ticks=ticks, action=action)
         if result.get('error'):
+            # The original bounded driver has already released the UI and
+            # reached a paused barrier. Reject this speculative interval;
+            # its real VM parent remains the only way to undo it. Unfinished
+            # calls and other Lua/transport errors still abort the epoch.
+            if ('Physics ticks stopped advancing'in result['error']and result.get('done')
+                    and self.view.get('state')==result.get('after')
+                    and(result.get('after')or{}).get('timeScale')==0):
+                raise NativeIntervalError(result['error'],result)
             raise RuntimeError(result['error'])
         before = result.get('before', {}).get('episodeFrame')
         after = result.get('after', {}).get('episodeFrame')
