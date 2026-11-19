@@ -799,3 +799,12 @@ v17及finish-v17均已停止：搜索在下一原生指令之前协作退出，�
 214项针对回归及Android DEX构建通过；原Java Keys类体抽取后用模拟Android注入接口运行，立即同键重发只产生1次Down，释放后再发累计2次，报告fixed-route-work/key-transport-java/report.json。这是原发送器逻辑的隔离验证，**不是实机Unity收键实验**。独立arena-search原生对照在transport-recheck-1795091907617776225：短双跳名义、单键端点和其余连续模式均能执行，第9个场景[+40,−40]的实际间隔66.665649ms，在HP5000时按input_transport_repeat_too_close拒绝；宽间隔双跳9场景全过。两组完整VM入口状态均恢复相等，manifest passed=true，研究进程正常退出。此短安全片段不计无伤整板或视觉成绩，也不证明所有按住/松开行为、负载或时相均已覆盖。
 
 修复后从新的batch-transport-v3-fresh-20261119启动v18（PID989942），只53042/max-cases=1，不沿用v17任何路径、warm缓存或证书；初始记录fresh-v18-restart.json包含旧搜索停止、反例/正例、Java测试和源码提交。新原生准入、板头及实际产物尚待跟进。独立finish-v18只待本轮结束，合格才一次编入runtime-transport-v3-fresh，并在live-transport-v3-fresh做三seed各3轮有限实机验收；没有合格产物则记录跳过后退出，无长期watch、无下一case、无默认库晋升。当前稳定可用仍0/407。
+
+
+### 宿主重启后的恢复（11月19日晚）
+
+用户确认电脑重启并要求自行恢复。当前主分支bee8ee5及已有WIP均保留；v18最后磁盘报告为25窗/5000血、complete=false，无合格整板。其systemd transient任务、VM进程及RAM回档点均已消失，不能把coverage遗留searching当存活，也不从输入历史重放恢复。原report/coverage不改写，fresh-v19-restart.json记录旧report摘要和本次boot_id；新建batch-transport-v3-reboot-20261119，仍仅53042/max-cases=1。
+
+第一次v19启动在boot_client早期am attach-agent阶段退出，worker.log明确Unknown process，尚未进入game gate/搜索。原句柄已终止且finish记无合格产物后正常退出。随后仅做一次新的冷初始化（v20），临时入口recover-search-v20.py在相同命名租约内为早期attach失败增加日志收集，没有改变客户端/物理/搜索源码或重试正在进行的VM操作。v20已成功连接game gate，当前等待原生准入及原选关完成；search-v20 PID25141、finish-v20 PID25146，进程已核实存活，启动清单fresh-v20-restart.json。CUDA可用、默认vision-fixed-routes.json与重启前SHA一致。
+
+finish-reboot-v20.py沿用有限收尾流程，只有新v3合格产物才编入runtime-transport-v3-reboot并在live-transport-v3-reboot做三seed各3轮实机验收，随后退出；默认库和旧watch均不恢复。不把启动、自检或旧25窗当作无伤成果，稳定可用仍0/407。
