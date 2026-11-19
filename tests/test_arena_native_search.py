@@ -67,6 +67,51 @@ def test_search_backtracks_before_an_unavoidable_late_collision():
     assert all(row['job']['after']['health'] == 5000 for row in result['path'])
 
 
+@pytest.mark.parametrize('guided',[False,True])
+def test_exact_vm_prefix_reuse_saves_original_steps_and_matches_uncached_search(monkeypatch,guided):
+    monkeypatch.syspath_prepend(str(SOURCE.parent))
+    from prefix_cache import PrefixCache
+    if guided:
+        import native_policy
+        monkeypatch.setattr(native_policy,'read',lambda _:None)
+        monkeypatch.setattr(native_policy,'decision',lambda _:dict(order=['none','jump','down']))
+    oracle=Oracle();entry=start(oracle);root=oracle.snapshot()['result']['id']
+    cache=PrefixCache(max_points=24)
+    args=dict(start=entry,offset=0,horizon=4,commit=2,root_point=root,retain_forecast=True,guided=guided)
+    first=search.search_window(oracle,tree_cache=cache,**args)
+    forbidden={tuple(r['action']for r in first['forecast_path'])}
+    cached=search.search_window(oracle,tree_cache=cache,forbidden_prefixes=forbidden,**args)
+    actual=deepcopy(oracle.native)
+    plain=Oracle();plain_root=plain.snapshot()['result']['id']
+    uncached=search.search_window(plain,start=start(plain),offset=0,horizon=4,commit=2,
+        root_point=plain_root,retain_forecast=True,guided=guided,forbidden_prefixes=forbidden)
+    assert cached['found']and uncached['found']
+    assert[r['action']for r in cached['path']]==[r['action']for r in uncached['path']]
+    assert actual==plain.native
+    assert cached['stats']['prefix_cache_hits']>0
+    assert cached['stats']['trials']<uncached['stats']['trials']
+    if guided:assert cached['stats']['decision_cache_hits']>0
+    assert len(cache.points)<=24
+    keep={r['point']for r in cached['forecast_path']}
+    cache.close(oracle,keep)
+    assert set(oracle.points)=={root,*keep}
+    oracle.restore(root)
+    assert oracle.native==dict(frame=0,hp=5000,lifted=False)
+
+
+def test_prefix_cache_refuses_different_native_roots_and_keeps_a_bounded_number_of_points(monkeypatch):
+    monkeypatch.syspath_prepend(str(SOURCE.parent))
+    from prefix_cache import PrefixCache
+    oracle=Oracle();entry=start(oracle);root=oracle.snapshot()['result']['id']
+    cache=PrefixCache(max_points=1)
+    result=search.search_window(oracle,start=entry,offset=0,horizon=4,commit=2,
+                               root_point=root,tree_cache=cache)
+    assert result['found']and len(cache.points)==1
+    with pytest.raises(ValueError,match='another original VM'):
+        search.search_window(oracle,start=entry,offset=1,horizon=4,commit=2,root_point=root,tree_cache=cache)
+    cache.close(oracle,{r['point']for r in result['path']})
+
+
 @pytest.mark.parametrize('prefix',[
     ('none',),('none','jump','none','none')])
 def test_rejected_prefixes_work_before_commit_and_on_the_native_exit(prefix):

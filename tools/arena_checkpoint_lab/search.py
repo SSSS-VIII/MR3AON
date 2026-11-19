@@ -41,7 +41,7 @@ class BudgetExceeded(RuntimeError):
 
 def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200, on_trial=None, cache_prefix=0,
                   root_point=None, forbidden_prefixes=(),early_jump=False,guided=False,retain_forecast=False,
-                  last_input_frame=None,warm_start=()):
+                  last_input_frame=None,warm_start=(),tree_cache=None):
     """Leave the guest at a chosen real checkpoint, or at this window's root.
 
     A 50ms nominal interval alternates 40/60ms original ticks. offset counts
@@ -50,17 +50,21 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
     if not 1 <= commit <= horizon <= 24 or max_trials < 1 or offset < 0 or not 0<=cache_prefix<=4:
         raise ValueError('Invalid bounded native search window')
     root = gate.snapshot()['result']['id'] if root_point is None else root_point
+    if tree_cache is not None:
+        tree_cache.bind(root,start,offset,horizon,last_input_frame)
     owned = [root]
     trials = []
     stats = dict(trials=0, rejected_damage=0, restores_ms=[], action_limits_tried=[], seconds=0)
     stats['prefix_cache_hits']=0
+    stats['decision_cache_hits']=0
+    stats['redundant_restores_skipped']=0
     stats['rejected_invalid_interval']=0
     stats['early_jump_hint']=False
     stats['blocked_rope_hint']=False
     force_first_jump=False
     prefix={}
-    unsafe_actions = set()
-    decisions={}
+    unsafe_actions = tree_cache.unsafe if tree_cache is not None else set()
+    decisions=tree_cache.decisions if tree_cache is not None else{}
     stats['native_decisions']=[]
     stats['timing_spacing_pruned']=0
     stats['proposal_deviation_limits_tried']=[]
@@ -68,6 +72,15 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
     stats['warm_start_choices']=[]
     began = time.monotonic()
     rejected={}
+    parked=None
+    def restore(point):
+        nonlocal parked
+        if parked==point:
+            stats['redundant_restores_skipped']+=1
+            return dict(ms=0)
+        result=gate.restore(point)
+        parked=point
+        return result
     for actions in forbidden_prefixes:rejected.setdefault(len(actions),set()).add(tuple(actions))
 
     def forbidden(actions):
@@ -75,9 +88,10 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
 
     def release(keep):
         for identity in owned:
-            if identity not in keep:gate.drop(identity)
+            if identity not in keep and (tree_cache is None or identity not in tree_cache.points):gate.drop(identity)
 
     def walk(point, depth, path, remaining_cost):
+        nonlocal parked
         if forbidden(tuple(r['action']for r in path)):
             return None
         if depth >= horizon:
@@ -87,9 +101,11 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
         if guided:
             from native_policy import read,decision,refine
             if point not in decisions:
+                parked=None
                 observation=read(gate)
                 decisions[point]=refine(gate,point,observation,decision(observation))
                 stats['native_decisions'].append(dict(point=point,**decisions[point]))
+            else:stats['decision_cache_hits']+=1
             order=tuple(decisions[point]['order'])
             if depth<len(warm_start)and tuple(r['action']for r in path)==tuple(warm_start[:depth]):
                 preferred=warm_start[depth]
@@ -107,24 +123,26 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
             cost = int(action != order[0]) if guided else int(action != 'none')
             if cost > remaining_cost or (point, action) in unsafe_actions:
                 continue
-            cached=prefix.get(point)if action=='none'else None
+            cached=(tree_cache.transitions.get((point,action))if tree_cache is not None
+                    else prefix.get(point)if action=='none'else None)
             if cached is None and stats['trials'] >= max_trials:
                 raise BudgetExceeded('Native window trial budget exhausted')
             if cached is not None:
                 stats['prefix_cache_hits']+=1
                 child=cached['point']
                 row=cached
-                stats['restores_ms'].append(gate.restore(child)['ms'])
+                stats['restores_ms'].append(restore(child)['ms'])
                 advanced=path+[row]
                 crossed=exit_kind(start['board'],row['board'])is not None
                 result=(advanced,True)if crossed else walk(child,depth+1,advanced,remaining_cost-cost)
                 if result is not None:
                     return result
-                gate.restore(point)
+                restore(point)
                 continue
-            restored = gate.restore(point)
+            restored = restore(point)
             stats['restores_ms'].append(restored['ms'])
             interval_error=None
+            parked=None
             try:
                 job = gate.step(ticks, action)
             except NativeIntervalError as error:
@@ -150,10 +168,12 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
                 # Different native gameplay contexts require another route.
                 continue
             child = gate.snapshot()['result']['id']
+            parked=child
             owned.append(child)
             row = dict(action=action, ticks=ticks, job=job, board=board, point=child)
-            keep=(action=='none'and depth<cache_prefix and all(r['action']=='none'for r in path))
-            if keep:
+            keep=(tree_cache.remember(point,action,row)if tree_cache is not None else
+                  action=='none'and depth<cache_prefix and all(r['action']=='none'for r in path))
+            if keep and tree_cache is None:
                 prefix[point]=row
             advanced = path + [row]
             crossed = goal is not None
@@ -162,7 +182,7 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
             result = walk(child, depth + 1, advanced, remaining_cost - cost)
             if result is not None:
                 return result
-            gate.restore(point)
+            restore(point)
             if not keep:
                 gate.drop(child)
                 owned.remove(child)
@@ -217,16 +237,17 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
                     pass  # The already verified original rollout remains valid.
                 finally:force_first_jump=False
         if result is None:
-            gate.restore(root)
+            restore(root)
             release({root})
             return dict(found=False, reason='No safe path within the finite window', root=root,
                         trials=trials, stats=stats)
         path, crossed = result
         count = len(path) if crossed else commit
         selected = path[count - 1]
-        gate.restore(selected['point'])
+        restore(selected['point'])
         # Do not replace these observations with field assignments. This is
         # the live state restored by the VM, checked before committing it.
+        parked=None
         actual = gate.call('state')
         if actual != selected['job']['after']:
             raise RuntimeError('Chosen VM checkpoint differs from the searched native state')
@@ -237,11 +258,11 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
         if retain_forecast:result['forecast_path']=deepcopy(path)
         return result
     except BudgetExceeded as error:
-        gate.restore(root)
+        restore(root)
         release({root})
         return dict(found=False, reason=str(error), root=root, trials=trials, stats=stats)
     except BaseException:
-        gate.restore(root)
+        restore(root)
         release({root})
         raise
     finally:

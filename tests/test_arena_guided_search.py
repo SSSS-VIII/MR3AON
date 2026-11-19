@@ -33,6 +33,7 @@ def test_future_operation_is_checked_before_committing_waits_without_banning_its
     assert ('none','none','jump')in calls[1]['forbidden_prefixes']
     assert ('none','none')not in calls[1]['forbidden_prefixes']
     assert len(result['timing_attempts'])==2
+    assert result['stats']['trials']==2 and result['stats']['proposals']==2
     assert set(dropped)=={11,12,13,14,23,24}
 
 
