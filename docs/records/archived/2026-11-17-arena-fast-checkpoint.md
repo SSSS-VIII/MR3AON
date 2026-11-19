@@ -750,3 +750,8 @@ v16第67窗在约294.16m再次没有可用延续，真实VM回退到288.61m；�
 确认复验进程及其file worker退出后，冷启动`mr3a-arena-fixed-search-v17.service`，Restart=no，独立全空队列`fixed-route-work/batch-clock-v2-fresh-20261119`，仍`--case L5-M43-S4-B53042 --max-cases 1`。不复制旧coverage/路线/前缀缓存，不读取v16的288m路径，也不热加载修补模块；全新Python进程加载当前已提交修复，再做自身原生准入自检、原选关、板头新根。新状态须看该队列的最新attempt/report，不能继续用v16报告或进程号判断。
 
 本轮不恢复长期watch后台。独立有限收尾器`mr3a-arena-fixed-finish-v17.service`只等v17退出：若有完整合格v2产物，使用现有refresh一次编入`runtime-clock-v2-fresh`，再用现有live_batch非watch模式对三seed各3轮验收，输出`live-clock-v2-fresh`后退出；没有合格产物则记录跳过并退出。只当前板、不自动进入其它case、不改默认运行库，结果在`fixed-route-work/fresh-v17-completion.json`。启动时尚无新整板或视觉成绩，原source固定与9轮全通过口径保留。
+
+
+16:58已确认v17实际开始新搜索。新run为`batch-clock-v2-fresh-20261119/runs/L5-M43-S4-B53042/1795078376602191116`；自身准入0/−49.999/+50.003ms全部通过、root_restored=true，然后原选关进入53042。起点原帧529/板内0.910278m/5000血/无保护未骑乘，首2窗真实提交到8.652954m、无回退或错误。冻结的guided_search/native_planner/endpoint_rollout/timing_margin/clock_step/gate及arena_action_contract七项源码摘要与当前版本逐项相同，没有runtime_source_updates；fresh-v17-restart.json保存准入、入口、report摘要及对比结果。新整板/稳定视觉仍0。
+
+另复核运行时残留的relative_tick×.02：这些连按计时辅助属于旧非认证路径；v2认证分支由certified_positions进入后按原板内world-X顺序触发，并仍校验当前动作位姿，定位不足时返回实时策略，不走旧short_combination/hold_recorded_motion。没有因为看见旧常量就修改当前v2发键语义，也没有用该辅助路径规避新的容差检查。
