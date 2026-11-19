@@ -755,3 +755,14 @@ v16第67窗在约294.16m再次没有可用延续，真实VM回退到288.61m；�
 16:58已确认v17实际开始新搜索。新run为`batch-clock-v2-fresh-20261119/runs/L5-M43-S4-B53042/1795078376602191116`；自身准入0/−49.999/+50.003ms全部通过、root_restored=true，然后原选关进入53042。起点原帧529/板内0.910278m/5000血/无保护未骑乘，首2窗真实提交到8.652954m、无回退或错误。冻结的guided_search/native_planner/endpoint_rollout/timing_margin/clock_step/gate及arena_action_contract七项源码摘要与当前版本逐项相同，没有runtime_source_updates；fresh-v17-restart.json保存准入、入口、report摘要及对比结果。新整板/稳定视觉仍0。
 
 另复核运行时残留的relative_tick×.02：这些连按计时辅助属于旧非认证路径；v2认证分支由certified_positions进入后按原板内world-X顺序触发，并仍校验当前动作位姿，定位不足时返回实时策略，不走旧short_combination/hold_recorded_motion。没有因为看见旧常量就修改当前v2发键语义，也没有用该辅助路径规避新的容差检查。
+
+
+### 原生区间内接地后首跳被粗粒度动作契约误删（11月19日）
+
+v17重新搜索至第10窗时，原生单步早筛记录了2条“无效jump”，但原始状态实际是fall:15→jump:14。复核第9窗原帧699的相邻三分支，均先恢复同一个父VM点且完整before相同：none在701为runOnGround/y−0.130005，jump为jump/y−0.046703，down为slideOnGround/y−0.177879，血量全5000。首个中间样本700分别已为ground/jump/slide，与原生区间内接地并消费输入一致，但不据此把所有fall强制当成首跳；本例2个计数实际33.333ms，不以50ms代指。其X约1168.8065/板内59.81m，尚在无敌人前段，不是拿后来受伤倒推动作效果。第10窗重复出现相同对照。
+
+旧native_pose将fall和jump均归入air/1，meaningful只比较这个粗粒度结果，错误拒绝了实际首跳。与此同时，若简单放行这一输入，旧effect_matches也会把仍fall/air1当成预期jump/air1，漏检问题反而会重现。9107039只为有原生证据的fall→jump/jump1首跳补充精确语义：允许它作为有效提案；其前提仍须原fall，结果必须真正进入首跳，仍fall、只落地或已经上升的相同air/1均不能替代。spent jump、原滑行检查及其它动作保持，不更改任何原Ninja/物理/按键/陷阱/HP。
+
+203项相关回归通过，包括原生轨迹束保留该合法分支，以及忽略fall jump时即使无伤也由容差验证按operation_effect_mismatch拒绝。原始三分支完整job/中间samples、旧函数误判和新函数复核在`fixed-route-work/landing-jump-repair-v17-2026-11-19.json`，不需要另起客户端重演来撤销搜索。
+
+修正在v17第22窗新window入口只替换宿主动作契约及native_planner/endpoint_rollout/timing_margin的实际导入绑定，保留148个VM点、gate元数据一致、没有客体请求。源码与manifest在本run `search/runtime-updates/1795079521448009312`，landing-jump-update.json为applied；原始冻结源码保留，以runtime_source_updates记此处增量。当前路线前21窗只提交过一次ground→slide，未依赖这类被错误删掉的输入；整板最终仍须从初始完整VM根用更新后的检查重新验证。尚未宣称新的fall→jump在现场提案/两端都已通过，也无同根速度A/B或合格新整板；后续以实际trials/audits为准。
