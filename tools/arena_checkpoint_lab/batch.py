@@ -4,6 +4,7 @@ Native selection initializes a new case. Every search undo is a VM restore;
 failed cases remain explicit and never become passes merely by being visited.
 """
 import json
+from copy import deepcopy
 from pathlib import Path
 import time
 
@@ -73,6 +74,38 @@ def initialize(gate, case, progress, seed=55200):
     except BaseException:
         gate.restore(root)
         raise
+
+
+def validate_entries(gate,rows,start,case,progress):
+    """New initialization is acceptance evidence, never the search undo path."""
+    from timing_margin import verify
+    saved=set(gate.points);park=gate.snapshot()['result']['id'];entries=[]
+    try:
+        for offset in (1,2):
+            seed=(start['state']['seed']+offset)%2147483648
+            initialize(gate,case,progress,seed=seed)
+            state=gate.call('state');board=gate.call('exec',code=search.BOARD)
+            actual=dict(health=state['health'],state=state,board=board)
+            initial=gate.snapshot()['result']['id']
+            dx=board['stage_start']-start['board']['stage_start']
+            dt=state['time']-start['state']['time']
+            df=state['episodeFrame']-start['state']['episodeFrame']
+            translated=deepcopy(rows)
+            for row in translated:
+                row.pop('point',None)
+                for key in ('before','after'):
+                    s=row['job'][key];s['position']['x']+=dx;s['time']+=dt;s['episodeFrame']+=df
+            validation=verify(gate,translated,initial_point=initial,initial_state=state,start=actual,
+                board_code=search.BOARD,whole_board=True,full_suite=False,
+                on_result=lambda check:progress(dict(phase='fresh_entry_endpoint',seed=seed,
+                    scenario=check['scenario'],passed=check['passed'])))
+            entries.append(dict(seed=seed,fresh_initialization=True,
+                unprotected=not board['god']and not board['mounted'],entry=actual,validation=validation))
+            if not validation['passed']:break
+    finally:
+        gate.restore(park)
+        for point in set(gate.points)-saved:gate.drop(point)
+    return entries
 
 
 class WorkQueue:
@@ -178,7 +211,8 @@ class WorkQueue:
                 # 600ms survival suffix while both jumps are already spent.
                 report = search.run(gate, output / 'search', collector=references, max_windows=600,
                                     horizon=24 if retain_history else 12,
-                                    retain_history=retain_history,native_decision=retain_history)
+                                    retain_history=retain_history,native_decision=retain_history,
+                                    entry_validator=lambda gate,rows,start:validate_entries(gate,rows,start,case,progress))
                 attempt['status'] = 'native_passed' if self.accept(
                     case, report, output / 'search/report.json', references) else 'search_stalled'
             except KeyboardInterrupt:

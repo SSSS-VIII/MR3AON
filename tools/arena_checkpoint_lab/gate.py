@@ -77,6 +77,21 @@ class GameGate:
                 f'Native physics interval mismatch: requested {ticks}, advanced {elapsed}, stopped {stopped}',result)
         return result
 
+    def render_step(self, frames, action='none'):
+        """Validation clock; never convert the game's counter into milliseconds."""
+        if type(frames)is not int or not 1<=frames<=120 or action not in ('none','jump','down'):
+            raise ValueError('Use render frames and an original input action')
+        job=self.call('exec',code=f'return MR3A.advance_render({frames},{json.dumps(action)})')
+        if job.get('error'):raise RuntimeError(job['error'])
+        before,after=job.get('before',{}),job.get('after',{})
+        elapsed=after.get('frame',0)-before.get('frame',0)
+        if (not job.get('done')or job.get('unit')!='unity_render_frame'
+                or elapsed<1 or(not job.get('exited')and elapsed<frames)or elapsed>max(frames,2)
+                or after.get('time',0)<=before.get('time',0)
+                or self.view.get('state')!=after):
+            raise NativeIntervalError('Invalid original render-clock interval',job)
+        return job
+
     def screenshot(self):
         # Debug evidence from the guest renderer; normal search does not encode
         # images. Request chunks so a dense PNG cannot overflow the mailbox.

@@ -157,3 +157,23 @@ def test_rebase_refuses_insufficient_spare_ram_before_mutation(tmp_path, monkeyp
     with pytest.raises(RuntimeError, match='spare RAM'):
         gate.rebase()
     assert [operation for operation, _ in vm.calls] == ['status']
+
+
+@pytest.mark.parametrize('native_ticks',[0,1])
+def test_render_clock_does_not_convert_native_counter_ticks_to_elapsed_time(native_ticks):
+    before=dict(frame=100,time=2.,episodeFrame=50)
+    after=dict(frame=101,time=2.+1/60,episodeFrame=50+native_ticks)
+    job=dict(done=True,unit='unity_render_frame',before=before,after=after)
+    gate=module.GameGate(VM([reply(state=after,last=dict(ok=True,result=job))]))
+    gate.view=dict(schema=1,state=before)
+    assert gate.render_step(1)==job
+
+
+def test_render_clock_rejects_a_stopped_clock_and_a_wrong_stopped_state():
+    before=dict(frame=100,time=2.,episodeFrame=50)
+    for after,stopped in [(dict(frame=101,time=2.,episodeFrame=51),None),
+                          (dict(frame=101,time=2.+1/60,episodeFrame=51),before)]:
+        job=dict(done=True,unit='unity_render_frame',before=before,after=after)
+        gate=module.GameGate(VM([reply(state=stopped or after,last=dict(ok=True,result=job))]))
+        gate.view=dict(schema=1,state=before)
+        with pytest.raises(RuntimeError,match='render-clock'):gate.render_step(1)

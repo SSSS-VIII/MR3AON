@@ -94,7 +94,10 @@ def run(gate, source, output, *, event_index, shift_ticks, collector=None):
             report['timing_validation'] = verify(gate, report['route'], initial_point=root,
                 initial_state=original['start']['state'], start=original['start'], board_code=BOARD,
                 whole_board=True, on_result=progress)
-        report['complete'] = bool(report['timing_validation']['passed'])
+        report['complete'] = valid(report['timing_validation'],report['start']['state']['episodeFrame'],
+            report['end']['state']['episodeFrame'],sum(r['action']!='none'for r in report['route']))
+        if report['timing_validation']['passed']and not report['complete']:
+            report['failure']=dict(reason='fresh_entry_validation_required')
         if report['complete']:
             report['exit_kind'] = crossed
         if collector is not None:

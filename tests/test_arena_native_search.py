@@ -443,6 +443,8 @@ def test_cross_window_dead_end_restores_an_earlier_real_root_and_changes_its_inp
             return dict(passed=True)
         monkeypatch.setattr(guided_search,'window',proposed)
         monkeypatch.setattr(timing_margin,'verify',verify)
+        # This fixture tests real-root backtracking, not certificate contents.
+        monkeypatch.setattr(search,'valid_timing_certificate',lambda *_:True)
     renderer=dict(width=320,height=180,interval=1)
     monkeypatch.setitem(sys.modules,'render',SimpleNamespace(
         prepare=lambda _:dict(requested=renderer),INFO='renderer'))
@@ -481,7 +483,8 @@ def test_cross_window_dead_end_restores_an_earlier_real_root_and_changes_its_inp
         def status(self):return dict(count=len(self.rows))
     collector=Collector()
     result=search.run(oracle,tmp_path/'history',horizon=4,commit=2,max_trials=100,max_windows=30,
-                      retain_history=True,collector=collector,native_decision=quality)
+                      retain_history=True,collector=collector,native_decision=quality,
+                      entry_validator=lambda *_:[])
     assert result['complete']and result['no_health_loss']
     assert result['backtracks']and oracle.rebases==1
     assert any(len(backtrack['skipped_attempts'])>1 for backtrack in result['backtracks'])

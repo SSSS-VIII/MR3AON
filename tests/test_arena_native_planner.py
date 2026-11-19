@@ -248,3 +248,23 @@ def test_equal_nominal_clearance_can_prefer_the_action_with_a_wider_timing_margi
     stable=planner.quality(current,slow);sensitive=planner.quality(current,fast)
     assert stable['nominal_risk']==pytest.approx(sensitive['nominal_risk'])
     assert stable['risk']<sensitive['risk']
+
+
+def test_motion_differences_use_engine_time_even_when_game_counters_label_another_duration():
+    g=Oracle();a=g.observation();a['state']['time']=1.
+    b=deepcopy(a);b['state'].update(time=1.05,episodeFrame=2)
+    b['role'][0]['center']=dict(x=.925,y=1.25,z=0)
+    q=planner.quality(b,a)
+    assert q['_role_velocity']==pytest.approx((18.5,10.))
+
+
+def test_two_endpoint_spacing_reserves_real_time_for_release_and_does_not_use_counter_ticks():
+    class ClockOracle(Oracle):
+        def state(self):
+            s=super().state();s['time']=s['episodeFrame']*.01;return s
+    g=ClockOracle();g.data.update(frame=5,early=True);g.update()
+    observed=[]
+    result=planner.search_window(g,start=start(g),offset=0,horizon=4,commit=2,
+        last_input_frame=0,last_input_time=0.,on_trial=observed.append)
+    assert result['found']and result['stats']['timing_spacing_pruned']>=2
+    assert {r['action']for r in observed if r['depth']==0}=={'none'}

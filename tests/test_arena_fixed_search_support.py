@@ -149,3 +149,42 @@ def test_abandoned_reference_images_do_not_overwrite_or_publish_as_accepted(tmp_
     assert [r['tick']for r in refs.abandoned]==[2]
     assert (refs.folder/'00001.png').read_bytes()==rejected
     assert refs.rows[-1]['image']=='00002.png'
+
+
+@pytest.mark.parametrize('failed',[False,True])
+def test_fresh_entry_validation_translates_only_reference_coordinates_and_restores_search_owner(monkeypatch,failed):
+    monkeypatch.syspath_prepend(str(ROOT/'tools/arena_checkpoint_lab'))
+    import batch,timing_margin
+    class Gate:
+        def __init__(self):
+            self.current=dict(seed=55200,time=2.,episodeFrame=15,health=5000,position=dict(x=101,y=.75))
+            self.points={1:deepcopy(self.current)};self.serial=1;self.origin=100
+        def snapshot(self):
+            self.serial+=1;self.points[self.serial]=(deepcopy(self.current),self.origin)
+            return dict(result=dict(id=self.serial))
+        def restore(self,p):self.current,self.origin=deepcopy(self.points[p]);return dict(ms=1)
+        def drop(self,p):del self.points[p]
+        def call(self,op,**_):
+            if op=='state':return deepcopy(self.current)
+            return dict(map=42,stage_index=1,stage_start=self.origin,god=False,mounted=False)
+    gate=Gate();owner=deepcopy(gate.current);saved=deepcopy(gate.points);seeds=[]
+    start=dict(state=dict(owner,time=1.,episodeFrame=10),board=dict(stage_start=100))
+    rows=[dict(action='jump',point=1,job=dict(before=dict(start['state'],position=dict(x=100,y=.75)),after=owner))]
+    original=deepcopy(rows)
+    def initialize(g,case,progress,seed):
+        seeds.append(seed);g.origin=200
+        g.current=dict(seed=seed,time=10.,episodeFrame=20,health=5000,position=dict(x=200,y=.75))
+        g.snapshot()  # Initialization's own checkpoint must be cleaned too.
+    def verify(g,translated,**kwargs):
+        assert kwargs['whole_board']and kwargs['full_suite']is False
+        assert translated[0]['job']['before']['time']==10
+        assert translated[0]['job']['after']['time']==11
+        assert translated[0]['job']['after']['episodeFrame']==25
+        assert translated[0]['job']['after']['position']['x']==201
+        assert 'point'not in translated[0]
+        return dict(passed=not failed,failure=dict(reason='native_damage',event=dict(row_index=0)))
+    monkeypatch.setattr(batch,'initialize',initialize);monkeypatch.setattr(timing_margin,'verify',verify)
+    result=batch.validate_entries(gate,rows,start,{},lambda *_:None)
+    assert seeds==([55201]if failed else[55201,55202])
+    assert rows==original and gate.current==owner and gate.points==saved
+    assert all(r['fresh_initialization']and r['unprotected']for r in result)

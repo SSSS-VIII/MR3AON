@@ -4,6 +4,7 @@ import time
 
 from arena_checkpoint_errors import NativeIntervalError
 from arena_fixed_goal import exit_kind
+from arena_action_contract import native_pose
 from native_policy import REST, decision, read, support_y
 from search import BOARD
 
@@ -19,7 +20,8 @@ def quality(observation,previous=None,previous_quality=None,*,jitter_seconds=.04
     """A ranking heuristic, not a collision oracle or proof of future safety."""
     state=observation['state'];body=observation['role'][0]
     p,r=body['center'],body['extents'];phase=state['physics'].split(':')[0].lower()
-    dt=(state['episodeFrame']-previous['state']['episodeFrame'])*.02 if previous else 0
+    dt=(state['time']-previous['state']['time']if 'time'in state and 'time'in previous['state']
+        else(state['episodeFrame']-previous['state']['episodeFrame'])*.02)if previous else 0
     old={h['id']:h for h in previous.get('hazards',[])}if previous else{}
     if dt>0:
         a=previous['role'][0]['center'];velocity=((p['x']-a['x'])/dt,(p['y']-a['y'])/dt)
@@ -116,7 +118,7 @@ def select(nodes,width):
 
 def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_trial=None,
                   root_point=None,forbidden_prefixes=(),tree_cache=None,last_input_frame=None,
-                  warm_start=(),beam_width=3,retain_forecast=True,**unused):
+                  warm_start=(),beam_width=3,retain_forecast=True,last_input_time=None,**unused):
     if not 1<=commit<=horizon<=24 or max_trials<1 or offset<0 or not 1<=beam_width<=4:
         raise ValueError('Invalid native trajectory beam bounds')
     root=gate.snapshot()['result']['id']if root_point is None else root_point
@@ -162,7 +164,12 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
                 point=node['point'];obs=observations[point];p=proposal(point)
                 order=tuple(p['order'])
                 previous=next((r['job']['before']['episodeFrame']for r in reversed(node['path'])if r['action']!='none'),last_input_frame)
-                if previous is not None and obs['state']['episodeFrame']-previous<=2:
+                previous_time=next((r['job']['before'].get('time')for r in reversed(node['path'])
+                                    if r['action']!='none'),last_input_time)
+                too_close=(obs['state']['time']-previous_time<.12-1e-5
+                    if previous_time is not None and 'time'in obs['state']
+                    else previous is not None and obs['state']['episodeFrame']-previous<=2)
+                if too_close:
                     stats['timing_spacing_pruned']+=2;order=('none',)
                 elif (p['reason']=='clear_native_corridor'and not p['nearest']
                       and node['quality']['phase']in REST and obs.get('support',{}).get('continues')):
@@ -175,6 +182,8 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
                 if depth<len(warm_start)and actions==tuple(warm_start[:depth])and warm_start[depth]in order:
                     preferred=warm_start[depth];order=(preferred,*(a for a in order if a!=preferred))
                 for action in order:
+                    if action=='jump'and native_pose(obs['state']['physics'])==('air',2):
+                        continue
                     if excluded(actions+(action,))or(point,action)in unsafe:continue
                     row=tree_cache.transitions.get((point,action))if tree_cache is not None else None
                     cached=row is not None
@@ -206,7 +215,9 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
                         row=dict(action=action,ticks=ticks,job=job,board=board,point=None)
                     q=quality(future,obs,node['quality'])
                     item=dict(point=row['point'],path=node['path']+[row],quality=q,
-                              integral=node['integral']+q['risk']*ticks*.02,
+                              integral=node['integral']+q['risk']*(
+                                  future['state']['time']-obs['state']['time']
+                                  if 'time'in future['state']and 'time'in obs['state']else ticks*.02),
                               peak=max(node['peak'],q['risk']),inputs=node['inputs']+int(action!='none'),
                               progress=future['state']['position']['x']-x0)
                     item['timing_cost']=timing_cost(item['path'],feedback)

@@ -21,12 +21,12 @@ def rejected_prefix(forecast,history_length,audit):
 
 
 def record_margin_feedback(cache,forecast,history_length,audit):
-    failure=audit.get('failure',{});event=failure.get('event',{})
+    failure=audit.get('failure',{});event=failure.get('perturbed_event')or failure.get('event',{})
     index=event.get('row_index',-1)-history_length
-    if failure.get('reason')!='native_damage'or failure.get('shift_ticks')not in(-2,2)or not 0<=index<len(forecast):return
+    if failure.get('reason')not in('native_damage','operation_prerequisite_mismatch','operation_effect_mismatch')or failure.get('shift_ms')not in(-40,40)or not 0<=index<len(forecast):return
     row=forecast[index]
     feedback=dict(before=tuple((r['job']['before']['episodeFrame'],r['action'])for r in forecast[:index]if r['action']!='none'),
-                  frame=row['job']['before']['episodeFrame'],action=row['action'],shift=failure['shift_ticks'])
+                  frame=row['job']['before']['episodeFrame'],action=row['action'],shift=1 if failure['shift_ms']>0 else-1)
     if feedback not in cache.margin_feedback:cache.margin_feedback.append(feedback)
 
 
@@ -65,10 +65,11 @@ def _window(gate,*,searcher,history,initial_point,initial_state,board_code,tree_
     kwargs['warm_start']=hint['actions']if matched else()
     gate._arena_native_continuation=None
     previous=next((r['job']['before']['episodeFrame']for r in reversed(history)if r['action']!='none'),None)
+    previous_time=next((r['job']['before'].get('time')for r in reversed(history)if r['action']!='none'),None)
     while used<budget:
         result=searcher(gate,**kwargs,max_trials=budget-used,root_point=root,
                         forbidden_prefixes=forbidden,guided=True,retain_forecast=True,last_input_frame=previous,
-                        tree_cache=tree_cache)
+                        last_input_time=previous_time,tree_cache=tree_cache)
         root=result['root'];used+=result['stats']['trials']
         proposal_stats.append(dict(result['stats']))
         if not result['found']:
@@ -79,7 +80,9 @@ def _window(gate,*,searcher,history,initial_point,initial_state,board_code,tree_
         end_frame=forecast[-1]['job']['after']['episodeFrame']
         selected.update(len(history)+i for i,row in enumerate(forecast)
                         if i>=len(path)and row['action']!='none'
-                        and row['job']['before']['episodeFrame']+2<end_frame)
+                        and (row['job']['before']['time']+.04+1/60<forecast[-1]['job']['after']['time']
+                             if 'time'in row['job']['before']and 'time'in forecast[-1]['job']['after']
+                             else row['job']['before']['episodeFrame']+2<end_frame))
         def progress(check):
             print(f'独立80ms窗口: 操作{check["event"]} 偏移{check["shift_ms"]}ms 通过={check["passed"]}',flush=True)
         audit=(verify(gate,combined,initial_point=initial_point,initial_state=initial_state,

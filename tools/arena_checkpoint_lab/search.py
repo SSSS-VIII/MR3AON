@@ -13,6 +13,7 @@ import shutil
 import time
 from arena_fixed_goal import exit_kind
 from arena_checkpoint_errors import NativeIntervalError
+from arena_timing_certificate import valid as valid_timing_certificate
 
 LOADED_SOURCE = Path(__file__).read_bytes()
 
@@ -270,7 +271,7 @@ def search_window(gate, *, start, offset, horizon=12, commit=6, max_trials=1200,
 
 
 def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120, collector=None,
-        retain_history=False,native_decision=False):
+        retain_history=False,native_decision=False,entry_validator=None):
     """Find one board exit from the current native starting point, if possible.
 
     Rolling mode rebases after each window. Retained mode keeps real earlier
@@ -285,13 +286,19 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
     names=('search.py','render.py','gate.py','game_gate.lua')+(
         ('worker_file.rs','ram_file.rs','ram_file.patch','ram_restore.patch','restore_trace.patch')if retain_history else('worker.rs',))
     if native_decision:names+=('native_policy.py','native_observation.lua','native_planner.py',
-                              'prefix_cache.py','timing_margin.py','guided_search.py')
+                              'prefix_cache.py','timing_margin.py','guided_search.py','endpoint_rollout.py','clock_step.lua')
     sources = {name: (LOADED_SOURCE if name == 'search.py' else (Path(__file__).parent / name).read_bytes())
                for name in names}
+    if native_decision:
+        for name in ('arena_action_contract.py','arena_timing_certificate.py'):
+            sources[name]=(Path(__file__).parent.parent/name).read_bytes()
     if collector is not None:
         sources['collector.py'] = (Path(__file__).parent / 'collector.py').read_bytes()
     for name, data in sources.items():
         (output / name).write_bytes(data)
+    if native_decision:
+        from timing_margin import install_clock
+        install_clock(gate)
     initial = gate.call('state')
     if retain_history and not gate.vm.request('status')['result'].get('file_ram'):
         raise RuntimeError('Cross-window history requires the validated file-backed worker')
@@ -318,7 +325,7 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
         report['worker_capabilities']=gate.vm.request('status')['result']
         report['source_scope']='Editor source snapshot; the executable SHA identifies the actual running backend'
     if retain_history:report['algorithm']='Original-engine input-count DFS with whole-VM cross-window backtracking'
-    if native_decision:report['algorithm']='Native trajectory beam with scored original-engine states and independent +/-40ms endpoints'
+    if native_decision:report['algorithm']='Native trajectory beam; measured-clock endpoint scenarios with action contracts and fresh-entry checks'
     report['backtracks']=[]
     history=[]
     nominal=[]
@@ -427,11 +434,26 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
                             validation=verify(gate,nominal,initial_point=report['initial_ram_root']['result']['id'],
                                 initial_state=start['state'],start=start,board_code=BOARD,whole_board=True,
                                 on_result=timing_progress)
+                        if validation['passed']:
+                            if entry_validator is None:
+                                validation.update(passed=False,failure=dict(
+                                    reason='fresh_entry_validation_required',event={'row_index':0}))
+                            else:
+                                entries=entry_validator(gate,nominal,start)
+                                validation['reentries']=entries
+                                rejected=next((e for e in entries if not e['validation']['passed']),None)
+                                if rejected:
+                                    validation.update(passed=False,failure=rejected['validation']['failure'])
+                            if validation['passed']and not valid_timing_certificate(validation,
+                                    start['state']['episodeFrame'],path[-1]['job']['after']['episodeFrame'],
+                                    sum(r['action']!='none'for r in nominal)):
+                                validation.update(passed=False,failure=dict(
+                                    reason='incomplete_transfer_evidence',event={'row_index':0}))
                         report['timing_validation']=validation
                         if not validation['passed']:
                             failure=validation['failure']
                             report.setdefault('timing_rejections',[]).append(validation)
-                            target=failure['event']['row_index']
+                            target=failure.get('repair_row_index',(failure.get('event')or{}).get('row_index',0))
                             print(f'整板80ms独立容差失败，回退修正操作所在窗: row={target}',flush=True)
                             if backtrack(window,index,'independent_operation_margin_failed',target):continue
                             report['reason']='No retained prefix can repair the operation timing margin'
