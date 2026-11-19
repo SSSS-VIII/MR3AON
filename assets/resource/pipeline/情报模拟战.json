@@ -165,17 +165,10 @@
                 }
             }
         },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "AbortTasker",
-                "custom_action_param": {}
-            }
-        },
         "next": [
-            "情报模拟战停止"
+            "重启游戏"
         ],
-        "focus": "情报模拟战超时，未登记完成"
+        "focus": "情报模拟战超时，重启游戏后恢复任务，未登记完成"
     },
     "情报模拟战停止": {
         "on_error": [],
@@ -228,6 +221,7 @@
             "Default_on_error"
         ],
         "next": [
+            "游戏有更新需重启",
             "情报模拟战总超时",
             "情报模拟战结算确定",
             "情报模拟战恢复对局",

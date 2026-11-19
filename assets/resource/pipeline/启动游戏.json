@@ -416,6 +416,7 @@
             "启动关闭渠道可币券弹窗",
             "识别登录",
             "关闭选择区服页面交给上层处理",
+            "启动游戏处理重启更新",
             "需要更新",
             "等待更新完成",
             "同意隐私保护提示",
@@ -1493,5 +1494,51 @@
             "type": "Click"
         },
         "post_delay": 500
+    },
+    "启动游戏处理重启更新": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "游戏更新提示标题",
+                    "游戏更新重启按钮"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisarmGameProcessWatch"
+            }
+        },
+        "next": [
+            "启动游戏点击重启更新"
+        ],
+        "on_error": [
+            "启动游戏失败"
+        ]
+    },
+    "启动游戏点击重启更新": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "游戏更新提示标题",
+                    "游戏更新重启按钮"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "闪退后重新拉起应用"
+        ],
+        "post_delay": 2000,
+        "on_error": [
+            "启动游戏失败"
+        ]
     }
 }
