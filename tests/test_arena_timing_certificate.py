@@ -3,15 +3,16 @@ from pathlib import Path
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
 from arena_timing_certificate import valid,schedules
+from arena_input_transport import PROFILE
 
 
 def context(full=True):
-    return dict(version=2,passed=True,window_ms=80,offsets_ms=[-40,40],sampling='endpoints',
+    return dict(version=3,transport=dict(PROFILE),passed=True,window_ms=80,offsets_ms=[-40,40],sampling='endpoints',
         clock='Unity.Time.time',timing_reference='each reachable prefix native world-X crossing',
         independent=True,semantic_checks=True,exhaustive=False,scope='whole_board_suffix',
         prefix_coverage='single_adjacent_continuous'if full else'continuous',
         covers_start_frame=10,covers_end_frame=100,operations=2,event_indices=[0,1],
-        checks=[dict(passed=True,reason='native_exit',schedule=list(p),actions=[dict(index=i,requested_shift_ms=s,
+        checks=[dict(passed=True,reason='native_exit',schedule=list(p),actions=[dict(index=i,action=('down','jump')[i],before_physics=('runOnLine: 1','runOnLineDown: 2')[i],transport_action=('down','jump')[i],requested_shift_ms=s,
             nominal_crossing_time=1.,input_time=1.+s/1000*1.25,actual_shift_ms=s*1.25)
             for i,s in enumerate(p)])for p in sorted(schedules(2,full))])
 
@@ -48,3 +49,18 @@ def test_each_requested_endpoint_needs_actual_clock_coverage_and_ordered_inputs(
         assert not valid(bad,10,100,2)
     bad=deepcopy(c);bad['checks'][0]['actions'].reverse();assert not valid(bad,10,100,2)
     bad=deepcopy(c);bad['reentries'][1]['validation']['passed']=False;assert not valid(bad,10,100,2)
+
+
+def test_pre_transport_certificates_and_undeliverable_keys_cannot_be_published():
+    c=certificate();assert valid(c,10,100,2)
+    old=deepcopy(c);old['version']=2;assert not valid(old,10,100,2)
+    missing=deepcopy(c);missing.pop('transport');assert not valid(missing,10,100,2)
+    for section in(c,c['reentries'][0]['validation']):
+        bad=deepcopy(c)
+        target=bad if section is c else bad['reentries'][0]['validation']
+        for check in target['checks']:
+            for action in check['actions']:
+                action.update(action='jump',before_physics='jump: 14',transport_action='jump')
+        assert not valid(bad,10,100,2)
+    bad=deepcopy(c);bad['checks'][0]['actions'][0]['transport_action']='jump'
+    assert not valid(bad,10,100,2)

@@ -75,6 +75,20 @@ def test_budget_exhaustion_restores_hidden_original_state_and_releases_unowned_n
     assert g.data==before and set(g.points)=={result['root']}
 
 
+def test_transport_spacing_guides_native_proposals_across_committed_history(monkeypatch):
+    class Timed(Oracle):
+        def state(self):return dict(super().state(),time=self.data['frame']*.02)
+    monkeypatch.setattr(planner,'decision',lambda _:dict(order=['jump','down','none'],reason='probe',nearest=[]))
+    g=Timed();g.data['early']=True;g.update()
+    before=dict(g.state(),time=-.1)
+    history=[dict(action='jump',job=dict(before=before))];observed=[]
+    result=planner.search_window(g,start=start(g),offset=0,horizon=8,commit=2,
+        input_history=history,last_input_frame=-5,last_input_time=-.1,on_trial=observed.append)
+    assert result['stats']['transport_spacing_pruned']>0
+    assert not any(r['action']=='jump'and r['job']['before']['time']<.11-1e-5 for r in observed)
+    assert any(r['action']=='down'and r['job']['before']['time']<.11 for r in observed)
+
+
 def test_real_damage_rejects_every_action_even_if_heuristics_look_safe():
     g=Oracle(impossible=True);before=deepcopy(g.data)
     result=planner.search_window(g,start=start(g),offset=0,horizon=8,commit=2)

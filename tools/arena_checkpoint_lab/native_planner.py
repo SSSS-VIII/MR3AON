@@ -7,6 +7,7 @@ from arena_fixed_goal import exit_kind
 from arena_action_contract import contract, meaningful, native_pose
 from native_policy import REST, decision, read, support_y
 from search import BOARD
+from arena_input_transport import transport_action, key as transport_key, minimum_gap
 
 
 def contact_time(dx,half_width,relative_vx):
@@ -122,14 +123,14 @@ def select(nodes,width):
 
 def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_trial=None,
                   root_point=None,forbidden_prefixes=(),tree_cache=None,last_input_frame=None,
-                  warm_start=(),beam_width=3,retain_forecast=True,last_input_time=None,**unused):
+                  warm_start=(),beam_width=3,retain_forecast=True,last_input_time=None,input_history=(),**unused):
     if not 1<=commit<=horizon<=24 or max_trials<1 or offset<0 or not 1<=beam_width<=4:
         raise ValueError('Invalid native trajectory beam bounds')
     root=gate.snapshot()['result']['id']if root_point is None else root_point
     if tree_cache is not None:tree_cache.bind(root,start,offset,horizon,last_input_frame)
     owned=set();started=time.monotonic();trials=[]
     stats=dict(trials=0,seconds=0,restores_ms=[],rejected_damage=0,rejected_invalid_interval=0,rejected_no_effect=0,
-               prefix_cache_hits=0,decision_cache_hits=0,timing_spacing_pruned=0,
+               prefix_cache_hits=0,decision_cache_hits=0,timing_spacing_pruned=0,transport_spacing_pruned=0,
                snapshots_created=0,snapshots_avoided=0,
                native_decisions=[],beam_trace=[],planner='native_trajectory_beam',beam_width=beam_width)
     observations=tree_cache.observations if tree_cache is not None else{}
@@ -186,6 +187,19 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
                 if depth<len(warm_start)and actions==tuple(warm_start[:depth])and warm_start[depth]in order:
                     preferred=warm_start[depth];order=(preferred,*(a for a in order if a!=preferred))
                 for action in order:
+                    if action!='none'and 'time'in obs['state']:
+                        delivered=transport_action(action,obs['state']['physics'])
+                        prior=next((r for r in reversed([*input_history,*node['path']])
+                            if r['action']!='none'and transport_key(transport_action(r['action'],
+                                r['job']['before']['physics']))==transport_key(delivered)),None)
+                        if prior is not None and 'time'in prior['job']['before']:
+                            previous_action=transport_action(prior['action'],prior['job']['before']['physics'])
+                            # Ranking guidance reserves both outward-quantized
+                            # endpoints; actual reachable-prefix checks remain
+                            # authoritative when the trajectory changes speed.
+                            required=minimum_gap(previous_action)+2*(.04+1/60)
+                            if obs['state']['time']-prior['job']['before']['time']<required-1e-5:
+                                stats['transport_spacing_pruned']+=1;continue
                     if action=='jump'and native_pose(obs['state']['physics'])==('air',2):
                         continue
                     if excluded(actions+(action,))or(point,action)in unsafe:continue

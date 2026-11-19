@@ -234,7 +234,7 @@ def run(args):
     goal=start_board-1+args.boards
     sources=('tools/arena_vision.py','tools/arena_policy.py','tools/arena_terrain.py',
              'tools/arena_motion.py','arena/vision-motion-priors.json','arena/Local/vision_eval.lua',
-             'tools/arena_capture.py','arena/Capture/FrameServer.java','tools/arena_yolo_detector.py',
+             'tools/arena_capture.py','tools/arena_input_transport.py','arena/Capture/FrameServer.java','tools/arena_yolo_detector.py',
              'tools/arena_yolo_data.py','tools/arena_visual_runner.py','tools/arena_projection.py',
              'arena/vision-camera.json','tools/arena_mpc.py','tools/arena_object_motion.py',
              'tools/arena_pinball_impulse.py',

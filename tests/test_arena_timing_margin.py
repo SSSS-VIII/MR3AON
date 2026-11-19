@@ -55,7 +55,7 @@ def baseline(oracle):
 def test_engine_time_endpoints_keep_each_physical_prefix_and_restore_the_parked_vm():
     oracle=Oracle();args=baseline(oracle);park=deepcopy(oracle.data);points=set(oracle.points)
     result=verify(oracle,whole_board=True,**args)
-    assert result['passed']and result['version']==2 and result['offsets_ms']==[-40,40]
+    assert result['passed']and result['version']==3 and result['offsets_ms']==[-40,40]
     assert result['clock']=='Unity.Time.time'and result['exhaustive']is False
     assert oracle.data==park and set(oracle.points)==points
     assert {tuple(c['schedule'])for c in result['checks']}=={tuple(p['schedule'])for p in scenarios((0,1))}
@@ -145,3 +145,31 @@ def test_cache_bound_does_not_merge_different_physical_prefixes_or_leak_points()
         assert len(r.cache)<=1
     finally:r.close()
     assert set(oracle.points)==initial_points
+
+
+@pytest.mark.parametrize('second,passed',[(13,False),(17,True)])
+def test_native_double_jump_requires_a_deliverable_android_same_key_gap(second,passed):
+    class Jumps(Oracle):
+        def render_step(self,frames,action='none'):
+            before=self.state()
+            if action=='jump':
+                self.data['phase']='jump: 14'if self.data['phase']=='runOnGround: 5'else'jump2: 16'
+            result=super().render_step(frames)
+            result['before']=before
+            return result
+    oracle=Jumps();oracle.data['phase']='runOnGround: 5'
+    initial=oracle.snapshot()['result']['id'];state=oracle.state();rows=[]
+    for i in range(45):
+        action='jump'if i in(9,second)else'none'
+        rows.append(dict(action=action,job=oracle.render_step(2,action),point=oracle.snapshot()['result']['id']))
+    parked=deepcopy(oracle.data);points=set(oracle.points)
+    result=verify(oracle,rows,initial_point=initial,initial_state=state,
+                  start=dict(health=5000,board=dict(map=42,stage_index=0)),board_code='board',whole_board=True)
+    assert result['passed']is passed
+    assert oracle.data==parked and set(oracle.points)==points
+    if not passed:
+        failure=result['failure']
+        assert failure['reason']=='input_transport_repeat_too_close'
+        assert failure['event']['index']==1 and failure['previous_event']==0
+        assert failure['actual']['health']==5000
+        assert failure['gap_ms']==pytest.approx(1000/12)

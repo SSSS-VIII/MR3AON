@@ -290,7 +290,7 @@ def run(gate, output, *, horizon=12, commit=6, max_trials=1200, max_windows=120,
     sources = {name: (LOADED_SOURCE if name == 'search.py' else (Path(__file__).parent / name).read_bytes())
                for name in names}
     if native_decision:
-        for name in ('arena_action_contract.py','arena_timing_certificate.py'):
+        for name in ('arena_action_contract.py','arena_timing_certificate.py','arena_input_transport.py'):
             sources[name]=(Path(__file__).parent.parent/name).read_bytes()
     if collector is not None:
         sources['collector.py'] = (Path(__file__).parent / 'collector.py').read_bytes()

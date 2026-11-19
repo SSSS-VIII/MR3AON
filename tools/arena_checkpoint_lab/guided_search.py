@@ -12,7 +12,8 @@ def rejected_prefix(forecast,history_length,audit):
     # and the perturbed key itself; leave later alternatives available.
     end=len(forecast)-1
     if failure.get('reason')in('nominal_operation_has_no_effect',
-                              'operation_prerequisite_mismatch','operation_effect_mismatch'):
+                              'operation_prerequisite_mismatch','operation_effect_mismatch',
+                              'input_transport_repeat_too_close'):
         # A later suffix cannot change an already failed operation check.
         # These prefixes are local to this exact VM root and input history.
         row=(failure.get('event')or{}).get('row_index')
@@ -69,7 +70,7 @@ def _window(gate,*,searcher,history,initial_point,initial_state,board_code,tree_
     def finish(result):
         stats=result['stats']
         for name in ('seconds','rejected_damage','rejected_invalid_interval','rejected_no_effect','prefix_cache_hits',
-                     'decision_cache_hits','timing_spacing_pruned','redundant_restores_skipped',
+                     'decision_cache_hits','timing_spacing_pruned','transport_spacing_pruned','redundant_restores_skipped',
                      'snapshots_created','snapshots_avoided'):
             stats[name]=sum(s.get(name,0)for s in proposal_stats)
         stats['restores_ms']=[v for s in proposal_stats for v in s.get('restores_ms',[])]
@@ -92,7 +93,7 @@ def _window(gate,*,searcher,history,initial_point,initial_state,board_code,tree_
     while used<budget:
         result=searcher(gate,**kwargs,max_trials=budget-used,root_point=root,
                         forbidden_prefixes=forbidden,guided=True,retain_forecast=True,last_input_frame=previous,
-                        last_input_time=previous_time,tree_cache=tree_cache)
+                        last_input_time=previous_time,input_history=history,tree_cache=tree_cache)
         root=result['root'];used+=result['stats']['trials']
         proposal_stats.append(dict(result['stats']))
         if not result['found']:

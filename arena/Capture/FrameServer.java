@@ -30,6 +30,8 @@ import org.json.JSONObject;
 
 /** Android pixels, explicit key pulses and opt-in local paired collection. */
 public final class FrameServer {
+    static final int KEY_PULSE_MS = 80;
+    static final int SLIDE_HOLD_MS = 500;
     private static final int VERSION = 1;
     private static final int MAX_LABELS = 8 * 1024 * 1024;
     private static final File CONTROL = new File("/sdcard/Android/data/com.pandadastudio.ninjamustdie3/files/arena-control");
@@ -233,7 +235,7 @@ public final class FrameServer {
                     if (keys == null) keys = new Keys();
                     keys.tap(command == 3 ? KeyEvent.KEYCODE_K
                             : command == 4 || command == 6 ? KeyEvent.KEYCODE_S : KeyEvent.KEYCODE_P,
-                            command == 6 ? 500 : 80);
+                            command == 6 ? SLIDE_HOLD_MS : KEY_PULSE_MS);
                     captured = ready = System.nanoTime();
                 }
                 out.writeInt(0x4d523346); // MR3F

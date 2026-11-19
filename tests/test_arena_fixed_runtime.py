@@ -578,7 +578,9 @@ def test_runtime_rejects_a_bank_compiled_with_different_anchor_semantics(tmp_pat
     programs.write_text(json.dumps(dict(schema=1,programs={
         'old':dict(timing_robust=True),
         'nominal':dict(timing_robust=False,timing_certificate_version=2),
-        'new':dict(timing_robust=True,timing_certificate_version=2)})))
+        'old_clock':dict(timing_robust=True,timing_certificate_version=2),
+        'new':dict(timing_robust=True,timing_certificate_version=policy_module.TIMING_VERSION,
+                   input_transport=dict(policy_module.INPUT_TRANSPORT))})))
     actor=policy_module.load(reactive,config,detector_sha256='detector')
     assert set(actor.programs)=={'new'}
 

@@ -29,6 +29,8 @@ VERSION = 1
 
 
 def build_server():
+    from arena_input_transport import check_server_profile
+    check_server_profile(SOURCE.read_text())
     digest = hashlib.sha256(SOURCE.read_bytes()).hexdigest()
     report = BUILD / 'report.json'
     dex = BUILD / 'dex/classes.dex'

@@ -1,7 +1,8 @@
 """Validate finite measured-clock evidence, never legacy counter certificates."""
 from math import isfinite
+from arena_input_transport import PROFILE, repeat_failure, transport_action
 
-VERSION=2
+VERSION=3
 
 
 def schedules(count,full=True):
@@ -19,7 +20,7 @@ def schedules(count,full=True):
 
 
 def _context(certificate,count,full):
-    if not(certificate.get('version')==VERSION and certificate.get('passed')is True
+    if not(certificate.get('version')==VERSION and certificate.get('transport')==PROFILE and certificate.get('passed')is True
         and certificate.get('window_ms')==80 and certificate.get('offsets_ms')==[-40,40]
         and certificate.get('sampling')=='endpoints'and certificate.get('clock')=='Unity.Time.time'
         and certificate.get('timing_reference')=='each reachable prefix native world-X crossing'
@@ -36,6 +37,7 @@ def _context(certificate,count,full):
                 or schedule not in expected or schedule in seen):return False
         seen.add(schedule);actions=check.get('actions',[])
         if [a.get('index')for a in actions]!=list(range(count)):return False
+        delivered=[]
         for action,shift in zip(actions,schedule):
             actual=action.get('actual_shift_ms');base=action.get('nominal_crossing_time');sent=action.get('input_time')
             if (action.get('requested_shift_ms')!=shift or not all(type(v)in(int,float)and isfinite(v)for v in(actual,base,sent))
@@ -43,6 +45,12 @@ def _context(certificate,count,full):
             if shift:
                 if actual*shift<=0 or not 39.97<=abs(actual)<=56.70:return False
             elif abs(actual)>.03:return False
+            if action.get('transport_action')not in('jump','down','slide'):return False
+            try:kind=transport_action(action.get('action'),action.get('before_physics',''))
+            except (ValueError,AttributeError):return False
+            if kind!=action['transport_action']:return False
+            if repeat_failure(delivered,action['transport_action'],sent):return False
+            delivered.append(action)
     return seen==expected
 
 

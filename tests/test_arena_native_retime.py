@@ -12,13 +12,14 @@ import retime
 
 def certificate():
     from arena_timing_certificate import schedules
+    from arena_input_transport import PROFILE
     def context(full):
-        return dict(version=2,passed=True,window_ms=80,offsets_ms=[-40,40],sampling='endpoints',
+        return dict(version=3,transport=dict(PROFILE),passed=True,window_ms=80,offsets_ms=[-40,40],sampling='endpoints',
             clock='Unity.Time.time',timing_reference='each reachable prefix native world-X crossing',
             independent=True,semantic_checks=True,exhaustive=False,scope='whole_board_suffix',
             prefix_coverage='single_adjacent_continuous'if full else'continuous',
             covers_start_frame=0,covers_end_frame=16,operations=2,event_indices=[0,1],
-            checks=[dict(passed=True,reason='native_exit',schedule=list(p),actions=[dict(index=i,requested_shift_ms=v,
+            checks=[dict(passed=True,reason='native_exit',schedule=list(p),actions=[dict(index=i,action=('down','jump')[i],before_physics=('runOnLine: 1','runOnLineDown: 2')[i],transport_action=('down','jump')[i],requested_shift_ms=v,
                 actual_shift_ms=v*1.25,nominal_crossing_time=1.,input_time=1.+v*.00125)
                 for i,v in enumerate(p)])for p in sorted(schedules(2,full))])
     return dict(context(True),reentries=[dict(seed=i,fresh_initialization=True,unprotected=True,

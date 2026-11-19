@@ -5,6 +5,8 @@ import time
 from arena_action_contract import contract
 from arena_checkpoint_errors import NativeIntervalError
 from endpoint_rollout import Rollouts,scenarios
+from arena_input_transport import PROFILE
+from arena_timing_certificate import VERSION
 
 SHIFTS=(-40,40)
 
@@ -44,7 +46,7 @@ def verify(gate,rows,*,initial_point,initial_state,start,board_code,selected_row
         wanted={tuple([s]*len(indices))for s in(-40,40)}
         wanted.update(tuple(s if i%2==0 else-s for i in range(len(indices)))for s in(-40,40))
         plans=[p for p in scenarios(indices,pairs=False)if not any(p['schedule'])or tuple(p['schedule'])in wanted]
-    report=dict(version=2,passed=False,window_ms=80,offsets_ms=[-40,40],sampling='endpoints',
+    report=dict(version=VERSION,transport=dict(PROFILE),passed=False,window_ms=80,offsets_ms=[-40,40],sampling='endpoints',
         clock='Unity.Time.time',timing_reference='each reachable prefix native world-X crossing',
         quantization_ms=1000/60,independent=True,semantic_checks=True,
         prefix_coverage='single_adjacent_continuous'if full_suite else'continuous',

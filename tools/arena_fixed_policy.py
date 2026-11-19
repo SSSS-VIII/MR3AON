@@ -5,7 +5,8 @@ import json
 from pathlib import Path
 
 from arena_fixed_match import Atlas, BoardTracker,feature_signature
-from arena_timing_certificate import valid as valid_timing_certificate
+from arena_timing_certificate import valid as valid_timing_certificate, VERSION as TIMING_VERSION
+from arena_input_transport import PROFILE as INPUT_TRANSPORT
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / 'arena/vision-fixed-routes.json'
@@ -77,7 +78,8 @@ def compile_program(route, key):
                 monotone=monotone, requires_phase_clock=clock_required,
                 input_order='Acknowledged event cursor; no automatic skipping after takeover',
                 tick_seconds=.02,timing_robust=robust,timing_window_ms=80 if robust else None,
-                timing_certificate_version=2 if robust else None,
+                timing_certificate_version=TIMING_VERSION if robust else None,
+                input_transport=dict(INPUT_TRANSPORT)if robust else None,
                 timing_evidence='finite_native_scenarios'if robust else None)
 
 
@@ -444,7 +446,8 @@ def load(reactive, config=CONFIG, *, detector_sha256=None):
     # Old counter-clock certificates and nominal-only routes are retained as
     # research artifacts, not silently admitted into the new runtime bank.
     programs_validated={key:p for key,p in loaded['programs'].items()
-        if p.get('timing_robust')and p.get('timing_certificate_version')==2}
+        if p.get('timing_robust')and p.get('timing_certificate_version')==TIMING_VERSION
+        and p.get('input_transport')==INPUT_TRANSPORT}
     actor=HybridAvoider(reactive, bank, programs_validated)
     actor.runtime_assets={str(path):hashlib.sha256(path.read_bytes()).hexdigest()
                           for path in (bank.folder/'index.json',bank.folder/'features.npz')}

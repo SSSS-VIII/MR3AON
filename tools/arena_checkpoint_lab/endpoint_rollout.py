@@ -10,6 +10,7 @@ from math import isfinite
 
 from arena_action_contract import prerequisite,effect_matches,meaningful
 from arena_fixed_goal import exit_kind
+from arena_input_transport import transport_action, repeat_failure
 
 RADIUS=.04
 QUANTUM=1/60
@@ -131,6 +132,11 @@ class Rollouts:
                     if self.gate.call('state')!=current:raise RuntimeError('Cached physical prefix did not restore exactly')
                     continue
                 current,clock=self.locate(current,key,shift)
+                delivered=transport_action(key['action'],key['contract']['native_before'])
+                blocked=repeat_failure(actions,delivered,current['time'])
+                if blocked:
+                    raise Rejected(blocked.pop('reason'),event=key['index'],actual=current,
+                                   clock=clock,**blocked)
                 if not meaningful(key['contract']):
                     raise Rejected('nominal_operation_has_no_effect',event=key['index'],actual=current)
                 if not prerequisite(key['contract'],current['physics']):
@@ -139,6 +145,7 @@ class Rollouts:
                 before=current
                 current,job=self.step(current,1,key['action'])
                 record=dict(index=key['index'],action=key['action'],x=before['position']['x'],
+                    transport_action=delivered,
                     frame=before['episodeFrame'],before_physics=before['physics'],
                     after_physics=current['physics'],before_y=before['position']['y'],
                     after_y=current['position']['y'],**clock)
