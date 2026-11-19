@@ -11,7 +11,7 @@ sys.path.insert(0,str(ROOT/'agent'))
 sys.path.insert(0,str(ROOT/'tools/arena_checkpoint_lab'))
 from runtime import InstanceSession
 from runtime.checkpoint_sandbox import ArenaCheckpointSandbox
-from batch import WorkQueue
+from batch import WorkQueue,initialize
 from boot_client import start
 
 
@@ -20,7 +20,9 @@ def main():
     parser.add_argument('--queue',type=Path,required=True)
     parser.add_argument('--file-ram',action='store_true')
     parser.add_argument('--case',action='append',default=[],help='Prioritize a canonical case before the remaining queue')
+    parser.add_argument('--max-cases',type=int,help='Bound this independent search epoch')
     args=parser.parse_args()
+    if args.max_cases is not None and args.max_cases<1:parser.error('--max-cases must be positive')
     if(args.queue/'stop-after-current.json').exists():
         print('This queue has a retained stop-after-current request; not starting another search epoch.',flush=True)
         return
@@ -44,8 +46,14 @@ def main():
         # This initializes a new case after process loss. Search undo always
         # uses real gate checkpoints, never bootstrap or input-history replay.
         gate=start(vm)
+        if args.file_ram:
+            from clock_audit import run as audit_clock
+            case=queue.cases['L5-M42-S2-B50022']
+            audit_clock(gate,case,args.queue/'admission'/str(time.time_ns()),initialize,
+                        lambda v:print('搜索前原生自检',v,flush=True))
         work=[queue.cases[key]for key in dict.fromkeys(args.case)]
         work.extend(case for case in queue.pending(require_margin=args.file_ram)if case['key']not in args.case)
+        if args.max_cases is not None:work=work[:args.max_cases]
         print(queue.run(gate,cases=work,retain_history=args.file_ram),flush=True)
 
 
