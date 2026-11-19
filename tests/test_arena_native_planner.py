@@ -130,3 +130,26 @@ def test_observation_cannot_silently_advance_a_completed_physics_boundary(monkey
     with pytest.raises(RuntimeError,match='exact step boundary'):
         planner.search_window(g,start=start(g),offset=0,horizon=6,commit=2)
     assert g.data==before
+
+
+def test_empty_hazard_list_cannot_prune_an_airborne_rescue_jump():
+    class AirRescue(Oracle):
+        def observation(self):
+            obs=super().observation();obs['hazards']=[]
+            return obs
+    g=AirRescue();g.data['mode']='air';g.update()
+    result=planner.search_window(g,start=start(g),offset=0,horizon=8,commit=2)
+    assert result['found']and g.data['early']and g.data['health']==5000
+    assert any(r['action']=='jump'for r in result['path'])
+
+
+def test_cached_transition_must_match_its_actual_saved_native_observation():
+    g=Oracle();entry=start(g);root=g.snapshot()['result']['id'];cache=PrefixCache()
+    kwargs=dict(start=entry,offset=0,horizon=8,commit=2,root_point=root,tree_cache=cache)
+    result=planner.search_window(g,**kwargs)
+    child=result['forecast_path'][0]['point']
+    cache.observations[child]['state']['episodeFrame']+=1
+    with pytest.raises(RuntimeError,match='Cached native trajectory'):
+        planner.search_window(g,**kwargs)
+    assert g.data==g.points[root]
+    cache.close(g)

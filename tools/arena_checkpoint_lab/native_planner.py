@@ -114,7 +114,8 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
                 previous=next((r['job']['before']['episodeFrame']for r in reversed(node['path'])if r['action']!='none'),last_input_frame)
                 if previous is not None and obs['state']['episodeFrame']-previous<=2:
                     stats['timing_spacing_pruned']+=2;order=('none',)
-                elif p['reason']=='clear_native_corridor'and not p['nearest']:
+                elif (p['reason']=='clear_native_corridor'and not p['nearest']
+                      and node['quality']['phase']in REST and obs.get('support',{}).get('continues')):
                     order=('none',)
                 elif depth%2 and all(h['ttc']>.18 for h in p['nearest']):
                     order=tuple(dict.fromkeys((order[0],'none')))
@@ -129,6 +130,8 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
                     if row is not None:
                         stats['prefix_cache_hits']+=1;child=row['point']
                         if child not in observations:restore(child);observe(child)
+                        if observations[child]['state']!=row['job']['after']:
+                            raise RuntimeError('Cached native trajectory differs from its original step state')
                     else:
                         if stats['trials']>=max_trials:return failure('Native trajectory beam trial budget exhausted')
                         restore(point);error=None
