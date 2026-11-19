@@ -6,6 +6,7 @@ import json
 import math
 from collections import Counter
 from pathlib import Path
+from arena_key_receipts import KeyReceiptMatcher
 
 
 def percentile(values, fraction):
@@ -20,7 +21,7 @@ def sequence_review(estimates,actions,program,key):
     recorded=[]
     for row in estimates:
         control=row.get('fixed_route',{});commit=row.get('action_commit')or{}
-        if (not row.get('action')or control.get('mode')!='fixed'
+        if (not row.get('action')or control.get('mode')!='fixed'or control.get('board',{}).get('key')!=key
                 or not row.get('reason','').startswith('fixed_route_')):continue
         recorded.append(dict(index=control.get('event'),action=row['action'],
             time=commit.get('committed_time'),key=control.get('board',{}).get('key')))
@@ -40,6 +41,50 @@ def sequence_review(estimates,actions,program,key):
                 expected=len(expected),recorded_indices=[r['index']for r in recorded],
                 acknowledged_fixed_keys=len(fixed),ordered=ordered,
                 report_matches_frames=matched,off_tape_keys=len(off_tape))
+
+
+def scoped_inputs(native,estimates,actions,program,case,initial,final):
+    """Scope by native input events, without guessing a boundary between polls."""
+    target=(case['map'],case['slot']-1,case['stage'])
+    def context(row):return row.get('map'),row.get('stageIndex'),row.get('stageID')
+    history={};available=False
+    for sample in native:
+        if 'input_events'in sample:available=True
+        rows=sample.get('input_events',[])
+        for event in rows.values()if isinstance(rows,dict)else rows:
+            history[event['key'],event['count'],event['time']]=event
+    matcher=KeyReceiptMatcher(initial['monotonic']);matched={};unknown_target=0
+    target_events=[]
+    for event in sorted(history.values(),key=lambda r:(r['time'],r['key'])):
+        action,_=matcher.match(event['key'],event,actions)
+        if context(event)==target:
+            target_events.append(event)
+            if action is None:unknown_target+=1
+        if action is not None:matched[id(action)]=event
+    tape={(r.get('action_commit',{}).get('committed_time'),r.get('action'))for r in estimates
+          if r.get('action_commit')and r.get('fixed_route',{}).get('board',{}).get('key')==case['key']
+          and r.get('fixed_route',{}).get('mode')=='fixed'and r.get('action')}
+    exits=[r['monotonic']for r in native if r.get('map')!=case['map']or r.get('stageIndex',-1)>=case['slot']]
+    exit_time=min(exits)if exits else float('inf')
+    scoped=[];unscoped=0;outside=0
+    for action in actions:
+        event=matched.get(id(action));is_tape=(action.get('committed_time'),action.get('action'))in tape
+        if is_tape or event is not None and context(event)==target:scoped.append(action)
+        elif event is not None and None not in context(event):outside+=1
+        elif action.get('enqueued_time',float('-inf'))>=exit_time:outside+=1
+        else:scoped.append(action);unscoped+=1
+    counts=Counter(e['key']for e in target_events)
+    counters=final.get('keys',{})
+    consistent=all(type(counters.get(k))is int and counters[k]==max(
+        (e['count']for e in history.values()if e['key']==k),default=0)for k in('jump','down'))
+    expected=Counter('jump'if e['action']=='jump'else'down'for e in program['events'])
+    confirmed=all(id(a)in matched and context(matched[id(a)])==target for a in scoped
+                  if (a.get('committed_time'),a.get('action'))in tape)
+    valid=bool(available and consistent and counts==expected and unknown_target==0 and unscoped==0 and confirmed
+               and all(e.get('god')is False for e in target_events))
+    return scoped,dict(verified=valid,history_available=available,observed=dict(counts),expected=dict(expected),
+        counter_consistent=consistent,unmatched_target_receipts=unknown_target,
+        unscoped_submissions=unscoped,outside_target_keys=outside)
 
 
 def review(folder, case, program):
@@ -94,12 +139,10 @@ def review(folder, case, program):
     # Require actual fixed execution. Merely loading a library, or passing
     # under the old reactive policy, does not validate a fixed input program.
     fixed_keys=sum(a.get('reason','').startswith('fixed_route_')for a in report['actions'])
-    sequence=sequence_review(estimates,report['actions'],program,case['key'])
+    scoped,inputs=scoped_inputs(native,estimates,report['actions'],program,case,setup['initial'],report['final'])
+    sequence=sequence_review(estimates,scoped,program,case['key'])
     executed=sequence['complete']
-    expected_keys=Counter('jump'if e['action']=='jump'else'down'for e in program['events'])
-    received=report['final'].get('keys',{})
-    native_keys_match=all(type(received.get(key))is int and received[key]==expected_keys[key]
-                          for key in('jump','down'))
+    native_keys_match=inputs['verified']
     detector_verified=bool(seen>=20 and control_frames>=20 and control_identified/control_frames>=.95
                            and control_localized/control_frames>=.95
                            and wrong_identity==0 and len(errors)>=20 and percentile(errors,.95)<=.5)
@@ -135,6 +178,7 @@ def review(folder, case, program):
                 progress_grade='Interpolated native samples; not exact per-frame ground truth',
                 fixed_keys=fixed_keys,fixed_sequence=sequence,unprotected_samples=unprotected,
                 native_key_totals_match=native_keys_match,
+                native_input_scope=inputs,
                 status=report['status'],had_damage=report['had_damage'])
     own_context=folder/'fixed-start-context.json'
     if own_context.exists():

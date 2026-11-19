@@ -87,3 +87,31 @@ io.write(MR3A.encode_vision_evaluation(row))
 ''')
     row=json.loads(output[0])
     assert row['health_drops']['1']==row['last_health_drop']==dict(before=5000,after=4900)
+
+
+def test_input_history_retains_the_native_board_for_each_key_when_the_board_changes(tmp_path):
+    output=run_lua(tmp_path,r'''
+local t={}
+function t:GetField(k)return {GetValue=function(_,o)return o[k]end}end
+local stage0={_stageBaseInfo={_stageID=50022},GetType=function()return t end}
+local stage1={_stageBaseInfo={_stageID=50031},GetType=function()return t end}
+local level={_stageList={[0]=stage0,[1]=stage1,Count=2},_levelBaseInfo={_levelID=42},GetType=function()return t end}
+local n={CurrentHp=5000,_GroundCollider={BelongToStageIndex=0},__ninjaPhysicsState='runOnLine: 1',GetType=function()return t end,IsGodMode=function()return false end}
+CS.NinjaController={Instance={NinjaScript=n}};CS.LevelManager={Instance={GameLevelInfo=level}}
+CS.UnityEngine.Time={frameCount=10,realtimeSinceStartup=1}
+CS.UnityEngine.KeyCode={K=1,S=2}
+local pressed,stamp=1,1.
+CS.UnityEngine.Input={GetKeyDown=function(k)return k==pressed end}
+CS.System.Diagnostics.Stopwatch.GetTimestamp=function()return stamp end
+CS.System.Diagnostics.Stopwatch.Frequency=1
+MR3A.visionEvalKeys={jump=0,down=0};MR3A.visionEvalReceipts={}
+MR3A.sample_vision_health()
+n._GroundCollider.BelongToStageIndex=1;pressed=2;stamp=2.
+MR3A.sample_vision_health()
+assert(#MR3A.visionInputEvents==2 and n.CurrentHp==5000)
+assert(MR3A.visionEvalReceipts.jump==MR3A.visionInputEvents[1])
+io.write(MR3A.encode_vision_evaluation({input_events=MR3A.visionInputEvents}))
+''')
+    events=json.loads(output[0])['input_events']
+    assert events['1']['stageID']==50022 and events['1']['key']=='jump'
+    assert events['2']['stageID']==50031 and events['2']['key']=='down'

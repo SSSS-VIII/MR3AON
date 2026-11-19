@@ -99,3 +99,15 @@ def test_frozen_bank_config_is_explicit_and_cannot_follow_a_later_symlink(tmp_pa
     assert batch.frozen_config(current,output)!=path
     path.write_text('{}')
     with pytest.raises(RuntimeError,match='changed'):batch.frozen_config(first,output)
+
+
+def test_fingerprint_tracks_native_evaluation_and_input_bridge_sources(tmp_path,monkeypatch):
+    monkeypatch.setattr(batch,'ROOT',tmp_path)
+    bundle=tmp_path/'bundle';bundle.mkdir()
+    (bundle/'manifest.json').write_text('{}');(bundle/'programs.json').write_text('{"programs":{}}')
+    local=tmp_path/'arena/Local';local.mkdir(parents=True)
+    evaluator=local/'vision_eval.lua';evaluator.write_text('old-evaluator')
+    old=batch.fingerprint(bundle,1);evaluator.write_text('new-evaluator')
+    current=batch.fingerprint(bundle,1);assert current!=old
+    bridge=tmp_path/'arena/Capture';bridge.mkdir();(bridge/'FrameServer.java').write_text('new-key-dispatch')
+    assert batch.fingerprint(bundle,1)!=current

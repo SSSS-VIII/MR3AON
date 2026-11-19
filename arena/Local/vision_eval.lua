@@ -177,6 +177,7 @@ function E.vision_evaluation()
         damage=E.visionEvalDamage or 0,minHealth=E.visionEvalMinHealth or n.CurrentHp,
         keys=E.visionEvalKeys or {},lastKeyTime=E.visionEvalLastKeyTime,
         keyReceipts=E.visionEvalReceipts or {},monotonic=monotonic(),
+        input_events=E.visionInputEvents or {},
         last_health_drop=E.visionEvalLastHealthDrop,health_drops=E.visionEvalHealthDrops or {},
         writer_timing=E.visionEvalWriterTiming}
     local ok,value=pcall(E.vision_interactions)
@@ -207,7 +208,25 @@ function E.sample_vision_health()
         if U.Input.GetKeyDown(pair[2]) then
             E.visionEvalKeys[pair[1]]=(E.visionEvalKeys[pair[1]] or 0)+1
             E.visionEvalLastKeyTime=U.Time.realtimeSinceStartup
-            E.visionEvalReceipts[pair[1]]={count=E.visionEvalKeys[pair[1]],time=monotonic()}
+            local event={key=pair[1],count=E.visionEvalKeys[pair[1]],time=monotonic(),frame=U.Time.frameCount}
+            local ok,context=pcall(function()
+                local n=CS.NinjaController.Instance.NinjaScript
+                local level=CS.LevelManager.Instance.GameLevelInfo
+                local ground=n._GroundCollider
+                local index=ground and ground.BelongToStageIndex or -1
+                local stages=get(level,'_stageList')
+                local stage=index>=0 and index<stages.Count and stages[index]or nil
+                if index>=stages.Count then stage=get(level,'_currLoopStage')end
+                return {map=get(level,'_levelBaseInfo')._levelID,stageIndex=index,
+                    stageID=stage and get(stage,'_stageBaseInfo')._stageID or 0,
+                    physics=tostring(get(n,'__ninjaPhysicsState')),god=n:IsGodMode()}
+            end)
+            if ok then for k,v in pairs(context)do event[k]=v end
+            else event.context_error=tostring(context)end
+            E.visionEvalReceipts[pair[1]]=event
+            local events=E.visionInputEvents or {}
+            if #events>=512 then table.remove(events,1)end
+            events[#events+1]=event;E.visionInputEvents=events
         end
     end
 end
@@ -223,6 +242,7 @@ function E.start_vision_evaluation()
     E.visionEvalHealthDrops={}
     E.visionEvalKeys={jump=0,down=0}
     E.visionEvalReceipts={}
+    E.visionInputEvents={}
     if E.visionEvalRunner then
         E.visionEvalRunner:StopAllCoroutines()
         U.Object.Destroy(E.visionEvalRunner.gameObject)

@@ -40,6 +40,8 @@ def actor_sources():
 def fingerprint(bundle,seed):
     files=[bundle/'manifest.json',bundle/'programs.json',*actor_sources(),
            *sorted((ROOT/'arena').glob('vision-*.json'))]
+    files.extend(sorted((ROOT/'arena/Local').glob('*.lua')))
+    files.extend(sorted((ROOT/'arena/Capture').glob('*.java')))
     files.extend(p for p in(ROOT/'tools/arena_fixed_validate.py',Path(__file__))if p.is_file())
     hashes=[(str(p),hashlib.sha256(p.read_bytes()).hexdigest())for p in files]
     return hashlib.sha256(json.dumps([hashes,seed]).encode()).hexdigest()
