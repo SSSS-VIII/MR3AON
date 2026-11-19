@@ -685,3 +685,14 @@ f7fd7f9收紧了实机验收：每一个原程序事件都须依次出现在视�
 新增的显式冻结配置仅用于独立实测：visual_runner --fixed-routes指向某个不可变bundle，并将实际配置/程序SHA写入setup；不用改默认arena/vision-fixed-routes.json，也不跟随编库过程中切换的current。原有视觉WIP保留，实际运行按源码摘要隔离。
 
 自动编库`mr3a-arena-fixed-refresh-v8`只监视新队列，目标`fixed-route-work/runtime-clock-v2`；验收`mr3a-arena-fixed-live-v13`使用`--repeats 3`，输出`fixed-route-work/live-clock-v2`，当前watch-state为waiting_for_bundle。初次v12等待器在补原生归属前已停止，未启动任何实际回合。搜索/编库/验收三个进程均经systemd和真实PID核实存活，未恢复旧队列watch，未覆盖默认旧运行库；新合格整板、实机通过和稳定通过计数仍0。目标保持active，下一步继续跟踪原生整板与新入口验收，待产物出现后核实自动编库、9轮实际结果及失败原因，不能将等待器启动当作验收完成。
+
+
+### 再次按请求停搜、独立复核后从头重开（11月19日）
+
+用户再次要求停止搜索、先修复再从头搜索。本次通过搜索所有者在已完成原生命令后的下一步协作中断v15，未打断VM传输；search-v15最终inactive/MainPID0，coverage active清空、attempt interrupted，原report complete=false，保留45窗记录、13个已提交键及约238.42m处的未完成路径（4175.76秒）。refresh-v8/live-v13也已停止，未将该路径发布为跑法。
+
+重新核对931782c/d992e05的真实时钟、连续物理前缀及运行时动作前提修复。本次没有重复修改原游戏物理/陷阱或把各键误差相加。补充发现搜索准入自检只记录root_restored=false却仍可返回passed=true；392dd82改为写失败报告并抛错，禁止带恢复不一致的入口启动搜索。两项新增保护模拟正常恢复与损坏恢复；这是一处漏掉的保护检查，不代表已观察到VM回档损坏，更不是先前50022失败的归因。相关回归合计220项通过。
+
+独立arena-search原生复验已完成：`debug/arena-client/fixed-route-work/timing-v2-native-1795064766894394768/native-repair-report.json`。Unity真实时间再次实测1/2/3渲染帧约16.6664/33.3328/49.9992ms。旧50022已知反例的名义与提前端点通过；第16键延后约49.999ms后，第17键仍fall2、HP5000，新验证以operation_prerequisite_mismatch拒绝，修复目标指回row161。诊断后完整入口state恢复相等。该有限反例复验只证明对应缺口能被检出，不是整板/全部初态/视觉无伤证明。
+
+复验进程正常结束后启动`mr3a-arena-fixed-search-v16.service`，Restart=no；沿用新队列batch-clock-v2-20261119保留失败历史，仍只`--case L5-M43-S4-B53042 --max-cases 1`。新进程先做原生安全起跳三分支自检，再重新选板，从板头建立全新搜索根，不读取v15的238m路径或旧名义跑法作热启动。汇总证据在`fixed-route-work/stop-recheck-restart-2026-11-19.json`；新准入及实际搜索进度待后续记录，当前合格整板与稳定视觉成果均0。
