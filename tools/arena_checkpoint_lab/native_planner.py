@@ -8,36 +8,58 @@ from native_policy import REST, decision, read, support_y
 from search import BOARD
 
 
-def quality(observation,previous=None):
+def contact_time(dx,half_width,relative_vx):
+    if abs(dx)<=half_width:return 0.
+    if dx>half_width and relative_vx<-.1:return(dx-half_width)/-relative_vx
+    if dx<-half_width and relative_vx>.1:return(-dx-half_width)/relative_vx
+    return None
+
+
+def quality(observation,previous=None,previous_quality=None,*,jitter_seconds=.04):
     """A ranking heuristic, not a collision oracle or proof of future safety."""
     state=observation['state'];body=observation['role'][0]
     p,r=body['center'],body['extents'];phase=state['physics'].split(':')[0].lower()
     dt=(state['episodeFrame']-previous['state']['episodeFrame'])*.02 if previous else 0
     old={h['id']:h for h in previous.get('hazards',[])}if previous else{}
-    velocity=(0.,0.)
     if dt>0:
         a=previous['role'][0]['center'];velocity=((p['x']-a['x'])/dt,(p['y']-a['y'])/dt)
-    else:velocity=(state.get('speed',18.5),0.)
-    risk=0.;clearance=32.
+    else:
+        support=observation.get('support',{});vx=state.get('speed',18.5)*support.get('slope_speed_ratio',1)
+        a,b=support.get('start'),support.get('finish');vy=0.
+        if phase in REST and a and b and b['x']>a['x']:vy=vx*(b['y']-a['y'])/(b['x']-a['x'])
+        velocity=(vx,vy)
+    role_acc=(0.,0.)
+    if dt>0 and previous_quality:
+        v=previous_quality['_role_velocity'];role_acc=tuple((velocity[i]-v[i])/dt for i in(0,1))
+    motions={};risk=nominal_risk=0.;clearance=robust_clearance=32.;padding_x=padding_y=0.
     for h in observation.get('hazards',[]):
         q,e=h['center'],h['extents']
-        if q['x']+e['x']<p['x']-r['x']-.4:continue
-        vx=vy=0.
+        vx=vy=growth_x=growth_y=0.
         if dt>0 and h['id']in old:
-            a=old[h['id']]['center'];vx=(q['x']-a['x'])/dt;vy=(q['y']-a['y'])/dt
+            prior=old[h['id']];a=prior['center'];vx=(q['x']-a['x'])/dt;vy=(q['y']-a['y'])/dt
+            growth_x=abs(e['x']-prior['extents']['x'])/dt;growth_y=abs(e['y']-prior['extents']['y'])/dt
+        motions[h['id']]=(vx,vy)
+        relative=(vx-velocity[0],vy-velocity[1]);hazard_acc=(0.,0.)
+        if dt>0 and previous_quality and h['id']in previous_quality['_hazard_velocities']:
+            v=previous_quality['_hazard_velocities'][h['id']];hazard_acc=((vx-v[0])/dt,(vy-v[1])/dt)
+        # Minkowski envelope of relative displacement over +/-40ms, plus
+        # observed acceleration and shape growth. Padding is local ranking
+        # geometry; original client colliders and native damage stay intact.
+        px=(abs(relative[0])+growth_x)*jitter_seconds+abs(hazard_acc[0]-role_acc[0])*jitter_seconds**2/2
+        py=(abs(relative[1])+growth_y)*jitter_seconds+abs(hazard_acc[1]-role_acc[1])*jitter_seconds**2/2
+        padding_x=max(padding_x,px);padding_y=max(padding_y,py)
         gapx=max(0.,abs(q['x']-p['x'])-e['x']-r['x'])
         gapy=max(0.,abs(q['y']-p['y'])-e['y']-r['y'])
         clearance=min(clearance,hypot(gapx,gapy))
-        closing=velocity[0]-vx
-        if closing<=.1:continue
-        t=max(0.,(q['x']-e['x']-p['x']-r['x'])/closing)
-        if t>.65:continue
-        # Finite differences come from two successive native observations of
-        # this exact branch, including slope Y and moving hazard Y. These
-        # local extrapolations rank candidates; native damage is authoritative.
-        lead=min(t,.25)
-        vertical=max(0.,abs(q['y']+vy*lead-p['y']-velocity[1]*lead)-e['y']-r['y'])
-        risk+=(1-t/.65)*exp(-vertical/.55)*(1. if h['enabled']else .3)
+        robust_clearance=min(robust_clearance,hypot(max(0.,gapx-px),max(0.,gapy-py)))
+        dx=q['x']-p['x'];half=e['x']+r['x'];weight=1. if h['enabled']else .3
+        def contribution(pad_x,pad_y):
+            t=contact_time(dx,half+pad_x,relative[0])
+            if t is None or t>.65:return 0.
+            vertical=max(0.,abs(q['y']-p['y']+relative[1]*min(t,.25))-e['y']-r['y']-pad_y)
+            return(1-t/.65)*exp(-vertical/.55)*weight
+        ordinary=contribution(0.,0.);nominal_risk+=ordinary
+        risk+=max(ordinary,contribution(px,py))
     used=observation.get('jumps_used')
     if phase in REST:used=0
     elif phase in ('jump2','fall2')or 'jump2'in str(observation.get('last_physics','')).lower():used=2
@@ -46,8 +68,14 @@ def quality(observation,previous=None):
     mobility=(.12+.12*used)if air else 0.
     line=support_y(observation,p['x']);drop=0.
     if air and line is not None:drop=max(0.,line-p['y']-1.5)*.12
-    return dict(risk=min(8.,risk),clearance=clearance,mobility=mobility,
-                drop=min(3.,drop),phase=phase,jumps_used=used)
+    return dict(risk=min(8.,risk),nominal_risk=min(8.,nominal_risk),clearance=clearance,
+                robust_clearance=robust_clearance,timing_radius_ms=jitter_seconds*1000,
+                timing_padding=dict(x=padding_x,y=padding_y),mobility=mobility,
+                drop=min(3.,drop),phase=phase,jumps_used=used,
+                _role_velocity=velocity,_hazard_velocities=motions)
+
+
+def explain(quality):return{k:v for k,v in quality.items()if not k.startswith('_')}
 
 
 def rank(node):
@@ -176,7 +204,7 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
                         if future['state']!=job['after']:
                             raise RuntimeError('Native trajectory observation changed the exact step boundary')
                         row=dict(action=action,ticks=ticks,job=job,board=board,point=None)
-                    q=quality(future,obs)
+                    q=quality(future,obs,node['quality'])
                     item=dict(point=row['point'],path=node['path']+[row],quality=q,
                               integral=node['integral']+q['risk']*ticks*.02,
                               peak=max(node['peak'],q['risk']),inputs=node['inputs']+int(action!='none'),
@@ -196,7 +224,7 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
                     else:children=retained
             frontier=children
             stats['beam_trace'].append(dict(depth=depth,alternatives=alternatives,
-                retained=[dict(point=n['point'],score=rank(n),**n['quality'])for n in frontier]))
+                retained=[dict(point=n['point'],score=rank(n),**explain(n['quality']))for n in frontier]))
             keep={r['point']for n in frontier+exits for r in n['path']}
             release(keep)
             if not frontier:
@@ -211,7 +239,7 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
             raise RuntimeError('Chosen trajectory VM point differs from its original native state')
         release({r['point']for r in path})
         stats['selected_trajectory']=dict(score=rank(best),inputs=best['inputs'],
-                                          timing_cost=best['timing_cost'],**best['quality'])
+                                          timing_cost=best['timing_cost'],**explain(best['quality']))
         parent=root;guidance=[]
         for row in path:
             proposal=proposals.get(parent,{})

@@ -111,7 +111,9 @@ def test_slope_and_hazard_velocity_use_successive_states_of_the_same_native_bran
     moving=planner.quality(b,a)
     static=deepcopy(a);static['hazards'][0]['center']['y']=1.75
     untracked=planner.quality(b,static)
-    assert moving['risk']>untracked['risk']  # Threat follows the slope upward with the role.
+    assert moving['nominal_risk']>untracked['nominal_risk']
+    assert moving['risk']>=moving['nominal_risk']and untracked['risk']>=untracked['nominal_risk']
+    assert moving['timing_padding']['y']<untracked['timing_padding']['y']
 
 
 def test_heuristic_prefers_regained_ground_jump_budget_to_a_spent_air_state():
@@ -185,3 +187,64 @@ def test_endpoint_feedback_ranks_other_timings_without_banning_a_native_trajecto
     assert planner.timing_cost(path(20,previous=6),feedback)==0
     feedback[0]['shift']=-2
     assert planner.timing_cost(path(22),feedback)<planner.timing_cost(path(20),feedback)<planner.timing_cost(path(18),feedback)
+
+
+def test_timing_envelope_is_relative_motion_times_forty_ms_and_does_not_change_colliders():
+    obs=Oracle().observation();original=deepcopy(obs)
+    q=planner.quality(obs);nominal=planner.quality(obs,jitter_seconds=0.)
+    assert q['timing_radius_ms']==40
+    assert q['timing_padding']==dict(x=pytest.approx(18.5*.04),y=0.)
+    assert q['risk']>=nominal['risk']and nominal['risk']==nominal['nominal_risk']
+    assert q['robust_clearance']<=q['clearance']and obs==original
+
+
+def test_slope_timing_envelope_includes_vertical_travel():
+    obs=Oracle().observation();obs['support'].update(start=dict(x=0,y=0),finish=dict(x=10,y=2))
+    q=planner.quality(obs)
+    assert q['timing_padding']['x']==pytest.approx(.74)
+    assert q['timing_padding']['y']==pytest.approx(18.5*.2*.04)
+
+
+def test_approaching_hazard_and_expanding_bounds_enlarge_the_envelope():
+    a=Oracle().observation();b=deepcopy(a)
+    b['state']['episodeFrame']=5;b['role'][0]['center']['x']=1.85
+    b['hazards'][0]['center']['x']-=1.
+    b['hazards'][0]['extents']['x']+=.2
+    q=planner.quality(b,a)
+    assert q['timing_padding']['x']==pytest.approx((18.5+10+2)*.04)
+
+
+def test_native_vertical_acceleration_adds_to_the_timing_envelope():
+    a=Oracle().observation();b=deepcopy(a);c=deepcopy(a)
+    b['state']['episodeFrame']=5;b['role'][0]['center']['x']=1.85
+    c['state']['episodeFrame']=10;c['role'][0]['center'].update(x=3.7,y=1.25)
+    q=planner.quality(c,b,planner.quality(b,a))
+    assert q['timing_padding']['y']==pytest.approx(5*.04+50*.04**2/2)
+
+
+def test_fast_hazard_approaching_from_behind_is_also_a_native_threat():
+    a=Oracle().observation();b=deepcopy(a)
+    a['hazards'][0]['center']['x']=-4.8
+    b['state']['episodeFrame']=5;b['role'][0]['center']['x']=1.85
+    b['hazards'][0]['center']['x']=.2
+    q=planner.quality(b,a)
+    assert q['nominal_risk']>0 and q['risk']>=q['nominal_risk']
+
+
+def test_model_trace_exposes_envelopes_without_dumping_internal_motion_caches():
+    q=planner.quality(Oracle().observation());visible=planner.explain(q)
+    assert 'timing_padding'in visible and 'nominal_risk'in visible
+    assert '_role_velocity'not in visible and '_hazard_velocities'not in visible
+
+
+def test_equal_nominal_clearance_can_prefer_the_action_with_a_wider_timing_margin():
+    current=Oracle().observation();current['state']['episodeFrame']=5
+    current['role'][0]['center'].update(x=0.,y=1.618)
+    current['hazards'][0]['center']['x']=0.;current['hazards'][0]['extents']['y']=.1
+    slow=deepcopy(current);fast=deepcopy(current)
+    for prior in(slow,fast):
+        prior['state']['episodeFrame']=0;prior['role'][0]['center']['x']=-1.85
+    fast['role'][0]['center']['y']-=1.
+    stable=planner.quality(current,slow);sensitive=planner.quality(current,fast)
+    assert stable['nominal_risk']==pytest.approx(sensitive['nominal_risk'])
+    assert stable['risk']<sensitive['risk']
