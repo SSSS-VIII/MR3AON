@@ -19,7 +19,15 @@ def contract(before,action,after):
                 native_before=before.split(':')[0].lower(),native_after=after.split(':')[0].lower())
 
 
+def landing_jump(expected):
+    # A native interval can land and consume the held jump before it ends.
+    # fall -> jump is then a real first jump despite the same coarse air pose.
+    return (expected['action']=='jump'and expected.get('native_before')=='fall'
+            and expected.get('native_after')in ('jump','jump1'))
+
+
 def prerequisite(expected,physics):
+    if landing_jump(expected)and physics.split(':')[0].lower()!='fall':return False
     # Sliding changes the hurt collider; ground contact alone is insufficient.
     if expected.get('native_after')=='slideonground'and expected['action']=='down':
         if physics.split(':')[0].lower()!=expected['native_before']:return False
@@ -28,6 +36,7 @@ def prerequisite(expected,physics):
 
 
 def effect_matches(expected,physics):
+    if landing_jump(expected):return physics.split(':')[0].lower()in ('jump','jump1')
     if expected.get('native_after')=='slideonground'and expected['action']=='down':
         return physics.split(':')[0].lower()=='slideonground'
     phase,jumps=native_pose(physics)
@@ -45,6 +54,7 @@ def effect_matches(expected,physics):
 def meaningful(expected):
     if expected['action']=='jump'and expected['before']=='air'and expected['before_jumps']==2:
         return False
+    if landing_jump(expected):return True
     if (expected['action']=='down'and expected['before']=='ground'
             and expected.get('native_after')=='slideonground'
             and expected.get('native_before')!='slideonground'):return True

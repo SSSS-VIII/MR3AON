@@ -112,6 +112,16 @@ def test_ground_running_cannot_stand_in_for_a_slide_that_never_started():
     assert result['failure']['actual']['health']==5000
 
 
+def test_ignored_falling_jump_cannot_stand_in_for_a_native_landing_then_jump():
+    oracle=Oracle();oracle.data['phase']='fall: 15';args=baseline(oracle)
+    row=args['rows'][6];row['action']='jump';row['job']['after']['physics']='jump: 14'
+    result=verify(oracle,selected_rows={6},**args)
+    assert not result['passed']
+    assert result['failure']['reason']=='operation_effect_mismatch'
+    assert result['failure']['actual']['physics']=='fall: 15'
+    assert result['failure']['actual']['health']==5000
+
+
 def test_different_game_counter_phase_does_not_change_the_measured_window():
     class DifferentCounter(Oracle):
         def state(self):

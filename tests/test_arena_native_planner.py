@@ -115,6 +115,28 @@ def test_ground_slide_with_unchanged_contact_phase_remains_an_effective_input(mo
     assert result['stats']['rejected_no_effect']==0
 
 
+def test_native_landing_inside_the_jump_interval_keeps_the_real_first_jump(monkeypatch):
+    class Landing(Oracle):
+        def state(self):
+            state=super().state()
+            if self.data.get('pending_landing'):state['physics']='fall: 15'
+            return state
+        def step(self,ticks,action):
+            before=self.state()
+            self.data['pending_landing']=False
+            job=super().step(ticks,action)
+            job['before']=before
+            return job
+    monkeypatch.setattr(planner,'decision',lambda o:dict(
+        order=['jump']if o['state']['physics']=='fall: 15'else['none'],reason='probe',nearest=[]))
+    g=Landing();g.data.update(pending_landing=True,early=True);g.update()
+    result=planner.search_window(g,start=start(g),offset=0,horizon=4,commit=2)
+    assert result['found']and result['path'][0]['action']=='jump'
+    assert result['path'][0]['job']['before']['physics']=='fall: 15'
+    assert result['path'][0]['job']['after']['physics']=='jump: 14'
+    assert result['stats']['rejected_no_effect']==0
+
+
 def test_rejected_operation_prefix_is_not_returned_as_a_native_exit():
     g=Oracle();entry=start(g);root=g.snapshot()['result']['id'];cache=PrefixCache()
     args=dict(start=entry,offset=0,horizon=8,commit=2,root_point=root,tree_cache=cache)

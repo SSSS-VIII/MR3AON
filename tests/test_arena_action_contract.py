@@ -23,3 +23,18 @@ def test_completed_transfers_still_accept_the_original_intermediate_state():
     up=contract('runOnLineDown: 2','jump','runOnLine: 1')
     assert effect_matches(up,'rollToLineOn: 4')
     assert effect_matches(up,'runOnLine: 1')
+
+
+def test_native_landing_then_first_jump_is_not_an_ignored_air_input():
+    # v17 window 9, frame 699: all three trials restore the same native parent.
+    # none lands at y=-.1300049; jump enters jump:14 at y=-.0467033, HP5000.
+    expected=contract('fall: 15','jump','jump: 14')
+    assert meaningful(expected)
+    assert prerequisite(expected,'fall: 15')
+    assert effect_matches(expected,'jump: 14')
+    # Neither an ignored key nor its no-input landing proves this effect.
+    assert not effect_matches(expected,'fall: 15')
+    assert not effect_matches(expected,'runOnGround: 5')
+    # The same coarse air/one-jump pose while still rising is not its entry.
+    assert not prerequisite(expected,'jump: 14')
+    assert not meaningful(contract('fall: 15','jump','fall: 15'))
