@@ -777,3 +777,5 @@ b512260仅延续软评分建议：沿已实际提交的输入帧/动作前缀剥
 210项针对回归通过，覆盖前缀剥离、过期与不匹配丢弃、反馈副本不随旧cache释放、回退/新start/新点失效、有界数量和动作类型区分。真实旧提案输入的离线评分复算：相同walkoff@1029为.15，已通过walkoff@1034和不同类型的更早ground@1024均0；这是评分重算，不是同根墙钟A/B或新增无伤路线。完整证据在`fixed-route-work/margin-feedback-carry-repair-v17.json`。
 
 更新在第39窗入口生效：只换新guided窗口与native_planner.timing_cost，267个VM点和gate元数据保留、无客体请求，原native search body及验证器未替换。冻结源码/manifest在本run `search/runtime-updates/1795082398508147805`，margin-carry-update.json为applied。实际继承窗口/反馈次数与端到端耗时收益仍待后续stats证明；不能把加载或单测当作已提速。当前主路线38窗/210.80m/5000血/10键、无跨窗回退或失效区间，局部审计累计6次拒绝；第38窗名义效果未成立的候选也已拒绝并换方案继续。整板/实机稳定无伤仍0，只有本case，finish-v17继续等待本轮结束。
+
+18:10已观测到首次真实继承：第42窗先在原帧1186的ground→jump提前端点处发现实际仍fall2/5000血而拒绝，第二提案通过；第43窗stats为inherited_margin_feedback=1、timing_feedback_seen=1，单提案/129次新原生候选、9个局部场景全过，主路线到238.55m/5000血。其名义前视改为1179的fall2→rollToGround下翻，再在1191从ground首跳，未重提单独1186起跳。**这证明反馈跨窗到达评分器，不是提速的因果A/B**；最终选中轨迹timing_cost=0且改变了更早输入，不能声称仅靠这一罚分造成选择。原始report摘要/动作/统计已补入margin-feedback-carry-repair-v17.json的first_live_inheritance。仍无完整新板或9轮实机稳定产物。
