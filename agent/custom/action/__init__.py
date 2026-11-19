@@ -121,3 +121,5 @@ from .bounty_companion import (
 )
 
 from .intelligence_simulation import PlanIntelligenceHand, ResetIntelligenceRounds, WarmIntelligenceStrategy, ConfirmIntelligenceHand
+
+from .xumi import BindXumiTaskRows

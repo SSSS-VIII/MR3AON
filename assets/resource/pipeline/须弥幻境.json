@@ -1,0 +1,1288 @@
+{
+    "须弥幻境entry": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "须弥幻境",
+                    "duration_ms": 3600000
+                }
+            }
+        },
+        "next": [
+            "须弥幻境导航"
+        ],
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境总超时": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "LoopDeadlineExpired",
+                "custom_recognition_param": {
+                    "scope": "须弥幻境"
+                }
+            }
+        },
+        "next": [
+            "重启游戏"
+        ],
+        "focus": "须弥幻境超时，未登记每日完成",
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境主页": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "每日悬赏确认在主页面"
+                ],
+                "box_index": 0
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境集会所标题": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    70,
+                    0,
+                    400,
+                    110
+                ],
+                "expected": [
+                    "^集会所$"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境活动首页标题": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    70,
+                    0,
+                    310,
+                    105
+                ],
+                "expected": [
+                    "^须弥幻境$"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境试炼页面标题": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    70,
+                    0,
+                    310,
+                    105
+                ],
+                "expected": [
+                    "^(方寸|大千)[试試]炼$"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境每日任务按钮": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1010,
+                    30,
+                    170,
+                    95
+                ],
+                "expected": [
+                    "^每日任务$"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境活动首页": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "须弥幻境活动首页标题",
+                    "须弥幻境每日任务按钮"
+                ],
+                "box_index": 0
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境任务标题": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    540,
+                    80,
+                    220,
+                    80
+                ],
+                "expected": [
+                    "^每日任务$"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境方寸次数已领取": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    1,
+                    1
+                ],
+                "expected": [
+                    "^已领取$"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境方寸次数进度": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    1,
+                    1
+                ],
+                "expected": [
+                    "^\\d+\\s*/\\s*\\d+$"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境大千次数已领取": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    1,
+                    1
+                ],
+                "expected": [
+                    "^已领取$"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境大千次数进度": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    1,
+                    1
+                ],
+                "expected": [
+                    "^\\d+\\s*/\\s*\\d+$"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境方寸积分已领取": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    1,
+                    1
+                ],
+                "expected": [
+                    "^已领取$"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境方寸积分进度": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    1,
+                    1
+                ],
+                "expected": [
+                    "^\\d+\\s*/\\s*\\d+$"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境大千积分已领取": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    1,
+                    1
+                ],
+                "expected": [
+                    "^已领取$"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境大千积分进度": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    1,
+                    1
+                ],
+                "expected": [
+                    "^\\d+\\s*/\\s*\\d+$"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境任务面板": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "须弥幻境任务标题",
+                    "须弥幻境任务全部内容"
+                ],
+                "box_index": 1
+            }
+        },
+        "next": [
+            "须弥幻境检查每日任务"
+        ],
+        "on_error": [
+            "Default_on_error"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BindXumiTaskRows"
+            }
+        }
+    },
+    "须弥幻境任务奖励可领取": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    820,
+                    175,
+                    245,
+                    410
+                ],
+                "expected": [
+                    "^领取奖励$"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境一键领取按钮": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    950,
+                    645,
+                    200,
+                    75
+                ],
+                "expected": [
+                    "^一键领取$"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境领取全部任务奖励": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "须弥幻境任务面板",
+                    "须弥幻境任务奖励可领取",
+                    "须弥幻境一键领取按钮"
+                ],
+                "box_index": 2
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "须弥幻境导航"
+        ],
+        "post_delay": 600,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境奖励弹层标题": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    450,
+                    65,
+                    400,
+                    120
+                ],
+                "expected": [
+                    "^恭喜获得$"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境确认奖励": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "须弥幻境奖励弹层标题",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    470,
+                                    575,
+                                    340,
+                                    135
+                                ],
+                                "expected": [
+                                    "^确定$"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "须弥幻境导航"
+        ],
+        "post_delay": 500,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境全部任务已领取": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "须弥幻境任务面板",
+                    "须弥幻境方寸次数已领取",
+                    "须弥幻境大千次数已领取",
+                    "须弥幻境方寸积分已领取",
+                    "须弥幻境大千积分已领取"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1060,
+                    95,
+                    40,
+                    45
+                ]
+            }
+        },
+        "next": [
+            "须弥幻境完成回主页"
+        ],
+        "post_delay": 400,
+        "focus": "须弥幻境四项每日任务均已领取",
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境方寸任务未完成": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "须弥幻境任务面板",
+                    {
+                        "recognition": {
+                            "type": "Or",
+                            "param": {
+                                "any_of": [
+                                    "须弥幻境方寸次数进度",
+                                    "须弥幻境方寸积分进度"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1060,
+                    95,
+                    40,
+                    45
+                ]
+            }
+        },
+        "next": [
+            "须弥幻境方寸导航"
+        ],
+        "post_delay": 500,
+        "focus": "须弥幻境检查到方寸任务尚未完成",
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境方寸试炼标题": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    70,
+                    0,
+                    310,
+                    105
+                ],
+                "expected": [
+                    "^方寸[试試]炼$"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境进入方寸试炼": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "须弥幻境活动首页"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    250,
+                    250,
+                    140,
+                    150
+                ]
+            }
+        },
+        "next": [
+            "须弥幻境方寸导航"
+        ],
+        "post_delay": 800,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境方寸开始游戏": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "须弥幻境方寸试炼标题",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    900,
+                                    570,
+                                    370,
+                                    145
+                                ],
+                                "expected": [
+                                    "^开始游戏$"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "须弥幻境设置战斗时限"
+        ],
+        "post_delay": 1500,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境方寸导航": {
+        "next": [
+            "须弥幻境总超时",
+            "处理游戏闪退",
+            "游戏有更新需重启",
+            "须弥幻境教程下一页",
+            "须弥幻境教程关闭",
+            "须弥幻境进入方寸试炼",
+            "须弥幻境方寸开始游戏"
+        ],
+        "timeout": 30000,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境大千任务未完成": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "须弥幻境任务面板",
+                    {
+                        "recognition": {
+                            "type": "Or",
+                            "param": {
+                                "any_of": [
+                                    "须弥幻境大千次数进度",
+                                    "须弥幻境大千积分进度"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1060,
+                    95,
+                    40,
+                    45
+                ]
+            }
+        },
+        "next": [
+            "须弥幻境大千导航"
+        ],
+        "post_delay": 500,
+        "focus": "须弥幻境检查到大千任务尚未完成",
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境大千试炼标题": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    70,
+                    0,
+                    310,
+                    105
+                ],
+                "expected": [
+                    "^大千[试試]炼$"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境进入大千试炼": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "须弥幻境活动首页"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    900,
+                    250,
+                    140,
+                    150
+                ]
+            }
+        },
+        "next": [
+            "须弥幻境大千导航"
+        ],
+        "post_delay": 800,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境大千开始游戏": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "须弥幻境大千试炼标题",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    900,
+                                    570,
+                                    370,
+                                    145
+                                ],
+                                "expected": [
+                                    "^开始游戏$"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "须弥幻境设置战斗时限"
+        ],
+        "post_delay": 1500,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境大千导航": {
+        "next": [
+            "须弥幻境总超时",
+            "处理游戏闪退",
+            "游戏有更新需重启",
+            "须弥幻境教程下一页",
+            "须弥幻境教程关闭",
+            "须弥幻境进入大千试炼",
+            "须弥幻境大千开始游戏"
+        ],
+        "timeout": 30000,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境检查每日任务": {
+        "next": [
+            "须弥幻境总超时",
+            "须弥幻境确认奖励",
+            "须弥幻境领取全部任务奖励",
+            "须弥幻境全部任务已领取",
+            "须弥幻境方寸任务未完成",
+            "须弥幻境大千任务未完成"
+        ],
+        "timeout": 10000,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境打开每日任务": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "须弥幻境活动首页",
+                    "须弥幻境每日任务按钮"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "须弥幻境导航"
+        ],
+        "post_delay": 500,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境试炼页返回任务": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "须弥幻境试炼页面标题",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    900,
+                                    570,
+                                    370,
+                                    145
+                                ],
+                                "expected": [
+                                    "^开始游戏$"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    12,
+                    8,
+                    65,
+                    65
+                ]
+            }
+        },
+        "next": [
+            "须弥幻境导航"
+        ],
+        "post_delay": 700,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境进入活动卡片": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "须弥幻境集会所标题",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    0,
+                                    100,
+                                    1280,
+                                    590
+                                ],
+                                "expected": [
+                                    "须[弥称]幻境"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "须弥幻境导航"
+        ],
+        "post_delay": 1000,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境主页进入集会所": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "须弥幻境主页",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    500,
+                                    400,
+                                    780,
+                                    320
+                                ],
+                                "expected": [
+                                    "集会所"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "须弥幻境导航"
+        ],
+        "post_delay": 700,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境集会所翻页": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "须弥幻境集会所标题"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    350,
+                    420
+                ],
+                "end": [
+                    1050,
+                    420
+                ],
+                "duration": 400
+            }
+        },
+        "next": [
+            "须弥幻境导航"
+        ],
+        "post_delay": 600,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境教程下一页": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    700,
+                    450,
+                    560,
+                    260
+                ],
+                "expected": [
+                    "^下一页$|^我知道了$|^知道了$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "须弥幻境导航"
+        ],
+        "post_delay": 500,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境教程关闭": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    250,
+                    550,
+                    800,
+                    160
+                ],
+                "expected": [
+                    "点击.*空白.*(关闭|继续)|点击.*继续"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "须弥幻境导航"
+        ],
+        "post_delay": 500,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境设置战斗时限": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "LoopDeadlineArm",
+                "custom_action_param": {
+                    "scope": "须弥幻境战斗",
+                    "duration_ms": 720000
+                }
+            }
+        },
+        "next": [
+            "须弥幻境等待结算"
+        ],
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境战斗超时": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "LoopDeadlineExpired",
+                "custom_recognition_param": {
+                    "scope": "须弥幻境战斗"
+                }
+            }
+        },
+        "next": [
+            "重启游戏"
+        ],
+        "focus": "须弥幻境单场等待超时，重启恢复",
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境接力选择标题": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    400,
+                    25,
+                    480,
+                    115
+                ],
+                "expected": [
+                    "选择忍者接力"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境跳过接力": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "须弥幻境接力选择标题",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    530,
+                                    655,
+                                    240,
+                                    65
+                                ],
+                                "expected": [
+                                    "^跳过$"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "须弥幻境等待结算"
+        ],
+        "post_delay": 800,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境继续试炼": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    700,
+                    540,
+                    570,
+                    170
+                ],
+                "expected": [
+                    "^继续([试試]炼|挑战)$"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "须弥幻境设置战斗时限"
+        ],
+        "post_delay": 1800,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境返回活动": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    540,
+                    1280,
+                    180
+                ],
+                "expected": [
+                    "返回须弥(幻|环)境"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "须弥幻境导航"
+        ],
+        "post_delay": 1000,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境战斗倒计时": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    550,
+                    0,
+                    240,
+                    80
+                ],
+                "expected": [
+                    "^\\d{1,3}[:：]\\d{1,2}$"
+                ]
+            }
+        },
+        "next": [
+            "须弥幻境设置战斗时限"
+        ],
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境继续等待结算": {
+        "next": [
+            "须弥幻境等待结算"
+        ],
+        "post_delay": 1000,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境等待结算": {
+        "next": [
+            "须弥幻境总超时",
+            "须弥幻境战斗超时",
+            "处理游戏闪退",
+            "游戏有更新需重启",
+            "[JumpBack]3v3网络异常点击重试",
+            "须弥幻境跳过接力",
+            "须弥幻境继续试炼",
+            "须弥幻境返回活动",
+            "须弥幻境继续等待结算"
+        ],
+        "rate_limit": 500,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境导航": {
+        "next": [
+            "处理游戏闪退",
+            "游戏有更新需重启",
+            "须弥幻境总超时",
+            "[JumpBack]3v3网络异常点击重试",
+            "[JumpBack]启动阶段拒绝好友邀请",
+            "须弥幻境确认奖励",
+            "须弥幻境任务面板",
+            "须弥幻境继续试炼",
+            "须弥幻境返回活动",
+            "须弥幻境战斗倒计时",
+            "须弥幻境教程下一页",
+            "须弥幻境教程关闭",
+            "须弥幻境打开每日任务",
+            "须弥幻境试炼页返回任务",
+            "须弥幻境进入活动卡片",
+            "须弥幻境主页进入集会所",
+            "须弥幻境集会所翻页"
+        ],
+        "timeout": 30000,
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境完成回主页": {
+        "next": [
+            "须弥幻境主页登记完成",
+            "[JumpBack]back"
+        ],
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境主页登记完成": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "须弥幻境主页"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SetManagedTaskPersistentState",
+                "custom_action_param": {
+                    "entry": "须弥幻境entry",
+                    "enabled": false,
+                    "valid_until": "next_daily_reset"
+                }
+            }
+        },
+        "next": [
+            "须弥幻境停止"
+        ],
+        "on_error": [
+            "Default_on_error"
+        ]
+    },
+    "须弥幻境停止": {
+        "action": {
+            "type": "StopTask"
+        },
+        "on_error": []
+    },
+    "须弥幻境任务全部内容": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    365,
+                    175,
+                    410,
+                    415
+                ],
+                "expected": [
+                    "(完成|挑战).*次.*(方寸|大千)[试試]炼",
+                    "(方寸|大千)[试試]炼.*(累计|积分|分)"
+                ]
+            }
+        },
+        "on_error": [
+            "Default_on_error"
+        ]
+    }
+}
