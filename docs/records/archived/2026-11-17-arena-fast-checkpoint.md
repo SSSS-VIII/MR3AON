@@ -721,3 +721,6 @@ v16在第40窗达到板内222.01m/12键后，第41窗有限轨迹束无可用延
 8644595仅将nominal_operation_has_no_effect的禁用前缀收至失败动作这一行；保留改变该动作或此前任何动作的备选，不全局屏蔽同一输入序列，不缩减80ms端点/组合/新入口验收范围。损血前缀与未知证据沿既有规则，历史/越界行号不作这种缩短。回归小搜索场景从6个相同无效前缀后缀加1条有效备选的逐项检查，变为一次拒绝后即选有效备选；共226项相关回归通过。真实第41窗的6个24步记录按新函数均归成同一13步前缀，原生同根A/B未运行，不声明端到端提速倍数。
 
 修复在v16第43窗的新审计入口只替换宿主rejected_prefix绑定，保留301个VM点与gate元数据，无客体请求；manifest在本run search/runtime-updates/1795070276290727119，noop-prefix-update.json已为applied。不同根的旧失败没有移植到新根；本次入口没有可缩短的当前根既有记录（existing_prefixes_shortened=0）。后续第43窗已实际通过并继续提交；期间新的损血拒绝涉及不同动作前缀，不能一并视作上述重复。原始前缀/窗口哈希/回退/应用记录在fixed-route-work/noop-prefix-repair-2026-11-19.json。合格整板和稳定视觉仍0，refresh-v10/live-v14继续等候新v2产物。
+
+
+后续第49窗首次实机命中该修复（同v16进程/VM）：一个rollToGround期间的jump再次以nominal_operation_has_no_effect拒绝，HP5000；其全局row226对应本窗第17步，实际rejected_forecast_prefix长度已为17，后续7步不再另分变体。第二提案即通过局部验证并提交，窗口共2提案/156次新原生候选，搜索80.67秒、局部审计22.13秒。这证明剪枝已在真实搜索执行，不是同根速度A/B；首例证据已补入noop-prefix-repair-2026-11-19.json的first_live_hit。仍无整板或实机跑法成果。
