@@ -695,4 +695,4 @@ f7fd7f9收紧了实机验收：每一个原程序事件都须依次出现在视�
 
 独立arena-search原生复验已完成：`debug/arena-client/fixed-route-work/timing-v2-native-1795064766894394768/native-repair-report.json`。Unity真实时间再次实测1/2/3渲染帧约16.6664/33.3328/49.9992ms。旧50022已知反例的名义与提前端点通过；第16键延后约49.999ms后，第17键仍fall2、HP5000，新验证以operation_prerequisite_mismatch拒绝，修复目标指回row161。诊断后完整入口state恢复相等。该有限反例复验只证明对应缺口能被检出，不是整板/全部初态/视觉无伤证明。
 
-复验进程正常结束后启动`mr3a-arena-fixed-search-v16.service`，Restart=no；沿用新队列batch-clock-v2-20261119保留失败历史，仍只`--case L5-M43-S4-B53042 --max-cases 1`。新进程先做原生安全起跳三分支自检，再重新选板，从板头建立全新搜索根，不读取v15的238m路径或旧名义跑法作热启动。汇总证据在`fixed-route-work/stop-recheck-restart-2026-11-19.json`；新准入及实际搜索进度待后续记录，当前合格整板与稳定视觉成果均0。
+复验进程正常结束后启动`mr3a-arena-fixed-search-v16.service`，Restart=no；沿用新队列batch-clock-v2-20261119保留失败历史，仍只`--case L5-M43-S4-B53042 --max-cases 1`。新进程先做原生安全起跳三分支自检，再重新选板，从板头建立全新搜索根，不读取v15的238m路径或旧名义跑法作热启动。汇总证据在`fixed-route-work/stop-recheck-restart-2026-11-19.json`；现已核实本轮准入三分支0/−49.999/+50.003ms均通过，root_restored=true；全新run 1795065721772718068以原帧529/板内0.9103m/5000血/无保护未骑乘开始，已实际提交3窗到14.20m，未报错。refresh-v10与live-v14重新监视新证据，后者等待新库；v9只是一次无源编库检查后正常退出，没有发布库。当前合格整板与稳定视觉成果均0。
