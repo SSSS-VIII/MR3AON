@@ -48,6 +48,18 @@ def test_causal_prefix_covers_later_rows_that_can_return_to_a_reached_world_posi
     assert guided_search.rejected_prefix(plan,5,audit)==tuple(r['action']for r in plan)
 
 
+def test_margin_feedback_records_exact_prior_keys_and_does_not_attribute_failure_to_other_history():
+    from prefix_cache import PrefixCache
+    cache=PrefixCache();plan=rows(['jump','none','down','none'])
+    audit=dict(failure=dict(reason='native_damage',shift_ticks=2,event=dict(row_index=7)))
+    guided_search.record_margin_feedback(cache,plan,5,audit)
+    guided_search.record_margin_feedback(cache,plan,5,audit)
+    assert cache.margin_feedback==[dict(before=((0,'jump'),),frame=4,action='down',shift=2)]
+    audit['failure']['event']['row_index']=4
+    guided_search.record_margin_feedback(cache,plan,5,audit)
+    assert len(cache.margin_feedback)==1
+
+
 def test_a_future_key_at_the_horizon_is_not_rejected_for_lacking_a_later_forecast(monkeypatch):
     def verify(*args,**kwargs):raise AssertionError('No complete later-side window is available')
     monkeypatch.setattr(guided_search,'verify',verify)

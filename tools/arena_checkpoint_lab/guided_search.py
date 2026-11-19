@@ -20,6 +20,16 @@ def rejected_prefix(forecast,history_length,audit):
     return tuple(row['action']for row in forecast[:end+1])
 
 
+def record_margin_feedback(cache,forecast,history_length,audit):
+    failure=audit.get('failure',{});event=failure.get('event',{})
+    index=event.get('row_index',-1)-history_length
+    if failure.get('reason')!='native_damage'or failure.get('shift_ticks')not in(-2,2)or not 0<=index<len(forecast):return
+    row=forecast[index]
+    feedback=dict(before=tuple((r['job']['before']['episodeFrame'],r['action'])for r in forecast[:index]if r['action']!='none'),
+                  frame=row['job']['before']['episodeFrame'],action=row['action'],shift=failure['shift_ticks'])
+    if feedback not in cache.margin_feedback:cache.margin_feedback.append(feedback)
+
+
 def window(gate,*,searcher,history,initial_point,initial_state,board_code,**kwargs):
     cache=PrefixCache();result=None
     try:
@@ -84,6 +94,7 @@ def _window(gate,*,searcher,history,initial_point,initial_state,board_code,tree_
                 actions=tuple(row['action']for row in forecast[len(path):]))
             return finish(result)
         prefix=rejected_prefix(forecast,len(history),audit)
+        record_margin_feedback(tree_cache,forecast,len(history),audit)
         audit['rejected_forecast_prefix']=list(prefix)
         forbidden.add(prefix)
         gate.restore(root)

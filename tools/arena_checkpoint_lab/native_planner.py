@@ -53,7 +53,26 @@ def quality(observation,previous=None):
 def rank(node):
     q=node['quality']
     return (node['integral']+node['peak']*.4+q['risk']*.35+q['mobility']+q['drop']
-            +node['inputs']*.06-node['progress']*.015)
+            +node['inputs']*.06-node['progress']*.015+node.get('timing_cost',0.))
+
+
+def timing_cost(path,feedback):
+    """Soft direction from failed endpoints, only under identical earlier keys.
+
+    A later suffix might rescue the same key, so this never bans that key or
+    asserts a cause of damage. Conflicting endpoint failures favor changing
+    the earlier trajectory instead of repeatedly nudging the final key.
+    """
+    keys=[(r['job']['before']['episodeFrame'],r['action'])for r in path if r['action']!='none']
+    cost=0.
+    for f in feedback:
+        i=len(f['before'])
+        if len(keys)<=i or tuple(keys[:i])!=f['before']:continue
+        frame,action=keys[i]
+        if action!=f['action']or abs(frame-f['frame'])>10:continue
+        direction=-1 if f['shift']>0 else 1
+        cost+=.15*max(0.,1-direction*(frame-f['frame'])/2)
+    return cost
 
 
 def select(nodes,width):
@@ -82,6 +101,8 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
     observations=tree_cache.observations if tree_cache is not None else{}
     proposals=tree_cache.decisions if tree_cache is not None else{}
     unsafe=tree_cache.unsafe if tree_cache is not None else set()
+    feedback=tree_cache.margin_feedback if tree_cache is not None else[]
+    stats['timing_feedback_seen']=len(feedback)
     forbidden=tuple(tuple(p)for p in forbidden_prefixes)
     def excluded(actions):return any(actions[:len(p)]==p for p in forbidden if len(p)<=len(actions))
     def restore(point):stats['restores_ms'].append(gate.restore(point)['ms'])
@@ -160,6 +181,7 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
                               integral=node['integral']+q['risk']*ticks*.02,
                               peak=max(node['peak'],q['risk']),inputs=node['inputs']+int(action!='none'),
                               progress=future['state']['position']['x']-x0)
+                    item['timing_cost']=timing_cost(item['path'],feedback)
                     goal=exit_kind(start['board'],row['board'])is not None
                     if not goal:alternatives+=1
                     retained=select((exits if goal else children)+[item],1 if goal else beam_width)
@@ -188,7 +210,8 @@ def search_window(gate,*,start,offset,horizon=24,commit=6,max_trials=1200,on_tri
         if gate.call('state')!=path[count-1]['job']['after']:
             raise RuntimeError('Chosen trajectory VM point differs from its original native state')
         release({r['point']for r in path})
-        stats['selected_trajectory']=dict(score=rank(best),inputs=best['inputs'],**best['quality'])
+        stats['selected_trajectory']=dict(score=rank(best),inputs=best['inputs'],
+                                          timing_cost=best['timing_cost'],**best['quality'])
         parent=root;guidance=[]
         for row in path:
             proposal=proposals.get(parent,{})

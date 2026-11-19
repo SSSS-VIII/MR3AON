@@ -175,3 +175,13 @@ def test_noncompetitive_native_rollouts_do_not_write_unneeded_vm_snapshots():
     assert result['stats']['snapshots_avoided']>0
     assert g.serial==result['stats']['snapshots_created']+1
     assert all(r['point']in g.points for r in result['forecast_path'])
+
+
+def test_endpoint_feedback_ranks_other_timings_without_banning_a_native_trajectory():
+    def path(tick,previous=4):
+        return[dict(action=a,job=dict(before=dict(episodeFrame=t)))for t,a in((previous,'jump'),(tick,'down'))]
+    feedback=[dict(before=((4,'jump'),),frame=20,action='down',shift=2)]
+    assert planner.timing_cost(path(18),feedback)<planner.timing_cost(path(20),feedback)<planner.timing_cost(path(22),feedback)
+    assert planner.timing_cost(path(20,previous=6),feedback)==0
+    feedback[0]['shift']=-2
+    assert planner.timing_cost(path(22),feedback)<planner.timing_cost(path(20),feedback)<planner.timing_cost(path(18),feedback)
