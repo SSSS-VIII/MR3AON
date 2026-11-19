@@ -46,15 +46,15 @@ def test_total_eighty_ms_and_each_key_variant_restores_its_own_nominal_snapshot(
     oracle=Oracle();initial,state,rows=baseline(oracle);end=deepcopy(oracle.data)
     result=verify(oracle,rows,initial_point=initial,initial_state=state,
                   start=dict(health=5000,board=dict(map=42,stage_index=0)),board_code='board',whole_board=True)
-    assert result['passed']and result['window_ms']==80 and len(result['checks'])==10
-    assert result['offsets_ms']==[-40,-20,0,20,40]
+    assert result['passed']and result['window_ms']==80 and len(result['checks'])==4
+    assert result['offsets_ms']==[-40,40]and result['sampling']=='endpoints'
     first=[r for r in result['checks']if r['event']==0]
     assert len({r['anchor_frame']for r in first})==1
-    assert [r['actions'][0]['frame']for r in first]==[6,4,8,5,7]
+    assert [r['actions'][0]['frame']for r in first]==[4,8]
     # Later inputs use their original world X, not original tick + the tested
     # offset. The physical state may differ; its input clock is not accumulated.
     assert all(abs(r['actions'][1]['x']-rows[7]['job']['before']['position']['x'])<=.5 for r in first)
-    for r in result['checks'][5:]:
+    for r in result['checks'][2:]:
         assert r['actions'][0]['index']==1  # First key already in original snapshot.
     assert oracle.data==end
     assert all('before_physics'in a and 'after_physics'in a
@@ -65,7 +65,7 @@ def test_a_nominally_safe_last_moment_input_is_rejected_and_cannot_pollute_the_n
     oracle=Oracle(fragile=True);initial,state,rows=baseline(oracle);end=deepcopy(oracle.data)
     result=verify(oracle,rows,initial_point=initial,initial_state=state,
                   start=dict(health=5000,board=dict(map=42,stage_index=0)),board_code='board',whole_board=True)
-    assert not result['passed']and result['checks'][0]['passed']
+    assert not result['passed']and len(result['checks'])==1
     assert result['failure']['shift_ticks']==-2 and result['failure']['reason']=='native_damage'
     assert result['failure']['max_world_x']>=result['failure']['actual']['position']['x']
     assert oracle.data==end and oracle.data['hp']==5000
@@ -95,4 +95,21 @@ def test_damage_witness_keeps_the_furthest_native_sample_when_a_hit_moves_the_ro
                   start=dict(health=5000,board=dict(map=42,stage_index=0)),board_code='board')
     failure=result['failure']
     assert not result['passed']and failure['reason']=='native_damage'
-    assert failure['max_world_x']==10 and failure['actual']['position']['x']==-4
+    assert failure['max_world_x']==9.5 and failure['actual']['position']['x']==-4.5
+
+
+def test_previously_failed_event_and_endpoint_are_checked_first_without_omitting_coverage(monkeypatch):
+    import timing_margin
+    oracle=Oracle();initial,state,rows=baseline(oracle)
+    arguments=dict(initial_point=initial,initial_state=state,
+                   start=dict(health=5000,board=dict(map=42,stage_index=0)),board_code='board')
+    def fragile(gate,keys,event,shift,*args):
+        return dict(passed=not(event['index']==1 and shift==2),reason='native_damage')
+    monkeypatch.setattr(timing_margin,'_branch',fragile)
+    first=verify(oracle,rows,**arguments)
+    assert not first['passed']and first['failure']['shift_ms']==40
+    monkeypatch.setattr(timing_margin,'_branch',lambda *args:dict(passed=True))
+    second=verify(oracle,rows,**arguments)
+    assert second['passed']and len(second['checks'])==4
+    assert(second['checks'][0]['event'],second['checks'][0]['shift_ms'])==(1,40)
+    assert{(c['event'],c['shift_ms'])for c in second['checks']}=={(i,s)for i in(0,1)for s in(-40,40)}

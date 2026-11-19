@@ -20,3 +20,15 @@ def test_every_operation_needs_all_five_independent_offsets_and_the_original_ent
     bad=deepcopy(c);bad['independent']=False;assert not valid(bad,10,100,2)
     bad=deepcopy(c);bad['scope']='native_forecast_suffix';assert not valid(bad,10,100,2)
     assert not valid(c,11,100,2)and not valid(c,10,100,3)
+
+
+def test_endpoint_certificate_requires_both_offsets_for_every_operation():
+    c=certificate();c['offsets_ms']=[-40,40]
+    c['checks']=[r for r in c['checks']if r['shift_ms']in(-40,40)]
+    assert valid(c,10,100,2)
+    bad=deepcopy(c);bad['checks'].pop()
+    assert not valid(bad,10,100,2)
+    bad=deepcopy(c);bad['checks'][-1]=deepcopy(bad['checks'][0])
+    assert not valid(bad,10,100,2)
+    bad=deepcopy(c);bad['offsets_ms']=[40]
+    assert not valid(bad,10,100,2)
