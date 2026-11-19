@@ -39,6 +39,10 @@ def run(gate,case,output,initialize,progress):
     finally:
         gate.restore(root)
         report['root_restored']=gate.call('state')==initial
+        if not report['root_restored']:
+            report.update(passed=False,restore_error='Native admission did not restore its original entry')
         for point in list(gate.points):
             if point!=root:gate.drop(point)
         (output/'report.json').write_text(json.dumps(report,indent=2))
+        if not report['root_restored']:
+            raise RuntimeError(report['restore_error'])
