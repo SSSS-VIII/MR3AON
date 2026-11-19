@@ -766,3 +766,14 @@ v17重新搜索至第10窗时，原生单步早筛记录了2条“无效jump”�
 203项相关回归通过，包括原生轨迹束保留该合法分支，以及忽略fall jump时即使无伤也由容差验证按operation_effect_mismatch拒绝。原始三分支完整job/中间samples、旧函数误判和新函数复核在`fixed-route-work/landing-jump-repair-v17-2026-11-19.json`，不需要另起客户端重演来撤销搜索。
 
 修正在v17第22窗新window入口只替换宿主动作契约及native_planner/endpoint_rollout/timing_margin的实际导入绑定，保留148个VM点、gate元数据一致、没有客体请求。源码与manifest在本run `search/runtime-updates/1795079521448009312`，landing-jump-update.json为applied；原始冻结源码保留，以runtime_source_updates记此处增量。当前路线前21窗只提交过一次ground→slide，未依赖这类被错误删掉的输入；整板最终仍须从初始完整VM根用更新后的检查重新验证。尚未宣称新的fall→jump在现场提案/两端都已通过，也无同根速度A/B或合格新整板；后续以实际trials/audits为准。
+
+
+### 已知容差失败在下一窗丢失软评分反馈（11月19日）
+
+v17第32、33窗都先提议同一个未来jump：原帧1029/全局row200，名义fallFromRun→jump；提前端点实际已是runOnGround、HP5000，被既有前提检查拒绝。第32窗已经找到原帧1034的通过替代，但下一窗虽沿原成功提交点续行，只有warm动作提示被带过去，PrefixCache.close清空了margin_feedback；轨迹评分仍可再次挑回1029。两窗都2提案，分别153/191次新原生候选。这不是同根重复VM实验，也不说明所有不同前提的首跳都不安全；当前视觉发键仍要求候选的操作前提，验证规则未在这里放宽。
+
+b512260仅延续软评分建议：沿已实际提交的输入帧/动作前缀剥离已提交键，丢弃已过去的目标，最多保留96条；下一窗必须匹配既有start对象、历史长度和最后保留检查点标识才接收，回退/换入口/换点均不继承。**不传播硬禁用前缀，不把上一窗失败当作新物理根的无效证明**，所有新候选仍经过原生前进和原容差检查。反馈增加原生前/后动作类型，防止fallFromRun首跳的失败顺带压制更早runOnGround首跳；只改变候选软评分，原碰撞、动作、健康、时钟及−40/+40ms端点/组合/新入口要求保持。
+
+210项针对回归通过，覆盖前缀剥离、过期与不匹配丢弃、反馈副本不随旧cache释放、回退/新start/新点失效、有界数量和动作类型区分。真实旧提案输入的离线评分复算：相同walkoff@1029为.15，已通过walkoff@1034和不同类型的更早ground@1024均0；这是评分重算，不是同根墙钟A/B或新增无伤路线。完整证据在`fixed-route-work/margin-feedback-carry-repair-v17.json`。
+
+更新在第39窗入口生效：只换新guided窗口与native_planner.timing_cost，267个VM点和gate元数据保留、无客体请求，原native search body及验证器未替换。冻结源码/manifest在本run `search/runtime-updates/1795082398508147805`，margin-carry-update.json为applied。实际继承窗口/反馈次数与端到端耗时收益仍待后续stats证明；不能把加载或单测当作已提速。当前主路线38窗/210.80m/5000血/10键、无跨窗回退或失效区间，局部审计累计6次拒绝；第38窗名义效果未成立的候选也已拒绝并换方案继续。整板/实机稳定无伤仍0，只有本case，finish-v17继续等待本轮结束。
