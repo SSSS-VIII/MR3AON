@@ -93,13 +93,17 @@ def timing_cost(path,feedback):
     asserts a cause of damage. Conflicting endpoint failures favor changing
     the earlier trajectory instead of repeatedly nudging the final key.
     """
-    keys=[(r['job']['before']['episodeFrame'],r['action'])for r in path if r['action']!='none']
+    operations=[r for r in path if r['action']!='none']
+    keys=[(r['job']['before']['episodeFrame'],r['action'])for r in operations]
     cost=0.
     for f in feedback:
         i=len(f['before'])
         if len(keys)<=i or tuple(keys[:i])!=f['before']:continue
         frame,action=keys[i]
         if action!=f['action']or abs(frame-f['frame'])>10:continue
+        if 'native_kind'in f:
+            kind=tuple(operations[i]['job'][side].get('physics','').split(':')[0].lower()for side in ('before','after'))
+            if kind!=f['native_kind']:continue
         direction=-1 if f['shift']>0 else 1
         cost+=.15*max(0.,1-direction*(frame-f['frame'])/2)
     return cost

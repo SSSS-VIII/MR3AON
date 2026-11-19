@@ -160,3 +160,52 @@ def test_verified_continuation_is_reused_only_for_the_same_committed_snapshot_hi
     guided_search.window(gate,history=history[:1]if invalidate=='backtrack'else history,
                          start={}if invalidate=='new_start'else start,**arguments)
     assert calls[-1]==()
+
+
+def test_continuation_feedback_strips_only_matching_committed_keys_and_expires_old_targets():
+    from prefix_cache import PrefixCache
+    cache=PrefixCache();path=rows(['jump','none'])
+    cache.margin_feedback=[
+        dict(before=((0,'jump'),(6,'down')),frame=10,action='jump',shift=-1,native_kind=('fallfromrun','jump')),
+        dict(before=((0,'down'),),frame=10,action='jump',shift=-1),
+        dict(before=(),frame=0,action='jump',shift=1)]
+    result=guided_search.continuation_feedback(cache,path)
+    assert result==[dict(before=((6,'down'),),frame=10,action='jump',shift=-1,native_kind=('fallfromrun','jump'))]
+    assert cache.margin_feedback[0]['before']==((0,'jump'),(6,'down'))
+    cache.margin_feedback.clear()
+    assert result[0]['before']==((6,'down'),)
+
+
+@pytest.mark.parametrize('invalidate',[None,'backtrack','new_start','different_point'])
+def test_feedback_is_carried_only_to_the_exact_committed_native_continuation(monkeypatch,invalidate):
+    calls=[]
+    feedback=dict(before=((0,'jump'),),frame=6,action='down',shift=1,native_kind=('fall2','rolltoground'))
+    def searcher(gate,**kwargs):
+        cache=kwargs['tree_cache'];calls.append(list(cache.margin_feedback))
+        if len(calls)==1:cache.margin_feedback.append(feedback)
+        plan=rows(['jump','none','down','none'],10*len(calls))
+        return dict(found=True,root=10,stats=dict(trials=1),path=plan[:2],forecast_path=plan)
+    monkeypatch.setattr(guided_search,'verify',lambda *a,**kw:dict(passed=True,checks=[]))
+    gate=SimpleNamespace(drop=lambda _:None);start={}
+    args=dict(searcher=searcher,initial_point=10,initial_state={},board_code='board',max_trials=2)
+    first=guided_search.window(gate,history=[],start=start,**args)
+    history=first['path']
+    if invalidate=='backtrack':history=history[:1]
+    if invalidate=='different_point':history=[*history[:-1],dict(history[-1],point=999)]
+    result=guided_search.window(gate,history=history,start={}if invalidate=='new_start'else start,**args)
+    expected=[dict(feedback,before=())]if invalidate is None else[]
+    assert calls[1]==expected
+    assert result['stats']['inherited_margin_feedback']==len(expected)
+
+
+def test_continuation_feedback_is_bounded_and_keeps_the_observed_action_kind():
+    from prefix_cache import PrefixCache
+    cache=PrefixCache();plan=rows(['jump','none','down'])
+    plan[2]['job']['before']['physics']='fall2: 17'
+    plan[2]['job']['after']['physics']='rollToGround: 6'
+    audit=dict(failure=dict(reason='native_damage',shift_ms=40,event=dict(row_index=2)))
+    guided_search.record_margin_feedback(cache,plan,0,audit)
+    assert cache.margin_feedback[0]['native_kind']==('fall2','rolltoground')
+    cache.margin_feedback=[dict(before=(),frame=i+10,action='jump',shift=1)for i in range(150)]
+    result=guided_search.continuation_feedback(cache,rows(['none']))
+    assert len(result)==96 and result[0]['frame']==64 and result[-1]['frame']==159

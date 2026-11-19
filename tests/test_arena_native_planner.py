@@ -244,6 +244,16 @@ def test_endpoint_feedback_ranks_other_timings_without_banning_a_native_trajecto
     assert planner.timing_cost(path(22),feedback)<planner.timing_cost(path(20),feedback)<planner.timing_cost(path(18),feedback)
 
 
+def test_timing_feedback_does_not_penalize_an_earlier_ground_jump_as_a_failed_walkoff_jump():
+    def path(frame,before):
+        return [dict(action='jump',job=dict(before=dict(episodeFrame=frame,physics=before),
+                                          after=dict(physics='jump: 14')))]
+    feedback=[dict(before=(),frame=1029,action='jump',shift=-1,native_kind=('fallfromrun','jump'))]
+    assert planner.timing_cost(path(1029,'fallFromRun: 13'),feedback)>0
+    assert planner.timing_cost(path(1034,'fallFromRun: 13'),feedback)==0
+    assert planner.timing_cost(path(1024,'runOnGround: 5'),feedback)==0
+
+
 def test_timing_envelope_is_relative_motion_times_forty_ms_and_does_not_change_colliders():
     obs=Oracle().observation();original=deepcopy(obs)
     q=planner.quality(obs);nominal=planner.quality(obs,jitter_seconds=0.)

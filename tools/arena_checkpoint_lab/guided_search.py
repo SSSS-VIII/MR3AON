@@ -33,7 +33,20 @@ def record_margin_feedback(cache,forecast,history_length,audit):
     row=forecast[index]
     feedback=dict(before=tuple((r['job']['before']['episodeFrame'],r['action'])for r in forecast[:index]if r['action']!='none'),
                   frame=row['job']['before']['episodeFrame'],action=row['action'],shift=1 if failure['shift_ms']>0 else-1)
+    if all(row['job'][side].get('physics')for side in ('before','after')):
+        feedback['native_kind']=tuple(row['job'][side]['physics'].split(':')[0].lower()for side in ('before','after'))
     if feedback not in cache.margin_feedback:cache.margin_feedback.append(feedback)
+
+
+def continuation_feedback(cache,path):
+    """Carry soft scores only along the actual committed native prefix."""
+    committed=tuple((r['job']['before']['episodeFrame'],r['action'])for r in path if r['action']!='none')
+    frame=path[-1]['job']['after']['episodeFrame'];result=[]
+    for feedback in cache.margin_feedback:
+        if feedback['frame']<frame or tuple(feedback['before'][:len(committed)])!=committed:continue
+        item=dict(feedback,before=tuple(feedback['before'][len(committed):]))
+        if item not in result:result.append(item)
+    return result[-96:]
 
 
 def window(gate,*,searcher,history,initial_point,initial_state,board_code,**kwargs):
@@ -52,7 +65,7 @@ def _window(gate,*,searcher,history,initial_point,initial_state,board_code,tree_
     forbidden=set(kwargs.pop('forbidden_prefixes',()))
     budget=kwargs.pop('max_trials',1200)
     root=kwargs.pop('root_point',None)
-    audits=[];used=0;proposal_stats=[]
+    audits=[];used=0;proposal_stats=[];inherited_feedback=0
     def finish(result):
         stats=result['stats']
         for name in ('seconds','rejected_damage','rejected_invalid_interval','rejected_no_effect','prefix_cache_hits',
@@ -63,12 +76,16 @@ def _window(gate,*,searcher,history,initial_point,initial_state,board_code,tree_
         stats['native_decisions']=[v for s in proposal_stats for v in s.get('native_decisions',[])]
         stats['trials']=stats['total_candidate_trials']=used
         stats['proposals']=len(proposal_stats)
+        stats['inherited_margin_feedback']=inherited_feedback
         result['timing_attempts']=audits
         return result
     hint=getattr(gate,'_arena_native_continuation',None)
     matched=bool(hint and history and hint['start']is kwargs['start']
                  and hint['history_length']==len(history)and hint['point']==history[-1]['point'])
     kwargs['warm_start']=hint['actions']if matched else()
+    if matched:
+        tree_cache.margin_feedback.extend(dict(f)for f in hint.get('margin_feedback',()))
+        inherited_feedback=len(tree_cache.margin_feedback)
     gate._arena_native_continuation=None
     previous=next((r['job']['before']['episodeFrame']for r in reversed(history)if r['action']!='none'),None)
     previous_time=next((r['job']['before'].get('time')for r in reversed(history)if r['action']!='none'),None)
@@ -100,7 +117,8 @@ def _window(gate,*,searcher,history,initial_point,initial_state,board_code,tree_
             for point in {r['point']for r in forecast}-committed-tree_cache.points:gate.drop(point)
             gate._arena_native_continuation=dict(start=kwargs['start'],
                 history_length=len(history)+len(path),point=path[-1]['point'],
-                actions=tuple(row['action']for row in forecast[len(path):]))
+                actions=tuple(row['action']for row in forecast[len(path):]),
+                margin_feedback=continuation_feedback(tree_cache,path))
             return finish(result)
         prefix=rejected_prefix(forecast,len(history),audit)
         record_margin_feedback(tree_cache,forecast,len(history),audit)
