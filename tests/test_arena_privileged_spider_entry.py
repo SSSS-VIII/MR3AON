@@ -12,6 +12,7 @@ from arena_privileged_model import PlayerModel,hazard_forecasts,spider_positions
 from arena_privileged_families import spider_entry
 
 FIXTURE=json.loads((Path(__file__).parent/'fixtures/arena-privileged-spider-entry.json').read_text())
+FLEX=next(c for c in FIXTURE['cases']if c['before']['enemies'][0]['fields']['_enemyState']=='flex: 2')
 
 
 @pytest.mark.parametrize('case',FIXTURE['cases'],ids=lambda c:c['name'])
@@ -35,14 +36,14 @@ def test_native_entry_and_flex_collision_envelopes_contain_later_original_shape(
 
 
 def test_flex_clamps_a_crossed_target_in_the_same_native_tick():
-    case=FIXTURE['cases'][-1];b=case['before'];a=case['after'];e=b['enemies'][0]
+    case=FLEX;b=case['before'];a=case['after'];e=b['enemies'][0]
     dt=a['state']['time']-b['state']['time']
     predicted=spider_positions(e,np.array([0.,dt]),stamp=b['state']['time'],tick=b['state']['fixedDeltaTime'])
     assert abs(predicted[-1]-a['enemy']['position']['y'])<.0005
 
 
 def test_stay_honors_original_up_speed_instead_of_freezing_the_root():
-    b=FIXTURE['cases'][-1]['before'];e=deepcopy(b['enemies'][0])
+    b=FLEX['before'];e=deepcopy(b['enemies'][0])
     e['fields']['_enemyState']='stay: 1';e['custom']['_upSpeed']=2.5
     e['fields']['_lastPosition']['y']=e['position']['y']
     e['fields']['_secondLastPosition']['y']=e['position']['y']-2.5*b['state']['fixedDeltaTime']
@@ -70,11 +71,14 @@ def test_unproved_entry_variants_are_not_silently_stationary(change,reason):
     assert prediction is None and missing==reason
 
 
-def test_candidate_speed_changes_cannot_reuse_original_activation_clock():
-    b=FIXTURE['cases'][0]['before'];p=PlayerModel(b);times=np.linspace(0,.2,25)
-    _,motors,_=p.trajectory(times);motors[-1].vx+=2
-    prediction,missing=spider_entry(b['enemies'][0],times,b,p,motors)
-    assert prediction is None and missing=='spider_player_speed_transition'
+def test_slope_acceleration_and_candidate_jump_supply_actual_physical_reference_positions():
+    b=next(c['before']for c in FIXTURE['cases']if c['name']=='slope_distance_trigger')
+    p=PlayerModel(b);times=np.linspace(0,1.8,217)
+    for operations in ((),((.1,'jump'),)):
+        _,motors,valid=p.trajectory(times,operations)
+        assert valid and any(abs(m.vx-b['state']['speed'])>.001 for m in motors)
+        prediction,missing=spider_entry(b['enemies'][0],times,b,p,motors)
+        assert missing is None and prediction is not None
 
 
 def test_bite_feedback_geometry_is_explicitly_rejected_until_authored_curves_are_modelled():

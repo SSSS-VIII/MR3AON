@@ -337,6 +337,39 @@ function E.privileged_state()
             local at=field(o,'privateAtLevelBlock')
             if at then row.native_support={id=at:GetInstanceID(),start=vector(at.PointStart),finish=vector(at.PointEnd),
                 is_line=at.IsLine,is_ground=at.IsGround}end
+            if row.type=='EnemyRollingBase'then
+                local block=field(o,'_currentBlock')
+                if block then row.rolling_support={id=block:GetInstanceID(),start=vector(block.PointStart),finish=vector(block.PointEnd),
+                    is_line=block.IsLine,is_ground=block.IsGround,info=values(field(block,'_levelBlockInfo'))}end
+                -- None overwrites _currentBlock on activation. A pooled
+                -- instance can still hold the preceding spawn's block here.
+                local cursor=block
+                if tostring(field(o,'_enemyState'))=='none: 0'then cursor=at end
+                row.rolling_blocks={};local seen={};local previous={};local back=cursor
+                if cursor then seen[cursor:GetInstanceID()]=true end
+                for depth=1,4 do
+                    local candidate=field(back,'<_LastGroundCollider>k__BackingField')
+                    -- Pool recycling can leave stale backward references.
+                    -- Export only an actual adjacent predecessor, without
+                    -- repairing or following a cycle in the game's graph.
+                    if not candidate or seen[candidate:GetInstanceID()] or
+                            (candidate.PointEnd-back.PointStart).magnitude>0.001 then break end
+                    back=candidate;seen[back:GetInstanceID()]=true;previous[#previous+1]=back
+                end
+                for depth=#previous,1,-1 do local v=previous[depth]
+                    row.rolling_blocks[#row.rolling_blocks+1]={id=v:GetInstanceID(),start=vector(v.PointStart),finish=vector(v.PointEnd),
+                        is_line=v.IsLine,is_ground=v.IsGround,info=values(field(v,'_levelBlockInfo'))}
+                end
+                seen={}
+                for depth=1,8 do
+                    if not cursor or seen[cursor:GetInstanceID()]then break end
+                    seen[cursor:GetInstanceID()]=true
+                    row.rolling_blocks[#row.rolling_blocks+1]={id=cursor:GetInstanceID(),start=vector(cursor.PointStart),finish=vector(cursor.PointEnd),
+                        is_line=cursor.IsLine,is_ground=cursor.IsGround,info=values(field(cursor,'_levelBlockInfo'))}
+                    cursor=field(cursor,'<_NextGroundCollider>k__BackingField')
+                end
+                row.rolling_chain_truncated=cursor~=nil
+            end
             if row.type=='EnemyHook' or row.type=='EnemyBambooThorn'then
                 local last,previous=field(o,'_lastRotation'),field(o,'_secondLastRotation')
                 if last and previous then row.rotation_samples={last=last.eulerAngles.z,previous=previous.eulerAngles.z}end

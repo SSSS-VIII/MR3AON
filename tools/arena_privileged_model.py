@@ -895,6 +895,8 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
             extent = np.tile(xy(c['extents']), (len(times), 1))*growth[:, None]
             if kind=='EnemySpider' and mode=='none':
                 extent[:,1]+=spread
+            if kind=='EnemyRollingBase' and 'envelope_spread'in predicted[5]:
+                extent+=predicted[5]['envelope_spread']
             if kind in ('EnemyPinball','EnemyBlowFish') and len(predicted)>4:
                 root_scale=np.array([enemy['scale'][a] for a in ('x','y','z')])
                 child_scale=np.array([c['scale'][a] for a in ('x','y','z')])/root_scale
@@ -914,6 +916,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                 # Float32 Time/fixedTime subtraction affects interpolation at
                 # large absolute clocks; bound it using native travel speed.
                 padding=2*abs(float(np.spacing(np.float32(observation['state']['time']))))*max(20.,abs(custom['_downSpeed']))+.00001
+            if kind=='EnemyRollingBase':padding=predicted[5]['position_padding'];approximate=True
             if kind=='EnemyPiranha':padding=predicted[5]['position_padding']
             if kind=='EnemyPoleaxeWarrior':
                 center,extent=predicted[4][c['id']]
@@ -935,7 +938,8 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                     padding=float(lever*predicted[5]['angular_padding']);approximate=True
                 elif kind in ('EnemyStraightBack','EnemySmallSword') and len(predicted)>5:
                     padding=float(predicted[5]['position_padding']);approximate=True
-            geometry=('aabb' if kind=='EnemySpider' and mode=='none' else
+            geometry=('aabb' if kind=='EnemySpider' and mode=='none' or
+                      kind=='EnemyRollingBase' and 'envelope_spread'in predicted[5] else
                       'sphere' if c['type']=='SphereCollider' or kind in ('EnemyFruitPinball','EnemyPiranha') else
                       'obb' if quads is not None else 'aabb')
             result.append(Hazard(c['id'], enemy['id'], kind, center, extent, active, source, approximate,

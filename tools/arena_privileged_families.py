@@ -36,6 +36,7 @@ FAMILIES = {
     'EnemyFruitMuppet': 'native_collectible_banana_role_callback',
     'EnemySmallSword': 'native_wait_charge_and_flight_on_constant_ground_reference',
     'EnemyPiranha': 'native_water_wait_jump_swim_with_root_rotation_envelope',
+    'EnemyRollingBase': 'native_activation_fall_slope_projection_wall_and_pit_chain',
 }
 
 
@@ -195,6 +196,199 @@ def role_reference_bounds(times,motors,query,actual):
     return np.minimum(lower[lo],lower[hi])-.025,np.maximum(upper[lo],upper[hi])+.025
 
 
+def rolling_path(enemy,times,observation,player,activation_tick=None):
+    """Source-order fall, slope projection, wall stop and native pit entry.
+
+    The actual current/next-ground chain is read without invoking a lookup or
+    changing the game. Missing links and unproved ready branches stop
+    prediction; the current slope is never extended over an unknown seam.
+    """
+    from arena_privileged_model import rows,xy
+    f=enemy['fields'];initial=int(f['_enemyState'].rsplit(':',1)[1]);mode=initial
+    if mode not in (0,1,2,3,4,5):return None,'rolling_phase:'+str(mode)
+    if observation.get('camera',{}).get('direction')!=1:
+        return None,'rolling_original_run_direction'
+    hurt=[c for c in rows(enemy['colliders'])if c.get('damage_kind')]
+    if (len(hurt)!=1 or hurt[0]['type']!='SphereCollider' or hurt[0]['damage_kind']!='enemy_tag'
+            or hurt[0].get('damage_owner') is not None or not hurt[0]['active'] or not hurt[0]['enabled']
+            or hurt[0]['name']!=enemy['name'] or np.linalg.norm(xy(hurt[0]['center'])-xy(enemy['position']))>.0001
+            or max(abs(hurt[0]['extents'][a]-f['_radius'])for a in ('x','y','z'))>.0001):
+        return None,'rolling_original_root_sphere'
+    # State None replaces _currentBlock at activation; a recycled instance
+    # can retain another spawn's field before that source branch runs.
+    support=enemy.get('native_support') if mode==0 else enemy.get('rolling_support')
+    if not support or not(support['is_line'] or support['is_ground']):
+        return None,'rolling_current_block_missing'
+    blocks=list(rows(enemy.get('rolling_blocks'))) or [support]
+    if enemy.get('rolling_chain_truncated') is False:
+        # A fast rock can reach an edge before the next native collider has
+        # been instantiated. The original resolved stage already specifies
+        # that continuation. Retain its possible live motion conservatively;
+        # if the real next link stays null, native code recycles the rock.
+        # Never extend a cyclic/truncated live graph or invent a missing floor.
+        terrain=rows(observation.get('terrain'));tail=blocks[-1]
+        matches=[i for i,b in enumerate(terrain)if
+                 np.linalg.norm(xy(b['start'])-xy(tail['start']))<.001 and
+                 np.linalg.norm(xy(b['finish'])-xy(tail['finish']))<.001]
+        if len(matches)==1:
+            from arena_privileged_model import phase
+            for b in terrain[matches[0]+1:]:
+                kind=phase(b['kind'])
+                if kind not in ('line','ground','link') or np.linalg.norm(xy(b['start'])-xy(blocks[-1]['finish']))>.001:
+                    break
+                blocks.append(dict(id=b['id'],start=b['start'],finish=b['finish'],is_line=kind=='line',is_ground=kind=='ground',
+                    info=dict(_isDeadBlockOffsetY=b['death_offset_y']),resolved_before_native_instantiation=True))
+    origin=next((i for i,b in enumerate(blocks)if b['id']==support['id']),None)
+    if origin is None:return None,'rolling_native_chain_origin'
+    if any(b['finish']['x']<b['start']['x'] or b['start']['z']!=b['finish']['z'] for b in blocks):
+        return None,'rolling_unsupported_native_block'
+    if any(abs(blocks[i]['finish']['x']-blocks[i+1]['start']['x'])>.001 for i in range(len(blocks)-1)):
+        return None,'rolling_discontinuous_native_chain'
+    if f['_readyToFall']:return None,'rolling_ready_rebound_unverified'
+    if abs(f['_velocity']['z'])>1e-8 or abs(f['_recordVelocity']['z'])>1e-8:
+        return None,'rolling_spatial_velocity'
+    age=observation['state']['time']-f['_lastFixedUpdateTime']
+    if not -.0002<=age<=player.tick+.0002:return None,'rolling_original_fixed_clock'
+    current=origin;block_degree=np.float32(f['_blockDegree']);fall_y=np.float32(f['_fallPosY'])
+    def degree(block):
+        d=xy(block['finish'])-xy(block['start']);length=np.float32(np.linalg.norm(d))
+        if length<=0:return np.float32(0.)
+        return np.float32(np.float32(math.acos(np.clip(np.float32(d[0])/length,-1,1)))*np.float32(57.295780181884766))
+    if abs(block_degree-degree(support))>.005 and mode not in (0,4,5):return None,'rolling_native_block_angle'
+    def ground(block,x):
+        a,b=block['start'],block['finish'];width=np.float32(b['x']-a['x'])
+        if abs(width)<=1e-5:return np.float32(a['y'])
+        rise=np.float32(b['y']-a['y']);dx=np.float32(x-np.float32(a['x']))
+        return np.float32(np.float32(a['y'])+np.float32(np.float32(dx*rise)/width))
+    if initial in (1,3) and abs(fall_y-ground(support,np.float32(f['_lastPosition']['x'])))>.001:
+        return None,'rolling_native_landing_height'
+    velocity=np.array([f['_velocity'][axis]for axis in ('x','y')],np.float32)
+    record=np.array([f['_recordVelocity'][axis]for axis in ('x','y')],np.float32)
+    real=np.array([f['_realVelocity'][axis]for axis in ('x','y')],np.float32)
+    gravity=np.float32(f['_gravity']);radius=np.float32(f['_radius']);height=np.float32(f['_height'])
+    lengthen=player.rules.get('ground_lengthen')
+    if lengthen is None:return None,'rolling_native_lookup_range_missing'
+    failure=None;step=0;max_speed=float(np.linalg.norm(velocity))
+    def next_index(i):
+        nonlocal failure
+        if i+1>=len(blocks):failure='rolling_native_next_block_missing';return i
+        return i+1
+    def lookup(x):
+        nonlocal failure
+        for i,block in enumerate(blocks):
+            if np.float32(np.float32(block['start']['x'])+np.float32(lengthen))<=x<=np.float32(np.float32(block['finish']['x'])+np.float32(lengthen)):
+                return i
+        failure='rolling_native_lookup_outside_chain';return current
+    def pit(index):
+        nonlocal current,mode,velocity
+        current=index;mode=4;velocity=real.copy()
+        velocity[1]=np.float32(velocity[1]-np.float32(np.float32(f['_speedY'])*np.float32(.5)))
+    def update(pos,dt):
+        nonlocal mode,velocity,record,real,current,block_degree,fall_y,failure,step,max_speed
+        dt=np.float32(dt);step+=1
+        if failure or mode==5:return pos,0.
+        block=blocks[current];a,b=block['start'],block['finish']
+        if mode==0:
+            if step==activation_tick:
+                current=lookup(pos[0]);block=blocks[current];block_degree=degree(block)
+                fall_y=ground(block,pos[0]);mode=3
+        elif mode in (1,3):
+            gain=np.float32(3.5 if mode==1 else 1.)
+            velocity[1]=np.float32(velocity[1]-np.float32(np.float32(gravity*gain)*dt))
+            max_speed=max(max_speed,float(np.linalg.norm(velocity)))
+            pos[1]=np.float32(pos[1]+np.float32(velocity[1]*dt))
+            if np.float32(np.float32(pos[1]-radius)-height)<=ground(block,pos[0]):
+                pos[1]=np.float32(np.float32(fall_y+radius)+height)
+                if record[0]==0:record=velocity.copy()
+                else:velocity=record.copy()
+                mode=2
+        elif mode==4:
+            velocity[1]=np.float32(velocity[1]-np.float32(np.float32(gravity*np.float32(5.))*dt))
+            max_speed=max(max_speed,float(np.linalg.norm(velocity)))
+            if np.float32(pos[0]-np.float32(a['x']))<radius:
+                pos=np.asarray(pos+velocity*dt,dtype=np.float32)
+            elif block['info']['_isDeadBlockOffsetY']!=0:
+                pos[1]=np.float32(pos[1]+np.float32(velocity[1]*dt))
+            else:
+                current=lookup(pos[0]);block=blocks[current];block_degree=degree(block)
+                fall_y=ground(block,pos[0]);mode=3
+        else:
+            if np.float32(pos[0]+radius)>=np.float32(b['x']):
+                j=next_index(current);n=blocks[j]
+                if failure:return pos,0.
+                if n['start']['x']==n['finish']['x'] and n['start']['y']<n['finish']['y']:
+                    pos[0]=np.float32(np.float32(n['finish']['x'])-radius);mode=5;return pos,0.
+            if pos[0]>=np.float32(b['x']):
+                j=next_index(current);n=blocks[j]
+                if failure:return pos,0.
+                if n['start']['x']==n['finish']['x'] and n['start']['y']>n['finish']['y']:
+                    pit(next_index(j));return pos,0.
+            target=lookup(pos[0])
+            if failure:return pos,0.
+            if target!=current:
+                n=blocks[target]
+                if n['info']['_isDeadBlockOffsetY']!=0:
+                    pit(target);return pos,0.
+                if n['start']['x']==n['finish']['x']:
+                    j=next_index(target)
+                    if failure:return pos,0.
+                    if blocks[j]['info']['_isDeadBlockOffsetY']!=0:
+                        pit(j);return pos,0.
+                else:current=target;block_degree=degree(n)
+            velocity[1]=np.float32(velocity[1]-np.float32(gravity*dt))
+            max_speed=max(max_speed,float(np.linalg.norm(velocity)))
+            ratio=math.inf if velocity[1]==0 else abs(float(np.float32(velocity[0]/velocity[1])))
+            degrees=np.float32(np.float32(math.atan(ratio))*np.float32(-57.295780181884766))
+            angle=np.float32(np.float32(np.float32(90.)-block_degree)+degrees)
+            factor=np.float32(math.cos(np.float32(angle*np.float32(.01745329238474369))))
+            magnitude=np.float32(math.sqrt(np.float32(np.float32(velocity[0]*velocity[0])+np.float32(velocity[1]*velocity[1]))))
+            speed=np.float32(magnitude*factor);theta=np.float32(block_degree*np.float32(.01745329238474369))
+            real=np.array([np.float32(math.cos(theta)),np.float32(math.sin(theta))],np.float32)*speed*np.where(velocity>0,np.float32(1.),np.float32(-1.))
+            pos=np.asarray(pos+real*dt,dtype=np.float32)
+        return pos,0.
+    positions,angles=native_steps(enemy,times,observation,update)
+    if failure:return None,failure
+    rounding=(2*abs(float(np.spacing(np.float32(observation['state']['time']))))*max(1.,max_speed)
+              +8*float(np.max(np.abs(np.spacing(positions.astype(np.float32)))))+.0001)
+    return (positions-xy(enemy['position']),angles,
+            'EnemyRollingBase.ProcessState/MoveOnGround; native gravity, slope projection, wall stop and linked pit entry',
+            None,None,dict(position_padding=rounding)),None
+
+
+def rolling(enemy,times,observation,player,trajectory_states=None):
+    """Enclose all original role-reference activation ticks for state None."""
+    f=enemy['fields'];mode=int(f['_enemyState'].rsplit(':',1)[1])
+    if mode!=0:return rolling_path(enemy,times,observation,player)
+    role=observation['role']['fields'];actual=role.get('_lastRoleObjPos')
+    if not player.native_samples or abs(f['_lastFixedUpdateTime']-role['_lastFixedUpdateTime'])>.0002:
+        return None,'rolling_original_role_clock'
+    if actual is None or abs(actual['x']-player.initial.physical_x-player.initial.offset_render)>abs(player.speed)*player.tick+.025:
+        return None,'rolling_original_role_reference'
+    if trajectory_states is None:
+        _,trajectory_states,valid=player.trajectory(times)
+        if not valid:return None,'rolling_player_reference_unsupported'
+    age=np.clip(observation['state']['time']-f['_lastFixedUpdateTime'],0,player.tick)
+    count=int(math.floor((age+times[-1]+1e-8)/player.tick));query=np.maximum(0.,np.arange(1,count+1)*player.tick-age)
+    lower,upper=role_reference_bounds(times,trajectory_states,query,actual)
+    threshold=f['_lastPosition']['x']-f['_activeDistance'];possible=certain=None
+    for k in range(1,count+1):
+        if possible is None and upper[k-1]>threshold:possible=k
+        if lower[k-1]>threshold:certain=k;break
+    activation=[None]
+    if possible is not None:
+        if (certain or count)-possible>8:return None,'rolling_activation_uncertainty'
+        activation=list(range(possible,(certain or count)+1))
+        if certain is None:activation.append(None)
+    paths=[]
+    for activation_tick in activation:
+        path,reason=rolling_path(enemy,times,observation,player,activation_tick)
+        if path is None:return None,reason
+        paths.append(path)
+    positions=np.array([p[0]for p in paths]);lower,upper=positions.min(axis=0),positions.max(axis=0)
+    middle=(lower+upper)/2;meta=dict(position_padding=max(p[5]['position_padding']for p in paths),envelope_spread=(upper-lower)/2)
+    return (middle,np.zeros(len(times)),paths[0][2]+'; native role-distance activation envelope',None,None,meta),None
+
+
 def spider_entry(enemy,times,observation,player,trajectory_states=None):
     """None:9 is a stationary high root, not a permanently harmless spider.
 
@@ -224,8 +418,9 @@ def spider_entry(enemy,times,observation,player,trajectory_states=None):
     if trajectory_states is None:
         _,trajectory_states,valid=player.trajectory(times)
         if not valid:return None,'spider_player_reference_unsupported'
-    if any(abs(m.vx-observation['state']['speed'])>.001 for m in trajectory_states):
-        return None,'spider_player_speed_transition'
+    # This trigger consumes actor position, not a fixed running-speed timer.
+    # The physical trajectory below already includes slope acceleration and
+    # candidate flips/slides; requiring vx==baseSpeed rejects valid slopes.
     age=np.clip(age,0,tick);count=int(math.floor((age+times[-1]+1e-8)/tick))
     query=np.maximum(0.,np.arange(1,count+1)*tick-age)
     lower,upper=role_reference_bounds(times,trajectory_states,query,actual)
@@ -460,6 +655,8 @@ def forecast(enemy, times, observation, player, trajectory_states=None):
     source = kind+'.FixedUpdateMovement'
     if kind=='EnemyPiranha':
         return piranha(enemy,times,observation,player,trajectory_states)
+    if kind=='EnemyRollingBase':
+        return rolling(enemy,times,observation,player,trajectory_states)
     if kind=='EnemySmallSword':
         return small_sword(enemy,times,observation,player,trajectory_states)
     if kind=='EnemyPoleaxeWarrior':
