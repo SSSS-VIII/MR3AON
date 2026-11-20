@@ -64,6 +64,7 @@ class InternalController:
                       e['type'] in ('EnemyStraightBack','EnemySmallSword','EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter') or
                       e['type']=='EnemySpider' and e['fields'].get('_enemyState')=='none: 9' or
                       e['type']=='EnemyRollingBase' and e['fields'].get('_enemyState','').rsplit(':',1)[-1].strip()=='0' or
+                      e['type']=='EnemyBrambles' and e['fields'].get('_currState','').rsplit(':',1)[-1].strip()=='0' or
                       e['type']=='EnemyRockTiger' and e['fields'].get('currState','').rsplit(':',1)[-1].strip() in ('1','2') or
                       e['type']=='EnemyPiranha' and e['fields'].get('_enemyState','').rsplit(':',1)[-1].strip() in ('0','1')
                       for e in rows(observation['enemies'])if not e['fields'].get('_dead') and not e['fields'].get('_isRecycled'))
@@ -225,7 +226,7 @@ class InternalController:
             # parent's spawn root. Missing motion must not make its current
             # authored damage footprint disappear from the safety boundary.
             for collider in rows(enemy.get('colliders'))+rows(enemy.get('grown_colliders')):
-                if not collider.get('damage_kind'):continue
+                if not(collider.get('damage_kind')or collider.get('native_movement_callback')):continue
                 quad=rows(collider.get('quad'))
                 a=min(p['x']for p in quad)if quad else collider['center']['x']-collider['extents']['x']
                 b=max(p['x']for p in quad)if quad else collider['center']['x']+collider['extents']['x']
@@ -241,7 +242,7 @@ class InternalController:
         def signature():
             return {(e['id'],c['id'],e.get('info_identity'),e['fields'].get('m_index'))
                     for e in rows(observation['enemies'])if not e['fields'].get('_dead') and not e['fields'].get('_isRecycled')
-                    for c in rows(e['colliders'])if c.get('damage_kind')}
+                    for c in rows(e['colliders'])if c.get('damage_kind')or c.get('native_movement_callback')}
         def proof_changed():
             prior=pending.get('negative_signature')
             return prior is not None and not signature().issubset({tuple(v)for v in prior})

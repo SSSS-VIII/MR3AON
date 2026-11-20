@@ -45,6 +45,9 @@ FAMILIES = {
     'EnemyBullutFireRobot': 'native_accelerating_camera_relative_fire_bullet',
     'EnemyBullutLaser': 'native_camera_relative_bullet_with_authored_growth_envelope',
     'EnemyAlarmShooter': 'native_camera_relative_body_and_complete_pending_laser_queue',
+    'EnemyBrambles': 'native_lift_stab_and_bounded_warning_callback',
+    'EnemyBramblesSingleThorn': 'native_parent_lift_stab_generated_thorn',
+    'EnemyBrambleCollider': 'native_parent_lift_stab_movement_contact_avoidance',
 }
 
 
@@ -557,6 +560,165 @@ def alarm_shooter(enemy,times,observation,player,trajectory_states=None,referenc
         return (zero,np.zeros(len(times)),
                 'EnemyAlarmShooter.FixedUpdateMovement; original camera-relative MoveIn/Attack/Leave and complete future shot queue',
                 np.ones(len(times),bool),geometry,dict(generated_hazards=generated,shots=path['shots'])),None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
+def brambles_path(enemy,times,observation,player,trajectory_states=None):
+    """Original lift/stab reducer, retaining the unknown callback phase.
+
+    The original Lua hotfix uses a GameController logic coroutine, with its
+    instance ID and actual countdown. Legacy captures retain the bounded
+    unknown remaining warning duration; no observed animation age is guessed.
+    """
+    from arena_privileged_model import rows,xy,timer_ticks
+    try:
+        f=enemy['fields'];binding=enemy['brambles'];render=binding['render'];actions=rows(binding['actions'])
+        mode=int(str(f['_currState']).rsplit(':',1)[1]);index=f['_currParamIndex'];axis=xy(binding['axis_y'])
+        if (mode not in range(7)or not actions or binding.get('actions_truncated')or
+                not -1<=index<len(actions)or mode!=0 and index<0):
+            raise ValueError('brambles_original_action_sequence')
+        if (not render['direct_parent']or any(abs(render['rotation'][a])>1e-4 for a in ('x','y','z'))or
+                any(abs(render['scale'][a]-1.)>1e-4 for a in ('x','y','z'))or
+                abs(axis[0])+abs(binding['axis_y']['z'])>1e-5 or abs(axis[1])<1e-5 or
+                abs(render['position']['x'])+abs(render['position']['z'])>1e-5):
+            raise ValueError('brambles_unverified_render_transform')
+        for action in actions:
+            kind=int(str(action['_paramType']).rsplit(':',1)[1])
+            if (kind not in (0,1)or not all(math.isfinite(action[k])for k in
+                    ('_moveOrStabSpeed','_moveOrStabMaxDis','_toNextActionWaitTime','_stabStayTime','_stabBackSpeed'))or
+                    action['_moveOrStabMaxDis']<0):raise ValueError('brambles_native_action_parameter_domain')
+        if mode and binding['action']!=actions[index]:raise ValueError('brambles_current_action_disagreement')
+        if (binding.get('blocks_truncated')or
+                len(rows(binding['blocks']))!=f['_totalBrambleBlockNum']):
+            raise ValueError('brambles_future_uninstantiated_blocks')
+        tick=player.tick;age=observation['state']['time']-f['_lastFixedUpdateTime']
+        if not -.0002<=age<=tick+.0002:raise ValueError('brambles_original_parent_clock')
+        values=[f[k]for k in ('_waitTime','_currUpDis','_stabStayTime','_groundY')]
+        if not all(math.isfinite(v)for v in values):raise ValueError('brambles_native_phase_parameter_domain')
+        age=np.clip(age,0.,tick);steps=np.floor((age+np.asarray(times)+1e-8)/tick).astype(int);count=int(steps[-1])
+        lower=upper=None
+        if mode==0:
+            if trajectory_states is None:
+                _,trajectory_states,valid=player.trajectory(times)
+                if not valid:raise ValueError('brambles_unsupported_actor_activation_path')
+            query=np.maximum(0.,np.arange(count+1)*tick-age)
+            lower,upper=role_reference_bounds(times,trajectory_states,query,observation['role']['fields']['_lastRoleObjPos'])
+        current=np.float32(f['_lastPosition']['y']);previous=np.float32(f['_secondLastPosition']['y'])
+        original_render=float(render['position']['y']);correction=enemy['position']['y']-(previous+(current-previous)*(age/tick))
+        maximum_warning=math.ceil(.3/tick)+2
+        warning_ticks=range(maximum_warning+1)
+        if 'warning'in binding:
+            warning=binding['warning'];implementation=warning['implementation']
+            if implementation not in ('lua_fixed_coroutine','native_delay'):
+                raise ValueError('brambles_original_warning_coroutine_binding')
+            if implementation=='lua_fixed_coroutine':
+                matches=rows(warning['matches'])
+                if (mode!=6 and warning.get('id')not in ('',None)or mode==6 and
+                        (warning.get('id')in ('',None)or len(matches)!=1 or warning['controllers']!=1 or
+                         not warning['processing']or warning.get('truncated'))):
+                    raise ValueError('brambles_original_warning_coroutine_binding')
+                if mode==6:
+                    co=matches[0];cf=co['fields']
+                    if (co['type']!='NewCoroutine'or co['stack_count']!=1 or str(cf['ID'])!=warning['id']or
+                            any(int(str(cf[k]).rsplit(':',1)[1])!=v for k,v in (('state',0),('nowStep',1),('nextStep',1)))or
+                            cf['hasOwner']or not 0<=cf['delayTime']<=np.float32(.3)+1e-6):
+                        raise ValueError('brambles_original_warning_coroutine_binding')
+                    if cf['delayTime']>0:
+                        remaining=timer_ticks(cf['delayTime'],tick,False)
+                        # Executor and enemy update order can place the
+                        # first stab in the expiry tick or the next one.
+                        warning_ticks=range(max(0,remaining-1),remaining+1)
+        # y, previous-y, local-render-y, phase, parameter, wait, lift-distance,
+        # stab-stay, warning fixed ticks still blocked.
+        initial=(float(current),float(previous),original_render,mode,index,f['_waitTime'],f['_currUpDis'],f['_stabStayTime'],0)
+        states={initial[:-1]+(warning,)for warning in warning_ticks}if mode==6 else{initial}
+        history=[states]
+        def next_action(s):
+            y,prev,local,state,param,wait,up,stay,warn=s;param=(param+1)%len(actions);a=actions[param]
+            if int(str(a['_paramType']).rsplit(':',1)[1])==0:
+                return {(y,prev,local,1,param,wait,0.,stay,0)}
+            return {(y,prev,local,6,param,wait,up,stay,w)for w in range(max(0,math.floor(.3/tick)-1),maximum_warning+1)}
+        for n in range(1,count+1):
+            following=set()
+            for s in states:
+                y,prev,local,state,param,wait,up,stay,warn=s;prev=y
+                if state==0:
+                    direction=observation['camera']['direction'];x=enemy['position']['x'];distance=enemy['custom']['_activateDistance']
+                    a,b=(x-upper[n])*direction,(x-lower[n])*direction;lo,hi=min(a,b),max(a,b)
+                    if lo<distance:following.update(next_action((y,prev,local,state,param,wait,up,stay,warn)))
+                    if hi>=distance:following.add((y,prev,local,state,param,wait,up,stay,warn))
+                    continue
+                action=actions[param];dt=np.float32(tick)
+                if state==6:
+                    if warn>0:
+                        following.add((y,prev,local,state,param,wait,up,stay,warn-1));continue
+                    state=2
+                if state==1:
+                    y=np.float32(np.float32(y)+np.float32(np.float32(action['_moveOrStabSpeed'])*dt))
+                    up=np.float32(np.float32(up)+np.float32(np.float32(abs(action['_moveOrStabSpeed']))*dt))
+                    if abs(up)>=action['_moveOrStabMaxDis']:
+                        # Original correction is world UP even for a negative
+                        # configured speed; preserve that source asymmetry.
+                        y=np.float32(y+np.float32(np.float32(action['_moveOrStabMaxDis'])-up))
+                        up=action['_moveOrStabMaxDis'];wait=action['_toNextActionWaitTime'];state=5
+                elif state==2:
+                    local=np.float32(np.float32(local)+np.float32(np.float32(abs(action['_moveOrStabSpeed']))*dt))
+                    world_y=np.float32(np.float32(y)+np.float32(np.float32(axis[1])*local))
+                    # Original rodata 0x11b2110 is 1.8f, not the thorn's
+                    # visual tip or its local collider offset.
+                    ground=np.float32(np.float32(f['_groundY'])+np.float32(1.8))
+                    if f['_flip']and world_y<=ground:
+                        local=np.float32((ground-np.float32(y))/np.float32(axis[1]));state=3;stay=action['_stabStayTime']
+                    elif local>=action['_moveOrStabMaxDis']:
+                        local=action['_moveOrStabMaxDis'];state=3;stay=action['_stabStayTime']
+                elif state==3:
+                    stay=np.float32(np.float32(stay)-dt)
+                    if stay<=0:state=4
+                elif state==4:
+                    local=np.float32(np.float32(local)-np.float32(np.float32(abs(action['_stabBackSpeed']))*dt))
+                    if local<=0:local=0.;state=5
+                elif state==5:
+                    wait=np.float32(np.float32(wait)-dt)
+                    if wait<=0:
+                        following.update(next_action((y,prev,local,state,param,wait,up,stay,warn)));continue
+                following.add(tuple(float(v)if isinstance(v,np.floating)else v for v in (y,prev,local,state,param,wait,up,stay,warn)))
+            states=following
+            if not states or len(states)>512:raise ValueError('brambles_callback_phase_envelope_budget')
+            history.append(states)
+        lo=[];hi=[]
+        for t,n in zip(times,steps):
+            alpha=np.clip((age+t-n*tick)/tick,0.,1.)
+            cloud=np.asarray([[axis[0]*(s[2]-original_render),
+                s[1]+(s[0]-s[1])*alpha+correction-enemy['position']['y']+axis[1]*(s[2]-original_render)]for s in history[n]])
+            lo.append(cloud.min(axis=0));hi.append(cloud.max(axis=0))
+        numeric=8*max(abs(float(np.spacing(np.float32(enemy['position'][a]))))for a in ('x','y'))+.0001
+        return (np.asarray(lo),np.asarray(hi),numeric),None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
+def brambles_child(enemy,times,observation,player,trajectory_states=None,context=None):
+    from arena_privileged_model import rows,xy
+    try:
+        binding=enemy['brambles_owner'];owner=next((e for e in rows(observation['enemies'])if e['id']==binding['id']and e['type']=='EnemyBrambles'),None)
+        if (owner is None or owner['info_identity']!=binding['info_identity']or not binding['under_render']or
+                owner['fields'].get('_dead')or owner['fields'].get('_isRecycled')):
+            raise ValueError('brambles_child_original_live_parent')
+        cache=context.setdefault('brambles_paths',{})if context is not None else{}
+        if owner['id']not in cache:cache[owner['id']]=brambles_path(owner,times,observation,player,trajectory_states)
+        path,reason=cache[owner['id']]
+        if path is None:return None,reason
+        movement=enemy['type']=='EnemyBrambleCollider'
+        colliders=[c for c in rows(enemy['colliders'])if c.get('native_movement_callback')=='bramble_contact']if movement else[
+            c for c in rows(enemy['colliders'])if c.get('damage_kind')]
+        if not colliders or any(c['type']!='BoxCollider'or not c['enabled']or not c['active']or c.get('depth_tilt')or
+                movement and c.get('movement_owner')!=enemy['id']for c in colliders):
+            raise ValueError('brambles_child_original_planar_boxes')
+        lo,hi,padding=path;geometry={c['id']:((lo+hi)/2+xy(c['center']),(hi-lo)/2+xy(c['extents'])+padding)for c in colliders}
+        zero=np.zeros((len(times),2))
+        return (zero,np.zeros(len(times)),
+                'EnemyBrambles.FixedUpdateMovement/ToNextAction; original parent lift/stab and bounded callback phase'+
+                ('; avoid native bramble movement contact'if movement else'; original generated thorn box'),
+                np.ones(len(times),bool),geometry),None
     except (KeyError,ValueError)as error:return None,str(error)
 
 
@@ -1439,6 +1601,12 @@ def forecast(enemy, times, observation, player, trajectory_states=None,context=N
     zero = np.zeros((len(times), 2))
     angles = np.zeros(len(times))
     source = kind+'.FixedUpdateMovement'
+    if kind=='EnemyBrambles':
+        path,reason=brambles_path(enemy,times,observation,player,trajectory_states)
+        if path is None:return None,reason
+        return (zero,angles,'EnemyBrambles.FixedUpdateMovement; original lift/stab owner',np.ones(len(times),bool)),None
+    if kind in ('EnemyBramblesSingleThorn','EnemyBrambleCollider'):
+        return brambles_child(enemy,times,observation,player,trajectory_states,context)
     if kind=='EnemySuspendSpecial':
         return suspend_special(enemy,times,observation,player)
     if kind=='EnemyConnectElectricBall':

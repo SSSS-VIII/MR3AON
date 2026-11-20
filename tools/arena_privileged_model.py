@@ -949,6 +949,8 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
                 colliders=[damage_bindings(enemy)[1]];approximate=True
             elif kind=='EnemyBambooWater':
                 colliders=predicted[4];approximate=True
+            elif kind=='EnemyBrambleCollider':
+                colliders=[c for c in rows(enemy['colliders'])if c.get('native_movement_callback')=='bramble_contact']
             elif kind=='EnemyHideBlade':
                 colliders = [c for c in rows(enemy['grown_colliders']) if c.get('damage_kind')]
             elif kind=='EnemyArrow' and mode!='onground' and enemy.get('untrimmed_colliders'):
@@ -985,10 +987,10 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
             if kind=='EnemyPiranha':padding=predicted[5]['position_padding']
             if kind in ('EnemySuspendSpecial','EnemyRotateElectricBall'):
                 padding=predicted[5]['position_padding'];approximate=True
-            if kind in ('EnemyPoleaxeWarrior','EnemyRockTiger','EnemyConnectElectricBall','EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter'):
+            if kind in ('EnemyPoleaxeWarrior','EnemyRockTiger','EnemyConnectElectricBall','EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter','EnemyBramblesSingleThorn','EnemyBrambleCollider'):
                 center,extent=predicted[4][c['id']]
                 approximate=True
-            if kind not in ('EnemyStraightBat','EnemyFlyBamboo','EnemySpider','EnemyMuppetBomb','EnemyEliteSpider','EnemyFruitPinball','EnemyPoleaxeWarrior','EnemyPiranha','EnemyRockTiger','EnemyConnectElectricBall','EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter'):
+            if kind not in ('EnemyStraightBat','EnemyFlyBamboo','EnemySpider','EnemyMuppetBomb','EnemyEliteSpider','EnemyFruitPinball','EnemyPoleaxeWarrior','EnemyPiranha','EnemyRockTiger','EnemyConnectElectricBall','EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter','EnemyBramblesSingleThorn','EnemyBrambleCollider'):
                 pivot = xy(enemy['position'])
                 rot = np.stack((np.stack((np.cos(angles),-np.sin(angles)),axis=-1),
                                 np.stack((np.sin(angles),np.cos(angles)),axis=-1)),axis=1)
@@ -1006,13 +1008,13 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
                     padding=float(lever*predicted[5]['angular_padding']);approximate=True
                 elif kind in ('EnemyStraightBack','EnemySmallSword') and len(predicted)>5:
                     padding=float(predicted[5]['position_padding']);approximate=True
-            geometry=('aabb' if kind=='EnemyAlarmShooter'or kind=='EnemySpider' and mode=='none' or
+            geometry=('aabb' if kind in ('EnemyAlarmShooter','EnemyBramblesSingleThorn','EnemyBrambleCollider')or kind=='EnemySpider' and mode=='none' or
                       kind=='EnemyRollingBase' and 'envelope_spread'in predicted[5] else
                       'sphere' if c['type']=='SphereCollider' or kind in ('EnemyFruitPinball','EnemyPiranha') else
                       'obb' if quads is not None else 'aabb')
             result.append(Hazard(c['id'], enemy['id'], kind, center, extent, active, source, approximate,
                                  geometry, quads,
-                                 padding=padding))
+                                 padding=padding,interaction=kind=='EnemyBrambleCollider'))
         if kind=='EnemyAlarmShooter':result.extend(predicted[5]['generated_hazards'])
     for item in player.contact_avoidance:
         for collider in rows(item['colliders']):

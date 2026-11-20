@@ -57,6 +57,23 @@ local function values(obj)
     end
     return out
 end
+local function logicCoroutines()
+    -- The client's original Lua_HotfixManager replaces Brambles.ToNextAction
+    -- with coroutine.myStart/myWait, not DelayCallFunctionController. Read
+    -- the existing executor; no enumerator is advanced or initialized.
+    local out={by_id={}};local controllers=U.Object.FindObjectsOfType(typeof(CS.GameController),true)
+    out.controllers=controllers.Length
+    if controllers.Length~=1 then return out end
+    local manager=field(controllers[0],'gameLogicManager')
+    local executor=field(manager,'gameCoroutineManager');local list=field(executor,'list')
+    out.processing=field(executor,'isNeedProcess');out.truncated=list and list.Count>4096 or false
+    if list then for i=0,math.min(list.Count-1,4095)do local co=list[i]
+        local data=values(co);local key=tostring(field(co,'ID'));local stack=field(co,'stack')
+        out.by_id[key]=out.by_id[key]or{}
+        out.by_id[key][#out.by_id[key]+1]={type=co:GetType().FullName,fields=data,stack_count=stack and stack.Count or nil}
+    end end
+    return out
+end
 local function rigidElectric(owner)
     -- RotateElectricBall rotates local Z after translating in world X.
     -- Export the actual hierarchy/axes rather than assuming its generated
@@ -220,6 +237,8 @@ local function shape(c)
     end
     local attack=c.gameObject:GetComponent(typeof(CS.EnemyAttackModule))
     local callback=c.gameObject:GetComponent(typeof(CS.EnemyBaseCollider))
+    local bramble=c.gameObject:GetComponent(typeof(CS.EnemyBrambleCollider))
+    if bramble then out.native_movement_callback='bramble_contact';out.movement_owner=bramble:GetInstanceID()end
     local owner=attack and field(attack,'_belongToEnemy')or callback and field(callback,'_enemy')
     out.damage_kind=attack and 'attack_module'or callback and 'enemy_callback'or c.tag=='Enemy'and 'enemy_tag'or nil
     if owner then out.damage_owner=owner:GetInstanceID()end
@@ -340,8 +359,20 @@ function E.privileged_state()
         end
     end
     local enemies=U.Object.FindObjectsOfType(typeof(CS.EnemyBase))
+    local brambleOwners={};local needBrambleTimers=false
+    for i=0,enemies.Length-1 do local o=enemies[i];local kind=o:GetType().Name
+        if kind=='EnemyBrambles'and math.abs(o.transform.position.x-p.x)<80 then needBrambleTimers=true end
+        if (kind=='EnemyBramblesSingleThorn'or kind=='EnemyBrambleCollider')and
+                o.gameObject.activeInHierarchy and math.abs(o.transform.position.x-p.x)<80 then
+            local owner=o:GetComponentInParent(typeof(CS.EnemyBrambles),true)
+            if owner then brambleOwners[owner:GetInstanceID()]=true end
+        end
+    end
+    local brambleCoroutines={by_id={}}
+    if needBrambleTimers or next(brambleOwners)then brambleCoroutines=logicCoroutines()end
     for i=0,enemies.Length-1 do local o=enemies[i]
-        if o.gameObject.activeInHierarchy and o.isActive and math.abs(o.transform.position.x-p.x)<80 then
+        if o.gameObject.activeInHierarchy and o.isActive and
+                (math.abs(o.transform.position.x-p.x)<80 or brambleOwners[o:GetInstanceID()])then
             local info=field(o,'_enemyInfo');local custom=info and field(info,'_enemyInfoCustom')
             local row={id=o:GetInstanceID(),type=o:GetType().Name,name=o.name,position=vector(o.transform.position),
                 fields=values(o),info=values(info),custom=values(custom),custom_type=custom and custom:GetType().Name or nil,
@@ -519,6 +550,53 @@ function E.privileged_state()
                     for j=0,cs.Length-1 do local c=cs[j]
                         if c.transform==t then row.rock_tiger.head_colliders[#row.rock_tiger.head_colliders+1]=c:GetInstanceID()end
                     end
+                end
+            end
+            if row.type=='EnemyBrambles'then
+                row.brambles={action=values(field(o,'_currActionParam')),actions={},nodes={},blocks={}}
+                local id=rawget(getmetatable(o),'lua_changeStateCo')
+                local hook=typeof(CS.EnemyBrambles):GetField('__Hotfix0_ToNextAction',CS.System.Reflection.BindingFlags.__CastFrom(60))
+                row.brambles.warning={implementation=hook and hook:GetValue(nil)~=nil and 'lua_fixed_coroutine'or 'native_delay',
+                    id=id and tostring(id)or nil,controllers=brambleCoroutines.controllers,processing=brambleCoroutines.processing,
+                    truncated=brambleCoroutines.truncated,matches=brambleCoroutines.by_id[tostring(id)]or{}}
+                row.brambles.axis_y=vector(o.transform:TransformVector(U.Vector3.up))
+                if custom then for _,f in ipairs(fields(custom))do
+                    if string.find(f.FieldType.FullName,'BramblesActionParam',1,true)then
+                        local list=f:GetValue(custom)
+                        if list and typeof(CS.System.Collections.IList):IsAssignableFrom(f.FieldType)then
+                            local count=f.FieldType.IsArray and list.Length or list.Count
+                            row.brambles.actions_truncated=count>64
+                            for j=0,math.min(count-1,63)do row.brambles.actions[#row.brambles.actions+1]=values(list[j])end
+                        end
+                    end
+                end end
+                local render=field(o,'_currRenderObj')
+                if render then local t=render.transform
+                    row.brambles.render={id=t:GetInstanceID(),position=vector(t.localPosition),scale=vector(t.localScale),
+                        rotation=vector(t.localEulerAngles),direct_parent=t.parent==o.transform}
+                end
+                for _,name in ipairs({'_collider','_colliderLft','_colliderRight','_topCollider'})do
+                    local node=field(o,name)
+                    if node then local t=node.transform;local ids={}
+                        for j=0,cs.Length-1 do if cs[j].transform:IsChildOf(t)then ids[#ids+1]=cs[j]:GetInstanceID()end end
+                        row.brambles.nodes[#row.brambles.nodes+1]={field=name,id=t:GetInstanceID(),position=vector(t.localPosition),
+                            scale=vector(t.localScale),rotation=vector(t.localEulerAngles),colliders=ids,
+                            parent=t.parent and t.parent:GetInstanceID()or nil,active=t.gameObject.activeInHierarchy}
+                    end
+                end
+                local blocks=field(o,'activedBlockList')
+                if blocks then row.brambles.blocks_truncated=blocks.Count>64
+                    for j=0,math.min(blocks.Count-1,63)do local block=blocks[j]
+                        row.brambles.blocks[#row.brambles.blocks+1]={fields=values(block),position=vector(block.transform.position),
+                            active=block.gameObject.activeInHierarchy}
+                    end
+                end
+            end
+            if row.type=='EnemyBramblesSingleThorn'or row.type=='EnemyBrambleCollider'then
+                local owner=o:GetComponentInParent(typeof(CS.EnemyBrambles),true)
+                if owner then local render=field(owner,'_currRenderObj')
+                    row.brambles_owner={id=owner:GetInstanceID(),under_render=render and o.transform:IsChildOf(render.transform)or false,
+                        info_identity=field(owner,'_enemyInfo'):GetHashCode()}
                 end
             end
             if row.type=='EnemySmallSword'then
