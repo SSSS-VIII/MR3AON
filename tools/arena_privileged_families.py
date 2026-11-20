@@ -1841,6 +1841,14 @@ def hook_reference_history(times,observation,player):
     return history
 
 
+def hook_same_scale_basis(prior,enemy):
+    # Transform.lossyScale decomposes a rotated float32 matrix and can wobble
+    # by an ULP even for an unchanged local scale. Bind the authored scale and
+    # actual parent frame instead; older readers keep their strict fallback.
+    a=prior.get('swing_axes');b=enemy.get('swing_axes')
+    return a==b if a is not None and b is not None else prior['scale']==enemy['scale']
+
+
 def hook_rotation_precedes_counterfactual_key(enemy,times,observation,player):
     """Once already rotating, Hook has no later role/camera-dependent phase."""
     from arena_privileged_model import rows,phase
@@ -1850,7 +1858,7 @@ def hook_rotation_precedes_counterfactual_key(enemy,times,observation,player):
         if (prior['id']==enemy['id']and prior['type']==enemy['type']and
                 prior.get('info_identity')is not None and prior['info_identity']==enemy.get('info_identity')and
                 prior['fields'].get('m_index')==enemy['fields'].get('m_index')and
-                prior['custom']==enemy['custom']and prior['scale']==enemy['scale']and
+                prior['custom']==enemy['custom']and hook_same_scale_basis(prior,enemy)and
                 not prior['fields'].get('_dead')and not prior['fields'].get('_isRecycled')and
                 phase(prior['fields']['_enemyState'])=='rotation'and
                 phase(enemy['fields']['_enemyState'])=='rotation'and

@@ -153,3 +153,20 @@ def test_already_rotating_hook_keeps_phase_only_with_pre_key_identity():
     # Same native object ID after recycling is not a proof of the same spawn.
     enemy['fields']['m_index']+=1
     assert not hook_rotation_precedes_counterfactual_key(enemy,times,o,current)
+
+
+@pytest.mark.parametrize('changed_basis',[False,True])
+def test_rotation_roundoff_does_not_change_original_local_scale_proof(changed_basis):
+    from arena_privileged_families import hook_rotation_precedes_counterfactual_key
+    times,current,states,o=reference_projection(DATA['cases'][2])
+    enemy=o['enemies'][0];prior=current._reference_history['model'].observation
+    # Keep the frozen original fixture immutable.
+    current._reference_history['model']=copy(current._reference_history['model'])
+    current._reference_history['model'].observation=deepcopy(prior)
+    before=current._reference_history['model'].observation['enemies'][0]
+    axes=dict(local_scale=dict(x=1.,y=1.,z=1.),parent=123,
+              x=dict(x=1.,y=0.,z=0.),y=dict(x=0.,y=1.,z=0.))
+    before['swing_axes']=deepcopy(axes);enemy['swing_axes']=deepcopy(axes)
+    enemy['scale']['x']=.9999999403953552
+    if changed_basis:enemy['swing_axes']['local_scale']['x']=1.1
+    assert hook_rotation_precedes_counterfactual_key(enemy,times,o,current)is (not changed_basis)

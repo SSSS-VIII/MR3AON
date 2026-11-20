@@ -533,6 +533,16 @@ function E.privileged_state()
             local row={id=o:GetInstanceID(),type=o:GetType().Name,name=o.name,position=vector(o.transform.position),
                 fields=values(o),info=values(info),custom=values(custom),custom_type=custom and custom:GetType().Name or nil,
                 speed=o.CurrentSpeed,attack=o.Attack,scale=vector(o.transform.lossyScale),rotation_z=o.transform.eulerAngles.z,colliders={}}
+            if row.type=='EnemyHook'or row.type=='EnemyBambooThorn'then
+                local p=o.transform.parent
+                row.swing_axes={local_scale=vector(o.transform.localScale),parent=p and p:GetInstanceID()or 0}
+                if p then
+                    row.swing_axes.position=vector(p.position)
+                    row.swing_axes.x=vector(p:TransformVector(U.Vector3.right))
+                    row.swing_axes.y=vector(p:TransformVector(U.Vector3.up))
+                    row.swing_axes.z=vector(p:TransformVector(U.Vector3.forward))
+                end
+            end
             row.info_identity=info and info:GetHashCode()or nil
             if row.type=='EnemyWarrior'then row.spine=spineState(field(o,'_spineWarrior'))end
             if row.type=='EnemyPoleaxeWarrior'then
