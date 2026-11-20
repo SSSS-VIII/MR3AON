@@ -109,6 +109,17 @@ CS.GameBuffManager={Instance={RemoveBuff=function(self,n,id)removed[#removed+1]=
 MR3A.remove_carrier_buffs({}, {['100']={id=100,fromRole=true}}, {
  ['100']={id=100,fromRole=true},['200']={id=200,fromRole=true},['300']={id=300,fromRole=false}})
 assert(#removed==1 and removed[1]==200) -- Preserve existing role and new scene/trap buffs.
+for _,budget in ipairs({0,599,3601,math.huge,'1800'})do
+ assert(not pcall(MR3A.native_select,{level=1,map=7},42,budget));assert(not MR3A.busy)
+end
+CS.UnityEngine.GameObject={Find=function()return {GetComponent=function()return {
+ StartCoroutine=function()end}end}end}
+CS.UnityEngine.EventSystems={EventTrigger={}}
+typeof=function(v)return v end
+package.preload['common/util']=function()return {cs_generator=function(f)return f end}end
+MR3A.native_select({level=1,map=7},42);assert(MR3A.travel.wallBudget==600)
+MR3A.busy=false
+MR3A.native_select({level=1,map=7},42,1800);assert(MR3A.travel.wallBudget==1800)
 io.write('ok')
 ''')
     assert subprocess.check_output([lua, str(script)], text=True) == 'ok'

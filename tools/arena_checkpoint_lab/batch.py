@@ -45,7 +45,9 @@ def native_call(gate, code, progress, timeout=900):
 def initialize(gate, case, progress, seed=55200):
     root = gate.snapshot()['result']['id']
     try:
-        native_call(gate, 'return MR3A.native_select(' + lua(case['selection']) + ',' + str(seed) + ')', progress)
+        budget=getattr(gate,'selection_wall_seconds',600)
+        native_call(gate, 'return MR3A.native_select(' + lua(case['selection']) + ',' + str(seed) + ','+str(budget)+')',
+                    progress,timeout=max(900,budget+120))
         travel = gate.call('exec', code='return MR3A.travel')
         progress(dict(phase='native_selection_completed',native_travel=travel))
         # The original wait_ready can expire while software rendering finishes

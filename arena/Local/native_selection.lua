@@ -212,19 +212,24 @@ function E.await_native_preload(deadline)
     end
 end
 
-function E.native_select(spec,seed)
+function E.native_select(spec,seed,wallBudget)
     assert(not E.busy,'A battle operation is active')
     local s=E.validate_selection(spec)
     seed=seed or E.seed
     assert(type(seed)=='number' and seed%1==0 and seed>=0 and seed<=2147483647,'Invalid seed')
+    -- The software-rendered checkpoint guest can spend minutes travelling
+    -- through the original full map. This is a tool watchdog, not game time.
+    wallBudget=wallBudget or 600
+    assert(type(wallBudget)=='number' and wallBudget>=600 and wallBudget<=3600,
+        'Invalid native selection wall budget')
     E.busy=true
-    E.travel={done=false,phase='waiting_for_preload',selection=s}
+    E.travel={done=false,phase='waiting_for_preload',selection=s,wallBudget=wallBudget}
     local runner=U.GameObject.Find('MR3A_LocalControl'):GetComponent(typeof(U.EventSystems.EventTrigger))
     runner:StartCoroutine(require('common/util').cs_generator(function()
         local held=false
         local ninja
         local ok,err=pcall(function()
-            local deadline=U.Time.realtimeSinceStartup+600
+            local deadline=U.Time.realtimeSinceStartup+wallBudget
             U.Time.captureFramerate=60;U.Time.timeScale=1
             E.await_native_preload(deadline)
             E.nativeSelection=s

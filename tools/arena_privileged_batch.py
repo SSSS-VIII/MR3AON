@@ -149,6 +149,7 @@ def main():
             # Bootstrap on the known original first-level opening. Requested
             # cases still initialize independently through native selection.
             gate=start(vm,seed=42,chapter=1,level=1)
+            gate.selection_wall_seconds=1800
         except BaseException as error:
             boot_error=dict(error=repr(error),phase='cold_initialization',search_started=False)
             if not getattr(vm,'arena_game_gate',False):

@@ -46,3 +46,20 @@ def test_entry_timeout_can_continue_only_after_complete_native_restore(monkeypat
     gate=Gate();gate.uncertain_operation='unacknowledged_restore'
     with pytest.raises(TimeoutError):batch.initialize_case(gate,{},lambda r:None,1)
     assert gate.state['health']==0 and gate.points
+
+
+@pytest.mark.parametrize('budget,timeout',((600,900),(1800,1920)))
+def test_selection_watchdog_and_host_wait_share_the_software_guest_budget(monkeypatch,budget,timeout):
+    native=sys.modules[batch.initialize.__module__];calls=[]
+    monkeypatch.setattr(native,'native_call',lambda gate,code,progress,timeout:
+                        calls.append(dict(code=code,timeout=timeout)))
+    class Gate:
+        def snapshot(self):return dict(result=dict(id=1))
+        def call(self,op,**kwargs):
+            if op=='state':return dict(state='Game: 8',content='Running: 1',health=5000)
+            return dict(map=42,stage_id=50012,stage_index=0,god=False,mounted=False)
+    gate=Gate()
+    if budget!=600:gate.selection_wall_seconds=budget
+    result=native.initialize(gate,dict(selection=dict(map=42),map=42,stage=50012,slot=1),lambda r:None)
+    assert calls[0]['code'].endswith(','+str(budget)+')')
+    assert calls[0]['timeout']==timeout and result['continued_steps']==0
