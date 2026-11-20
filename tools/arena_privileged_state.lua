@@ -370,6 +370,9 @@ function E.privileged_state()
         reflection_right=vector(camera:GetScreenRightTopPos_Reflection(0)),
         position=vector(camera.LastPosition),direction=CS.GameManager.Instance.CurrDirModeNum,fields=values(camera)}
     out.role.fields=values(n);out.role.velocity=vector(n.Velocity);out.role.gravity=n.Gravity
+    out.role.ground_reference_y=CS.NinjaController.Instance:GetGroundY()
+    local excludedAir=n.FallFromAirGround
+    out.role.excluded_air_ground={present=excludedAir~=nil,fields=values(excludedAir)}
     out.role.slope_state=n.SlopeState
     local staticFlags=CS.System.Reflection.BindingFlags.__CastFrom(56)
     local ninjaType=typeof(CS.Ninja)

@@ -367,7 +367,11 @@ class PlayerModel:
         if mode=='slideonground':
             offset=p['_slideColliderOffset']
             radius=p['_normalColliderRadius']*max(abs(scale['x']),abs(scale['z']))
-            return (m.x+m.offset_render+offset['x']*scale['x'],m.y+offset['y']*scale['y'],radius,0.)
+            support=next((s for s in self.surfaces if s.id==m.support),None)
+            angle=math.atan(support.slope)if support else 0.
+            ox,oy=offset['x']*scale['x'],offset['y']*scale['y']
+            return (m.x+m.offset_render+ox*math.cos(angle)-oy*math.sin(angle),
+                    m.y+ox*math.sin(angle)+oy*math.cos(angle),radius,0.)
         if mode in TRANSFER or mode == 'jump2':
             radius = p['_rollColliderRadius']*max(abs(scale['x']), abs(scale['z']))
             # The original roll rotates its offset center. Bound that native
@@ -413,7 +417,8 @@ class PlayerModel:
                 old_fixed=int(math.floor((self.clock_age+times[index-1]+1e-8)/self.tick))
                 new_fixed=int(math.floor((self.clock_age+t+1e-8)/self.tick))
                 pending_air=(motor.native_air and motor.mode in AIR or motor.native_transfer and motor.mode in TRANSFER) and motor.delay>self.tick+1e-8
-                effective_mode=motor.lead_mode if pending_air else motor.mode
+                pending_slide=self.native_samples and motor.mode=='slideonground'and motor.delay>self.tick+1e-8
+                effective_mode=motor.lead_mode if pending_air or pending_slide else motor.mode
                 if motor.ground_source and motor.mode in REST or pending_air and motor.lead_mode in REST:
                     if new_fixed>old_fixed:
                         s=self.ground_step_surface(motor,t)
@@ -450,9 +455,8 @@ class PlayerModel:
                 ratio = 1/math.sqrt(1+slope*slope)
                 vx = self.speed*ratio
                 slide_entered=motor.mode=='slideonground' and motor.delay<=dt+1e-8
-                if slide_entered and s and abs(s.slope)>1e-8:
-                    valid=False
-                active_slope=bool(s and abs(s.slope)>1e-8 and effective_mode=='runonground')
+                active_slope=bool(s and abs(s.slope)>1e-8 and
+                    (effective_mode=='runonground'or slide_entered and s.slope<0))
                 if active_slope:
                     # ProcessMovementOnGround accelerates the velocity's
                     # magnitude on a descent, then projects onto its segment.
@@ -477,6 +481,7 @@ class PlayerModel:
                 elif motor.native_air and motor.mode in AIR:
                     vx=motor.vx
                 elif slide_entered:
+                    magnitude=math.hypot(motor.vx,motor.vy)
                     for _ in range(new_fixed-old_fixed):
                         # Original cubic speed target and Lerp(dt*5), not a
                         # fitted constant slide speed or ordinary run speed.
@@ -484,25 +489,39 @@ class PlayerModel:
                         a=np.float32(np.float32(speed*np.float32(.00325))*speed)
                         b=np.float32(speed*np.float32(-.167))
                         target=np.float32(speed*np.float32(np.float32(a+b)+np.float32(3.14)))
-                        motor.vx=float(np.float32(np.float32(motor.vx)+np.float32(
-                            np.float32(target-np.float32(motor.vx))*np.float32(self.tick*5))))
-                        motor.slide_ticks-=1
-                    vx=motor.vx*ratio
-                    if motor.slide_ticks<=0:
-                        motor.mode='runonground'
+                        magnitude=float(np.float32(np.float32(magnitude)+np.float32(
+                            np.float32(target-np.float32(magnitude))*np.float32(self.tick*5))))
+                        motor.vx=magnitude*ratio
+                    vx=motor.vx
                 elif motor.ground_source and not new_fixed-old_fixed:
                     vx=motor.vx
                 else:
                     motor.vx=vx
+                if slide_entered:
+                    motor.slide_ticks-=new_fixed-old_fixed
+                    if motor.slide_ticks<=0:motor.mode='runonground'
                 for _ in range(new_fixed-old_fixed):
                     # Ninja.MyFixedUpdate positions the collider parent from
                     # the preceding offset before MoveLogic changes its field.
                     motor.offset_render=motor.offset_field
+                    if slide_entered and motor.mode=='runonground':
+                        # ProcessMovementOnGround advances the slide offset
+                        # before its final timer changes mode to ground.
+                        # MoveLogic then also advances the ordinary offset.
+                        sine=-s.slope/math.sqrt(1+s.slope*s.slope)if s else 0.
+                        so=min(10.,32*sine)if sine>0 else 16*sine
+                        target=(self.rules['slide_offset']['x']+so)*self.scale['x']
+                        if abs(motor.offset_field)<abs(target):
+                            motor.offset_field=float(np.float32(np.float32(motor.offset_field)+np.float32(
+                                np.float32(target-motor.offset_field)*np.float32(self.tick*5))))
                     if motor.mode=='slideonground' and slide_entered:
-                        target=self.rules['slide_offset']['x']*self.scale['x'];gain=self.tick*5
+                        sine=-s.slope/math.sqrt(1+s.slope*s.slope)if s else 0.
+                        slope_offset=min(10.,32*sine)if sine>0 else 16*sine
+                        target=(self.rules['slide_offset']['x']+slope_offset)*self.scale['x']
+                        gain=self.tick*5 if abs(motor.offset_field)<abs(target)else 0.
                     elif effective_mode in REST:
                         slope_offset=0.
-                        offset_surface=s if active_slope else None
+                        offset_surface=s if active_slope or slide_entered and motor.mode=='runonground'else None
                         if effective_mode=='runonline' and s and s.rope:
                             # OnLine can hand over the ground reference after
                             # movement, before MoveLogic's final offset tween.
@@ -515,12 +534,17 @@ class PlayerModel:
                             sine=-offset_surface.slope/math.sqrt(1+offset_surface.slope*offset_surface.slope)
                             slope_offset=min(10.,32*sine) if sine>0 else 16*sine
                         target=slope_offset*self.scale['x'];gain=self.tick*self.data['_moveSpeed']/10
+                        # The UI key changes the native mode during this
+                        # first update. ProcessMovementOnGround's preceding
+                        # slope tween already ran; MoveLogic's final ordinary
+                        # ground-offset tween no longer runs in slide mode.
+                        if pending_slide:gain=0.
                     else:
                         continue
                     if not pending_air:
                         motor.offset_field=float(np.float32(np.float32(motor.offset_field)+np.float32(
                             np.float32(target-motor.offset_field)*np.float32(gain))))
-                    if active_slope:
+                    if active_slope and effective_mode=='runonground':
                         # The same native target receives the additional
                         # iTween.Vector3Update in ProcessMovementOnGround.
                         # Its speed is slopeOffset.x/20, including a negative
@@ -541,8 +565,8 @@ class PlayerModel:
                             if not motor.ground_source and abs(s.slope)<1e-8:
                                 self.ground_samples(motor,t)
                         contact=(-self.foot if motor.mode=='runonlinedown' else self.foot-.25 if
-                                 motor.mode=='slideonground' and slide_entered else self.foot)
-                        if motor.mode=='runonground' and abs(s.slope)>1e-8:
+                                 slide_entered else self.foot)
+                        if effective_mode=='runonground' and abs(s.slope)>1e-8:
                             contact=self.foot*math.sqrt(1+s.slope*s.slope)
                         target_y=s.height((motor.physical_x if motor.ground_source else motor.x)+motor.offset_render,t)+contact
                         if motor.ground_source:
@@ -1015,6 +1039,8 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
                     padding=float(lever*predicted[5]['angular_padding']);approximate=True
                 elif kind in ('EnemyStraightBack','EnemySmallSword') and len(predicted)>5:
                     padding=float(predicted[5]['position_padding']);approximate=True
+            if kind=='EnemySmallSword'and predicted[4]is not None:
+                center,extent=predicted[4][c['id']];quads=None;approximate=True
             geometry=('aabb' if kind in ('EnemyAlarmShooter','EnemyBramblesSingleThorn','EnemyBrambleCollider')or kind in ('EnemySpider','EnemyMuppetBomb') and mode=='none' or
                       kind=='EnemyRollingBase' and 'envelope_spread'in predicted[5] else
                       'sphere' if c['type']=='SphereCollider' or kind in ('EnemyFruitPinball','EnemyPiranha') else

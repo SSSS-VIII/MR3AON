@@ -35,7 +35,7 @@ FAMILIES = {
     'EnemyBambooWater': 'native_authored_rise_tween_envelope',
     'EnemyPoleaxeWarrior': 'native_distance_triggered_spine_weapon',
     'EnemyFruitMuppet': 'native_collectible_banana_role_callback',
-    'EnemySmallSword': 'native_wait_charge_and_flight_on_constant_ground_reference',
+    'EnemySmallSword': 'native_wait_charge_and_flight_with_cached_terrain_reference',
     'EnemyPiranha': 'native_water_wait_jump_swim_with_root_rotation_envelope',
     'EnemyRollingBase': 'native_activation_fall_slope_projection_wall_and_pit_chain',
     'EnemyRockTiger': 'native_distance_aim_extend_retract_head_capsule_envelope',
@@ -1160,13 +1160,115 @@ def spider_entry(enemy,times,observation,player,trajectory_states=None):
     return ((lower+upper)/2-enemy['position']['y'],(upper-lower)/2+.0002),None
 
 
+def small_sword_variable_reference(enemy,times,observation,player,trajectory_states):
+    """Enclose source physical-root X and cached terrain/platform ground Y.
+
+    The sword stays relative to this pivot even in flight. A changing ground
+    height is not an airborne-target Y or a frozen initial ground plane.
+    """
+    from arena_privileged_model import rows,xy,phase
+    try:
+        f=enemy['fields'];role=observation['role'];tick=player.tick
+        cached=role['ground_reference_y'];excluded=role['excluded_air_ground']
+        parameters=[f[k][axis]for k in ('_velocity','_localPos','_pivotPos','_lastPosition','_secondLastPosition')for axis in ('x','y','z')]
+        if (not all(math.isfinite(v)for v in [*parameters,f['_flyTime'],f['_chargeTime']])or
+                not isinstance(f['_stayRefNinja'],bool)):
+            raise ValueError('small_sword_native_parameter_domain')
+        if excluded.get('present'):raise ValueError('small_sword_excluded_platform_transition')
+        if not math.isfinite(cached):raise ValueError('small_sword_nonfinite_ground_cache')
+        if observation['camera']['direction']!=1:raise ValueError('small_sword_reference_run_direction')
+        if any(p['info'].get('_speedX')or p['info'].get('_speedY')for p in rows(observation['platforms'])):
+            raise ValueError('small_sword_moving_ground_reference')
+        if trajectory_states is None:
+            _,trajectory_states,valid=player.trajectory(times)
+            if not valid:raise ValueError('small_sword_actor_reference_unsupported')
+        age=observation['state']['time']-f['_lastFixedUpdateTime']
+        if not -.0002<=age<=tick+.0002:raise ValueError('small_sword_original_fixed_clock')
+        age=float(np.clip(age,0.,tick));steps=np.floor((age+np.asarray(times)+1e-8)/tick).astype(int);count=int(max(steps))
+        query=np.maximum(0.,np.arange(count+1)*tick-age)
+        low,high=role_reference_rectangles(times,trajectory_states,query,role['fields']['_lastRoleObjPos'])
+        # The pivot's X uses GetNinjaLastPos; only the ground lookup uses
+        # _trRole, whose original parent offset can differ substantially.
+        actual=np.array([xy(role['fields']['_lastPosition']),xy(role['fields']['_secondLastPosition'])])
+        current=np.array([[m.physical_x,m.physical_y]for m in trajectory_states]);previous=np.array([[m.previous_x,m.previous_y]for m in trajectory_states])
+        a=np.clip(np.searchsorted(times,query,side='right')-1,0,len(times)-1);b=np.clip(np.searchsorted(times,query,side='left'),0,len(times)-1)
+        native_lo=np.minimum(np.minimum(current[a],previous[a]),np.minimum(current[b],previous[b]))
+        native_hi=np.maximum(np.maximum(current[a],previous[a]),np.maximum(current[b],previous[b]))
+        native_lo[0]=np.minimum(native_lo[0],actual.min(axis=0));native_hi[0]=np.maximum(native_hi[0],actual.max(axis=0))
+        terrain=rows(observation.get('terrain'));lengthen=player.rules['ground_lengthen']
+        if not terrain:raise ValueError('small_sword_resolved_ground_reference_missing')
+        ground_lo=[];ground_hi=[]
+        for n,(left,right)in enumerate(zip(low[:,0],high[:,0])):
+            heights=[];covered=[]
+            for block in terrain:
+                if phase(block['kind'])not in ('line','ground','link'):
+                    raise ValueError('small_sword_unknown_reference_terrain')
+                u,v=block['start'],block['finish'];width=v['x']-u['x']
+                # Original NotInLineSegment uses role-object X with the
+                # native ground extension; retain both boundary callbacks.
+                l,r=u['x']-lengthen,v['x']+lengthen
+                if r<left or l>right:continue
+                covered.append((l,r))
+                if abs(width)<1e-5:heights.append(u['y'])
+                else:heights.extend(u['y']+(x-u['x'])*(v['y']-u['y'])/width for x in (left,right))
+            edge=left
+            for l,r in sorted(covered):
+                if l>edge+.001:raise ValueError('small_sword_ground_reference_gap')
+                edge=max(edge,r)
+            if edge<right or not heights:raise ValueError('small_sword_ground_reference_gap')
+            for p in rows(observation['platforms']):
+                data=p['info']
+                if data['_rightX']>=left and data['_leftX']<=right and data['_topY']<=high[n,1]:
+                    # GetAtAirGroundY chooses the highest eligible top. The
+                    # floor alternative remains for an uncertain crossing.
+                    heights.append(data['_topY'])
+            if n<=1:heights.extend((cached,f['_pivotPos']['y']))
+            ground_lo.append(min(heights));ground_hi.append(max(heights))
+        # Enemy and Ninja fixed callbacks can consume the old cached value.
+        pivlo=np.column_stack((native_lo[:,0],np.minimum(ground_lo,np.r_[cached,ground_lo[:-1]])))
+        pivhi=np.column_stack((native_hi[:,0],np.maximum(ground_hi,np.r_[cached,ground_hi[:-1]])))
+        local_lo=local_hi=xy(f['_localPos']).copy();world_lo=world_hi=xy(f['_lastPosition']).copy()
+        mode=phase(f['_enemyState']);waiting=np.float32(f['_flyTime']);charge=np.float32(f['_chargeTime'])
+        velocity=xy(f['_velocity']).astype(np.float32);magnitude=float(np.linalg.norm(velocity))
+        unit=velocity/np.float32(magnitude)if magnitude>1e-5 else np.zeros(2,np.float32)
+        lows=[];highs=[]
+        for n in range(count+1):
+            if n:
+                if mode=='wait':
+                    waiting=np.float32(waiting-np.float32(tick))
+                    if not f['_stayRefNinja']:
+                        # Preserve source cancellation: while waiting without
+                        # follow, changing the pivot does not move the sword.
+                        local_lo=world_lo-pivhi[n];local_hi=world_hi-pivlo[n]
+                    else:world_lo=pivlo[n]+local_lo;world_hi=pivhi[n]+local_hi
+                    if waiting<=0:mode='shoot';charge=np.float32(.5)
+                else:
+                    if charge>0:
+                        charge=np.float32(charge-np.float32(tick));change=-np.float32(unit*np.float32(tick))
+                    else:change=np.float32(velocity*np.float32(tick))
+                    local_lo=local_lo+change;local_hi=local_hi+change
+                    world_lo=pivlo[n]+local_lo;world_hi=pivhi[n]+local_hi
+            lows.append(world_lo.copy());highs.append(world_hi.copy())
+        lo=np.minimum(lows,np.vstack((xy(f['_secondLastPosition']),lows[:-1])))[steps]
+        hi=np.maximum(highs,np.vstack((xy(f['_secondLastPosition']),highs[:-1])))[steps]
+        numeric=8*abs(float(np.spacing(np.float32(max(abs(xy(enemy['position'])))))))+.0001
+        numeric+=4*count*abs(float(np.spacing(np.float32(max(1.,np.max(np.abs(local_lo)),np.max(np.abs(local_hi)))))))
+        geometry={c['id']:((lo+hi)/2+xy(c['center'])-xy(enemy['position']),(hi-lo)/2+xy(c['extents'])+numeric)
+                  for c in rows(enemy['colliders'])if c.get('damage_kind')}
+        zero=np.zeros((len(times),2))
+        return (zero,np.zeros(len(times)),
+                'EnemySmallSword.ProcessState/Ninja.FixedUpdateMovement; native root X and cached terrain/platform ground interval',
+                None,geometry,dict(position_padding=0.)),None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
 def small_sword(enemy,times,observation,player,trajectory_states):
     """ProcessState's player-relative pivot and separate back-charge phase.
 
     GetNinjaLastPos supplies the physical root X, GetGroundY the ground Y;
-    neither is the airborne ninja's rendered position. Only a constant native
-    reference is currently proved. Slopes, platforms and hidden appearance
-    callbacks remain explicit boundaries, not guessed linear motion.
+    neither is the airborne ninja's rendered position. Keep the precise flat
+    reducer for its proved domain; changing reference uses source intervals.
+    Hidden appearance and unknown platform callbacks remain explicit.
     """
     from arena_privileged_model import phase,rows,xy
     f=enemy['fields'];mode=phase(f['_enemyState'])
@@ -1182,17 +1284,23 @@ def small_sword(enemy,times,observation,player,trajectory_states):
     role=observation['role']['fields'];tick=observation['state']['fixedDeltaTime']
     if not player.native_samples or abs(f['_lastFixedUpdateTime']-role['_lastFixedUpdateTime'])>.0002:
         return None,'small_sword_reference_clock'
-    vx=player.initial.vx
-    if abs(vx-player.speed)>.001 or trajectory_states is not None and any(abs(m.vx-vx)>.001 for m in trajectory_states):
-        return None,'small_sword_player_speed_transition'
+    if abs(f['_velocity']['z'])>1e-8 or abs(f['_localPos']['z'])>1e-8 or abs(f['_pivotPos']['z'])>1e-8:
+        return None,'small_sword_spatial_reference'
     pivot=xy(f['_pivotPos']).astype(np.float32)
     if abs(pivot[0]-role['_lastPosition']['x'])>.001:
         return None,'small_sword_reference_position'
+    vx=player.initial.vx
+    if abs(vx-player.speed)>.001 or trajectory_states is not None and any(abs(m.vx-vx)>.001 for m in trajectory_states):
+        if 'ground_reference_y'in observation['role']:
+            return small_sword_variable_reference(enemy,times,observation,player,trajectory_states)
+        return None,'small_sword_player_speed_transition'
     horizon=max(times,default=0.)
     left=role['_lastPosition']['x']-1;right=left+abs(vx)*(horizon+tick)+3
     reference=[s for s in player.surfaces if s.right>=left and s.left<=right]
     if (not reference or observation.get('platforms') or any(abs(s.slope)>1e-8
             or s.vx or s.vy or abs(s.y-pivot[1])>.0001 for s in reference)):
+        if 'ground_reference_y'in observation['role']:
+            return small_sword_variable_reference(enemy,times,observation,player,trajectory_states)
         return None,'small_sword_nonconstant_ground_reference'
     cursor=left
     for s in sorted(reference,key=lambda s:s.left):
