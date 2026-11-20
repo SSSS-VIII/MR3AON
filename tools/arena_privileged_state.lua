@@ -382,6 +382,38 @@ function E.privileged_state()
                 end
             end
             local cs=o.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
+            if row.type=='EnemySuspendSpecial'then
+                local fs=o:GetType():GetFields(flags)
+                row.suspend_controller={}
+                for j=0,fs.Length-1 do local f=fs[j]
+                    if f.FieldType.FullName=='EnemyElectricBall'then
+                        local owner=f:GetValue(o)
+                        if owner then local info=field(owner,'_enemyInfo')
+                            row.suspend_controller={id=owner:GetInstanceID(),type=owner:GetType().Name,
+                                info_identity=info and info:GetHashCode()or nil,index=field(owner,'m_index'),
+                                alive=owner.gameObject.activeInHierarchy and owner.isActive and
+                                    not field(owner,'_dead')and not field(owner,'_isRecycled')}
+                        end
+                    end
+                end
+            end
+            if row.type=='EnemyConnectElectricBall'then
+                local balls=field(o,'_balls');local electric=field(o,'_electric')
+                row.electric_connection={balls={},colliders={}}
+                row.electric_connection.balls_truncated=balls and balls.Count>8 or false
+                if balls then for j=0,math.min(balls.Count-1,7)do local ball=balls[j]
+                    row.electric_connection.balls[#row.electric_connection.balls+1]={id=ball:GetInstanceID(),
+                        type=ball:GetType().Name,position=vector(ball.transform.position),fields=values(ball)}
+                end end
+                if electric then
+                    row.electric_connection.direct_parent=electric.parent==o.transform
+                    row.electric_connection.position=vector(electric.position)
+                    row.electric_connection.local_scale=vector(electric.localScale)
+                    for j=0,cs.Length-1 do local c=cs[j]
+                        if c.transform==electric then row.electric_connection.colliders[#row.electric_connection.colliders+1]=c:GetInstanceID()end
+                    end
+                end
+            end
             if row.type=='EnemyRockTiger'then
                 local head=field(o,'_currRenderObj');local matrix=o.transform.localToWorldMatrix
                 row.rock_tiger={data=values(field(o,'customData')),head_colliders={},
@@ -405,9 +437,10 @@ function E.privileged_state()
                     end
                 end end
             end
-            for j=0,cs.Length-1 do local c=cs[j];local owner=c:GetComponentInParent(typeof(CS.EnemyBase))
+            for j=0,cs.Length-1 do local c=cs[j];local owner=c:GetComponentInParent(typeof(CS.EnemyBase),true)
                 if owner and owner:GetInstanceID()==row.id then
                     local collider=shape(c)
+                    collider.component_owner=owner:GetInstanceID()
                     if row.type=='EnemyFruitPinball' or row.type=='EnemyPiranha'then
                         collider.rotation_envelope=rotationEnvelope(c,o.transform)
                     end
@@ -436,7 +469,7 @@ function E.privileged_state()
                     end
                     local from,to=field(tween,'from'),field(tween,'to')
                     if from and to then for j=0,cs.Length-1 do local c=cs[j]
-                        local owner=c:GetComponentInParent(typeof(CS.EnemyBase))
+                        local owner=c:GetComponentInParent(typeof(CS.EnemyBase),true)
                         if owner and owner:GetInstanceID()==row.id then
                             local first=posedShape(c,tween.transform,tween.transform.localScale,from)
                             local last=posedShape(c,tween.transform,tween.transform.localScale,to)

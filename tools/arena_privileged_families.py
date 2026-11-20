@@ -38,6 +38,8 @@ FAMILIES = {
     'EnemyPiranha': 'native_water_wait_jump_swim_with_root_rotation_envelope',
     'EnemyRollingBase': 'native_activation_fall_slope_projection_wall_and_pit_chain',
     'EnemyRockTiger': 'native_distance_aim_extend_retract_head_capsule_envelope',
+    'EnemySuspendSpecial': 'native_enabled_connected_ball_hover',
+    'EnemyConnectElectricBall': 'native_pulsed_link_between_moving_endpoints',
 }
 
 
@@ -647,6 +649,161 @@ def piranha(enemy,times,observation,player,trajectory_states=None):
             active,radius,dict(position_padding=rounding,activation_ticks=activation)),None
 
 
+def suspend_path(enemy,times,observation):
+    """Original world-space hover reducer and both fixed-position samples."""
+    from arena_privileged_model import phase,xy
+    f=enemy['fields'];mode=phase(f['_state'])
+    if mode not in ('stay','move'):return None,'suspend_phase:'+mode
+    vy=np.float32(f['_speedY']);waiting=np.float32(f['_stayTime'])
+    samples=[xy(f['_lastPosition']).astype(np.float32)]
+    def update(pos,dt):
+        nonlocal mode,vy,waiting
+        if mode=='stay':
+            waiting=np.float32(waiting-np.float32(dt))
+            if waiting<=0:mode='move'
+        elif vy!=0:
+            y=np.float32(pos[1]+np.float32(vy*dt))
+            if y>=f['_maxY']:
+                if not f['_changeSpeedDirAcc']:vy=-vy
+                else:vy=np.float32(vy-np.float32(f['_changeSpeedDirAcc']*dt));pos[1]=y
+            elif y<=f['_minY']:
+                if not f['_changeSpeedDirAcc']:vy=-vy
+                else:vy=np.float32(vy+np.float32(f['_changeSpeedDirAcc']*dt));pos[1]=y
+            else:pos[1]=y
+        pos[0]=np.float32(pos[0]+np.float32(f['_speedX']*dt))
+        samples.append(pos.copy())
+        return pos,0.
+    positions,angles=native_steps(enemy,times,observation,update)
+    tick=observation['state']['fixedDeltaTime']
+    age=np.clip(observation['state']['time']-f['_lastFixedUpdateTime'],0.,tick)
+    indices=np.floor((age+np.asarray(times)+1e-8)/tick).astype(int)
+    current=np.array(samples)[indices]
+    previous=np.asarray([xy(f['_secondLastPosition']),*samples[:-1]])[indices]
+    return (positions,angles,current,previous),None
+
+
+def suspend_special(enemy,times,observation,player):
+    """A source-verified generated sphere; no generic subclass aliasing."""
+    from arena_privileged_model import rows,xy
+    try:
+        f=enemy['fields'];controller=enemy.get('suspend_controller',{})
+        if (f.get('_movementEnable')is not True or controller.get('type')!='EnemyConnectElectricBall'
+                or not controller.get('id')or not controller.get('alive')or not controller.get('info_identity')):
+            raise ValueError('suspend_special_unverified_or_disabled_controller')
+        hurt=[c for c in rows(enemy['colliders'])if c.get('damage_kind')]
+        if (len(hurt)!=1 or hurt[0]['type']!='SphereCollider' or hurt[0]['name']!='balloon'
+                or hurt[0].get('damage_kind')!='enemy_callback' or hurt[0].get('damage_owner')!=enemy['id']
+                or not hurt[0]['enabled']or not hurt[0]['active']
+                or np.linalg.norm(xy(hurt[0]['center'])-xy(enemy['position']))>.0001):
+            raise ValueError('suspend_special_original_centered_sphere')
+        numbers=[f[k]for k in ('_speedX','_speedY','_stayTime','_minY','_maxY','_changeSpeedDirAcc')]
+        if not all(math.isfinite(v)for v in numbers)or f['_minY']>f['_maxY']or f['_changeSpeedDirAcc']<0:
+            raise ValueError('suspend_special_native_parameter_domain')
+        age=observation['state']['time']-f['_lastFixedUpdateTime']
+        if not -.0002<=age<=player.tick+.0002:raise ValueError('suspend_special_original_fixed_clock')
+        path,reason=suspend_path(enemy,times,observation)
+        if path is None:return None,reason
+        positions,angles=path[:2]
+        numeric=8*max(abs(float(np.spacing(np.float32(v))))for v in positions.ravel())
+        rate=max(abs(f['_speedX']),abs(f['_speedY'])+f['_changeSpeedDirAcc']*times[-1])
+        numeric+=2*abs(float(np.spacing(np.float32(observation['state']['time']))))*rate+.00001
+        return (positions-xy(enemy['position']),angles,
+                'EnemySuspendSpecial.MyFixedUpdate/EnemySuspend.FixedUpdateMovement; original enabled generated sphere',
+                None,None,dict(position_padding=numeric)),None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
+def connected_electric(enemy,times,observation,player):
+    """Original pulsed link between two independently moving native balls.
+
+    The link Transform samples the endpoint Transforms in fixed-update order.
+    Enclose both physical samples and their rendered interpolation; do not
+    freeze the current line or predict a beam at the parent spawn position.
+    """
+    from arena_privileged_model import rows,xy
+    try:
+        f=enemy['fields'];binding=enemy['electric_connection'];balls=rows(binding['balls'])
+        if binding.get('balls_truncated')or len(balls)!=2 or any(b['type']!='EnemySuspendSpecial'or b['fields'].get('_movementEnable')is not True for b in balls):
+            raise ValueError('electric_connection_original_moving_endpoints')
+        scale=enemy['scale']['x']
+        if (not binding.get('direct_parent')or abs(enemy['rotation_z'])>1e-5 or scale<=0 or
+                not all(math.isfinite(enemy['scale'][a])for a in ('x','y','z'))or
+                abs(enemy['scale']['y']-scale)>1e-5 or
+                any(abs(binding['local_scale'][a]-1.)>1e-5 for a in ('x','z'))):
+            raise ValueError('electric_connection_modified_transform')
+        root=xy(enemy['position'])
+        if any(np.linalg.norm(xy(f[k])-root)>.0001 for k in ('_lastPosition','_secondLastPosition')):
+            raise ValueError('electric_connection_moving_parent')
+        hurt=[c for c in rows(enemy['colliders'])if c.get('damage_kind')]
+        if (len(hurt)!=1 or hurt[0]['type']!='BoxCollider'or hurt[0]['id']not in binding['colliders']or
+                hurt[0].get('damage_owner')!=enemy['id']or hurt[0].get('damage_kind')!='enemy_callback'or
+                not hurt[0]['enabled']or hurt[0].get('depth_tilt')):
+            raise ValueError('electric_connection_original_link_box')
+        c=hurt[0];tick=player.tick;age=observation['state']['time']-f['_lastFixedUpdateTime']
+        if not -.0002<=age<=tick+.0002:raise ValueError('electric_connection_original_fixed_clock')
+        ratio=f['_electricRatio'];duration=np.float32(f['_durationTimer']);interval=np.float32(f['_intervalTimer'])
+        if (not all(math.isfinite(v)and v>=0 for v in (ratio,f['_durationTime'],f['_interalTime'],duration,interval))or ratio<=0):
+            raise ValueError('electric_connection_timer_or_length_domain')
+        enabled=f['_electricEnable'];generating=f['_generateElectric']
+        if c['active']!=bool(enabled and generating):raise ValueError('electric_connection_native_enable_disagreement')
+        age=np.clip(age,0.,tick);steps=np.floor((age+np.asarray(times)+1e-8)/tick).astype(int)
+        query=np.maximum(0.,steps*tick-age)
+        endpoints=[]
+        for b in balls:
+            if b['fields'].get('_dead')or b['fields'].get('_isRecycled'):
+                raise ValueError('electric_connection_dead_or_recycled_endpoint')
+            if abs(b['position']['z']-enemy['position']['z'])>1e-5:
+                raise ValueError('electric_connection_spatial_endpoint')
+            bf=b['fields'];child_age=observation['state']['time']-bf['_lastFixedUpdateTime']
+            if not -.0002<=child_age<=tick+.0002:
+                raise ValueError('electric_connection_endpoint_fixed_clock')
+            if (not all(math.isfinite(bf[k])for k in ('_speedX','_speedY','_stayTime','_minY','_maxY','_changeSpeedDirAcc'))
+                    or bf['_minY']>bf['_maxY']or bf['_changeSpeedDirAcc']<0):
+                raise ValueError('electric_connection_endpoint_parameter_domain')
+            path,reason=suspend_path(b,query,observation)
+            if path is None:raise ValueError(reason)
+            endpoints.append((np.minimum.reduce([path[0],path[2],path[3]]),
+                              np.maximum.reduce([path[0],path[2],path[3]])))
+        # Original local Y length is endpoint distance/electricRatio. Include
+        # authored longitudinal offsets/overhang and full cross-section even
+        # for coincident endpoints, whose rotation is still source-defined.
+        width=scale*(abs(c['local_center']['x'])+c['size']['x']/2)
+        length=scale*(abs(c['local_center']['y'])+c['size']['y']/2)/ratio
+        if width<0 or length<0 or not math.isfinite(width+length):
+            raise ValueError('electric_connection_authored_box_domain')
+        a,b=endpoints
+        separation=np.maximum(abs(a[0]-b[1]),abs(a[1]-b[0]))
+        overhang=np.maximum(0.,length-.5)*np.linalg.norm(separation,axis=1)
+        guard=width+overhang
+        low=np.minimum(a[0],b[0])-guard[:,None];high=np.maximum(a[1],b[1])+guard[:,None]
+        # n=0 is the original line, which may preserve a prior endpoint sample
+        # while its child balls have already interpolated another render pose.
+        initial=steps==0
+        low[initial]=xy(c['center'])-xy(c['extents'])
+        high[initial]=xy(c['center'])+xy(c['extents'])
+        active=[];n=0
+        for wanted in steps:
+            while n<wanted:
+                if generating:
+                    if enabled:
+                        duration=np.float32(duration+np.float32(tick))
+                        if duration>=f['_durationTime']:enabled=False;duration=np.float32(0.)
+                    else:
+                        interval=np.float32(interval+np.float32(tick))
+                        if interval>f['_interalTime']:enabled=True;interval=np.float32(0.)
+                n+=1
+            active.append(bool(generating and enabled))
+        numeric=8*max(abs(float(np.spacing(np.float32(v))))for v in np.r_[low.ravel(),high.ravel()])+.0001
+        speed=max(abs(ball['fields']['_speedX'])+abs(ball['fields']['_speedY'])+
+                  ball['fields']['_changeSpeedDirAcc']*times[-1]for ball in balls)
+        numeric+=2*abs(float(np.spacing(np.float32(observation['state']['time']))))*speed
+        zero=np.zeros((len(times),2))
+        return (zero,np.zeros(len(times)),
+                'EnemyConnectElectricBall.FixedUpdateMovement/FreshElectricPosition; native endpoint and pulse envelope',
+                np.asarray(active),{c['id']:((low+high)/2,(high-low)/2+numeric)}),None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
 def planar_arc_bounds(point, lower, upper):
     """Exact AABB of a point over a continuous planar rotation interval."""
     x,y=point;radius=math.hypot(x,y)
@@ -808,6 +965,10 @@ def forecast(enemy, times, observation, player, trajectory_states=None):
     zero = np.zeros((len(times), 2))
     angles = np.zeros(len(times))
     source = kind+'.FixedUpdateMovement'
+    if kind=='EnemySuspendSpecial':
+        return suspend_special(enemy,times,observation,player)
+    if kind=='EnemyConnectElectricBall':
+        return connected_electric(enemy,times,observation,player)
     if kind=='EnemyRockTiger':
         return rock_tiger(enemy,times,observation,player,trajectory_states)
     if kind=='EnemyPiranha':
@@ -1001,33 +1162,10 @@ def forecast(enemy, times, observation, player, trajectory_states=None):
         positions, angles = native_steps(enemy, times, observation, update)
         return (positions-xy(enemy['position']), angles, 'EnemyCurve.UpdateCureMove'), None
     if kind == 'EnemySuspend':
-        mode = phase(f['_state']); vy = np.float32(f['_speedY']); waiting = np.float32(f['_stayTime'])
-        if mode not in ('stay', 'move'):
-            return None, 'suspend_phase:'+mode
-        def update(pos, dt):
-            nonlocal mode, vy, waiting
-            if mode == 'stay':
-                waiting = np.float32(waiting-np.float32(dt))
-                if waiting <= 0:
-                    mode = 'move'
-            elif vy != 0:
-                y = np.float32(pos[1]+np.float32(vy*dt))
-                if y >= f['_maxY']:
-                    if not f['_changeSpeedDirAcc']:
-                        vy = -vy
-                    else:
-                        vy = np.float32(vy-np.float32(f['_changeSpeedDirAcc']*dt)); pos[1] = y
-                elif y <= f['_minY']:
-                    if not f['_changeSpeedDirAcc']:
-                        vy = -vy
-                    else:
-                        vy = np.float32(vy+np.float32(f['_changeSpeedDirAcc']*dt)); pos[1] = y
-                else:
-                    pos[1] = y
-            pos[0] = np.float32(pos[0]+np.float32(f['_speedX']*dt))
-            return pos, 0.
-        positions, angles = native_steps(enemy, times, observation, update)
-        return (positions-xy(enemy['position']), angles, source), None
+        path,reason=suspend_path(enemy,times,observation)
+        if path is None:return None,reason
+        positions,angles=path[:2]
+        return (positions-xy(enemy['position']),angles,source),None
     if kind == 'EnemyMace':
         mode = phase(f['_enemyState'])
         if mode not in ('none','rotation'):
