@@ -1017,6 +1017,67 @@ function E.privileged_state()
         end
         return out
     end
+    local function hookSpawnTemplate(name)
+        local all=U.Resources.FindObjectsOfTypeAll(typeof(CS.EnemyHook));local original
+        for i=0,all.Length-1 do local o=all[i]
+            if o.name==name and not o.gameObject.activeInHierarchy then
+                assert(not original,'Ambiguous original hook prefab');original=o
+            end
+        end
+        if not original then return {missing=true}end
+        local root=original.transform;local head=field(original,'_hatchet');local pole=field(original,'_longHandle')
+        if not head or not pole then return {missing=true}end
+        head=head.transform;pole=pole.transform
+        local body=original:GetComponent(typeof(U.Rigidbody))
+        local result={id=original:GetInstanceID(),type=original:GetType().Name,source_name=name,
+            kinematic=not body or body.isKinematic,gravity=body and body.useGravity or false,callbacks_clear=true,
+            head_scale=vector(head.localScale),head_rotation=vector(head.localEulerAngles),parent_identity=true,
+            native_initialization=true,unknown_hooks={},component_types={},colliders={},
+            animated_tree=original:GetComponentsInChildren(typeof(U.Animator),true).Length>0 or
+                original:GetComponentsInChildren(typeof(U.Animation),true).Length>0}
+        for _,name in ipairs({'conditionActionEvent','normalActionEvent','collisionActionEvent',
+                'collisionExitActionEvent','btAnimatorEvent','conditionParamActionEvent','syncComponent'})do
+            if field(original,name)~=nil then result.callbacks_clear=false end
+        end
+        local graphs=field(original,'allGraphOwners')
+        if graphs and graphs.Count>0 then result.callbacks_clear=false end
+        local parent=head.parent
+        while parent and parent~=root do
+            local q=parent.localRotation
+            if parent.localPosition.magnitude>0.00001 or (parent.localScale-U.Vector3.one).magnitude>0.00001 or
+                    math.abs(q.x)+math.abs(q.y)+math.abs(q.z)+math.abs(q.w-1)>0.00001 then result.parent_identity=false end
+            parent=parent.parent
+        end
+        if not parent then result.parent_identity=false end
+        local scripts=original:GetComponentsInChildren(typeof(U.MonoBehaviour),true)
+        for i=0,scripts.Length-1 do result.component_types[#result.component_types+1]=
+            scripts[i]and scripts[i]:GetType().FullName or 'missing_component'end
+        for _,entry in ipairs({{typeof(CS.EnemyHook),'ResetEnemyInfo'},
+                {typeof(CS.EnemyHook),'SetHookRadius'},{typeof(CS.EnemyHook),'FixedUpdateMovement'},
+                {typeof(CS.EnemyHook),'ProcessState'},{typeof(CS.EnemyFissonable),'ResetEnemyInfo'},
+                {typeof(CS.EnemyBase),'ResetEnemyInfo'},{typeof(CS.EnemyBase),'FixedUpdateMovement'}})do
+            local hook=entry[1]:GetField('__Hotfix0_'..entry[2],staticFlags)
+            if not hook or hook:GetValue(nil)~=nil then
+                result.native_initialization=false;result.unknown_hooks[#result.unknown_hooks+1]=entry[1].Name..'.'..entry[2]
+            end
+        end
+        local cs=original:GetComponentsInChildren(typeof(U.Collider),true)
+        for i=0,cs.Length-1 do local c=cs[i];local info=shape(c)
+            if info.damage_kind then
+                local row={type=c:GetType().Name,enabled=c.enabled,trigger=c.isTrigger,
+                    damage_kind=info.damage_kind,owner_bound=info.damage_owner==original:GetInstanceID(),
+                    under_head=c.transform:IsChildOf(head),under_pole=c.transform:IsChildOf(pole),vertices={}}
+                if row.type=='BoxCollider'then
+                    for _,x in ipairs({-1,1})do for _,y in ipairs({-1,1})do for _,z in ipairs({-1,1})do
+                        local p=c.transform:TransformPoint(c.center+U.Vector3(x*c.size.x/2,y*c.size.y/2,z*c.size.z/2))
+                        row.vertices[#row.vertices+1]=vector(head:InverseTransformPoint(p))
+                    end end end
+                end
+                result.colliders[#result.colliders+1]=row
+            end
+        end
+        return result
+    end
     local function swordSpawnTemplate()
         local candidates=U.Resources.FindObjectsOfTypeAll(typeof(CS.EnemySmallSword))
         local original
@@ -1081,6 +1142,11 @@ function E.privileged_state()
                 custom_type=custom and custom:GetType().Name,
                 block_start=vector(live and live.transform.position or a),stage_index=stageIndex,block_index=blockIndex,
                 source=source,sync_blocked=blocked,vertical_gate=live and field(live,'openGenerateDistanceY')or false}
+            if kind=='EnemyGoldHook: 289'or kind:match('^EnemyHook: ')then
+                out.spawn_templates.hooks=out.spawn_templates.hooks or{}
+                local name=kind:match('^(.-): ')
+                if not out.spawn_templates.hooks[name]then out.spawn_templates.hooks[name]=hookSpawnTemplate(name)end
+            end
             if kind=='EnemySmallSword: 250'and not out.spawn_templates.small_sword then
                 out.spawn_templates.small_sword=swordSpawnTemplate()
             end

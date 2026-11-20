@@ -134,7 +134,7 @@ class InternalController:
             (e['info']['_enemyType'].split(':',1)[0]not in PENDING_BLADE_NAMES or e['id']not in static_pending)
             for e in rows(observation.get('pending_enemies')))
         spring_camera_coupled=bool(player.spring_launches)and any(e['type']in (
-            'EnemyFlyBamboo','EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter')
+            'EnemyFlyBamboo','EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter','EnemyHook','EnemyBambooThorn')
             for e in rows(observation['enemies'])if not e['fields'].get('_dead')and not e['fields'].get('_isRecycled'))
         coupled = any(e['type']=='EnemyPoleaxeWarrior' and e['fields'].get('_enemyState')=='Idle: 0'
                       and not e['fields'].get('_dead') and not e['fields'].get('_isRecycled')

@@ -1769,6 +1769,66 @@ def pending_blade(entry,times,observation,player,trajectory_states):
     except (KeyError,ValueError)as error:return None,str(error)
 
 
+def pending_hook(entry,times,observation):
+    """Full-turn original head bound before birth, no guessed spawn phase.
+
+    Native SetHookRadius clamps radius to 1.76, subtracts 1.76, scales only
+    the visual pole and sets the head's local position to (0,-length,0).
+    Every original damage box must be in that static head subtree. A circle
+    enclosing its reset vertices contains all native waiting/swing phases,
+    independent of adjacent birth ticks and the initial angular velocity.
+    The live pendulum reducer takes over after the original object appears.
+    """
+    from arena_privileged_model import Hazard,rows
+    try:
+        info=entry['info'];kind=info['_enemyType'].split(':')[0];custom=entry['custom']
+        template=observation.get('spawn_templates',{}).get('hooks',{}).get(kind,{})
+        if template.get('missing')or not template:raise ValueError('pending_hook_original_prefab_missing')
+        if (kind not in ('EnemyHook','EnemyGoldHook')or template.get('type')!='EnemyHook'or
+                template.get('source_name')!=kind or entry['source']not in ('native_enemyList','resolved_uninstantiated_block')or
+                entry.get('custom_type')!='EnemyHookDataStruct'or
+                entry.get('custom_projection',{}).get('complete')is not True or
+                set(custom)!={'_render','_radius','_maxLineSpeed','_isGravityOpposite'}or custom['_render']!=0 or
+                info.get('createPlayerUID')or info.get('baseID')!=0):
+            raise ValueError('pending_hook_source_binding')
+        if (template.get('native_initialization')is not True or rows(template.get('unknown_hooks'))or
+                template.get('animated_tree',True)or template.get('parent_identity')is not True or
+                template.get('kinematic')is not True or template.get('gravity')is not False or
+                template.get('callbacks_clear')is not True or
+                not set(rows(template.get('component_types')))<= {'EnemyHook','EnemyBaseCollider','EnemyAttackModule','EnemyFissonablePieces'}or
+                'EnemyHook'not in rows(template.get('component_types'))or
+                any(abs(template['head_rotation'][a])>1e-8 for a in ('x','y','z'))):
+            raise ValueError('pending_hook_unverified_hierarchy')
+        angles=info['_localEulerAngles'];scale=np.array([info['_localScale'][a]for a in ('x','y','z')])
+        head_scale=np.array([template['head_scale'][a]for a in ('x','y','z')])
+        spawn=np.array([entry['block_start'][a]+info['_localPosition'][a]for a in ('x','y','z')])
+        radius=custom['_radius'];speed=custom['_maxLineSpeed']
+        if (observation['camera']['direction']!=1 or any(abs(angles[a])>1e-8 for a in ('x','y'))or
+                not np.isfinite([*scale,*head_scale,*spawn,radius,speed]).all()or min(abs(scale))<=0 or
+                min(abs(head_scale))<=0 or abs(spawn[2])>1e-8 or radius<=0 or speed<0):
+            raise ValueError('pending_hook_native_parameter_domain')
+        length=float(np.float32(np.float32(max(np.float32(radius),np.float32(1.76)))+np.float32(-1.76)))
+        boxes=rows(template['colliders']);maximum=0.
+        if not boxes:raise ValueError('pending_hook_original_damage_geometry_missing')
+        for box in boxes:
+            if (box['type']!='BoxCollider'or not box['enabled']or not box['trigger']or
+                    not box['owner_bound']or box['damage_kind']not in ('enemy_callback','attack_module')or
+                    not box['under_head']or box['under_pole']or len(rows(box['vertices']))!=8):
+                raise ValueError('pending_hook_original_head_box_binding')
+            vertices=np.array([[v[a]for a in ('x','y','z')]for v in rows(box['vertices'])])*head_scale
+            vertices[:,1]-=length
+            vertices*=scale
+            # Root's rigid Z rotation preserves each scaled vertex radius.
+            maximum=max(maximum,float(np.linalg.norm(vertices[:,:2],axis=1).max()))
+        guard=.0002+16*abs(float(np.spacing(np.float32(max(1.,abs(spawn).max(),maximum)))))
+        extent=maximum+guard
+        return [Hazard(entry['id']+':turn',entry['id'],'EnemyHook',np.tile(spawn[:2],(len(times),1)),
+            np.full((len(times),2),extent),np.ones(len(times),bool),
+            'Original EnemyHook.SetHookRadius head reset; complete pre-birth swing envelope',
+            approximate=True,geometry='sphere')],None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
 def pending_enemy_forecasts(observation,times,player,trajectory_states,context=None):
     """Never treat an unmodelled imminent native spawn as an empty lane."""
     from arena_privileged_model import rows,xy
@@ -1785,8 +1845,11 @@ def pending_enemy_forecasts(observation,times,player,trajectory_states,context=N
         # A source queue starts checking at this horizontal threshold.
         # One original tick reserves either order of LevelManager/Ninja.
         reachable=float(high[:,0].max())+abs(player.speed)*player.tick>=spawn[0]-info['generateDistance']
-        if not reachable and kind not in PENDING_BLADE_NAMES:continue
-        if kind=='EnemySmallSword':
+        if not reachable and kind not in PENDING_BLADE_NAMES|{'EnemyHook','EnemyGoldHook'}:continue
+        if kind in ('EnemyHook','EnemyGoldHook'):
+            hs,reason=pending_hook(entry,times,observation)
+            if hs is not None:result.extend(hs);continue
+        elif kind=='EnemySmallSword':
             hs,reason=pending_small_sword(entry,times,observation,player,trajectory_states,context)
             if hs is not None:result.extend(hs);continue
         elif kind in PENDING_BLADE_NAMES:
@@ -2735,6 +2798,9 @@ def forecast(enemy, times, observation, player, trajectory_states=None,context=N
     if kind in ('EnemyHook','EnemyBambooThorn'):
         mode = phase(f['_enemyState'])
         waiting_entry=mode=='none'
+        if waiting_entry and (player.initial.mode in ('popup','popfall')or trajectory_states is not None and
+                any(m.mode in ('popup','popfall')for m in trajectory_states)):
+            return None,'spring_pop_camera_transition_not_validated'
         if mode not in ('none','rotation'):
             return None, 'hook_entry_phase:'+mode
         if not enemy.get('rotation_samples'):
