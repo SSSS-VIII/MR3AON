@@ -871,29 +871,34 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
             if not colliders:
                 unsupported.append(dict(id=enemy['id'], type=kind, reason='selected_attack_shape_missing')); continue
             if custom.get('_followNinja'):
-                unsupported.append(dict(id=enemy['id'], type=kind, reason='tracking_target_y')); continue
-            remaining = timer_ticks(f['_currStateTime'],tick,mode=='readyattack')*tick
-            lock = timer_ticks(custom['_aimLockTime'],tick,False)*tick
-            ready = timer_ticks(.5,tick)*tick
-            launch = remaining+lock+ready if mode == 'aim' else remaining+ready if mode == 'aimlock' else remaining if mode == 'readyattack' else 0.
-            launch = max(0., launch-age)
-            if mode not in ('aim', 'aimlock', 'readyattack', 'flytoninja', 'none'):
-                unsupported.append(dict(id=enemy['id'], type=kind, reason='unmapped_phase:'+mode)); continue
-            if mode == 'none':
-                continue
-            if mode == 'flytoninja':
-                delta[:, 0] = -abs(f['_flySpeed'])*times
-            elif camera.get('reflection_right') is not None:
-                # ProcessState's ready phase follows RealRight+.5, but the
-                # *launch* uses ScreenRightTopPos_Reflection(0)+2. The camera
-                # sample is one physics update behind the movement clock.
-                spawn = camera['reflection_right']['x']+speed*(launch-tick+age)+2.
-                movement = launch+tick
-                delta[:, 0] = spawn-enemy['position']['x']-abs(f['_flySpeed'])*np.maximum(0., times-movement)
+                from arena_privileged_families import tracking_bamboo
+                predicted,reason=tracking_bamboo(enemy,times,observation,player,trajectory_states)
+                if predicted is None:
+                    unsupported.append(dict(id=enemy['id'],type=kind,reason=reason));continue
+                delta,angles,source,active=predicted[:4];approximate=True
             else:
-                unsupported.append(dict(id=enemy['id'], type=kind, reason='camera_spawn_missing')); continue
-            active = times >= launch
-            source = 'EnemyFlyBamboo.ProcessState; native aim/lock/ready remaining timer, real camera edge and flySpeed'
+                remaining = timer_ticks(f['_currStateTime'],tick,mode=='readyattack')*tick
+                lock = timer_ticks(custom['_aimLockTime'],tick,False)*tick
+                ready = timer_ticks(.5,tick)*tick
+                launch = remaining+lock+ready if mode == 'aim' else remaining+ready if mode == 'aimlock' else remaining if mode == 'readyattack' else 0.
+                launch = max(0., launch-age)
+                if mode not in ('aim', 'aimlock', 'readyattack', 'flytoninja', 'none'):
+                    unsupported.append(dict(id=enemy['id'], type=kind, reason='unmapped_phase:'+mode)); continue
+                if mode == 'none':
+                    continue
+                if mode == 'flytoninja':
+                    delta[:, 0] = -abs(f['_flySpeed'])*times
+                elif camera.get('reflection_right') is not None:
+                    # ProcessState's ready phase follows RealRight+.5, but the
+                    # *launch* uses ScreenRightTopPos_Reflection(0)+2. The camera
+                    # sample is one physics update behind the movement clock.
+                    spawn = camera['reflection_right']['x']+speed*(launch-tick+age)+2.
+                    movement = launch+tick
+                    delta[:, 0] = spawn-enemy['position']['x']-abs(f['_flySpeed'])*np.maximum(0., times-movement)
+                else:
+                    unsupported.append(dict(id=enemy['id'], type=kind, reason='camera_spawn_missing')); continue
+                active = times >= launch
+                source = 'EnemyFlyBamboo.ProcessState; native aim/lock/ready remaining timer, real camera edge and flySpeed'
         elif kind in ('EnemySpider', 'EnemyMuppetBomb','EnemyEliteSpider'):
             if kind=='EnemyEliteSpider' and f.get('_positionIndex',0)>0:
                 unsupported.append(dict(id=enemy['id'],type=kind,reason='elite_damage_relocation'));continue
@@ -960,6 +965,8 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
                 continue
             center = xy(c['center'])[None, :]+delta
             extent = np.tile(xy(c['extents']), (len(times), 1))*growth[:, None]
+            if kind=='EnemyFlyBamboo'and custom.get('_followNinja'):
+                center,extent=predicted[4][c['id']]
             if kind in ('EnemySpider','EnemyMuppetBomb') and mode=='none':
                 extent[:,1]+=spread
             if kind=='EnemyRollingBase' and 'envelope_spread'in predicted[5]:

@@ -242,6 +242,95 @@ def role_reference_bounds(times,motors,query,actual):
     return np.minimum(lower[lo],lower[hi])-.025,np.maximum(upper[lo],upper[hi])+.025
 
 
+def tracking_bamboo(enemy,times,observation,player,trajectory_states=None):
+    """Native aim-only Y tracking, frozen lock height and original launch.
+
+    Tracking reads Ninja.LastPosition, not the visible capsule center. Keep
+    both physical update orders through the float32 Lerp. No native trial or
+    alteration of the projectile, camera or target is involved.
+    """
+    from arena_privileged_model import rows,xy,phase,timer_ticks
+    try:
+        f=enemy['fields'];custom=enemy['custom'];camera=observation['camera'];tick=player.tick
+        mode=phase(f['_enemyState'])
+        if mode not in ('aim','aimlock','readyattack','flytoninja','none'):
+            raise ValueError('tracking_bamboo_unmapped_phase:'+mode)
+        if custom.get('_followNinja')is not True or f.get('_fissonState')is not False:
+            raise ValueError('tracking_bamboo_original_unsplit_instance')
+        if camera['direction']!=1:raise ValueError('tracking_bamboo_unverified_run_direction')
+        if not all(math.isfinite(v)for v in (f['_flySpeed'],f['_currStateTime'],custom['_aimTime'],custom['_aimLockTime']))or f['_flySpeed']<=0 or custom['_aimLockTime']<0:
+            raise ValueError('tracking_bamboo_native_parameter_domain')
+        colliders=[c for c in rows(enemy['colliders'])if c.get('damage_kind')and c.get('enabled')and
+                   c['name']=='Attack'and c.get('parent_active',c['active'])]
+        if len(colliders)!=1 or colliders[0]['type']!='BoxCollider'or colliders[0].get('depth_tilt')or colliders[0].get('damage_owner')!=enemy['id']:
+            raise ValueError('tracking_bamboo_original_selected_attack_box')
+        collider=colliders[0];root=xy(enemy['position']);zero=np.zeros((len(times),2));angles=np.zeros(len(times))
+        age=observation['state']['time']-f['_lastFixedUpdateTime']
+        if not -.0002<=age<=tick+.0002:raise ValueError('tracking_bamboo_original_fixed_clock')
+        age=float(np.clip(age,0.,tick));steps=np.floor((age+np.asarray(times)+1e-8)/tick).astype(int);count=int(max(steps))
+        # None first enters Aim on a later tick. It cannot launch earlier
+        # than a complete original aim/lock/strict-negative-ready countdown.
+        if mode=='none':
+            minimum=1+max(1,timer_ticks(custom['_aimTime']if custom['_aimTime']>0 else 2.,tick,False))+max(1,timer_ticks(custom['_aimLockTime'],tick,False))+max(1,timer_ticks(.5,tick,True))
+            if count>=minimum:raise ValueError('tracking_bamboo_future_camera_activation')
+            geometry={collider['id']:(np.tile(xy(collider['center']),(len(times),1)),np.tile(xy(collider['extents']),(len(times),1)))}
+            return (zero,angles,'EnemyFlyBamboo.ProcessState; original None minimum complete warning duration',np.zeros(len(times),bool),geometry),None
+        if trajectory_states is None:
+            _,trajectory_states,valid=player.trajectory(times)
+            if not valid:raise ValueError('tracking_bamboo_actor_reference_unsupported')
+        query=np.maximum(0.,np.arange(count+1)*tick-age)
+        lo,hi=role_reference_rectangles(times,trajectory_states,query,observation['role']['fields']['_lastPosition'])
+        remaining=np.float32(f['_currStateTime']);ylo=yhi=np.float32(f['_lastPosition']['y']);state=mode
+        ylower=[];yupper=[];active=[];launch=None
+        for n in range(count+1):
+            if n:
+                if state=='aim':
+                    gain=np.float32(min(1.,max(0.,2*tick)))
+                    ylo=np.float32(ylo+np.float32(np.float32(lo[n,1]-ylo)*gain))
+                    yhi=np.float32(yhi+np.float32(np.float32(hi[n,1]-yhi)*gain))
+                if state in ('aim','aimlock','readyattack'):
+                    remaining=np.float32(remaining-np.float32(tick))
+                    expired=remaining<0 if state=='readyattack'else remaining<=0
+                    if expired:
+                        if state=='aim':state='aimlock';remaining=np.float32(custom['_aimLockTime'])
+                        elif state=='aimlock':state='readyattack';remaining=np.float32(.5)
+                        else:state='flytoninja';launch=n
+            ylower.append(float(ylo));yupper.append(float(yhi));active.append(state=='flytoninja')
+        # BaseObject interpolates the last physical samples. Include the
+        # adjacent fixed roots, not a new smooth projectile velocity law.
+        yl=np.minimum(ylower,np.r_[f['_secondLastPosition']['y'],ylower[:-1]])[steps]
+        yh=np.maximum(yupper,np.r_[f['_secondLastPosition']['y'],yupper[:-1]])[steps]
+        xlo=np.full(count+1,root[0]);xhi=xlo.copy()
+        if mode=='flytoninja':
+            initial=[root[0],f['_lastPosition']['x'],f['_secondLastPosition']['x']]
+            for n in range(count+1):
+                xlo[n]=min(initial)-f['_flySpeed']*n*tick
+                xhi[n]=max(initial)-f['_flySpeed']*max(0,n-1)*tick
+        elif launch is not None:
+            bounds,reason=camera_x_bounds(observation,times,player,trajectory_states)
+            if bounds is None:raise ValueError('tracking_bamboo_launch_'+reason)
+            cf=camera['fields']
+            if cf['_cameraRotate']or cf['_fieldViewChangeSpeed']!=0 or cf['_lastFieldView']!=cf['_tarFieldView']:
+                raise ValueError('tracking_bamboo_changing_camera_projection')
+            ca=observation['state']['time']-cf['_lastFixedUpdateTime']
+            at=max(0.,launch*tick-age)
+            ci=int(math.floor((max(0.,ca)+at+1e-8)/tick));ci=min(len(bounds[0])-1,ci)
+            # The native reflection projection reads the cached physical
+            # camera. Its current and previous X encompass update ordering.
+            offsets=[camera['reflection_right']['x']-cf[k]['x']for k in ('_lastPosition','_secondLastPosition')]
+            left=min(bounds[0][max(0,ci-1):ci+1])+min(offsets)+2.
+            right=max(bounds[1][max(0,ci-1):ci+1])+max(offsets)+2.
+            for n in range(launch,count+1):
+                xlo[n]=left-f['_flySpeed']*(n-launch)*tick
+                xhi[n]=right-f['_flySpeed']*max(0,n-launch-1)*tick
+        low=np.column_stack((xlo[steps],yl));high=np.column_stack((xhi[steps],yh))
+        offset=xy(collider['center'])-root
+        numeric=8*abs(float(np.spacing(np.float32(max(abs(root))))))+.0001
+        geometry={collider['id']:((low+high)/2+offset,(high-low)/2+xy(collider['extents'])+numeric)}
+        return (zero,angles,'EnemyFlyBamboo.ProcessState; float32 aim Lerp, frozen lock Y and camera launch envelope',np.asarray(active,bool)[steps],geometry),None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
 def camera_x_bounds(observation,times,player,trajectory_states=None):
     """Source default camera X damping, including physical update ordering.
 
