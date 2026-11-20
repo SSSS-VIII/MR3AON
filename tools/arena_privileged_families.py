@@ -40,6 +40,7 @@ FAMILIES = {
     'EnemyRockTiger': 'native_distance_aim_extend_retract_head_capsule_envelope',
     'EnemySuspendSpecial': 'native_enabled_connected_ball_hover',
     'EnemyConnectElectricBall': 'native_pulsed_link_between_moving_endpoints',
+    'EnemyRotateElectricBall': 'native_rigid_rotating_electric_assembly',
 }
 
 
@@ -687,6 +688,8 @@ def suspend_special(enemy,times,observation,player):
     from arena_privileged_model import rows,xy
     try:
         f=enemy['fields'];controller=enemy.get('suspend_controller',{})
+        if controller.get('type')=='EnemyRotateElectricBall'and f.get('_movementEnable')is False:
+            return rotating_ball(enemy,times,observation,player)
         if (f.get('_movementEnable')is not True or controller.get('type')!='EnemyConnectElectricBall'
                 or not controller.get('id')or not controller.get('alive')or not controller.get('info_identity')):
             raise ValueError('suspend_special_unverified_or_disabled_controller')
@@ -710,6 +713,115 @@ def suspend_special(enemy,times,observation,player):
         return (positions-xy(enemy['position']),angles,
                 'EnemySuspendSpecial.MyFixedUpdate/EnemySuspend.FixedUpdateMovement; original enabled generated sphere',
                 None,None,dict(position_padding=numeric)),None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
+def rotating_path(enemy,times,observation,player):
+    """Rigid assembly, source fixed-position interpolation and direct Z writes.
+
+    Reset disables both generated children's movement. FreshElectricPosition
+    runs once there, not every tick. FixedUpdateMovement then translates the
+    parent and rotates its local Euler Z at NinjaSpeed*.125*rotateSpeed.
+    """
+    from arena_privileged_model import rows,xy
+    try:
+        f=enemy['fields'];binding=enemy['rigid_electric'];balls=rows(binding['balls'])
+        if (not binding['parent_axes_identity']or not binding['direct_electric']or
+                any(abs(binding['local_rotation'][a])>1e-4 for a in ('x','y'))or
+                enemy['scale']['x']<=0 or
+                abs(enemy['scale']['x']-enemy['scale']['y'])>1e-4 or
+                not all(math.isfinite(enemy['scale'][a])for a in ('x','y','z'))):
+            raise ValueError('rotating_electric_unverified_rigid_transform')
+        if (len(balls)!=2 or len({b['id']for b in balls})!=2 or
+                any(not b['direct_parent']or b['movement_enabled']is not False for b in balls)):
+            raise ValueError('rotating_electric_unverified_disabled_endpoints')
+        tick=player.tick;age=observation['state']['time']-f['_lastFixedUpdateTime']
+        if not -.0002<=age<=tick+.0002:raise ValueError('rotating_electric_original_parent_clock')
+        speed=observation['state']['speed']
+        # SetStopRun changes speed data on the following actor physics tick.
+        # Do not extrapolate the old speed across this pending transition.
+        if observation['role']['fields'].get('_runStopped')and speed!=0:
+            raise ValueError('rotating_electric_pending_actor_speed_stop')
+        if not all(math.isfinite(v)for v in (f['_moveSpeed'],f['_rotateSpeed'],speed,enemy['rotation_z'])):
+            raise ValueError('rotating_electric_native_parameter_domain')
+        angle=np.float32(binding['local_rotation']['z']);initial=float(angle)
+        rate=np.float32(np.float32(np.float32(speed)*np.float32(.125))*np.float32(f['_rotateSpeed']))
+        def update(pos,dt):
+            nonlocal angle
+            pos[0]=np.float32(pos[0]+np.float32(np.float32(f['_moveSpeed'])*np.float32(dt)))
+            angle=np.float32(np.float32(angle+np.float32(rate*np.float32(dt)))%np.float32(360.))
+            return pos,math.radians(float(angle)-initial)
+        positions,angles=native_steps(enemy,times,observation,update)
+        # Euler getter/Quaternion conversion and float32 fixedTime subtraction
+        # can choose the neighbouring physical angle at a tick boundary. Keep
+        # one full angular tick, plus accumulated float32 angle roundoff.
+        updates=math.ceil(float(times[-1])/tick)+1
+        angle_guard=abs(float(rate))*tick+updates*float(np.spacing(np.float32(360.)))*4
+        numeric=8*max(abs(float(np.spacing(np.float32(v))))for v in positions.ravel())+.0001
+        numeric+=2*abs(float(np.spacing(np.float32(observation['state']['time']))))*abs(f['_moveSpeed'])
+        return (positions,angles,math.radians(angle_guard),numeric),None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
+def rotating_ball(enemy,times,observation,player):
+    from arena_privileged_model import rows,xy
+    try:
+        owner=enemy['suspend_controller'];hurt=[c for c in rows(enemy['colliders'])if c.get('damage_kind')]
+        if (not owner.get('alive')or not owner.get('info_identity')or
+                enemy['id']not in {b['id']for b in rows(owner['rigid_electric']['balls'])}):
+            raise ValueError('rotating_ball_original_live_owner')
+        if (len(hurt)!=1 or hurt[0]['type']!='SphereCollider'or hurt[0]['name']!='balloon'or
+                hurt[0].get('damage_kind')!='enemy_callback'or hurt[0].get('damage_owner')!=enemy['id']or
+                not hurt[0]['active']or not hurt[0]['enabled']or
+                np.linalg.norm(xy(hurt[0]['center'])-xy(enemy['position']))>.0001):
+            raise ValueError('rotating_ball_original_centered_sphere')
+        predicted,reason=rotating_path(owner,times,observation,player)
+        if predicted is None:return None,reason
+        positions,angles,angular_guard,numeric=predicted
+        offset=xy(enemy['position'])-xy(owner['position'])
+        orbit=np.column_stack((offset[0]*np.cos(angles)-offset[1]*np.sin(angles),
+                               offset[0]*np.sin(angles)+offset[1]*np.cos(angles)))
+        pad=numeric+np.linalg.norm(offset)*min(2.,angular_guard)
+        return (positions+orbit-xy(enemy['position']),np.zeros(len(times)),
+                'EnemyRotateElectricBall.FixedUpdateMovement; original disabled child follows parent rigid orbit',
+                None,None,dict(position_padding=pad)),None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
+def rotating_electric(enemy,times,observation,player):
+    from arena_privileged_model import rows,xy
+    try:
+        predicted,reason=rotating_path(enemy,times,observation,player)
+        if predicted is None:return None,reason
+        positions,angles,angular_guard,numeric=predicted
+        hurt=[c for c in rows(enemy['colliders'])if c.get('damage_kind')]
+        if (len(hurt)!=1 or hurt[0]['type']!='BoxCollider'or not hurt[0].get('quad')or
+                hurt[0]['id']not in enemy['rigid_electric']['colliders']or
+                hurt[0].get('damage_kind')!='enemy_callback'or hurt[0].get('damage_owner')!=enemy['id']or
+                not hurt[0]['enabled']or hurt[0].get('depth_tilt')):
+            raise ValueError('rotating_electric_original_link_box')
+        c=hurt[0];f=enemy['fields'];enabled=f['_electricEnable'];generating=f['_generateElectric']
+        duration=np.float32(f['_durationTimer']);interval=np.float32(f['_intervalTimer']);tick=player.tick
+        if (not all(math.isfinite(v)and v>=0 for v in (duration,interval,f['_durationTime'],f['_interalTime']))):
+            raise ValueError('rotating_electric_native_pulse_domain')
+        if c['active']!=bool(generating and enabled):raise ValueError('rotating_electric_native_enable_disagreement')
+        age=np.clip(observation['state']['time']-f['_lastFixedUpdateTime'],0.,tick)
+        steps=np.floor((age+np.asarray(times)+1e-8)/tick).astype(int);n=0;active=[]
+        for wanted in steps:
+            while n<wanted:
+                if generating:
+                    if enabled:
+                        duration=np.float32(duration+np.float32(tick))
+                        if duration>=f['_durationTime']:enabled=False;duration=np.float32(0.)
+                    else:
+                        interval=np.float32(interval+np.float32(tick))
+                        if interval>f['_interalTime']:enabled=True;interval=np.float32(0.)
+                n+=1
+            active.append(bool(generating and enabled))
+        lever=max(np.linalg.norm(xy(p)-xy(enemy['position']))for p in c['quad'])
+        return (positions-xy(enemy['position']),angles,
+                'EnemyRotateElectricBall.FixedUpdateMovement; original rigid box, direct parent Euler and pulse clock',
+                np.asarray(active),None,dict(position_padding=numeric+lever*min(2.,angular_guard))),None
     except (KeyError,ValueError)as error:return None,str(error)
 
 
@@ -969,6 +1081,8 @@ def forecast(enemy, times, observation, player, trajectory_states=None):
         return suspend_special(enemy,times,observation,player)
     if kind=='EnemyConnectElectricBall':
         return connected_electric(enemy,times,observation,player)
+    if kind=='EnemyRotateElectricBall':
+        return rotating_electric(enemy,times,observation,player)
     if kind=='EnemyRockTiger':
         return rock_tiger(enemy,times,observation,player,trajectory_states)
     if kind=='EnemyPiranha':

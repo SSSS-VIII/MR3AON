@@ -57,6 +57,30 @@ local function values(obj)
     end
     return out
 end
+local function rigidElectric(owner)
+    -- RotateElectricBall rotates local Z after translating in world X.
+    -- Export the actual hierarchy/axes rather than assuming its generated
+    -- spheres still follow their deliberately disabled hover clocks.
+    local t=owner.transform;local parent=t.parent
+    local m=parent and parent.localToWorldMatrix or U.Matrix4x4.identity
+    local error=0
+    for a=0,2 do for b=0,2 do error=error+math.abs(m['m'..a..b]-(a==b and 1 or 0))end end
+    local rotation=t.localEulerAngles
+    local out={parent_axes_identity=error<0.00001,local_rotation=vector(rotation),balls={},colliders={}}
+    for _,f in ipairs(fields(owner))do
+        if f.FieldType.FullName=='EnemySuspendSpecial'then local ball=f:GetValue(owner)
+            if ball then out.balls[#out.balls+1]={id=ball:GetInstanceID(),direct_parent=ball.transform.parent==t,
+                movement_enabled=field(ball,'_movementEnable'),alive=ball.isActive and ball.gameObject.activeInHierarchy and
+                    not field(ball,'_dead')and not field(ball,'_isRecycled')}end
+        end
+    end
+    local electric=field(owner,'_electric')
+    out.direct_electric=electric~=nil and electric.parent==t
+    if electric then local cs=electric:GetComponents(typeof(U.Collider))
+        for i=0,cs.Length-1 do out.colliders[#out.colliders+1]=cs[i]:GetInstanceID()end
+    end
+    return out
+end
 local function actionData(obj,depth,budget)
     -- Traverse only authored action data, never its owner/manager graph.
     -- Unknown or truncated data stays explicit for the planning layer.
@@ -393,10 +417,18 @@ function E.privileged_state()
                                 info_identity=info and info:GetHashCode()or nil,index=field(owner,'m_index'),
                                 alive=owner.gameObject.activeInHierarchy and owner.isActive and
                                     not field(owner,'_dead')and not field(owner,'_isRecycled')}
+                            if owner:GetType().Name=='EnemyRotateElectricBall'then
+                                row.suspend_controller.position=vector(owner.transform.position)
+                                row.suspend_controller.scale=vector(owner.transform.lossyScale)
+                                row.suspend_controller.rotation_z=owner.transform.eulerAngles.z
+                                row.suspend_controller.fields=values(owner)
+                                row.suspend_controller.rigid_electric=rigidElectric(owner)
+                            end
                         end
                     end
                 end
             end
+            if row.type=='EnemyRotateElectricBall'then row.rigid_electric=rigidElectric(o)end
             if row.type=='EnemyConnectElectricBall'then
                 local balls=field(o,'_balls');local electric=field(o,'_electric')
                 row.electric_connection={balls={},colliders={}}

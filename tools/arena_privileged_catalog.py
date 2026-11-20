@@ -14,6 +14,12 @@ from arena_privileged_families import FAMILIES
 
 CATALOG = ROOT/'debug/arena-client/yolo/entity-catalog-final'
 
+# Current Cfg no longer contains this legacy type. Original pooled instances
+# identify both info._enemyType=238 and concrete EnemyRotateElectricBall;
+# v103 also verifies the generated rigid assembly. No enum-name inference for
+# the still unresolved 226/257, and no fabricated prefab/resource binding.
+NATIVE_BINDINGS={238:'EnemyRotateElectricBall'}
+
 
 def dependencies(inventory, entities, prefabs):
     entity_index = {(r['kind'],r['type_id']):r for r in entities}
@@ -30,8 +36,10 @@ def dependencies(inventory, entities, prefabs):
                        for s in prefabs.get(key,{}).get('scripts',[])
                        if s['path'].count('/')==1 and s['class_name'].startswith('Enemy')
                        and s['class_name']!='EnemyBaseCollider'}
-            # Three legacy ids have no Cfg/prefab binding. Keep them unresolved
-            # until a native instance identifies their concrete implementation.
+            if not classes and identity in NATIVE_BINDINGS:
+                classes={NATIVE_BINDINGS[identity]}
+            # Other legacy ids stay unresolved until an original instance
+            # identifies the concrete implementation.
             if not classes:
                 unresolved.append(identity)
             for name in sorted(classes):

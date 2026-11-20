@@ -922,7 +922,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
             elif kind=='EnemyArrow' and mode!='onground' and enemy.get('untrimmed_colliders'):
                 colliders = [c for c in rows(enemy['untrimmed_colliders']) if c.get('damage_kind')]
         for c in colliders:
-            if kind not in ('EnemyFlyBamboo','EnemyHideBlade','EnemyBambooWater','EnemyPoleaxeWarrior','EnemyConnectElectricBall') and not c['active']:
+            if kind not in ('EnemyFlyBamboo','EnemyHideBlade','EnemyBambooWater','EnemyPoleaxeWarrior','EnemyConnectElectricBall','EnemyRotateElectricBall') and not c['active']:
                 continue
             center = xy(c['center'])[None, :]+delta
             extent = np.tile(xy(c['extents']), (len(times), 1))*growth[:, None]
@@ -951,7 +951,8 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                 padding=2*abs(float(np.spacing(np.float32(observation['state']['time']))))*max(20.,abs(custom['_downSpeed']))+.00001
             if kind=='EnemyRollingBase':padding=predicted[5]['position_padding'];approximate=True
             if kind=='EnemyPiranha':padding=predicted[5]['position_padding']
-            if kind=='EnemySuspendSpecial':padding=predicted[5]['position_padding']
+            if kind in ('EnemySuspendSpecial','EnemyRotateElectricBall'):
+                padding=predicted[5]['position_padding'];approximate=True
             if kind in ('EnemyPoleaxeWarrior','EnemyRockTiger','EnemyConnectElectricBall'):
                 center,extent=predicted[4][c['id']]
                 approximate=True
