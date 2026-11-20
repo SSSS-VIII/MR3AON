@@ -2067,7 +2067,7 @@ def pending_curve(entry,times,observation,player):
     except (KeyError,ValueError)as error:return None,str(error)
 
 
-def curve_counterfactual(enemy,times,observation,player):
+def pending_motion_history(enemy,times,observation,player,predict,states,state_field):
     """An earlier hypothetical key must not borrow a later nominal birth clock."""
     from arena_privileged_model import rows,phase
     history=hook_reference_history(times,observation,player)
@@ -2077,12 +2077,12 @@ def curve_counterfactual(enemy,times,observation,player):
         e.get('info_identity')is not None and e['info_identity']==enemy.get('info_identity')and
         e['fields'].get('m_index')==enemy['fields'].get('m_index')and e['custom']==enemy['custom']and
         not e['fields'].get('_dead')and not e['fields'].get('_isRecycled')]
-    if len(live)==1 and phase(live[0]['fields']['_currState'])=='flytoninja'and phase(enemy['fields']['_currState'])=='flytoninja':
+    if len(live)==1 and phase(live[0]['fields'][state_field])in states and phase(enemy['fields'][state_field])in states:
         return None,True
     pending=[e for e in rows(origin.get('pending_enemies'))if e['info_identity']==enemy['info_identity']and
         {k:v for k,v in e['info'].items()if k!='_level'}=={k:v for k,v in enemy['info'].items()if k!='_level'}and e['custom']==enemy['custom']]
     if len(pending)!=1:return None,False
-    hs,reason=pending_curve(pending[0],history['times'],origin,prior)
+    hs,reason=predict(pending[0],history['times'],origin,prior)
     if reason:return None,False
     indices=history['indices'];lo=np.full((len(times),2),np.inf);hi=-lo.copy();active=np.zeros(len(times),bool)
     for h in hs:
@@ -2092,6 +2092,81 @@ def curve_counterfactual(enemy,times,observation,player):
     pivot=np.array([enemy['position'][a]for a in('x','y')]);lo=np.where(active[:,None],lo,pivot);hi=np.where(active[:,None],hi,pivot)
     shapes={c['id']:((lo+hi)/2,(hi-lo)/2)for c in rows(enemy['colliders'])if c.get('damage_kind')}
     return (active,shapes),False
+
+
+def curve_counterfactual(enemy,times,observation,player):
+    return pending_motion_history(enemy,times,observation,player,pending_curve,{'flytoninja'},'_currState')
+
+
+def pending_suspend(entry,times,observation,player):
+    """Union the native hover sequence over all possible future birth ticks."""
+    from arena_privileged_model import Hazard,rows
+    try:
+        info=entry['info'];custom=entry['custom'];kind=info['_enemyType'].split(':')[0]
+        template=observation.get('spawn_templates',{}).get('suspends',{}).get(kind,{})
+        if not template or template.get('missing'):raise ValueError('pending_suspend_original_prefab_missing')
+        if (kind!='EnemySuspendBalloon'or template.get('source_name')!=kind or template.get('type')!='EnemySuspend'or
+                entry.get('custom_type')!='EnemySuspendDataStruct'or entry.get('custom_projection',{}).get('complete')is not True or
+                entry['source']not in ('native_enemyList','resolved_uninstantiated_block')or info.get('baseID')!=0 or
+                info.get('createPlayerUID')or observation['camera']['direction']!=1):
+            raise ValueError('pending_suspend_source_binding')
+        if set(custom)!={'_render','_speedX','_speedY','_amplitude','_rangeRandomY','_stayTime'}or custom['_render']!=0 or custom['_rangeRandomY']!=0:
+            raise ValueError('pending_suspend_random_or_render_variant')
+        if (template.get('native_initialization')is not True or rows(template.get('unknown_hooks'))or
+                template.get('kinematic')is not True or template.get('gravity')is not False or
+                template.get('callbacks_clear')is not True or template.get('animated_tree',True)or
+                set(rows(template.get('component_types')))!={'EnemySuspend'}or
+                not isinstance(template.get('reverse_run_flip'),bool)):
+            raise ValueError('pending_suspend_unverified_hierarchy')
+        f=np.float32;tick=player.tick;dt=f(tick)
+        spawn=np.array([f(entry['block_start'][a]+info['_localPosition'][a])for a in('x','y','z')])
+        scale=np.array([info['_localScale'][a]for a in('x','y','z')])
+        if template['reverse_run_flip']:scale[0]=abs(scale[0])
+        vx,vy,amplitude,waiting=(f(custom[k])for k in('_speedX','_speedY','_amplitude','_stayTime'))
+        duration=template['acc']
+        if (not np.isfinite([*spawn,*scale,vx,vy,amplitude,waiting,duration,tick]).all()or
+                min(abs(scale))<=0 or min(amplitude,waiting,duration)<0 or tick<=0):
+            raise ValueError('pending_suspend_native_parameter_domain')
+        acceleration=abs(f(f(vy+vy)/f(duration)))if duration>0 else f(0.)
+        maximum=f(spawn[1]+amplitude);minimum=f(spawn[1]-amplitude)
+        count=int(math.ceil((times[-1]+2*tick)/tick))+2
+        x,y=spawn[:2];xs=[x];ys=[y];stay=waiting>0
+        for _ in range(count):
+            if stay:
+                waiting=f(waiting-dt)
+                if waiting<=0:stay=False
+            elif vy!=0:
+                new=f(y+f(vy*dt))
+                if new>=maximum:
+                    if acceleration==0:vy=-vy
+                    else:vy=f(vy-f(acceleration*dt));y=new
+                elif new<=minimum:
+                    if acceleration==0:vy=-vy
+                    else:vy=f(vy+f(acceleration*dt));y=new
+                else:y=new
+            x=f(x+f(vx*dt));xs.append(x);ys.append(y)
+        poses=np.column_stack((xs,ys));low=np.minimum.accumulate(poses,axis=0);high=np.maximum.accumulate(poses,axis=0)
+        indices=np.minimum(count,np.ceil((np.asarray(times)+2*tick)/tick).astype(int)+2)
+        lo=low[indices];hi=high[indices];q=entry['pose_rotation'];a,b,c,d=(q[k]for k in('x','y','z','w'))
+        if not np.isfinite([a,b,c,d]).all()or abs(a*a+b*b+c*c+d*d-1)>1e-5:raise ValueError('pending_suspend_native_rotation')
+        rotation=np.array([[1-2*(b*b+c*c),2*(a*b-c*d),2*(a*c+b*d)],
+            [2*(a*b+c*d),1-2*(a*a+c*c),2*(b*c-a*d)],
+            [2*(a*c-b*d),2*(b*c+a*d),1-2*(a*a+b*b)]])
+        boxes=rows(template['colliders']);hs=[]
+        if not boxes:raise ValueError('pending_suspend_damage_geometry_missing')
+        for i,box in enumerate(boxes):
+            if (box['type']!='BoxCollider'or not box['enabled']or not box['trigger']or not box['direct_root']or
+                    box['damage_kind']!='enemy_tag'or len(rows(box['vertices']))!=8):
+                raise ValueError('pending_suspend_original_root_box_binding')
+            vertices=(np.array([[v[k]for k in('x','y','z')]for v in rows(box['vertices'])])*scale)@rotation.T
+            if not np.isfinite(vertices).all():raise ValueError('pending_suspend_native_parameter_domain')
+            vmin=vertices[:,:2].min(axis=0);vmax=vertices[:,:2].max(axis=0)
+            numeric=.0002+32*abs(float(np.spacing(f(max(1.,abs(spawn).max(),abs(poses).max(),abs(vertices).max())))))
+            hs.append(Hazard(entry['id']+':hover:'+str(i),entry['id'],'EnemySuspend',
+                (lo+hi+vmin+vmax)/2,(hi-lo+vmax-vmin)/2+numeric,np.ones(len(times),bool),
+                'Original EnemySuspend reset and native hover steps; union of all future birth times',approximate=True))
+        return hs,None
+    except (KeyError,ValueError)as error:return None,str(error)
 
 
 def pending_enemy_forecasts(observation,times,player,trajectory_states,context=None):
@@ -2113,6 +2188,9 @@ def pending_enemy_forecasts(observation,times,player,trajectory_states,context=N
         if not reachable and kind not in PENDING_BLADE_NAMES|{'EnemyHook','EnemyGoldHook'}:continue
         if kind in ('EnemyHook','EnemyGoldHook'):
             hs,reason=pending_hook_phase(entry,times,observation,player,trajectory_states,context)
+            if hs is not None:result.extend(hs);continue
+        elif kind=='EnemySuspendBalloon':
+            hs,reason=pending_suspend(entry,times,observation,player)
             if hs is not None:result.extend(hs);continue
         elif kind in PENDING_CURVE_NAMES:
             hs,reason=pending_curve(entry,times,observation,player)
@@ -3058,6 +3136,13 @@ def forecast(enemy, times, observation, player, trajectory_states=None,context=N
         positions, angles = native_steps(enemy, times, observation, update)
         return (positions-xy(enemy['position']), angles, 'EnemyCurve.UpdateCureMove'), None
     if kind == 'EnemySuspend':
+        if getattr(player,'_observed_motor',None)is not player.initial:
+            historical,independent=pending_motion_history(enemy,times,observation,player,pending_suspend,{'stay','move'},'_state')
+            if historical is not None:
+                active,shapes=historical
+                return (zero,angles,'EnemySuspend birth propagated from actual pre-key world',active,None,
+                    dict(historical_shapes=shapes,angular_padding=0.)),None
+            if not independent:return None,'suspend_past_birth_history_unbound'
         path,reason=suspend_path(enemy,times,observation)
         if path is None:return None,reason
         positions,angles=path[:2]

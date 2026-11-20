@@ -1159,7 +1159,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
                     quads = np.einsum('nij,kj->nki',rot,quad)+pivot+delta[:,None,:]
                     center = quads.mean(axis=1)
                     extent = (quads.max(axis=1)-quads.min(axis=1))/2
-                if kind in ('EnemyHook','EnemyBambooThorn','EnemyCurveBat') and len(predicted)>5:
+                if kind in ('EnemyHook','EnemyBambooThorn','EnemyCurveBat','EnemySuspend') and len(predicted)>5:
                     if c.get('quad'):
                         lever=np.linalg.norm(np.array([xy(p)for p in c['quad']])-pivot,axis=1).max()
                     else:
@@ -1181,7 +1181,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
                       kind=='EnemyRollingBase' and 'envelope_spread'in predicted[5] else
                       'sphere' if c['type']=='SphereCollider' or kind in ('EnemyFruitPinball','EnemyPiranha') else
                       'obb' if quads is not None else 'aabb')
-            if kind=='EnemyCurveBat'and len(predicted)>5 and predicted[5].get('historical_shapes')is not None:
+            if kind in ('EnemyCurveBat','EnemySuspend')and len(predicted)>5 and predicted[5].get('historical_shapes')is not None:
                 geometry='aabb'
             result.append(Hazard(c['id'], enemy['id'], kind, center, extent, active, source, approximate,
                                  geometry, quads,
