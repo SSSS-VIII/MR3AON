@@ -130,6 +130,54 @@ local function originalCollectEffects()
     end
     return out
 end
+local function retiredClearScreen(obj,data)
+    local staticFlags=CS.System.Reflection.BindingFlags.__CastFrom(56)
+    if obj:GetType().FullName~='SkillClearScreen'or data._bIsSkillEnd~=true or data['<isActive>k__BackingField']~=false then return nil end
+    local ok,root=pcall(function()return obj.gameObject end)
+    if not ok or not root then return {native_object_unavailable=true}end
+    local out={active_self=root.activeSelf,active_hierarchy=root.activeInHierarchy,
+        native_cleanup=true,unknown_hooks={},callbacks_clear=true,coroutines_absent=false,component_types={},active_colliders=0,coroutines={}}
+    local components=obj:GetComponentsInChildren(typeof(U.MonoBehaviour),true)
+    for i=0,components.Length-1 do out.component_types[#out.component_types+1]=components[i]and components[i]:GetType().FullName or 'missing_component'end
+    local cs=obj:GetComponentsInChildren(typeof(U.Collider),true)
+    for i=0,cs.Length-1 do if cs[i].enabled and cs[i].gameObject.activeInHierarchy then out.active_colliders=out.active_colliders+1 end end
+    for _,name in ipairs({'conditionActionEvent','normalActionEvent','collisionActionEvent',
+            'collisionExitActionEvent','btAnimatorEvent','conditionParamActionEvent','syncComponent'})do
+        if field(obj,name)~=nil then out.callbacks_clear=false end
+    end
+    local graphs=field(obj,'allGraphOwners');if graphs and graphs.Count>0 then out.callbacks_clear=false end
+    for _,entry in ipairs({{typeof(CS.Ninja3BaseObject),'get_isActive'},
+            {typeof(CS.Ninja3BaseObject),'MyUpdate'},{typeof(CS.Ninja3BaseObject),'OnDisable'},
+            {typeof(CS.NinjaSkillManager),'CleanActiveSkill'},{typeof(CS.NinjaSkillManager),'MyFixedUpdate'},
+            {typeof(CS.NinjaSkill),'MyFixedUpdate'},{typeof(CS.NinjaSkill),'MyUpdate'},
+            {typeof(CS.NinjaSkill),'OnDisable'},{typeof(CS.NinjaSkill),'SkillEnd'},
+            {typeof(CS.NinjaSkill),'DestroySelf'},{typeof(CS.NinjaSkill),'Recycle'},
+            {typeof(CS.SkillClearScreen),'MyFixedUpdate'},{typeof(CS.SkillClearScreen),'OnDisable'},
+            {typeof(CS.SkillClearScreen),'ClearScreenSkillEnd'},{typeof(CS.SkillClearScreen),'SkillEnd'},
+            {typeof(CS.GameDamageManager),'AddNinjaSkillDamageInfo'},
+            {typeof(CS.GameDamageManager),'NinjaSkillDamageFixedUpdate'}})do
+        local hook=entry[1]:GetField('__Hotfix0_'..entry[2],staticFlags)
+        if not hook or hook:GetValue(nil)~=nil then out.native_cleanup=false;out.unknown_hooks[#out.unknown_hooks+1]=entry[1].Name..'.'..entry[2]end
+    end
+    local controllers=U.Object.FindObjectsOfType(typeof(CS.GameController),true)
+    if controllers.Length~=1 then return out end
+    local logic=field(controllers[0],'gameLogicManager');local executor=field(logic,'gameCoroutineManager')
+    local damage=field(logic,'gameDamagerManager');out.damage_queues={};out.damage_queues_empty=damage~=nil
+    for _,name in ipairs({'skillDamageList','enemyDamageList','itemDamageList','mountDamageList'})do
+        local list=field(damage,name);out.damage_queues[name]=list and list.Count or -1
+        if not list or list.Count~=0 then out.damage_queues_empty=false end
+    end
+    local list=field(executor,'list');if not list or list.Count>4096 then return out end
+    out.coroutines_absent=true
+    for _,name in ipairs({'_startCoro','_initCoro','_hideCoro','waitSkillEndCoroutine'})do
+        local id=field(obj,name);local row={name=name,id=id,present=false};out.coroutines[#out.coroutines+1]=row
+        if id==nil then out.coroutines_absent=false
+        elseif tostring(id)~='0'then for i=0,list.Count-1 do
+            if tostring(field(list[i],'ID'))==tostring(id)then row.present=true;out.coroutines_absent=false end
+        end end
+    end
+    return out
+end
 local function originalSkills()
     local manager=existingSingleton(typeof(CS.NinjaSkillManager))
     local out={present=manager~=nil,active={},bullets={}}
@@ -137,7 +185,8 @@ local function originalSkills()
     local function entries(list,count)
         local result={};assert(list and count>=0 and count<=list.Count,'Original skill list count mismatch')
         for i=0,count-1 do local obj=list[i];assert(obj,'Nil original active skill')
-            result[#result+1]={index=i,type=obj:GetType().FullName,fields=values(obj)}
+            local data=values(obj)
+            result[#result+1]={index=i,type=obj:GetType().FullName,fields=data,retired_clear_screen=retiredClearScreen(obj,data)}
         end
         return result
     end

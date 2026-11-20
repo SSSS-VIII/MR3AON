@@ -1663,6 +1663,26 @@ def ordinary_red_coin(entry,template,observation):
         'collect_effects'in observation['role']and not collect_effect_issues(observation['role']))
 
 
+def retired_clear_screen(row):
+    """Native inactive scene object awaiting list cleanup, not a live skill."""
+    from arena_privileged_model import rows
+    f=row.get('fields',{});d=row.get('retired_clear_screen',{})
+    queues={'skillDamageList','enemyDamageList','itemDamageList','mountDamageList'}
+    coroutines={'_startCoro','_initCoro','_hideCoro','waitSkillEndCoroutine'}
+    records=rows(d.get('coroutines'))
+    return (row.get('type')=='SkillClearScreen'and f.get('_bIsSkillEnd')is True and
+        f.get('<isActive>k__BackingField')is False and f.get('_cameraShiftCtrling')is False and
+        f.get('<SkillSource>k__BackingField')=='Scene: 0'and d.get('active_self')is False and
+        d.get('active_hierarchy')is False and d.get('active_colliders')==0 and
+        d.get('native_cleanup')is True and not rows(d.get('unknown_hooks'))and d.get('callbacks_clear')is True and
+        d.get('coroutines_absent')is True and {r['name']for r in records}==coroutines and
+        all(r.get('present')is False and r.get('id')==f.get(r['name'])for r in records)and
+        d.get('damage_queues_empty')is True and set(d.get('damage_queues',{}))==queues and
+        all(v==0 for v in d['damage_queues'].values())and
+        'SkillClearScreen'in rows(d.get('component_types'))and set(rows(d.get('component_types')))<=
+        {'SkillClearScreen','uTools.uTweenScale','uTools.uTweenAlpha','uTweenController','NinjaSkillBaseCollider'})
+
+
 def skill_issues(role):
     """A consumed ball's original skill/bullets outlive its item collider."""
     if 'skills'not in role:return []  # Older calibration channel did not read it.
@@ -1670,7 +1690,9 @@ def skill_issues(role):
     if not data['present']:return ['native_skill_manager_missing']
     for key in ('active','bullets'):
         prefix='active_skill:'if key=='active'else'active_skill_bullet:'
-        for row in data[key]or[]:issues.append(prefix+row['type'])
+        for row in data[key]or[]:
+            if key=='active'and retired_clear_screen(row):continue
+            issues.append(prefix+row['type'])
     if data.get('move_skill')is not None:issues.append('active_move_skill:'+data['move_skill'])
     return sorted(set(issues))
 
