@@ -68,6 +68,43 @@ local function actionData(obj,depth,budget)
     for _,f in ipairs(fields(obj))do out.fields[f.Name]=actionData(f:GetValue(obj),depth-1,budget)end
     return out
 end
+local function spineState(animation)
+    -- Read backing fields only. Skeleton/AnimationState property getters may
+    -- initialize a disabled component; observing must never do that.
+    if not animation then return nil end
+    local skeleton,state=field(animation,'skeleton'),field(animation,'state')
+    local out={initialized=skeleton~=nil,time_scale=field(animation,'timeScale'),tracks={},bones={}}
+    if not skeleton then return out end
+    out.fields=values(skeleton)
+    out.state_fields=values(state)
+    local skin=field(skeleton,'skin');out.skin=skin and field(skin,'name')or nil
+    local t=animation.transform
+    out.origin=vector(t:TransformPoint(U.Vector3.zero))
+    out.axis_x=vector(t:TransformVector(U.Vector3.right))
+    out.axis_y=vector(t:TransformVector(U.Vector3.up))
+    local asset=field(animation,'skeletonDataAsset');local text=asset and field(asset,'skeletonJSON')
+    out.asset_name=text and text.name or nil
+    local tracks=state and field(state,'tracks');local items=tracks and field(tracks,'Items')
+    local count=tracks and field(tracks,'Count')or 0
+    local function entryData(entry,depth)
+        if not entry then return nil end
+        local r=values(entry);local anim=field(entry,'animation')
+        r.animation=anim and field(anim,'name')or nil
+        if depth>0 then r.mixing_from=entryData(field(entry,'mixingFrom'),depth-1)end
+        return r
+    end
+    out.tracks_truncated=count>4
+    if items then for i=0,math.min(count-1,3)do
+        out.tracks[#out.tracks+1]={index=i,entry=entryData(items[i],3)}
+    end end
+    local bones=field(skeleton,'bones');items=bones and field(bones,'Items');count=bones and field(bones,'Count')or 0
+    out.bones_truncated=count>128
+    if items then for i=0,math.min(count-1,127)do local bone=items[i];local data=field(bone,'data')
+        out.bones[#out.bones+1]={name=data and field(data,'name'),x=field(bone,'worldX'),y=field(bone,'worldY'),
+            a=field(bone,'a'),b=field(bone,'b'),c=field(bone,'c'),d=field(bone,'d')}
+    end end
+    return out
+end
 local function shape(c)
     local tp=c:GetType().Name
     local out={id=c:GetInstanceID(),name=c.name,type=tp,enabled=c.enabled,
@@ -75,6 +112,8 @@ local function shape(c)
         tag=c.tag,trigger=c.isTrigger,
         position=vector(c.transform.position),scale=vector(c.transform.lossyScale),
         rotation_z=c.transform.eulerAngles.z}
+    local follower=c.gameObject:GetComponent(typeof(CS.Spine.Unity.SkeletonUtilityBone))
+    if follower then out.spine_follow={bone_name=field(follower,'boneName'),fields=values(follower)}end
     local b=c.bounds;out.center=vector(b.center);out.extents=vector(b.extents)
     if tp=='BoxCollider'then
         out.local_center=vector(c.center);out.size=vector(c.size);out.quad={}
@@ -209,6 +248,7 @@ function E.privileged_state()
                 fields=values(o),info=values(info),custom=values(custom),custom_type=custom and custom:GetType().Name or nil,
                 speed=o.CurrentSpeed,attack=o.Attack,scale=vector(o.transform.lossyScale),rotation_z=o.transform.eulerAngles.z,colliders={}}
             row.info_identity=info and info:GetHashCode()or nil
+            if row.type=='EnemyWarrior'then row.spine=spineState(field(o,'_spineWarrior'))end
             local at=field(o,'privateAtLevelBlock')
             if at then row.native_support={id=at:GetInstanceID(),start=vector(at.PointStart),finish=vector(at.PointEnd),
                 is_line=at.IsLine,is_ground=at.IsGround}end

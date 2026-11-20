@@ -185,7 +185,9 @@ PYTHONPATH=tools:agent .venv/bin/python tools/arena_privileged_batch.py \
 
 本轮前三个完整VM原生出口候选为L5/M42/50012、L5/M41/51012、L5/M41/51013：游戏约11.083/11.083/11.067秒，壁钟175/162/148秒，实际回档0/5/3次。另有普通GPU暂停前进的M32/40013曲线板一次5键、8.533秒无伤；不同冻结版本和运行链分别保存，不能混作同源容差验证。目前逐键原引擎端点、新入口及视觉部署验收仍未完成，合格默认库仍0/407。
 
-后续累计保留5个原生出口候选，另两个为L5/M42/5001、50013，壁钟约203/218秒、均0回档；这两个与M41/51013是不同位置。当前后台服务为`mr3a-arena-privileged-fixed-v2.service`，仍使用`all-fixed-v3`队列，日志已续到`all-fixed-v7.log`。新版本优先尝试未覆盖位置，避免补模型后反复重试已有失败；首次遍历并不等于全部位置已成功。原选板可能需要数分钟，保留原900秒上限；仅原选板等待超时、通信已确定且完整VM恢复逐字段一致时，登记失败后继续其他位置，未知传输状态必须停机。
+后续累计保留5个原生出口候选，另两个为L5/M42/5001、50013，壁钟约203/218秒、均0回档；这两个与M41/51013是不同位置。后台服务由`mr3a-arena-privileged-fixed-v2.service`安全边界交接给`mr3a-arena-privileged-fixed-v3.service`，仍使用`all-fixed-v3`队列，新日志为`all-fixed-v8.log`。新版本优先尝试未覆盖位置，避免补模型后反复重试已有失败；首次遍历并不等于全部位置已成功。仅原选板等待超时、通信已确定且完整VM恢复逐字段一致时，登记失败后继续其他位置，未知传输状态必须停机。
+
+L5/M42/S9与L6/M51/S8先后证实尚未进入目标板就耗尽原选板工具600秒墙钟：软件渲染只推进约19–20秒游戏时间，仍在原载具上，因此拒绝入场，不算搜索或无伤成绩。仅VM Gate现在传1800秒工具预算，宿主等待1920秒；共享选板API的省略参数仍为600秒，普通菜单不新增选项。原载具速度、captureFramerate、物理步长、完整地图和安全入场检查均未改，较长预算的新后段到达仍待队列实测。
 
 `arena_privileged_family_audit.py`在原前后状态上校验新增机关运动和碰撞范围；真实配对夹具覆盖吊锤、曲线蝙蝠、旋转锤、飞镖、藏刃、摆钩及弹球。摆钩429个短窗位置P95约0.000095米；弹球335个短窗位置P95约0.000045米，补原挤压缩放后包围尺寸P95约0.000009米。统计窗口混合约100/200/500ms，不是整板或全阶段正确性证明。滑铲另有原UI输入/恢复配对保护；完整证据在忽略目录`debug/arena-client/privileged-controller-v2/`。
 
@@ -193,4 +195,21 @@ PYTHONPATH=tools:agent .venv/bin/python tools/arena_privileged_batch.py \
 
 角色方面补原垂直墙/地形死亡阈值，绳下接地板必须提前回绳上；按真实身体父节点X查询坡面，平地不再误用下坡残留倍率。后坡平地100/200/500ms原生轨迹对照误差小于0.0002米；**活动坡面完整加速/父偏移动力学仍待补齐**。非旋转未触发弹簧可按原拾取胶囊与原触发器禁止接触来绕过，接触后的PopBySpring仍不支持。3201独立前进试验因此从绳下接地死亡改善到17.58秒/283.92米/5000血，随后遇到未建模武士停止，不是整板成功。
 
-空间转动导致BoxCollider深度投影进入XY时导出全部八角包围，未实现三维未来变换的移动类明确拒绝。ItemEvent只导出有界原动作数据，尚不忽略或执行其回调。武士武器跟随原Spine骨骼，不能拿静态身体框或攻击触发距离充当挥刀范围；已从原4.0.21二进制资源离线解析49骨骼及动画，但原生阶段/混合动画/武器碰撞配对未完成，仍标记不支持。原始资源及临时Spine工具仅在忽略目录。最新128项相关保护通过，普通arena只读输入烟测的位置、血量、物理状态和游戏时钟均不变；这些不替代全板及容差验收。
+空间转动导致BoxCollider深度投影进入XY时导出全部八角包围，未实现三维未来变换的移动类明确拒绝。ItemEvent只导出有界原动作数据，尚不忽略或执行其回调。武士武器跟随原Spine骨骼，不能拿静态身体框或攻击触发距离充当挥刀范围；原4.0.21二进制资源已离线解析49骨骼及70个动画，未来阶段/混合动画预测仍标记不支持。原始资源及生成轨迹仅在忽略目录。此前128项相关保护通过，普通arena只读输入烟测的位置、血量、物理状态和游戏时钟均不变；这些不替代全板及容差验收。
+
+Spine入口已整理为`arena_spine_bone_profile.cjs`（原二进制→离线骨骼采样）、`arena_spine_bone_audit.cjs`（按原TrackEntry时间核对骨骼）及`arena_spine_geometry.py`（已知骨骼位姿→原直接跟随碰撞箱）。只读Lua读取`skeleton/state`后备字段，避免会初始化组件的属性getter；保留原资产名、皮肤、轨道混合链、截断标志和骨骼矩阵。使用[官方4.0运行库](https://github.com/EsotericSoftware/spine-runtimes/tree/4.0/spine-ts/spine-core)解析原4.0.21资源，依赖隔离安装于忽略目录，不随项目打包原素材。
+
+5301的80帧原生片段中，严格单轨0且无混合的110个武器位姿最大骨骼误差约0.000000053米；41个轨1状态明确排除，不拿单轨结果证明多轨。当前骨骼到武器BoxCollider四角的151个历史观测重建最大误差约0.0000039米；新增包含原Follow配置的两组真实镜像位姿为回归夹具。上述是**已知当前位姿重建**，武士未来状态转移/追赶/多轨攻击仍未接入规划，不能将武士注册成已完成预测器。原生取样包含受伤帧，也不是无伤路线试验。示例：
+
+```bash
+# --runtime指向隔离安装的@esotericsoftware/spine-core@4.0.31目录。
+node tools/arena_spine_bone_profile.cjs --runtime "$SPINE_RUNTIME_DIR" \
+  --input "$ORIGINAL_SKEL_FILE" --output "$PRIVATE_PROFILE_FILE" \
+  --scale 0.009999999776482582 --skin 1 --bones root,weapon
+node tools/arena_spine_bone_audit.cjs --runtime "$SPINE_RUNTIME_DIR" \
+  --input "$ORIGINAL_SKEL_FILE" --output "$PRIVATE_AUDIT_FILE" \
+  --scale 0.009999999776482582 --skin 1 --bones weapon \
+  --observations "$NATIVE_OBSERVATIONS_FILE" --asset-name Wushi_Soldier.skel
+```
+
+活动坡面另采原3201第5块起35个被动状态，已排除相关Hotfix覆盖；原MoveLogic向`slopeOffset`回归，而非回零，ProcessMovementOnGround还追加`slopeOffset.x/20`增益，并按物理速度模长渐进加速。实验源在非接缝下坡100–500ms配对已达约0.00003米中心误差，但坡末支持切换与绳地/动作回归仍失败，**该实验未合入在线模型**，保存为`slope-ground-source-wip-v1.patch`及原始native-slope-v10片段继续研究。当前最新141项相关保护通过。
