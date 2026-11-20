@@ -845,7 +845,12 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
             if len(predicted)>3 and predicted[3] is not None:
                 active = predicted[3]
             if kind=='EnemyPoleaxeWarrior':
-                colliders=[c for c in rows(enemy['colliders'])if c.get('damage_kind')];approximate=True
+                from arena_privileged_poleaxe import damage_bindings
+                # Its concrete body callback attacks the warrior, unlike the
+                # EnemyBase body damage callback. Keep the axe hazardous even
+                # beyond a predicted body contact: future melee kills are not
+                # yet certified, so this remains a conservative lifetime.
+                colliders=[damage_bindings(enemy)[1]];approximate=True
             elif kind=='EnemyBambooWater':
                 colliders=predicted[4];approximate=True
             elif kind=='EnemyHideBlade':

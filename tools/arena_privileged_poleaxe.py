@@ -14,6 +14,27 @@ from arena_spine_geometry import full_scale_follow_quad
 PROFILE=Path(__file__).with_name('arena_privileged_poleaxe_poses.json')
 
 
+def damage_bindings(enemy):
+    """The concrete body callback is melee contact, not Ninja.Damage.
+
+    EnemyPoleaxeWarrior overrides EnemyBase.ProcessOnTriggerEnter. Contact
+    with its body calls the ninja's attack animation and damages the warrior;
+    only ProcessAttackModuleOnTriggerOnter damages the ninja. Require the
+    original callback/owner bindings before making this distinction.
+    """
+    colliders=[c for c in enemy['colliders'] if c.get('damage_kind')]
+    if len(colliders)!=2:
+        raise ValueError('poleaxe_original_damage_shapes')
+    weapon=next((c for c in colliders if c.get('spine_follow')),None)
+    body=next((c for c in colliders if not c.get('spine_follow')),None)
+    if (weapon is None or body is None or body['type']!='BoxCollider'
+            or body.get('damage_kind')!='enemy_callback'
+            or weapon.get('damage_kind')!='attack_module'
+            or any(c.get('damage_owner')!=enemy['id'] for c in colliders)):
+        raise ValueError('poleaxe_damage_shape_binding')
+    return body,weapon
+
+
 @lru_cache(maxsize=1)
 def profile():
     data=json.loads(PROFILE.read_text())
@@ -132,11 +153,7 @@ def forecast(enemy,times,observation,player,trajectory_states=None):
         if entry['animation']!=(ready if mode=='idle' else attack):raise ValueError('poleaxe_track_phase_disagreement')
         age=np.clip(observation['state']['time']-f['_lastFixedUpdateTime'],0,tick)
         steps=np.floor((age+np.asarray(times)+1e-8)/tick).astype(int)
-        colliders=[c for c in rows(enemy['colliders'])if c.get('damage_kind')]
-        if len(colliders)!=2:raise ValueError('poleaxe_original_damage_shapes')
-        weapon=next((c for c in colliders if c.get('spine_follow')),None)
-        body=next((c for c in colliders if not c.get('spine_follow')),None)
-        if weapon is None or body is None or body['type']!='BoxCollider':raise ValueError('poleaxe_damage_shape_binding')
+        body,weapon=damage_bindings(enemy)
         # Validate the whole original follower chain before using any pose.
         full_scale_follow_quad(spine,next(b for b in spine['bones']if b['name']=='axe'),weapon)
         native_direction=observation.get('camera',{}).get('direction')

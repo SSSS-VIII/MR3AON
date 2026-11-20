@@ -9,7 +9,7 @@ import pytest
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
 from arena_privileged_model import PlayerModel,hazard_forecasts
-from arena_privileged_poleaxe import checked_entry,forecast,carry_ratio,adjusted_bone
+from arena_privileged_poleaxe import checked_entry,forecast,carry_ratio,adjusted_bone,damage_bindings
 from arena_spine_geometry import full_scale_follow_quad
 
 FIXTURE=json.loads((ROOT/'tests/fixtures/arena-privileged-poleaxe.json').read_text())
@@ -22,7 +22,9 @@ def test_original_living_ready_attack_and_direction_pairs_are_contained(case):
     assert before['state']['health']==after['state']['health']==5000
     times=np.linspace(0,elapsed,round(elapsed*120)+1)
     hazards,missing=hazard_forecasts(before,times,model)
-    assert not missing and len(hazards)==2
+    assert not missing and len(hazards)==1
+    body,weapon=damage_bindings(before['enemies'][0])
+    assert hazards[0].id==weapon['id'] and hazards[0].id!=body['id']
     actual={c['id']:c for c in after['enemy']['colliders']if c.get('damage_kind')}
     for h in hazards:
         c=actual[h.id]
@@ -48,6 +50,8 @@ def test_original_living_ready_attack_and_direction_pairs_are_contained(case):
     ('chain','Unvalidated full-scale native bone-follow chain'),
     ('scale','Unvalidated full-scale native bone-follow configuration'),
     ('player','poleaxe_player_trajectory_unsupported'),
+    ('body_callback','poleaxe_damage_shape_binding'),
+    ('weapon_owner','poleaxe_damage_shape_binding'),
 ])
 def test_unvalidated_native_states_are_rejected_instead_of_using_body_only(change,reason):
     sample=deepcopy(next(c for c in FIXTURE['cases']if c['before']['enemies'][0]['fields']['_enemyState']=='Idle: 0'))
@@ -62,6 +66,8 @@ def test_unvalidated_native_states_are_rejected_instead_of_using_body_only(chang
     if change=='moving':e['fields']['currMoveVelocity']['x']=1
     if change=='chain':weapon['spine_follow']['full_scale_chain']=False
     if change=='scale':weapon['spine_follow']['chain'][0]['fields']['scale']=False
+    if change=='body_callback':next(c for c in e['colliders']if not c.get('spine_follow'))['damage_kind']='attack_module'
+    if change=='weapon_owner':weapon['damage_owner']+=1
     model=PlayerModel(before)
     if change=='player':model.unsupported.append('role:pop')
     result,missing=forecast(e,np.linspace(0,.5,61),before,model)

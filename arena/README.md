@@ -255,3 +255,8 @@ node tools/arena_spine_bone_audit.cjs --runtime "$SPINE_RUNTIME_DIR" \
 内部调度新增`--certify-case L5-M42-S1-B50012`：在同一VM先从原入口新搜索并作端点验证，再按`--defer-certification`继续其余覆盖，不再为复验和全量各付一次冷启动。一次worker只优先处理该请求一次；同版本已完成的验证不原地循环，失败的新复验也不抹掉旧冻结名义候选，两种证据字段分开。stop请求在冷启动前即可生效。`native-quality-v3`曾在客户端manifest初始化超时，search_started=false，不能算策略失败或认证；冷启动失败现在额外保留原进程PID及有界boot-state/launch/loaded/agent/ready文件，GameGate接管后禁止调用该诊断Root RPC。
 
 搜索预算另记录requested/effective：按原观测的剩余板长/当前速度给较长板提供必要前进额度（20×游戏时长，自动增加上限1800秒；更高显式请求保留），避免40秒长板即使无伤前进也一律在300秒墙钟耗尽。800米等长板保护与旧短板预算分别测试；不是路线安全性或成功率估计。v8现用同一all-fixed-v3账本及`all-fixed-v13.log`运行，先复验50012再继续45个已尝试位置以外的全量覆盖；原名义候选仍8、原引擎容差合格仍0，GPU30023另列。229项相关保护通过。
+
+
+斧兵伤害回调再次核对：其具体类覆写`ProcessOnTriggerEnter`，身体回调不会走`Ninja.Damage`，而是触发原近身攻击并向斧兵提交伤害；`ProcessAttackModuleOnTriggerOnter`才是斧刃伤害。模型现在严格核对身体`enemy_callback`/斧刃`attack_module`及共同原owner，只把斧刃纳入伤害预测，不能把所有`EnemyBaseCollider`都当普通怪物的身体伤害。原v43每渲染帧取样在角色x59.453→59.719时观察到斧兵alive→dead、角色5000血，未发现活动NinjaSkill或额外攻击碰撞体。`Ninja.Damage`活动热更也已核对原Lua：除特定PUGC复制体提前返回外仍调原函数，不是本例跳过伤害的证据。完整原生取样及只读前后状态保存在`poleaxe-death-reader-v43*`/`native-poleaxe-death-v43.jsonl`；原回调没有改动。
+
+新v44冻结GPU前进试验仍在1.700秒/27.383米、1键/0回档/5000血处遇到`no_safe_action_window`，不计整板通过。身体误分类已经纠正，但目前仍保留斧刃存活到预测末尾，**没有用预测身体相交来假定未来必杀**；原近身伤害量、固定帧回调次序及死亡时刻尚需单独证明。新增两项错误绑定拒绝后相关斧兵/决策/家族保护64项通过。50012新v8在300.693秒/18回档预算结束，最终前进6.183秒，18次拒绝均为待执行窗口重验失效，没有新端点结论；全量继续至第46个已尝试位置，保留8个VM名义出口、0端点合格。
