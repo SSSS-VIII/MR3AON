@@ -73,9 +73,13 @@ def test_original_sender_repeat_gap_covers_both_independent_endpoint_shifts():
 
 def test_pending_key_is_not_sent_one_render_frame_before_its_checked_center():
     pair=json.loads((ROOT/'tests/fixtures/arena-privileged-pending.json').read_text())
+    # Isolate scheduler timing on the real coasting role/support pair. The
+    # original hazards are covered separately by the native counterexample.
+    for observation in pair.values():observation['enemies']=[]
     before=pair['now'];stamp=before['state']['time'];controller=InternalController()
     controller.scheduled=dict(action='jump',due=stamp+1/60,window=(stamp-.05,stamp+.2),
                               origin_stamp=stamp-.1,checked_offsets_ms=[-50,50])
+    controller.decide(pair['before'])
     proposal=controller.decide(before)
     assert proposal.action=='none' and proposal.delay==pytest.approx(1/60)
     assert controller.scheduled['due']>stamp
@@ -99,3 +103,55 @@ def test_expired_search_window_is_not_recentered_as_a_fresh_action():
     proposal=controller.decide(before)
     assert proposal.reason=='selected_internal_window_invalidated'
     assert proposal.action=='none' and controller.scheduled is None
+
+
+def introduced_blade(observation,x,y):
+    return dict(id=987654,type='EnemyBlade',name='test_new_instance',info_identity=876543,
+        position=dict(x=x,y=y,z=0),scale=dict(x=1,y=1,z=1),custom={},
+        fields=dict(_dead=False,_isRecycled=False,m_index=765432),
+        colliders=[dict(id=654321,name='hurt',type='SphereCollider',radius=.02,
+            center=dict(x=x,y=y,z=0),extents=dict(x=.02,y=.02,z=.02),
+            active=True,enabled=True,damage_kind='enemy_callback',depth_tilt=False)])
+
+
+def test_new_distant_instance_rechecks_the_actual_earlier_trajectory_without_rollback():
+    from dataclasses import asdict
+    from arena_privileged_runner import json_safe
+    pair=json.loads((ROOT/'tests/fixtures/arena-privileged-pending.json').read_text())
+    controller=InternalController();controller.decide(pair['before'])
+    now=pair['now'];now['enemies'].append(introduced_blade(now,now['state']['position']['x']+60,0))
+    result=controller.decide(now)
+    assert result.action=='jump'
+    proof=result.evidence['retained_early_endpoint']
+    assert proof['visibility_changed'] and proof['result']['safe']
+    assert proof['seconds_since_origin']==pytest.approx(.05,abs=.00001)
+    assert result.evidence['native_rollouts']==result.evidence['restores']==0
+    # Frozen Python models stay in the policy/VM branch state, never leak
+    # into the recorded proposal or its public JSON evidence.
+    json.dumps(json_safe(asdict(result)),allow_nan=False)
+
+
+def test_new_danger_after_the_early_key_is_checked_against_its_retained_jump():
+    pair=json.loads((ROOT/'tests/fixtures/arena-privileged-pending.json').read_text())
+    controller=InternalController();controller.decide(pair['before'])
+    origin=pair['before']['state']['time'];now=pair['now'];elapsed=now['state']['time']-origin
+    old=PlayerModel(pair['before']);times=np.linspace(0,elapsed+.1,37)
+    body,_,valid=old.trajectory(times,((0.,'jump'),));assert valid
+    x,y,radius,core=body[-1]
+    now['enemies'].append(introduced_blade(now,float(x),float(y+radius+core+.01)))
+    controller.scheduled['search_choice']=True
+    result=controller.decide(now)
+    assert result.action=='none' and result.reason=='selected_internal_window_invalidated'
+    checks=result.evidence['pending_rejection']
+    assert checks['nominal']['safe'] and checks['late']['safe']
+    assert not checks['early']['safe']
+
+
+def test_retained_endpoint_is_rejected_if_the_native_coast_prefix_changed():
+    pair=json.loads((ROOT/'tests/fixtures/arena-privileged-pending.json').read_text())
+    controller=InternalController();controller.decide(pair['before'])
+    controller.scheduled['search_choice']=True
+    pair['now']['state']['position']['x']+=1
+    result=controller.decide(pair['now'])
+    assert result.action=='none' and result.reason=='selected_internal_window_invalidated'
+    assert result.evidence['pending_rejection']['early']['reason']=='unchanged_prefix_disagrees_with_native_state'

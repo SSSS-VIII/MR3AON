@@ -210,6 +210,10 @@ def test_original_bamboo_window_executes_when_early_endpoint_has_passed():
     stamp=pair['before']['state']['time']
     controller.scheduled=dict(action='jump',due=stamp+.05,window=(stamp,stamp+.1),
                               origin_stamp=stamp,checked_offsets_ms=[-40.,40.])
+    # Retain the actual earlier trajectory while its endpoint is still
+    # available. A timestamp alone is not a proof of the past endpoint.
+    approach=controller.decide(pair['before'])
+    assert approach.action=='none' and controller.scheduled is not None
     execution=controller.decide(pair['now'])
     assert execution.action=='jump'
     assert execution.reason=='execute_center_of_native_safe_window'
@@ -286,8 +290,13 @@ def test_input_repeat_constraints_are_per_key_and_float_clock_tolerant(previous,
     # Isolate delivery availability using a known physically safe pending
     # operation. The original UI reversal capture proves alternate keys work
     # at 50ms; equal keys still respect the future sender's repeat interval.
-    controller.delivered(previous,now-gap)
     controller.scheduled=dict(action='jump',due=origin+.05,window=(origin,origin+.1),
                               origin_stamp=origin,checked_offsets_ms=[-40.,40.])
+    controller.decide(pair['before'])
+    pending=controller.scheduled
+    controller.delivered(previous,now-gap)
+    # This test isolates the sender repeat gate from the already checked
+    # trajectory; real intervening delivery always clears a pending plan.
+    controller.scheduled=pending
     result=controller.decide(pair['now'])
     assert result.action==expected

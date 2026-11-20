@@ -1,4 +1,5 @@
 """Greedy internal-state controller: compute action windows without VM trials."""
+from copy import copy
 from dataclasses import dataclass
 import math
 import time
@@ -67,15 +68,16 @@ class InternalController:
                         native_rollouts=0, restores=0, evaluated=0)
         required_until = self.horizon
 
-        def evaluate(operations, checked_until=None):
-            body, motors, valid = player.trajectory(times, operations)
+        def evaluate(operations, checked_until=None, rollout=None, forecast_player=None):
+            model = forecast_player or player
+            body, motors, valid = rollout if rollout is not None else model.trajectory(times, operations)
             if operations:
                 valid &= input_ready(operations[0][1],operations[0][0])
             evidence['evaluated'] += 1
-            actual_hazards = hazard_forecasts(observation, times, player, motors)[0] if coupled else hazards
-            interaction_body=player.interaction_bodies(motors) if any(h.interaction for h in actual_hazards) else None
+            actual_hazards = hazard_forecasts(observation, times, model, motors)[0] if coupled or forecast_player is not None else hazards
+            interaction_body=model.interaction_bodies(motors) if any(h.interaction for h in actual_hazards) else None
             distances = [clearance(interaction_body if hazard.interaction else body, hazard) for hazard in actual_hazards]
-            distances.append(player.terrain_clearances(motors))
+            distances.append(model.terrain_clearances(motors))
             distance = np.minimum.reduce(distances) if distances else np.full(len(times), math.inf)
             collision = np.flatnonzero(distance <= .025)
             # A discontinuous/dead surface is not covered by collision checks
@@ -147,6 +149,30 @@ class InternalController:
         def remember_negative():
             self.scheduled['negative_signature']=[list(v)for v in sorted(signature(),key=repr)]
             self.scheduled['negative_checked_at']=stamp
+            self.scheduled['_negative_model']=player
+            self.scheduled['_negative_origin']=stamp
+            self.scheduled['_negative_operation']=(max(0.,self.scheduled['due']-stamp-self.timing_radius),self.scheduled['action'])
+        def retained_negative():
+            origin=pending.get('_negative_origin')
+            if origin is None:
+                return dict(safe=False,reason='earlier_endpoint_model_missing')
+            elapsed=stamp-origin
+            prior=pending['_negative_model']
+            if prior.tick!=player.tick or prior.data!=player.data:
+                return dict(safe=False,reason='earlier_endpoint_motion_parameters_changed')
+            _,coast,_=prior.trajectory(np.array([0.,elapsed]))
+            if np.hypot(coast[-1].x-player.initial.x,coast[-1].y-player.initial.y)>.025:
+                return dict(safe=False,reason='unchanged_prefix_disagrees_with_native_state')
+            query=elapsed+times
+            mesh=np.unique(np.r_[np.linspace(0.,query[-1],math.ceil(query[-1]*120)+1),query])
+            bodies,motors,valid=prior.trajectory(mesh,(pending['_negative_operation'],))
+            indices=np.searchsorted(mesh,query)
+            motors=[motors[i]for i in indices]
+            projected=copy(player);projected.initial=motors[0]
+            result=evaluate((),pending_deadline(),(bodies[indices],motors,valid),projected)
+            evidence['retained_early_endpoint']=dict(origin_stamp=origin,seconds_since_origin=elapsed,
+                visibility_changed=proof_changed(),result=result)
+            return result
         if pending and stamp > pending['due']+self.timing_radius+clock_epsilon:
             self.scheduled = None
             if pending.get('search_choice'):
@@ -157,7 +183,8 @@ class InternalController:
             checks = [evaluate(((max(0.,delay+d),pending['action']),),pending_deadline())
                       for d in (-self.timing_radius, 0., self.timing_radius)]
             negative_future=delay>=self.timing_radius-clock_epsilon
-            if all(r['safe'] for r in checks) and (negative_future or not proof_changed()):
+            if not negative_future:checks[0]=retained_negative()
+            if all(r['safe'] for r in checks):
                 if negative_future:remember_negative()
                 return finish('none', delay, tuple(v-stamp for v in pending['window']),
                               checks[1], 'approach_selected_internal_window' if pending.get('search_choice') else 'approach_center_of_native_safe_window')
@@ -169,16 +196,17 @@ class InternalController:
         if pending and pending['due']-clock_epsilon <= stamp <= pending['due']+self.timing_radius:
             nominal = evaluate(((0.,pending['action']),),pending_deadline())
             late = evaluate(((self.timing_radius,pending['action']),),pending_deadline())
-            if nominal['safe'] and late['safe'] and not proof_changed():
-                # Retain the earlier endpoint's proof and absolute deadline.
-                # A new enemy/collider lifetime after that endpoint passed
-                # invalidates the proof instead of silently clamping it to now.
-                evidence['window_origin'] = dict(pending)
+            early=retained_negative()
+            if nominal['safe'] and late['safe'] and early['safe']:
+                # Re-evaluate the retained earlier trajectory against the
+                # newly observed world. Do not replace an already-past key
+                # with a new key at the current decision boundary.
+                evidence['window_origin'] = {k:v for k,v in pending.items()if not k.startswith('_negative_')}
                 evidence['delivery_check'] = dict(nominal=nominal,late=late)
                 window = tuple(v-stamp for v in pending['window'])
                 return finish(pending['action'],0.,window,nominal,'execute_center_of_native_safe_window')
             self.scheduled = None
-            evidence['pending_rejection']=dict(nominal=nominal,late=late,
+            evidence['pending_rejection']=dict(nominal=nominal,late=late,early=early,
                 checked_until=pending.get('checked_until'),visibility_changed=proof_changed())
             if pending.get('search_choice'):
                 return finish('none',0.,None,baseline,'selected_internal_window_invalidated')

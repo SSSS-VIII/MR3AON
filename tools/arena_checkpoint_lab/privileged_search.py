@@ -78,10 +78,11 @@ def run(gate, output, *, max_decisions=4000,max_backtracks=80,wall_seconds=1800,
     board=gate.call('exec',code=BOARD)
     initial=gate.snapshot()['result']['id'];initial_observation=deepcopy(observation)
     owned={initial};branches=[];route=[];restores=[];started=time.monotonic()
-    report=dict(schema=1,algorithm='native_internal_action_windows_with_VM_dead_end_backtracking_v2',
+    report=dict(schema=1,algorithm='native_internal_action_windows_with_VM_dead_end_backtracking_v3',
         timing=dict(requested_offsets_ms=[-controller.requested_timing_radius*1000,controller.requested_timing_radius*1000],
                     planning_offsets_ms=[-controller.timing_radius*1000,controller.timing_radius*1000],
-                    quantum_ms=controller.timing_quantum*1000,retains_absolute_safety_deadline=True),
+                    quantum_ms=controller.timing_quantum*1000,retains_absolute_safety_deadline=True,
+                    retains_earlier_endpoint_trajectory=True),
         start=dict(state=observation['state'],health=5000,board=board),
         uses_restart_replay=False,uses_vision=False,native_decision=True,
         status='running',nominal_complete=False,timing_robust=False,complete=False,
@@ -133,6 +134,9 @@ def run(gate, output, *, max_decisions=4000,max_backtracks=80,wall_seconds=1800,
                         proposal=asdict(proposal),executed=False)),ensure_ascii=False,allow_nan=False)+'\n')
                     stream.flush();break
                 if proposal.reason in ('no_safe_action_window','selected_internal_window_invalidated'):
+                    stream.write(json.dumps(json_safe(dict(index=index,observation=observation,
+                        proposal=asdict(proposal),executed=False)),ensure_ascii=False,allow_nan=False)+'\n')
+                    stream.flush()
                     if backtrack(dict(reason=proposal.reason,proposal=asdict(proposal))):
                         save();continue
                     break
