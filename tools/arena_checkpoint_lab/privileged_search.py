@@ -19,28 +19,69 @@ from search import BOARD
 from timing_margin import verify
 
 
-def observe(gate):
-    """Read one paused observation without exceeding the native mailbox.
+OBSERVATION_PREPARE="""
+MR3A.privilegedCached=MR3A.privileged_state()
+local function bound(v,seen,depth)
+    local kind=type(v)
+    if kind=='number'then return 32 end
+    if kind=='boolean'then return 5 end
+    if kind=='nil'then return 4 end
+    if kind~='table'then return #json.stringify(tostring(v))end
+    assert(depth<64 and not seen[v],'Cyclic or overly deep observation')
+    seen[v]=true;local bytes=2
+    for k,value in pairs(v)do
+        bytes=bytes+#json.stringify(tostring(k))+2+bound(value,seen,depth+1)
+    end
+    seen[v]=nil;return bytes
+end
+MR3A.privilegedSize=function(v)return bound(v,{},0)end
+local c=MR3A.privilegedCached;local estimate=MR3A.privilegedSize(c)
+if estimate<210000 then
+    MR3A.privilegedCached=nil;MR3A.privilegedSize=nil
+    return {complete=c,estimate=estimate}
+end
+local paged={enemies=true,mechanism_items=true,supports=true,platforms=true,terrain=true}
+local h,n={},{}
+for k,v in pairs(c)do if paged[k]then n[k]=#v else h[k]=v end end
+assert(MR3A.privilegedSize(h)<210000,'Observation header exceeds native mailbox budget')
+return {head=h,counts=n,estimate=estimate}
+"""
 
-    Dense fixed patterns contain dozens of enemies and authored event actions.
-    Keep the original 17-digit gate encoding, read list records in bounded
-    pages, and verify that no native state changed while assembling them.
+
+def observe(gate):
+    """Pack complete records under the unchanged 17-digit native encoder.
+
+    The size calculation is a conservative upper bound, never the transmitted
+    JSON or a lossy serialization. Keep 52 KiB for the gate envelope/state.
+    Dense observations use bounded pages without dropping any model fields.
     """
-    sizes=dict(enemies=2,mechanism_items=1,supports=8,platforms=8,terrain=16)
-    keys='{'+','.join(f'{name}=true' for name in sizes)+'}'
-    result=gate.call('exec',code="MR3A.privilegedCached=MR3A.privileged_state();local c=MR3A.privilegedCached;"
-        f"local paged={keys};local h,n={{}},{{}};for k,v in pairs(c)do "
-        "if paged[k]then n[k]=#v else h[k]=v end end;return {head=h,counts=n}")
-    observation=result['head']
-    for name,size in sizes.items():
-        observation[name]=[]
-        for offset in range(0,result['counts'].get(name,0),size):
-            page=gate.call('exec',code=f'local out={{}};local e=MR3A.privilegedCached.{name};'
-                f'for i={offset+1},math.min({offset+size},#e)do out[#out+1]=e[i]end;return out')
-            observation[name].extend(page or [])
-    gate.call('exec',code='MR3A.privilegedCached=nil;return true')
+    started=time.perf_counter();calls=1
+    result=gate.call('exec',code=OBSERVATION_PREPARE)
+    if 'complete'in result:
+        observation=result['complete']
+        for name in ('enemies','mechanism_items','supports','platforms','terrain'):
+            if observation.get(name)=={}:observation[name]=[]
+    else:
+        observation=result['head']
+        for name,count in result['counts'].items():
+            observation[name]=[];offset=0
+            while offset<count:
+                page=gate.call('exec',code=f'local out={{}};local e=MR3A.privilegedCached.{name};'
+                    f'local i={offset+1};local bytes=32;while i<=#e do '
+                    'local size=MR3A.privilegedSize(e[i])+32;'
+                    "assert(size<210000,'Single observation record exceeds native mailbox budget');"
+                    'if bytes+size>=210000 then break end;'
+                    'bytes=bytes+size;out[#out+1]=e[i];i=i+1 end;return {items=out,next=i}')
+                calls+=1;items=page['items']or[]
+                if (not isinstance(items,list)or page['next']!=offset+len(items)+1 or
+                        not offset<page['next']-1<=count):
+                    raise RuntimeError('Incomplete packed native observation page')
+                observation[name].extend(items);offset=page['next']-1
+        gate.call('exec',code='MR3A.privilegedCached=nil;MR3A.privilegedSize=nil;return true');calls+=1
     if gate.view['state']!=observation['state']:
         raise RuntimeError('Paused native state changed during paged observation')
+    gate.observation_transport=dict(calls=calls,seconds=time.perf_counter()-started,
+        estimated_upper_bytes=result['estimate'],mode='complete'if 'complete'in result else 'packed_pages')
     return observation
 
 
@@ -185,6 +226,8 @@ def run(gate, output, *, max_decisions=4000,max_backtracks=80,wall_seconds=1800,
                 observation=observe(gate)
                 board=gate.call('exec',code=BOARD)
                 record=dict(index=index,observation=before,proposal=asdict(proposal),action=action,job=job,board=board)
+                if hasattr(gate,'observation_transport'):
+                    record['observation_transport']=deepcopy(gate.observation_transport)
                 stream.write(json.dumps(json_safe(record),ensure_ascii=False,allow_nan=False)+'\n');stream.flush()
                 samples=job.get('samples') or []
                 if (not healthy(observation,5000) or job.get('terminated')
@@ -198,7 +241,8 @@ def run(gate, output, *, max_decisions=4000,max_backtracks=80,wall_seconds=1800,
                     progress(dict(phase='expert_forward',decisions=report['decisions'],
                         game_seconds=observation['state']['time']-initial_observation['state']['time'],
                         world_x=observation['state']['position']['x'],health=observation['state']['health'],
-                        action=action,backtracks=report['backtracks'],compute_ms=proposal.evidence['compute_ms']))
+                        action=action,backtracks=report['backtracks'],compute_ms=proposal.evidence['compute_ms'],
+                        observation_transport=getattr(gate,'observation_transport',None)))
                     save()
                 crossed=exit_kind(report['start']['board'],board)
                 if crossed:
