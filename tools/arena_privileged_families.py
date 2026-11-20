@@ -1312,6 +1312,50 @@ def pending_small_sword(entry,times,observation,player,trajectory_states,context
     except (KeyError,ValueError)as error:return None,str(error)
 
 
+PENDING_BLADE_NAMES={'EnemyBlade','EnemyBlade2','EnemyBlade3','EnemyBlade4','EnemyBlade6','EnemyBladeGold'}
+
+
+def pending_blade(entry,times,observation,player,trajectory_states):
+    """Source unhit EnemyBlade is stationary; use original inactive box TRS."""
+    from arena_privileged_model import Hazard,rows,xy
+    try:
+        info=entry['info'];kind=info['_enemyType'].split(':',1)[0]
+        template=observation['spawn_templates']['blades'][kind]
+        if entry['source']not in ('native_enemyList','resolved_uninstantiated_block'):
+            raise ValueError('pending_blade_spawn_source')
+        if observation['camera']['direction']!=1:raise ValueError('pending_spawn_run_direction')
+        if template.get('missing')or template['type']!='EnemyBlade':raise ValueError('pending_blade_original_prefab_missing')
+        if entry['custom']['_render']!=0:raise ValueError('pending_blade_render_variant')
+        if not rows(template['colliders']):raise ValueError('pending_blade_damage_geometry_missing')
+        spawn=np.array([entry['block_start'][a]+info['_localPosition'][a]for a in ('x','y','z')])
+        scale=np.array([info['_localScale'][a]for a in ('x','y','z')])
+        # EnemyBase.ResetEnemyInfo normalizes X sign only for reverseRunFlip.
+        if template['fields']['reverseRunFlip']:scale[0]=abs(scale[0])
+        q=entry['pose_rotation'];x,y,z,w=(q[a]for a in ('x','y','z','w'))
+        if not math.isfinite(x*x+y*y+z*z+w*w)or abs(x*x+y*y+z*z+w*w-1)>1e-5:
+            raise ValueError('pending_blade_native_rotation')
+        rotation=np.array([[1-2*(y*y+z*z),2*(x*y-z*w),2*(x*z+y*w)],
+            [2*(x*y+z*w),1-2*(x*x+z*z),2*(y*z-x*w)],
+            [2*(x*z-y*w),2*(y*z+x*w),1-2*(x*x+y*y)]])
+        # This rigid shape never moves before contact. Enabling its final
+        # geometry early also encloses delayed block initialization/vertical
+        # birth gating; it does not require guessing either event's time.
+        active=np.ones(len(times),bool)
+        result=[]
+        for index,box in enumerate(rows(template['colliders'])):
+            if (box['type']!='BoxCollider'or not box['enabled']or not box['static_chain']or not box['local_active']or
+                    len(rows(box['vertices']))!=8):raise ValueError('pending_blade_original_static_box_binding')
+            vertices=(np.array([[v[a]for a in ('x','y','z')]for v in rows(box['vertices'])])*scale)@rotation.T+spawn
+            if not np.isfinite(vertices).all():raise ValueError('pending_blade_native_parameter_domain')
+            lo,hi=vertices[:,:2].min(axis=0),vertices[:,:2].max(axis=0)
+            numeric=.0002+16*abs(float(np.spacing(np.float32(max(1.,abs(vertices).max())))))
+            result.append(Hazard(entry['id']+':'+str(index),entry['id'],'EnemyBlade',
+                np.tile((hi+lo)/2,(len(times),1)),np.tile((hi-lo)/2+numeric,(len(times),1)),active,
+                'LevelBlockCollider.enemyList and EnemyBlade.ResetEnemyInfo/FixedUpdateMovement; original unhit static box',approximate=True))
+        return result,None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
 def pending_enemy_forecasts(observation,times,player,trajectory_states,context=None):
     """Never treat an unmodelled imminent native spawn as an empty lane."""
     from arena_privileged_model import rows,xy
@@ -1327,10 +1371,15 @@ def pending_enemy_forecasts(observation,times,player,trajectory_states,context=N
         spawn=xy(entry['block_start'])+xy(info['_localPosition'])
         # A source queue starts checking at this horizontal threshold.
         # One original tick reserves either order of LevelManager/Ninja.
-        if float(high[:,0].max())+abs(player.speed)*player.tick<spawn[0]-info['generateDistance']:continue
+        reachable=float(high[:,0].max())+abs(player.speed)*player.tick>=spawn[0]-info['generateDistance']
+        if not reachable and kind not in PENDING_BLADE_NAMES:continue
         if kind=='EnemySmallSword':
             hs,reason=pending_small_sword(entry,times,observation,player,trajectory_states,context)
             if hs is not None:result.extend(hs);continue
+        elif kind in PENDING_BLADE_NAMES:
+            hs,reason=pending_blade(entry,times,observation,player,trajectory_states)
+            if hs is not None:result.extend(hs);continue
+            if not reachable and reason=='pending_blade_original_prefab_missing':continue
         else:reason='pending_spawn_initialization_not_modelled'
         missing.append(dict(id=entry['id'],type=kind,reason=reason))
     return result,missing

@@ -13,7 +13,7 @@ from pathlib import Path
 import time
 import numpy as np
 
-from arena_local import LocalClient, ROOT
+from arena_local import LocalClient, ROOT, FOLDER
 from arena_bootstrap import wait_job
 from arena_privileged_model import PlayerModel, hazard_forecasts, rows
 from arena_privileged_policy import InternalController
@@ -36,8 +36,18 @@ class Held(LocalClient):
 
 
 def install(client):
+    # The full reader no longer fits reliably inside the bridge's nested
+    # JSON string parser. Transfer the exact source via the managed instance
+    # and keep the executing request short; do not reduce reader fields.
+    import uuid
     for path in (ROOT/'tools/arena_privileged_state.lua', ROOT/'tools/arena_checkpoint_lab/clock_step.lua'):
-        client.execute('assert(load('+json.dumps(path.read_text())+'))();return true')
+        remote=FOLDER+'/reader-'+uuid.uuid4().hex+'.lua'
+        try:
+            client.session.adb('push',str(path),remote).check_returncode()
+            client.execute('local s=CS.System.IO.File.ReadAllText('+json.dumps(remote)+');'
+                'assert(load(s))();return true')
+        finally:
+            client.session.adb('shell','rm','-f',remote).check_returncode()
 
 
 def observe(client):

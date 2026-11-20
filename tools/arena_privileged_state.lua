@@ -764,6 +764,54 @@ function E.privileged_state()
     -- instantiates terrain incrementally; missing a not-yet-created collider
     -- must not turn a known continuation into an imaginary pit.
     out.terrain={};out.pending_enemies={};out.spawn_templates={}
+    local staticBladePrefabs
+    local function bladeSpawnTemplate(name)
+        if not staticBladePrefabs then
+            staticBladePrefabs={}
+            local originals=U.Resources.FindObjectsOfTypeAll(typeof(CS.EnemyBlade))
+            for i=0,originals.Length-1 do local o=originals[i]
+                if not o.name:find('(',1,true)and not o.gameObject.activeInHierarchy then
+                    assert(not staticBladePrefabs[o.name],'Ambiguous original blade prefab')
+                    staticBladePrefabs[o.name]=o
+                end
+            end
+        end
+        local o=staticBladePrefabs[name]
+        if not o then return {missing=true}end
+        local root=o.transform;local out={id=o:GetInstanceID(),type=o:GetType().Name,fields=values(o),colliders={}}
+        local cs=o.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
+        for i=0,cs.Length-1 do local c=cs[i];local s=shape(c)
+            if s.damage_kind then
+                local row={type=s.type,name=c.name,damage_kind=s.damage_kind,enabled=c.enabled,
+                    static_chain=true,local_active=true,vertices={}}
+                local t=c.transform
+                while t do
+                    if t~=root and not t.gameObject.activeSelf then row.local_active=false end
+                    if t.gameObject:GetComponent(typeof(U.Animator))or t.gameObject:GetComponent(typeof(U.Animation))then
+                        row.static_chain=false
+                    end
+                    local scripts=t.gameObject:GetComponents(typeof(U.MonoBehaviour))
+                    for j=0,scripts.Length-1 do local script=scripts[j]
+                        if script then local kind=script:GetType().Name
+                            if kind~='EnemyBlade'and kind~='EnemyBaseCollider'and kind~='EnemyAttackModule'then
+                                row.static_chain=false
+                            end
+                        end
+                    end
+                    if t==root then break end;t=t.parent
+                end
+                if not t then row.static_chain=false end
+                if s.type=='BoxCollider'then
+                    for _,x in ipairs({-1,1})do for _,y in ipairs({-1,1})do for _,z in ipairs({-1,1})do
+                        local p=c.transform:TransformPoint(c.center+U.Vector3(x*c.size.x/2,y*c.size.y/2,z*c.size.z/2))
+                        row.vertices[#row.vertices+1]=vector(root:InverseTransformPoint(p))
+                    end end end
+                end
+                out.colliders[#out.colliders+1]=row
+            end
+        end
+        return out
+    end
     local function swordSpawnTemplate()
         local candidates=U.Resources.FindObjectsOfTypeAll(typeof(CS.EnemySmallSword))
         local original
@@ -810,6 +858,16 @@ function E.privileged_state()
                 source=source,sync_blocked=blocked,vertical_gate=live and field(live,'openGenerateDistanceY')or false}
             if kind=='EnemySmallSword: 250'and not out.spawn_templates.small_sword then
                 out.spawn_templates.small_sword=swordSpawnTemplate()
+            end
+            local bladeNames={['EnemyBlade: 101']=true,['EnemyBlade2: 107']=true,['EnemyBlade3: 108']=true,
+                ['EnemyBlade4: 109']=true,['EnemyBlade6: 116']=true,['EnemyBladeGold: 241']=true}
+            if bladeNames[kind]then
+                local q=U.Quaternion.Euler(U.Vector3(info._localEulerAngles.x,
+                    info._localEulerAngles.y,info._localEulerAngles.z))
+                out.pending_enemies[#out.pending_enemies].pose_rotation={x=q.x,y=q.y,z=q.z,w=q.w}
+                out.spawn_templates.blades=out.spawn_templates.blades or{}
+                local name=kind:match('^(.-): ')
+                if not out.spawn_templates.blades[name]then out.spawn_templates.blades[name]=bladeSpawnTemplate(name)end
             end
         end
         if live then
