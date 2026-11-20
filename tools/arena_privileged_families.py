@@ -178,6 +178,71 @@ def native_steps(enemy, times, observation, update):
     return np.asarray(output), np.asarray(rotations)
 
 
+def role_reference_bounds(times,motors,query,actual):
+    """Enclose cached physical roots at fixed ticks between render samples.
+
+    Physical samples are step functions. Interpolating them can postpone a
+    distance trigger by a whole tick. Use both neighboring observations and
+    the previous/current root instead; retain the observed parent offset as
+    well as its predicted settling.
+    """
+    physical=np.array([m.physical_x for m in motors]);previous=np.array([m.previous_x for m in motors])
+    offsets=np.array([m.offset_render for m in motors]);residual=actual['x']-physical[0]
+    lo=np.clip(np.searchsorted(times,query,side='right')-1,0,len(times)-1)
+    hi=np.clip(np.searchsorted(times,query,side='left'),0,len(times)-1)
+    lower=np.minimum(physical,previous)+np.minimum(offsets,min(0.,residual))
+    upper=np.maximum(physical,previous)+np.maximum(offsets,max(0.,residual))
+    return np.minimum(lower[lo],lower[hi])-.025,np.maximum(upper[lo],upper[hi])+.025
+
+
+def spider_entry(enemy,times,observation,player,trajectory_states=None):
+    """None:9 is a stationary high root, not a permanently harmless spider.
+
+    Original ProcessState compares X against cached GetRoleObjPos plus the
+    configured activation distance. Enclose every feasible activation tick
+    around the physical/render reference ordering, then run the unchanged
+    original drop/flex reducer. This is conditional on no damage feedback;
+    Bite:8 has its own render-child curves and remains explicitly unsupported.
+    """
+    from arena_privileged_model import rows,xy,spider_positions
+    f=enemy['fields'];tick=player.tick
+    if observation.get('camera',{}).get('direction')!=1:
+        return None,'spider_original_run_direction'
+    if f.get('_renderType')!=0 or enemy.get('custom_type')!='EnemySpiderDataStruct':
+        return None,'spider_unverified_entry_render'
+    hurt=[c for c in rows(enemy['colliders'])if c.get('damage_kind')]
+    if len(hurt)!=1 or any(c['type']!='SphereCollider' or c.get('damage_owner')!=enemy['id']
+            or not c['enabled'] or not c['active'] or np.linalg.norm(xy(c['center'])-xy(enemy['position']))>.0001
+            or max(abs(c['scale'][a]-enemy['scale'][a])for a in ('x','y','z'))>.0001 for c in hurt):
+        return None,'spider_unverified_entry_shape'
+    role=observation['role']['fields'];actual=role.get('_lastRoleObjPos')
+    age=observation['state']['time']-f['_lastFixedUpdateTime']
+    if not player.native_samples or not -.0002<=age<=tick+.0002 or abs(f['_lastFixedUpdateTime']-role['_lastFixedUpdateTime'])>.0002:
+        return None,'spider_original_reference_clock'
+    if actual is None or abs(actual['x']-player.initial.physical_x-player.initial.offset_render)>abs(player.speed)*tick+.025:
+        return None,'spider_original_role_reference'
+    if trajectory_states is None:
+        _,trajectory_states,valid=player.trajectory(times)
+        if not valid:return None,'spider_player_reference_unsupported'
+    if any(abs(m.vx-observation['state']['speed'])>.001 for m in trajectory_states):
+        return None,'spider_player_speed_transition'
+    age=np.clip(age,0,tick);count=int(math.floor((age+times[-1]+1e-8)/tick))
+    query=np.maximum(0.,np.arange(1,count+1)*tick-age)
+    lower,upper=role_reference_bounds(times,trajectory_states,query,actual)
+    threshold=f['_lastPosition']['x']-enemy['custom']['_activateDistance'];possible=certain=None
+    for k in range(1,count+1):
+        if possible is None and upper[k-1]>threshold:possible=k
+        if lower[k-1]>threshold:certain=k;break
+    activation=[None]
+    if possible is not None:
+        if (certain or count)-possible>8:return None,'spider_activation_uncertainty'
+        activation=list(range(possible,(certain or count)+1))
+        if certain is None:activation.append(None)
+    ys=np.asarray([spider_positions(enemy,times,stamp=observation['state']['time'],tick=tick,activation_tick=k)for k in activation])
+    lower,upper=ys.min(axis=0),ys.max(axis=0)
+    return ((lower+upper)/2-enemy['position']['y'],(upper-lower)/2+.0002),None
+
+
 def small_sword(enemy,times,observation,player,trajectory_states):
     """ProcessState's player-relative pivot and separate back-charge phase.
 
@@ -350,18 +415,7 @@ def piranha(enemy,times,observation,player,trajectory_states=None):
         if actual is None or abs(actual['x']-player.initial.physical_x-player.initial.offset_render)>.025:
             return None,'piranha_original_role_reference'
         query=np.maximum(0.,np.arange(1,count+1)*tick-age)
-        xs=np.array([m.physical_x+m.offset_render for m in trajectory_states])
-        old=np.array([m.previous_x+m.offset_render for m in trajectory_states])
-        lower=np.interp(query,times,np.minimum(xs,old))-.025
-        upper=np.interp(query,times,np.maximum(xs,old))+.025
-        # A carrier/ground transition can leave a residual RoleObj offset.
-        # Enclose both holding that original offset and its predicted settling;
-        # do not treat an immediately settled parent as an exact native fact.
-        residual=actual['x']-player.initial.physical_x
-        physical=np.array([m.physical_x for m in trajectory_states])
-        previous=np.array([m.previous_x for m in trajectory_states])
-        lower=np.minimum(lower,np.interp(query,times,np.minimum(physical,previous))+min(0.,residual)-.025)
-        upper=np.maximum(upper,np.interp(query,times,np.maximum(physical,previous))+max(0.,residual)+.025)
+        lower,upper=role_reference_bounds(times,trajectory_states,query,actual)
         # Enumerate every feasible *activation tick*, not key combinations.
         # Both native callback orders and the sampled actor reference are
         # enclosed, including intermediate ticks around the jump apex.

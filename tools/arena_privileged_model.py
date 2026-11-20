@@ -697,7 +697,7 @@ class Hazard:
     padding: float = 0.
 
 
-def spider_positions(enemy, times, *, stamp, tick):
+def spider_positions(enemy, times, *, stamp, tick, activation_tick=None):
     """Recovered EnemySpider.ProcessState: drop, elastic flex, then stay.
 
     _curSpeed/_accUpFlag are current internal state, not fitted velocities.
@@ -717,11 +717,17 @@ def spider_positions(enemy, times, *, stamp, tick):
         wanted = int(math.floor((age+t+1e-8)/tick))
         while steps < wanted:
             previous = y
-            if mode == 'movetoninja':
+            if mode == 'none' and steps+1 == activation_tick:
+                # ProcessState's activation branch changes state only. The
+                # first downward integration happens on the following tick.
+                mode = 'movetoninja'
+            elif mode == 'movetoninja':
                 y = np.float32(y-np.float32(np.float32(custom['_downSpeed'])*dt))
                 if y < target:
                     y = target
                     mode = 'flex'
+            elif mode == 'stay':
+                y = np.float32(y+np.float32(np.float32(custom['_upSpeed'])*dt))
             elif mode == 'flex':
                 if speed > 0 and accelerating:
                     speed = np.float32(speed+np.float32(np.float32(-40.)*dt))
@@ -732,6 +738,8 @@ def spider_positions(enemy, times, *, stamp, tick):
                         desired = np.float32(np.float32(np.float32(target+np.float32(.7))-y)*np.float32(5.))
                         speed = np.float32(speed+np.float32(np.float32(np.float32(desired-speed)*np.float32(50.))*dt))
                         y = np.float32(y+np.float32(speed*dt))
+                        if y > target:
+                            y = target
                     else:
                         y = target; mode = 'stay'; speed = np.float32(0.)
             steps += 1
@@ -836,11 +844,24 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
         elif kind in ('EnemySpider', 'EnemyMuppetBomb','EnemyEliteSpider'):
             if kind=='EnemyEliteSpider' and f.get('_positionIndex',0)>0:
                 unsupported.append(dict(id=enemy['id'],type=kind,reason='elite_damage_relocation'));continue
-            if mode not in ('movetoninja', 'stay', 'flex', 'bite'):
+            if mode=='bite':
+                # TriggerFeedback changes the render child's local position
+                # and scale along authored curves; a frozen sphere is wrong.
+                unsupported.append(dict(id=enemy['id'],type=kind,reason='spider_bite_feedback_geometry'));continue
+            if mode=='none' and kind=='EnemySpider':
+                from arena_privileged_families import spider_entry
+                predicted,reason=spider_entry(enemy,times,observation,player,trajectory_states)
+                if predicted is None:
+                    unsupported.append(dict(id=enemy['id'],type=kind,reason=reason));continue
+                delta[:,1],spread=predicted
+                source='EnemySpider.ProcessState; native role-distance activation ticks then original drop/flex envelope'
+                approximate=True
+            elif mode not in ('movetoninja', 'stay', 'flex'):
                 unsupported.append(dict(id=enemy['id'], type=kind, reason='unmapped_phase:'+mode)); continue
-            delta[:, 1] = spider_positions(enemy, times,stamp=observation['state']['time'],tick=tick)-enemy['position']['y']
-            source = 'EnemySpider.ProcessState; native targetY/downSpeed/curSpeed/accUpFlag and original flex reducer'
-            approximate = mode in ('movetoninja', 'flex', 'bite')
+            else:
+                delta[:, 1] = spider_positions(enemy, times,stamp=observation['state']['time'],tick=tick)-enemy['position']['y']
+                source = 'EnemySpider.ProcessState; native targetY/downSpeed/curSpeed/accUpFlag and original flex reducer'
+                approximate = mode in ('movetoninja', 'flex')
         else:
             from arena_privileged_families import forecast
             try:
@@ -872,6 +893,8 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                 continue
             center = xy(c['center'])[None, :]+delta
             extent = np.tile(xy(c['extents']), (len(times), 1))*growth[:, None]
+            if kind=='EnemySpider' and mode=='none':
+                extent[:,1]+=spread
             if kind in ('EnemyPinball','EnemyBlowFish') and len(predicted)>4:
                 root_scale=np.array([enemy['scale'][a] for a in ('x','y','z')])
                 child_scale=np.array([c['scale'][a] for a in ('x','y','z')])/root_scale
@@ -887,6 +910,10 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                 source+='; original rotating collider root-sphere envelope'
             quads = None
             padding=0.
+            if kind in ('EnemySpider','EnemyMuppetBomb','EnemyEliteSpider'):
+                # Float32 Time/fixedTime subtraction affects interpolation at
+                # large absolute clocks; bound it using native travel speed.
+                padding=2*abs(float(np.spacing(np.float32(observation['state']['time']))))*max(20.,abs(custom['_downSpeed']))+.00001
             if kind=='EnemyPiranha':padding=predicted[5]['position_padding']
             if kind=='EnemyPoleaxeWarrior':
                 center,extent=predicted[4][c['id']]
@@ -908,8 +935,11 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                     padding=float(lever*predicted[5]['angular_padding']);approximate=True
                 elif kind in ('EnemyStraightBack','EnemySmallSword') and len(predicted)>5:
                     padding=float(predicted[5]['position_padding']);approximate=True
+            geometry=('aabb' if kind=='EnemySpider' and mode=='none' else
+                      'sphere' if c['type']=='SphereCollider' or kind in ('EnemyFruitPinball','EnemyPiranha') else
+                      'obb' if quads is not None else 'aabb')
             result.append(Hazard(c['id'], enemy['id'], kind, center, extent, active, source, approximate,
-                                 'sphere' if c['type']=='SphereCollider' or kind in ('EnemyFruitPinball','EnemyPiranha') else 'obb' if quads is not None else 'aabb', quads,
+                                 geometry, quads,
                                  padding=padding))
     for item in player.contact_avoidance:
         for collider in rows(item['colliders']):
