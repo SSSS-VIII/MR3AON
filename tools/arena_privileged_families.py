@@ -37,6 +37,7 @@ FAMILIES = {
     'EnemySmallSword': 'native_wait_charge_and_flight_on_constant_ground_reference',
     'EnemyPiranha': 'native_water_wait_jump_swim_with_root_rotation_envelope',
     'EnemyRollingBase': 'native_activation_fall_slope_projection_wall_and_pit_chain',
+    'EnemyRockTiger': 'native_distance_aim_extend_retract_head_capsule_envelope',
 }
 
 
@@ -646,6 +647,160 @@ def piranha(enemy,times,observation,player,trajectory_states=None):
             active,radius,dict(position_padding=rounding,activation_ticks=activation)),None
 
 
+def planar_arc_bounds(point, lower, upper):
+    """Exact AABB of a point over a continuous planar rotation interval."""
+    x,y=point;radius=math.hypot(x,y)
+    if upper-lower>=2*math.pi-1e-10:
+        return np.full(2,-radius),np.full(2,radius)
+    direction=math.atan2(y,x)
+    samples=[lower,upper]
+    for extremum in (0.,math.pi/2,math.pi,3*math.pi/2):
+        angle=extremum-direction
+        first=math.ceil((lower-angle)/(2*math.pi))
+        candidate=angle+first*2*math.pi
+        if candidate<=upper:samples.append(candidate)
+    angles=np.asarray(samples)+direction
+    values=np.column_stack((np.cos(angles),np.sin(angles)))*radius
+    return values.min(axis=0),values.max(axis=0)
+
+
+def role_reference_rectangles(times,motors,query,actual):
+    """Cached physical XY reference, including both original update orders."""
+    physical=np.array([[m.physical_x,m.physical_y]for m in motors])
+    previous=np.array([[m.previous_x,m.previous_y]for m in motors])
+    offsets=np.array([[m.offset_render,0.]for m in motors])
+    residual=np.array([actual[a]for a in ('x','y')])-physical[0]
+    lower=np.minimum(physical,previous)+np.minimum(offsets,np.minimum(0.,residual))
+    upper=np.maximum(physical,previous)+np.maximum(offsets,np.maximum(0.,residual))
+    lo=np.clip(np.searchsorted(times,query,side='right')-1,0,len(times)-1)
+    hi=np.clip(np.searchsorted(times,query,side='left'),0,len(times)-1)
+    return np.minimum(lower[lo],lower[hi])-.025,np.maximum(upper[lo],upper[hi])+.025
+
+
+def rock_tiger(enemy,times,observation,player,trajectory_states=None):
+    """Original distance/aim/extend/retract with the actual head capsule.
+
+    Head translation and root aim are fixed-update Transform writes, rather
+    than BaseObject root interpolation. Unknown activation ticks and cached
+    actor reference rectangles are retained as a union of complete futures.
+    """
+    from arena_privileged_model import rows,xy
+    try:
+        f=enemy['fields'];binding=enemy['rock_tiger'];data=binding['data'];head=binding['head']
+        mode=int(str(f['currState']).rsplit(':',1)[-1]);tick=player.tick
+        if mode not in range(1,6):raise ValueError('rock_tiger_phase')
+        if not binding.get('planar_root') or not head.get('direct_parent') or not head.get('identity_rotation'):
+            raise ValueError('rock_tiger_head_transform')
+        root=xy(enemy['position']);scale=enemy['scale'];head_scale=head['scale']
+        if (scale['x']<=0 or max(abs(scale[a]-scale['x'])for a in ('x','y','z'))>1e-5
+                or max(abs(head_scale[a]-1.)for a in ('x','y','z'))>1e-5):
+            raise ValueError('rock_tiger_nonuniform_or_modified_scale')
+        if any(np.linalg.norm(xy(f[k])-root)>.0001 for k in ('_lastPosition','_secondLastPosition')):
+            raise ValueError('rock_tiger_moving_root')
+        direction=xy(f['originLookAt']);length=np.linalg.norm(direction)
+        if length<1e-5 or abs(f['originLookAt']['z'])>1e-6 or abs(head['position']['z'])>1e-6:
+            raise ValueError('rock_tiger_spatial_head_path')
+        direction=(direction/length).astype(np.float32)
+        local=xy(head['position']).astype(np.float32)
+        if (abs(direction[0]*local[1]-direction[1]*local[0])>.0001 or np.dot(direction,local)<-.0001
+                or mode in (1,2,5)and np.linalg.norm(local)>.0001):
+            raise ValueError('rock_tiger_head_path_disagrees_with_state')
+        hurt=[c for c in rows(enemy['colliders'])if c.get('damage_kind')]
+        if (len(hurt)!=1 or hurt[0]['id']not in binding['head_colliders'] or
+                hurt[0]['type']!='CapsuleCollider' or not hurt[0]['active']or not hurt[0]['enabled']or
+                hurt[0].get('damage_kind')!='enemy_callback' or hurt[0].get('tag')!='Enemy' or
+                hurt[0].get('damage_owner')!=enemy['id']):
+            raise ValueError('rock_tiger_original_head_capsule')
+        collider=hurt[0]
+        if collider['direction']not in (0,1):raise ValueError('rock_tiger_spatial_capsule_axis')
+        radius=collider['radius']*scale['x']
+        half=max(0.,collider['height']/2-collider['radius'])
+        axis=np.eye(2)[collider['direction']]*half
+        ends=np.array([xy(collider['local_center'])-axis,xy(collider['local_center'])+axis])
+        theta=math.radians(enemy['rotation_z']);origin_angle=math.atan2(direction[1],direction[0])
+        # Validate the read-only transform binding against the current native
+        # world shape before extrapolating any future rotation or translation.
+        rotation=np.array([[math.cos(theta),-math.sin(theta)],[math.sin(theta),math.cos(theta)]])
+        current=(local+ends)*scale['x']@rotation.T+root
+        expected_lo=current.min(axis=0)-radius;expected_hi=current.max(axis=0)+radius
+        if max(np.max(abs(xy(collider['center'])-(expected_lo+expected_hi)/2)),
+               np.max(abs(xy(collider['extents'])-(expected_hi-expected_lo)/2)))>.0002:
+            raise ValueError('rock_tiger_current_capsule_pose_disagrees')
+        speed=data['attackSpeed'];maximum=data['maxAttackRange'];aim=data['aimTime']
+        if (not all(math.isfinite(v)and v>=0 for v in (speed,maximum,aim,data['activeRange']))
+                or not math.isfinite(f['currStateTimeRemain'])or speed<=0):
+            raise ValueError('rock_tiger_native_parameter_domain')
+        age=observation['state']['time']-f['_lastFixedUpdateTime']
+        if not -.0002<=age<=tick+.0002:raise ValueError('rock_tiger_original_fixed_clock')
+        age=np.clip(age,0.,tick);steps=np.floor((age+np.asarray(times)+1e-8)/tick).astype(int)
+        count=int(max(steps));activation=[None]
+        lower=upper=None
+        if mode in (1,2):
+            if any(not s.startswith('item:')for s in player.unsupported):
+                raise ValueError('rock_tiger_player_reference_unsupported')
+            if trajectory_states is None:
+                _,trajectory_states,valid=player.trajectory(times)
+                if not valid:raise ValueError('rock_tiger_player_reference_unsupported')
+            actual=observation['role']['fields']['_lastRoleObjPos']
+            if (abs(actual['z']-enemy['position']['z'])>1e-5 or abs(f['lookAtOffset']['z'])>1e-5):
+                raise ValueError('rock_tiger_spatial_aim_reference')
+            query=np.maximum(0.,np.arange(count+1)*tick-age)
+            lower,upper=role_reference_rectangles(times,trajectory_states,query,actual)
+        if mode==1:
+            nearest=np.maximum(lower-root,np.maximum(root-upper,0.))
+            farthest=np.maximum(abs(lower-root),abs(upper-root))
+            possible=np.flatnonzero(np.linalg.norm(nearest,axis=1)<data['activeRange'])
+            certain=np.flatnonzero(np.linalg.norm(farthest,axis=1)<data['activeRange'])
+            first=max(1,int(possible[0]))if len(possible)else count+1
+            last=max(first,int(certain[0]))if len(certain)else count+1
+            if last-first>8:raise ValueError('rock_tiger_activation_uncertainty')
+            activation=list(range(first,last+1))
+        lows=[];highs=[]
+        for trigger in activation:
+            state=mode;remaining=np.float32(f['currStateTimeRemain']);position=local.copy()
+            angle_lo=angle_hi=theta;lo=[];hi=[]
+            for n in range(count+1):
+                if n:
+                    if state==1 and n>=trigger:
+                        state=2;remaining=np.float32(aim)
+                    elif state==2:
+                        a,b=lower[n]+xy(f['lookAtOffset'])-root,upper[n]+xy(f['lookAtOffset'])-root
+                        if np.all(a<=0)and np.all(b>=0):
+                            angle_lo,angle_hi=theta-math.pi,theta+math.pi
+                        else:
+                            corners=np.array([[a[0],a[1]],[a[0],b[1]],[b[0],a[1]],[b[0],b[1]]])
+                            angles=np.arctan2(corners[:,1],corners[:,0])-origin_angle
+                            middle=math.atan2((a[1]+b[1])/2,(a[0]+b[0])/2)-origin_angle
+                            angles=middle+(angles-middle+math.pi)%(2*math.pi)-math.pi
+                            angle_lo,angle_hi=float(min(angles)),float(max(angles))
+                        remaining=np.float32(remaining-np.float32(tick))
+                        if remaining<=0:state=3
+                    elif state==3:
+                        position=np.float32(position+np.float32(direction*np.float32(np.float32(speed)*np.float32(tick))))
+                        if np.linalg.norm(position)>=maximum:state=4
+                    elif state==4:
+                        if np.linalg.norm(position)<=np.float32(np.float32(speed)*np.float32(tick)):
+                            position=np.zeros(2,np.float32);state=5
+                        else:
+                            position=np.float32(position-np.float32(direction*np.float32(np.float32(speed)*np.float32(tick))))
+                bounds=[planar_arc_bounds((position+end)*scale['x'],angle_lo,angle_hi)for end in ends]
+                lo.append(np.minimum(bounds[0][0],bounds[1][0])+root-radius)
+                hi.append(np.maximum(bounds[0][1],bounds[1][1])+root+radius)
+            lows.append(np.array(lo)[steps]);highs.append(np.array(hi)[steps])
+        low=np.min(lows,axis=0);high=np.max(highs,axis=0)
+        # Fixed-transform stepping does not interpolate the head. Only numeric
+        # float32 world/quaternion roundoff needs this guard, not a speed*time
+        # interpolation interval that would erase all useful safe windows.
+        numeric=abs(float(np.spacing(np.float32(max(abs(root))))))*8+.0001
+        geometry={collider['id']:((low+high)/2,(high-low)/2+numeric)}
+        zero=np.zeros((len(times),2))
+        return (zero,np.zeros(len(times)),
+                'EnemyRockTiger.FixedUpdateMovement/AttackLogic/TakeBackLogic; original head capsule and full aim/trigger envelope',
+                np.ones(len(times),bool),geometry),None
+    except (KeyError,ValueError)as error:
+        return None,str(error)
+
+
 def forecast(enemy, times, observation, player, trajectory_states=None):
     """Return original root displacement/rotation, or a specific missing rule."""
     from arena_privileged_model import phase, xy
@@ -653,6 +808,8 @@ def forecast(enemy, times, observation, player, trajectory_states=None):
     zero = np.zeros((len(times), 2))
     angles = np.zeros(len(times))
     source = kind+'.FixedUpdateMovement'
+    if kind=='EnemyRockTiger':
+        return rock_tiger(enemy,times,observation,player,trajectory_states)
     if kind=='EnemyPiranha':
         return piranha(enemy,times,observation,player,trajectory_states)
     if kind=='EnemyRollingBase':

@@ -53,6 +53,7 @@ class InternalController:
                       e['type'] in ('EnemyStraightBack','EnemySmallSword') or
                       e['type']=='EnemySpider' and e['fields'].get('_enemyState')=='none: 9' or
                       e['type']=='EnemyRollingBase' and e['fields'].get('_enemyState','').rsplit(':',1)[-1].strip()=='0' or
+                      e['type']=='EnemyRockTiger' and e['fields'].get('currState','').rsplit(':',1)[-1].strip() in ('1','2') or
                       e['type']=='EnemyPiranha' and e['fields'].get('_enemyState','').rsplit(':',1)[-1].strip() in ('0','1')
                       for e in rows(observation['enemies'])if not e['fields'].get('_dead') and not e['fields'].get('_isRecycled'))
         stamp = observation['state']['time']

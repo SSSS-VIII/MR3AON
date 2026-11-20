@@ -932,9 +932,10 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                 padding=2*abs(float(np.spacing(np.float32(observation['state']['time']))))*max(20.,abs(custom['_downSpeed']))+.00001
             if kind=='EnemyRollingBase':padding=predicted[5]['position_padding'];approximate=True
             if kind=='EnemyPiranha':padding=predicted[5]['position_padding']
-            if kind=='EnemyPoleaxeWarrior':
+            if kind in ('EnemyPoleaxeWarrior','EnemyRockTiger'):
                 center,extent=predicted[4][c['id']]
-            if kind not in ('EnemyStraightBat','EnemyFlyBamboo','EnemySpider','EnemyMuppetBomb','EnemyEliteSpider','EnemyFruitPinball','EnemyPoleaxeWarrior','EnemyPiranha'):
+                approximate=True
+            if kind not in ('EnemyStraightBat','EnemyFlyBamboo','EnemySpider','EnemyMuppetBomb','EnemyEliteSpider','EnemyFruitPinball','EnemyPoleaxeWarrior','EnemyPiranha','EnemyRockTiger'):
                 pivot = xy(enemy['position'])
                 rot = np.stack((np.stack((np.cos(angles),-np.sin(angles)),axis=-1),
                                 np.stack((np.sin(angles),np.cos(angles)),axis=-1)),axis=1)

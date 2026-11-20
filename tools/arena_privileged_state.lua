@@ -382,6 +382,20 @@ function E.privileged_state()
                 end
             end
             local cs=o.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
+            if row.type=='EnemyRockTiger'then
+                local head=field(o,'_currRenderObj');local matrix=o.transform.localToWorldMatrix
+                row.rock_tiger={data=values(field(o,'customData')),head_colliders={},
+                    planar_root=math.abs(matrix.m02)+math.abs(matrix.m12)+math.abs(matrix.m20)+math.abs(matrix.m21)<0.00001 and
+                        matrix.m00*matrix.m11-matrix.m01*matrix.m10>0}
+                if head then local t=head.transform;local q=t.localRotation
+                    row.rock_tiger.head={position=vector(t.localPosition),scale=vector(t.localScale),
+                        direct_parent=t.parent==o.transform,
+                        identity_rotation=math.abs(q.x)+math.abs(q.y)+math.abs(q.z)+math.abs(math.abs(q.w)-1)<0.00001}
+                    for j=0,cs.Length-1 do local c=cs[j]
+                        if c.transform==t then row.rock_tiger.head_colliders[#row.rock_tiger.head_colliders+1]=c:GetInstanceID()end
+                    end
+                end
+            end
             if row.type=='EnemySmallSword'then
                 local breath=field(o,'breathTween')
                 row.sword={breath_present=breath~=nil,breath_affects_damage=false}

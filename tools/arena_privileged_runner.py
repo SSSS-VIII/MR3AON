@@ -66,7 +66,7 @@ def forecast_error(before, after, action):
         'x':float(bodies[-1, 0]-body['center']['x']),
         'y':float(bodies[-1, 1]-body['center']['y'])}, valid=valid,
         predicted_mode=motors[-1].mode, actual_mode=after['state']['physics'], enemies=[])
-    forecasts, missing = hazard_forecasts(before, times, model)
+    forecasts, missing = hazard_forecasts(before, times, model,motors)
     actual = {c['id']:c for e in rows(after['enemies']) for c in rows(e['colliders'])}
     for h in forecasts:
         if h.id not in actual:
