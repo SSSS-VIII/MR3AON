@@ -31,7 +31,93 @@ FAMILIES = {
     'EnemyKill': 'stationary_original_shape_before_contact_recycle',
     'EnemyStraightBack': 'native_go_brake_follow_and_return_centered_sphere',
     'EnemyFruitPinball': 'native_free_pinball_with_rotating_authored_collider_envelope',
+    'EnemyBambooWater': 'native_authored_rise_tween_envelope',
 }
+
+
+def curve_range(keys,lower=0.,upper=1.):
+    """Exact extrema of exported unweighted cubic Hermite curve segments."""
+    if len(keys)<2 or not all(str(k['weighted_mode']).lower().startswith('none:')for k in keys):
+        raise ValueError('weighted_or_missing_curve')
+    if not keys[0]['time']<=lower<=upper<=keys[-1]['time']:
+        raise ValueError('curve_wrap_domain')
+    values=[]
+    for a,b in zip(keys,keys[1:]):
+        dt=b['time']-a['time']
+        if dt<=0:raise ValueError('curve_key_order')
+        if b['time']<lower or a['time']>upper:continue
+        v,w=a['value'],b['value'];m,n=a['out_tangent']*dt,b['in_tangent']*dt
+        coefficients=[2*v-2*w+m+n,-3*v+3*w-2*m-n,m,v]
+        if not all(math.isfinite(x)for x in coefficients):raise ValueError('nonfinite_curve_tangent')
+        lo=max(0.,(lower-a['time'])/dt);hi=min(1.,(upper-a['time'])/dt)
+        points=[lo,hi]
+        A,B,C=3*coefficients[0],2*coefficients[1],coefficients[2]
+        if abs(A)<1e-12:
+            if abs(B)>1e-12:points.append(-C/B)
+        else:
+            discriminant=B*B-4*A*C
+            if discriminant>=0:
+                root=math.sqrt(discriminant);points.extend(((-B-root)/(2*A),(-B+root)/(2*A)))
+        for t in points:
+            if lo<=t<=hi:values.append(float(np.polyval(coefficients,t)))
+    if not values:raise ValueError('empty_curve_domain')
+    return min(values),max(values)
+
+
+def water_envelopes(enemy):
+    """Original translation tween, including every future curve extremum.
+
+    The warning collider can be disabled/inactive. Pose its authored shape at
+    both limits without mutating a Transform, and enclose the whole rise.
+    Timing is deliberately conservative; the physics collider is unchanged.
+    """
+    import copy
+    from arena_privileged_model import phase,rows,xy
+    tween=enemy.get('position_tween')
+    if not tween or tween.get('curve_truncated'):
+        return None,'water_bamboo_original_tween_missing'
+    if enemy['custom'].get('_render')!=0:
+        return None,'water_bamboo_unverified_render_variant'
+    fields=tween['fields']
+    if tween['type']!='uTools.uTweenPosition' or fields.get('isRect') is not False:
+        return None,'water_bamboo_nonlocal_position_tween'
+    method=phase(fields['method'])
+    try:method_value=int(str(fields['method']).rsplit(':',1)[1])
+    except (ValueError,IndexError):return None,'water_bamboo_easing_enum_missing'
+    if method_value!=0 and not (method_value==22 and method=='linear'):
+        return None,'water_bamboo_easing:'+method
+    try:
+        bounds=curve_range(tween['curve'])
+        # Original Sample applies its custom curve twice for method zero;
+        # the native linear easing passes the factor to the curve only once.
+        if method_value==0:bounds=curve_range(tween['curve'],*bounds)
+    except (ValueError,KeyError) as error:
+        return None,'water_bamboo_curve:'+str(error)
+    velocity=enemy['fields'].get('currMoveVelocity')
+    if velocity is None or any(abs(velocity[a])>1e-6 for a in ('x','y','z')):
+        return None,'water_bamboo_moving_root'
+    first={c['id']:c for c in rows(tween['from_colliders'])if c.get('damage_kind')}
+    last={c['id']:c for c in rows(tween['to_colliders'])if c.get('damage_kind')}
+    damage={c['id']for c in rows(enemy['colliders'])if c.get('damage_kind')}
+    if not damage or damage!=first.keys() or damage!=last.keys():
+        return None,'water_bamboo_unposed_damage_collider'
+    output=[]
+    for identity in sorted(damage):
+        a,b=first[identity],last[identity]
+        if a['type']!='BoxCollider' or b['type']!='BoxCollider' or not a.get('authored_pose') or not b.get('authored_pose'):
+            return None,'water_bamboo_nonbox_authored_collider'
+        if np.linalg.norm(xy(a['extents'])-xy(b['extents']))>1e-5:
+            return None,'water_bamboo_changing_collider_extent'
+        # Translation keeps the original orientation/extent fixed, including
+        # authored 3D depth projection. AABB union is conservative for all f.
+        start,end=xy(a['center']),xy(b['center']);delta=end-start
+        centers=np.array([start+f*delta for f in bounds])
+        lo=centers.min(axis=0)-xy(a['extents']);hi=centers.max(axis=0)+xy(a['extents'])
+        row=copy.deepcopy(b);row.pop('quad',None);row['active']=row['enabled']=True
+        row['center'].update(x=float((lo[0]+hi[0])/2),y=float((lo[1]+hi[1])/2))
+        row['extents'].update(x=float((hi[0]-lo[0])/2),y=float((hi[1]-lo[1])/2))
+        row['authored_translation_envelope']=True;output.append(row)
+    return output,None
 
 
 def native_steps(enemy, times, observation, update):
@@ -64,6 +150,14 @@ def forecast(enemy, times, observation, player, trajectory_states=None):
     zero = np.zeros((len(times), 2))
     angles = np.zeros(len(times))
     source = kind+'.FixedUpdateMovement'
+    if kind=='EnemyBambooWater':
+        mode=phase(f['_enemyState'])
+        if mode not in ('none','movetoninja'):
+            return None,'water_bamboo_phase:'+mode
+        bounds,reason=water_envelopes(enemy)
+        if bounds is None:return None,reason
+        return (zero,angles,'EnemyBambooWater.ProcessState/uTweenPosition.Sample; original full-rise envelope',
+                np.ones(len(times),bool),bounds),None
     if kind in ('EnemyPinball','EnemyBlowFish','EnemyFruitPinball'):
         if kind=='EnemyFruitPinball':
             if not enemy.get('local_movement_parent_identity'):

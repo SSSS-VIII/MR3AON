@@ -740,7 +740,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
         f, custom, kind = enemy['fields'], enemy['custom'], enemy['type']
         if f.get('_dead') or f.get('_isRecycled'):
             continue
-        if kind not in ('EnemyBlade','EnemySpiderWeb','EnemyKill','EnemyHideBlade') and any(
+        if kind not in ('EnemyBlade','EnemySpiderWeb','EnemyKill','EnemyHideBlade','EnemyBambooWater') and any(
                 c.get('depth_tilt') for c in rows(enemy['colliders'])):
             unsupported.append(dict(id=enemy['id'],type=kind,reason='spatial_rotation_requires_3D_forecast'))
             continue
@@ -835,12 +835,14 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
             delta, angles, source = predicted[:3]
             if len(predicted)>3 and predicted[3] is not None:
                 active = predicted[3]
-            if kind=='EnemyHideBlade':
+            if kind=='EnemyBambooWater':
+                colliders=predicted[4];approximate=True
+            elif kind=='EnemyHideBlade':
                 colliders = [c for c in rows(enemy['grown_colliders']) if c.get('damage_kind')]
             elif kind=='EnemyArrow' and mode!='onground' and enemy.get('untrimmed_colliders'):
                 colliders = [c for c in rows(enemy['untrimmed_colliders']) if c.get('damage_kind')]
         for c in colliders:
-            if kind not in ('EnemyFlyBamboo','EnemyHideBlade') and not c['active']:
+            if kind not in ('EnemyFlyBamboo','EnemyHideBlade','EnemyBambooWater') and not c['active']:
                 continue
             center = xy(c['center'])[None, :]+delta
             extent = np.tile(xy(c['extents']), (len(times), 1))*growth[:, None]

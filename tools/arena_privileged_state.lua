@@ -305,6 +305,31 @@ function E.privileged_state()
                     if grown and grown.damage_owner==row.id then row.grown_colliders[#row.grown_colliders+1]=grown end
                 end
             end
+            if row.type=='EnemyBambooWater'then
+                local tween=field(o,'_crabTweener')
+                if tween then
+                    row.position_tween={type=tween:GetType().FullName,fields=values(tween),curve={},from_colliders={},to_colliders={}}
+                    local curve=field(tween,'animationCurve')
+                    if curve then local keys=curve.keys
+                        for k=0,math.min(keys.Length-1,127)do local v=keys[k]
+                            row.position_tween.curve[#row.position_tween.curve+1]={time=v.time,value=v.value,
+                                in_tangent=v.inTangent,out_tangent=v.outTangent,
+                                weighted_mode=tostring(v.weightedMode),in_weight=v.inWeight,out_weight=v.outWeight}
+                        end
+                        row.position_tween.curve_truncated=keys.Length>128
+                    end
+                    local from,to=field(tween,'from'),field(tween,'to')
+                    if from and to then for j=0,cs.Length-1 do local c=cs[j]
+                        local owner=c:GetComponentInParent(typeof(CS.EnemyBase))
+                        if owner and owner:GetInstanceID()==row.id then
+                            local first=posedShape(c,tween.transform,tween.transform.localScale,from)
+                            local last=posedShape(c,tween.transform,tween.transform.localScale,to)
+                            if first then row.position_tween.from_colliders[#row.position_tween.from_colliders+1]=first end
+                            if last then row.position_tween.to_colliders[#row.position_tween.to_colliders+1]=last end
+                        end
+                    end end
+                end
+            end
             if row.type=='EnemyArrow'then
                 -- Native ResetEnemyInfo resets this object's local position
                 -- to zero and scale to one. UpdateCollider only clips that
