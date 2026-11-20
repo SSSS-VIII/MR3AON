@@ -2077,6 +2077,7 @@ PENDING_CURVE_NAMES={'EnemyCurveBat','EnemyCurveCrow','EnemyCurveFireFairy'}
 def pending_curve(entry,times,observation,player):
     """Original no-fruit curve root; union every possible future birth tick.
 
+    Original optional random height is enclosed before its native draw.
     All authored render spheres are enclosed together, including currently
     inactive render variants. Sprite-only tweens do not change their geometry.
     Birth/activation may wait arbitrarily: X encloses every elapsed move time
@@ -2095,7 +2096,7 @@ def pending_curve(entry,times,observation,player):
             raise ValueError('pending_curve_source_binding')
         keys={'_render','_renderType','_speedX','_angularSpeed','_amplitude','_initalPhaseRadian','_hangOnFruit',
               '_randomRangeY','_minRaduisScale','_maxRaduisScale','_frequency'}
-        if set(custom)!=keys or custom['_hangOnFruit']!=0 or custom['_randomRangeY']!=0:
+        if set(custom)!=keys or custom['_hangOnFruit']!=0:
             raise ValueError('pending_curve_random_or_fruit_variant')
         if (template.get('native_initialization')is not True or rows(template.get('unknown_hooks'))or
                 template.get('kinematic')is not True or template.get('gravity')is not False or
@@ -2106,8 +2107,9 @@ def pending_curve(entry,times,observation,player):
         spawn=np.array([entry['block_start'][a]+info['_localPosition'][a]for a in ('x','y','z')])
         scale=np.array([info['_localScale'][a]for a in ('x','y','z')])
         vx,omega,amplitude,initial=(custom[k]for k in ('_speedX','_angularSpeed','_amplitude','_initalPhaseRadian'))
-        if (not np.isfinite([*spawn,*scale,vx,omega,amplitude,initial,player.tick]).all()or
-                min(abs(scale))<=0 or player.tick<=0):raise ValueError('pending_curve_native_parameter_domain')
+        random_y=custom['_randomRangeY']
+        if (not np.isfinite([*spawn,*scale,vx,omega,amplitude,initial,random_y,player.tick]).all()or
+                min(abs(scale))<=0 or player.tick<=0 or random_y<0):raise ValueError('pending_curve_native_parameter_domain')
         spheres=rows(template['colliders']);radius=0.
         if not spheres:raise ValueError('pending_curve_damage_geometry_missing')
         for c in spheres:
@@ -2129,6 +2131,7 @@ def pending_curve(entry,times,observation,player):
             centers[:,1]-=amplitude*math.sin(initial);extents[:,1]=abs(amplitude)
         numeric=.0002+32*abs(float(np.spacing(np.float32(max(1.,abs(spawn).max(),abs(movement).max(),abs(amplitude),radius)))))
         extents+=radius+numeric
+        extents[:,1]+=random_y
         updates=np.ceil(elapsed/player.tick)+2
         magnitude=np.maximum(1.,abs(spawn[0])+abs(movement))
         extents[:,0]+=(updates+2)*np.abs(np.spacing(magnitude.astype(np.float32))).astype(float)

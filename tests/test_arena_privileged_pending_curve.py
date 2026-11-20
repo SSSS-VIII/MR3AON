@@ -28,7 +28,7 @@ def test_original_birth_to_live_spheres_stay_inside_source_bound():
 def test_unbound_variant_or_geometry_is_not_silently_ignored(change):
     case=deepcopy(DATA['cases'][0]);o=case['before'];entry=case['entry'];t=o['spawn_templates']['curves']['EnemyCurveBat']
     if change=='fruit':entry['custom']['_hangOnFruit']=1
-    if change=='random':entry['custom']['_randomRangeY']=1
+    if change=='random':entry['custom']['_randomRangeY']=-1
     if change=='script':t['component_types'].append('UnknownMover')
     if change=='hook':t['native_initialization']=False
     if change=='animation':t['animated_tree']=True
@@ -86,3 +86,17 @@ def test_live_counterfactual_birth_keeps_its_rectangular_enclosure_in_the_model(
         c=next(c for e in targets for c in e['colliders']if c['id']==h.id)
         center=np.array([c['center'][a]for a in('x','y')]);extent=np.array([c['extents'][a]for a in('x','y')])
         assert np.all(abs(center-h.centers[0])+extent<=h.extents[0]+.0002)
+
+
+
+def test_authored_random_spawn_height_is_bounded_before_the_draw():
+    case=deepcopy(DATA['cases'][0]);o=case['before'];entry=case['entry']
+    c=entry['custom'];c['_randomRangeY']=.7;c['_angularSpeed']=2.3;c['_initalPhaseRadian']=.9
+    times=np.linspace(0,1.8,217);hs,reason=pending_curve(entry,times,o,PlayerModel(o));assert not reason
+    h=hs[0];spawn=np.array([entry['block_start'][a]+entry['info']['_localPosition'][a]for a in('x','y')])
+    for delta in (-.7,0.,.7):
+        for born in (0.,.15,.9,1.8):
+            elapsed=np.maximum(0.,times-born)
+            x=spawn[0]+c['_speedX']*elapsed
+            y=spawn[1]+delta+c['_amplitude']*(np.sin(c['_initalPhaseRadian']+c['_angularSpeed']*elapsed)-np.sin(c['_initalPhaseRadian']))
+            assert np.all(abs(np.column_stack((x,y))-h.centers)<=h.extents)
