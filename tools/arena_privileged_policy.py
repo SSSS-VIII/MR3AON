@@ -28,6 +28,80 @@ def witness_operations(model,times,first,witness,offset=0.):
     return (first,(second,witness['action']))
 
 
+def contact_guided_options(player,times,hazards,check,input_ready,radius,evidence):
+    """Static contact events guide a bounded two-key physical maneuver.
+
+    Widen original static geometry along X before choosing a proposal. This
+    is a timing-friendly heuristic, not its certificate: every retained key
+    still passes the actual independently anchored 0/-radius/+radius checks.
+    The first collision supplies the next action interval; no engine trial or
+    injury state is queried. Dynamic/candidate-dependent worlds stay outside.
+    """
+    if not hazards or not all(h.active.all()and np.ptp(h.centers,axis=0).max()<1e-8 and
+            np.ptp(h.extents,axis=0).max()<1e-8 and
+            (h.quads is None or np.ptp(h.quads,axis=0).max()<1e-8)for h in hazards):return []
+    from dataclasses import replace
+    expansion=max(player.speed,abs(player.initial.vx))*radius
+    widened=[]
+    for h in hazards:
+        extents=h.extents.copy();extents[:,0]+=expansion
+        widened.append(replace(h,extents=extents,quads=None,geometry='aabb'))
+    cache={};count=0
+    def forecast(operations):
+        nonlocal count
+        if operations in cache:return cache[operations]
+        body,motors,valid=player.trajectory(times,operations)
+        distance=player.terrain_clearances(motors)
+        pickup=None
+        for h in widened:
+            if h.interaction and pickup is None:pickup=player.interaction_bodies(motors)
+            distance=np.minimum(distance,clearance(pickup if h.interaction else body,h))
+        collision=np.flatnonzero(distance<=.025)
+        first=float(times[collision[0]])if len(collision)else math.inf
+        value=dict(valid=valid,first=first,margin=float(distance.min()),motors=motors)
+        cache[operations]=value;count+=1;return value
+    beam=[()];options=[];seen=set();verified=0
+    for depth in (1,2):
+        candidates=[]
+        for prefix in beam:
+            previous=forecast(prefix);contact=previous['first']
+            if not math.isfinite(contact):continue
+            for action in ('jump','down'):
+                earliest=max(.1,prefix[-1][0]+(.1+2*radius if prefix[-1][1]==action else .1)if prefix else .1)
+                when=sorted({round(max(earliest,math.floor((contact-lead)/.05)*.05),8)
+                             for lead in (.7,.6,.5,.4,.3,.25,.2,.15,.1)})
+                for delay in when:
+                    if delay>contact-.075 or delay>times[-1]-.1:continue
+                    if not prefix and not input_ready(action,delay-radius):continue
+                    operations=prefix+((delay,action),);result=forecast(operations)
+                    if not result['valid']or result['first']<contact+.075:continue
+                    if math.isfinite(result['first']):
+                        candidates.append((operations,result));continue
+                    first,first_action=operations[0];witness=None
+                    if len(operations)==2:
+                        end,followup=operations[1];before=forecast(operations[:1])['motors']
+                        witness=dict(action=followup,world_x=float(np.interp(end,times,[m.x for m in before])))
+                    checks=[check(first+offset,first_action,witness,float(times[-1]))
+                            for offset in (0.,-radius,radius)]
+                    verified+=1
+                    if not all(r['full_horizon_safe']for r in checks):continue
+                    key=(first_action,first)
+                    if key in seen:continue
+                    seen.add(key)
+                    options.append(dict(action=first_action,delay=first,window=(first-radius,first+radius),
+                        result=checks[0],endpoints=checks[1:],margin=min(r['clearance']for r in checks),
+                        survival=min(r['first_contact']for r in checks),checked_until_seconds=float(times[-1]),
+                        **(dict(witness=witness)if witness else{})))
+        if options:break
+        candidates.sort(key=lambda v:(-v[1]['first'],len(v[0]),-v[1]['margin'],sum(t for t,a in v[0])))
+        beam=[ops for ops,result in candidates[:6]]
+        if not beam:break
+    evidence['contact_guidance']=dict(heuristic_x_expansion_m=expansion,model_candidates=count,
+        verified_full_candidates=verified,retained=len(options),maximum_keys=2,
+        actual_independent_endpoint_checks=True)
+    return options
+
+
 class InternalController:
     def __init__(self, *, horizon=1.8, timing_radius=.04, collect_alternatives=False):
         if horizon < 1. or not 0. <= timing_radius <= .05:
@@ -346,12 +420,14 @@ class InternalController:
         # contact. Only its start time varies; there is no key-sequence beam,
         # branch depth, damage-driven rollback, or native engine trial here.
         options = []
+        if not coupled and not baseline['safe']:
+            options=contact_guided_options(player,times,hazards,planned_check,input_ready,self.timing_radius,evidence)
         step = 1/30
         latest = min(self.horizon-.1, baseline['first_contact']-.04)
         if not math.isfinite(latest):
             latest = self.horizon-.1
         delays = np.arange(0., max(0., latest)+step/2, step)
-        for action in ('jump', 'down'):
+        for action in ('jump', 'down')if not options else ():
             samples = []
             for delay in delays:
                 result = evaluate(((float(delay), action),))
