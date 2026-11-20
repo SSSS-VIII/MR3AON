@@ -49,7 +49,10 @@ class InternalController:
                       for e in rows(observation['enemies'])) or any(e['type'] == 'EnemyStraightBat' and
                       (e['custom'].get('_pointToNinja') or e['custom'].get('_followNinjaY')) and
                       e['fields'].get('_currState','').split(':')[0].lower() in ('none','enterscreen')
-                      for e in rows(observation['enemies']))
+                      for e in rows(observation['enemies'])) or any(
+                      e['type'] in ('EnemyStraightBack','EnemySmallSword') or
+                      e['type']=='EnemyPiranha' and e['fields'].get('_enemyState','').rsplit(':',1)[-1].strip() in ('0','1')
+                      for e in rows(observation['enemies'])if not e['fields'].get('_dead') and not e['fields'].get('_isRecycled'))
         stamp = observation['state']['time']
         # Original UI intervals release their input before the next decision.
         # Reserve the keyboard-compatible repeat gap per key, not across K/S.
@@ -73,6 +76,7 @@ class InternalController:
                         timing_quantum_ms=self.timing_quantum*1000,
                         previous_input_reserve_ms=self.timing_radius*1000 if self.collect_alternatives else 0.,
                         native_rollouts=0, restores=0, evaluated=0)
+        original_missing={(m['id'],m['type'],m['reason'])for m in missing}
         required_until = self.horizon
 
         def evaluate(operations, checked_until=None, rollout=None, forecast_player=None):
@@ -81,7 +85,19 @@ class InternalController:
             if operations:
                 valid &= input_ready(operations[0][1],operations[0][0])
             evidence['evaluated'] += 1
-            actual_hazards = hazard_forecasts(observation, times, model, motors)[0] if coupled or forecast_player is not None else hazards
+            if coupled or forecast_player is not None:
+                actual_hazards,unmapped=hazard_forecasts(observation,times,model,motors)
+                new_missing=[m for m in unmapped if (m['id'],m['type'],m['reason'])not in original_missing]
+                # A rejected candidate-specific forecast is not an empty
+                # safe lane. Keep the guard for speed/target changes instead
+                # of silently dropping the very obstacle being replanned.
+                valid &= not new_missing
+                if new_missing:
+                    counts=evidence.setdefault('candidate_forecast_rejections',{})
+                    for m in new_missing:
+                        key=m['type']+':'+m['reason'];counts[key]=counts.get(key,0)+1
+            else:
+                actual_hazards=hazards
             interaction_body=model.interaction_bodies(motors) if any(h.interaction for h in actual_hazards) else None
             distances = [clearance(interaction_body if hazard.interaction else body, hazard) for hazard in actual_hazards]
             distances.append(model.terrain_clearances(motors))

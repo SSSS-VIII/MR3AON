@@ -202,6 +202,21 @@ def test_unlocked_targeting_bat_depends_on_candidate_role_trajectory(native):
     assert abs(a[0].centers[-1,1]-b[0].centers[-1,1]) > .1
 
 
+def test_candidate_specific_missing_forecast_is_not_an_empty_safe_lane(native,monkeypatch):
+    import arena_privileged_policy as policy
+    enemy=next(e for e in native['enemies']if e['fields']['_currState'].startswith('enterScreen:'))
+    enemy['custom']['_pointToNinja']=True
+    def reject_candidate(observation,times,player,states=None):
+        if states is not None:
+            return [],[dict(id=enemy['id'],type=enemy['type'],reason='candidate_motion_not_supported')]
+        return hazard_forecasts(observation,times,player)
+    monkeypatch.setattr(policy,'hazard_forecasts',reject_candidate)
+    proposal=InternalController().decide(native)
+    assert proposal.reason=='no_safe_action_window'
+    assert proposal.action=='none' and not proposal.evidence['selected']['safe']
+    assert proposal.evidence['candidate_forecast_rejections'][enemy['type']+':candidate_motion_not_supported']>0
+
+
 def test_original_bamboo_window_executes_when_early_endpoint_has_passed():
     pair=json.loads((Path(__file__).parent/'fixtures/arena-privileged-pending.json').read_text())
     controller=InternalController()
