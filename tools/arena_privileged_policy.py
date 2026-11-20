@@ -5,7 +5,7 @@ import math
 import time
 import numpy as np
 from arena_privileged_model import PlayerModel, hazard_forecasts, clearance, rows
-from arena_privileged_families import collectible_kind,progression_marker
+from arena_privileged_families import collectible_kind,progression_marker,PENDING_BLADE_NAMES
 
 
 @dataclass(frozen=True)
@@ -55,6 +55,13 @@ class InternalController:
         times = np.linspace(0., self.horizon, round(self.horizon*120)+1)
         forecast_cache={}
         hazards, missing = hazard_forecasts(observation, times, player,forecast_cache=forecast_cache)
+        static_pending={h.enemy for h in hazards if h.kind in PENDING_BLADE_NAMES}
+        pending_coupled=any(not e['sync_blocked']and
+            (e['info']['_enemyType'].split(':',1)[0]not in PENDING_BLADE_NAMES or e['id']not in static_pending)
+            for e in rows(observation.get('pending_enemies')))
+        spring_camera_coupled=bool(player.spring_launches)and any(e['type']in (
+            'EnemyFlyBamboo','EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter')
+            for e in rows(observation['enemies'])if not e['fields'].get('_dead')and not e['fields'].get('_isRecycled'))
         coupled = any(e['type']=='EnemyPoleaxeWarrior' and e['fields'].get('_enemyState')=='Idle: 0'
                       and not e['fields'].get('_dead') and not e['fields'].get('_isRecycled')
                       for e in rows(observation['enemies'])) or any(e['type'] == 'EnemyStraightBat' and
@@ -68,7 +75,7 @@ class InternalController:
                       e['type']=='EnemyBrambles' and e['fields'].get('_currState','').rsplit(':',1)[-1].strip()=='0' or
                       e['type']=='EnemyRockTiger' and e['fields'].get('currState','').rsplit(':',1)[-1].strip() in ('1','2') or
                       e['type']=='EnemyPiranha' and e['fields'].get('_enemyState','').rsplit(':',1)[-1].strip() in ('0','1')
-                      for e in rows(observation['enemies'])if not e['fields'].get('_dead') and not e['fields'].get('_isRecycled')) or bool(rows(observation.get('pending_enemies')))
+                      for e in rows(observation['enemies'])if not e['fields'].get('_dead') and not e['fields'].get('_isRecycled')) or pending_coupled or spring_camera_coupled
         stamp = observation['state']['time']
         # Original UI intervals release their input before the next decision.
         # Reserve the keyboard-compatible repeat gap per key, not across K/S.
@@ -78,7 +85,7 @@ class InternalController:
         def input_ready(action,delay):
             previous_late = self.timing_radius if self.collect_alternatives else 0.
             return stamp+delay-(self.last_inputs[action]+previous_late) >= .1-clock_epsilon
-        evidence = dict(native_types=sorted({e['type'] for e in rows(observation['enemies'])}),
+        evidence = dict(coupled_forecasts=bool(coupled),native_types=sorted({e['type'] for e in rows(observation['enemies'])}),
                         pending_types=sorted({e['info']['_enemyType']for e in rows(observation.get('pending_enemies'))}),
                         models=sorted({h.source for h in hazards}), unsupported_role=player.unsupported,
                         collectibles=[dict(id=e['id'],kind=collectible_kind(e),position=e['position'])
