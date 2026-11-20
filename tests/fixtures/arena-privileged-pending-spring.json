@@ -1,0 +1,529 @@
+{
+  "provenance": {
+    "native": "native-pending-spawn-v211.jsonl",
+    "immutable_prefab_metadata": "spring-prefab-scripts-v216.json",
+    "same_prefab_instance_id": 2591770,
+    "scope": "Original inactive template reset pose versus original newly born item. No controller or launch certificate."
+  },
+  "template": {
+    "colliders": [
+      {
+        "type": "BoxCollider",
+        "direct_root": true,
+        "vertices": [
+          {
+            "y": -0.6000000238418579,
+            "z": -1.5,
+            "x": -0.550000011920929
+          },
+          {
+            "y": -0.6000000238418579,
+            "z": 1.5,
+            "x": -0.550000011920929
+          },
+          {
+            "y": 0.8600000143051147,
+            "z": -1.5,
+            "x": -0.550000011920929
+          },
+          {
+            "y": 0.8600000143051147,
+            "z": 1.5,
+            "x": -0.550000011920929
+          },
+          {
+            "y": -0.6000000238418579,
+            "z": -1.5,
+            "x": -0.14999999105930328
+          },
+          {
+            "y": -0.6000000238418579,
+            "z": 1.5,
+            "x": -0.14999999105930328
+          },
+          {
+            "y": 0.8600000143051147,
+            "z": -1.5,
+            "x": -0.14999999105930328
+          },
+          {
+            "y": 0.8600000143051147,
+            "z": 1.5,
+            "x": -0.14999999105930328
+          }
+        ],
+        "name": "ItemSpring",
+        "trigger": true,
+        "enabled": true
+      }
+    ],
+    "id": 2591770,
+    "type": "ItemSpring",
+    "root_scripts": [
+      "ItemSpring"
+    ],
+    "animated_root": false
+  },
+  "cases": [
+    {
+      "name": "161550544",
+      "entry": {
+        "block_index": 2,
+        "id": "pending-item:3:2:161550544",
+        "info_identity": 161550544,
+        "custom": {
+          "_render": 0,
+          "_cameraFollowNinja": true,
+          "_jumpLimitTime": 0,
+          "_endRotateAngelZ": 0,
+          "_continuePop": false,
+          "_popSpeed": 25,
+          "_rotateAngelPerSecond": 0,
+          "_needRotate": false,
+          "_disFromRoleX": 0,
+          "_startRotateAngelZ": 0,
+          "_popAcceleration": 0.05000000074505806
+        },
+        "block_start": {
+          "y": -22.660003662109375,
+          "z": 0,
+          "x": 729.660400390625
+        },
+        "info": {
+          "index": 0,
+          "_localPosition": {
+            "y": 8.79998779296875,
+            "z": 0,
+            "x": 4.5400390625
+          },
+          "createPlayerUID": 0,
+          "independentAnim": false,
+          "_localEulerAngles": {
+            "y": 0,
+            "z": 0,
+            "x": 0
+          },
+          "baseID": 0,
+          "<ObjectNearestPosX>k__BackingField": 733.6504516601562,
+          "_localScale": {
+            "y": 1,
+            "z": 1,
+            "x": 1
+          },
+          "generateDistance": 15,
+          "_itemType": "ItemSpring: 15"
+        },
+        "sync_blocked": false,
+        "source": "native_itemList",
+        "custom_type": "ItemSpringDataStruct",
+        "stage_index": 3
+      },
+      "first_live_index": 12,
+      "after": {
+        "colliders": [
+          {
+            "parent_active": true,
+            "type": "BoxCollider",
+            "position": {
+              "y": -13.860016822814941,
+              "z": 0,
+              "x": 734.200439453125
+            },
+            "rotation_z": 0,
+            "depth_tilt": false,
+            "tag": "Untagged",
+            "quad": [
+              {
+                "y": -14.460017204284668,
+                "z": 0,
+                "x": 733.6504516601562
+              },
+              {
+                "y": -14.460017204284668,
+                "z": 0,
+                "x": 734.0504150390625
+              },
+              {
+                "y": -13.000016212463379,
+                "z": 0,
+                "x": 734.0504150390625
+              },
+              {
+                "y": -13.000016212463379,
+                "z": 0,
+                "x": 733.6504516601562
+              }
+            ],
+            "name": "ItemSpring(Clone)(Clone)002",
+            "scale": {
+              "y": 1,
+              "z": 1,
+              "x": 1
+            },
+            "enabled": true,
+            "id": -3066102,
+            "size": {
+              "y": 1.4600000381469727,
+              "z": 3,
+              "x": 0.4000000059604645
+            },
+            "local_center": {
+              "y": 0.12999999523162842,
+              "z": 0,
+              "x": -0.3499999940395355
+            },
+            "active": true,
+            "extents": {
+              "y": 0.7300004959106445,
+              "z": 1.5,
+              "x": 0.199981689453125
+            },
+            "trigger": true,
+            "center": {
+              "y": -13.730015754699707,
+              "z": 0,
+              "x": 733.8504638671875
+            }
+          }
+        ],
+        "id": -3066100,
+        "info_identity": 161550544,
+        "custom": {
+          "_render": 0,
+          "_cameraFollowNinja": true,
+          "_jumpLimitTime": 0,
+          "_endRotateAngelZ": 0,
+          "_continuePop": false,
+          "_popSpeed": 25,
+          "_rotateAngelPerSecond": 0,
+          "_needRotate": false,
+          "_disFromRoleX": 0,
+          "_startRotateAngelZ": 0,
+          "_popAcceleration": 0.05000000074505806
+        },
+        "fields": {
+          "curStopTime": 5,
+          "_lastFixedUpdateTime": 893.3899536132812,
+          "shootIndex": 0,
+          "_btRecycleFlag": false,
+          "_rotateAngelPerSecond": 0,
+          "_species": "Default: -1",
+          "_initialized": true,
+          "_alreadyWaitPop": false,
+          "beAttractSpeed": 12,
+          "_endRotateAngelZ": 0,
+          "btState": 0,
+          "isGenByLevelBlock": true,
+          "<BeBlockedStayX>k__BackingField": 0,
+          "_caculateAtLevelBlockFlag": false,
+          "m_hitMaterial": "NONE: 0",
+          "_showPickupScore": false,
+          "_pickupRecycle": true,
+          "m_pickupAudio": "Game_Item_Spring: 710",
+          "maxStopTime": 5,
+          "levelNoRecycle": false,
+          "<isActive>k__BackingField": true,
+          "<BeBlocked>k__BackingField": false,
+          "_secondLastPosition": {
+            "y": -13.860016822814941,
+            "z": 0,
+            "x": 734.200439453125
+          },
+          "_stayPositionOffsetX": 8,
+          "_needRotate": false,
+          "m_attackMaterial": "NONE: 0",
+          "_recycleDisScreen": 3,
+          "_renderType": 0,
+          "originScale": {
+            "y": 1,
+            "z": 1,
+            "x": 1
+          },
+          "_isRecycled": false,
+          "beAttracting": false,
+          "pickupEffectOnRole": false,
+          "_lastPosition": {
+            "y": -13.860016822814941,
+            "z": 0,
+            "x": 734.200439453125
+          },
+          "isTrigger": false,
+          "beAttractLevel": "Steady: 32",
+          "_disFromRoleX": 0,
+          "_startRotateAngelZ": 0,
+          "_direction": 1
+        },
+        "spring": {
+          "rotation": {
+            "y": 0,
+            "z": 0,
+            "w": 1,
+            "x": 0
+          },
+          "normal_active": true,
+          "pop_active": false
+        },
+        "type": "ItemSpring",
+        "info": {
+          "index": 0,
+          "_localPosition": {
+            "y": 8.79998779296875,
+            "z": 0,
+            "x": 4.5400390625
+          },
+          "createPlayerUID": 0,
+          "independentAnim": false,
+          "_localEulerAngles": {
+            "y": 0,
+            "z": 0,
+            "x": 0
+          },
+          "baseID": 0,
+          "<ObjectNearestPosX>k__BackingField": 733.6504516601562,
+          "_localScale": {
+            "y": 1,
+            "z": 1,
+            "x": 1
+          },
+          "generateDistance": 15,
+          "_itemType": "ItemSpring: 15"
+        },
+        "position": {
+          "y": -13.860016822814941,
+          "z": 0,
+          "x": 734.200439453125
+        }
+      }
+    },
+    {
+      "name": "640251328",
+      "entry": {
+        "block_index": 2,
+        "id": "pending-item:3:2:640251328",
+        "info_identity": 640251328,
+        "custom": {
+          "_render": 0,
+          "_cameraFollowNinja": true,
+          "_jumpLimitTime": 0,
+          "_endRotateAngelZ": 0,
+          "_continuePop": false,
+          "_popSpeed": 25,
+          "_rotateAngelPerSecond": 0,
+          "_needRotate": false,
+          "_disFromRoleX": 0,
+          "_startRotateAngelZ": 0,
+          "_popAcceleration": 0.05000000074505806
+        },
+        "block_start": {
+          "y": -22.660003662109375,
+          "z": 0,
+          "x": 729.660400390625
+        },
+        "info": {
+          "index": 1,
+          "_localPosition": {
+            "y": 5.170013427734375,
+            "z": 0,
+            "x": 4.5400390625
+          },
+          "createPlayerUID": 0,
+          "independentAnim": false,
+          "_localEulerAngles": {
+            "y": 0,
+            "z": 0,
+            "x": 0
+          },
+          "baseID": 0,
+          "<ObjectNearestPosX>k__BackingField": 733.6504516601562,
+          "_localScale": {
+            "y": 1,
+            "z": 1,
+            "x": 1
+          },
+          "generateDistance": 15,
+          "_itemType": "ItemSpring: 15"
+        },
+        "sync_blocked": false,
+        "source": "native_itemList",
+        "custom_type": "ItemSpringDataStruct",
+        "stage_index": 3
+      },
+      "first_live_index": 12,
+      "after": {
+        "colliders": [
+          {
+            "parent_active": true,
+            "type": "BoxCollider",
+            "position": {
+              "y": -17.489990234375,
+              "z": 0,
+              "x": 734.200439453125
+            },
+            "rotation_z": 0,
+            "depth_tilt": false,
+            "tag": "Untagged",
+            "quad": [
+              {
+                "y": -18.089988708496094,
+                "z": 0,
+                "x": 733.6504516601562
+              },
+              {
+                "y": -18.089988708496094,
+                "z": 0,
+                "x": 734.0504150390625
+              },
+              {
+                "y": -16.629989624023438,
+                "z": 0,
+                "x": 734.0504150390625
+              },
+              {
+                "y": -16.629989624023438,
+                "z": 0,
+                "x": 733.6504516601562
+              }
+            ],
+            "name": "ItemSpring(Clone)(Clone)001",
+            "scale": {
+              "y": 1,
+              "z": 1,
+              "x": 1
+            },
+            "enabled": true,
+            "id": -3063688,
+            "size": {
+              "y": 1.4600000381469727,
+              "z": 3,
+              "x": 0.4000000059604645
+            },
+            "local_center": {
+              "y": 0.12999999523162842,
+              "z": 0,
+              "x": -0.3499999940395355
+            },
+            "active": true,
+            "extents": {
+              "y": 0.7299995422363281,
+              "z": 1.5,
+              "x": 0.199981689453125
+            },
+            "trigger": true,
+            "center": {
+              "y": -17.359989166259766,
+              "z": 0,
+              "x": 733.8504638671875
+            }
+          }
+        ],
+        "id": -3063686,
+        "info_identity": 640251328,
+        "custom": {
+          "_render": 0,
+          "_cameraFollowNinja": true,
+          "_jumpLimitTime": 0,
+          "_endRotateAngelZ": 0,
+          "_continuePop": false,
+          "_popSpeed": 25,
+          "_rotateAngelPerSecond": 0,
+          "_needRotate": false,
+          "_disFromRoleX": 0,
+          "_startRotateAngelZ": 0,
+          "_popAcceleration": 0.05000000074505806
+        },
+        "fields": {
+          "curStopTime": 5,
+          "_lastFixedUpdateTime": 893.3899536132812,
+          "shootIndex": 0,
+          "_btRecycleFlag": false,
+          "_rotateAngelPerSecond": 0,
+          "_species": "Default: -1",
+          "_initialized": true,
+          "_alreadyWaitPop": false,
+          "beAttractSpeed": 12,
+          "_endRotateAngelZ": 0,
+          "btState": 0,
+          "isGenByLevelBlock": true,
+          "<BeBlockedStayX>k__BackingField": 0,
+          "_caculateAtLevelBlockFlag": false,
+          "m_hitMaterial": "NONE: 0",
+          "_showPickupScore": false,
+          "_pickupRecycle": true,
+          "m_pickupAudio": "Game_Item_Spring: 710",
+          "maxStopTime": 5,
+          "levelNoRecycle": false,
+          "<isActive>k__BackingField": true,
+          "<BeBlocked>k__BackingField": false,
+          "_secondLastPosition": {
+            "y": -17.489990234375,
+            "z": 0,
+            "x": 734.200439453125
+          },
+          "_stayPositionOffsetX": 8,
+          "_needRotate": false,
+          "m_attackMaterial": "NONE: 0",
+          "_recycleDisScreen": 3,
+          "_renderType": 0,
+          "originScale": {
+            "y": 1,
+            "z": 1,
+            "x": 1
+          },
+          "_isRecycled": false,
+          "beAttracting": false,
+          "pickupEffectOnRole": false,
+          "_lastPosition": {
+            "y": -17.489990234375,
+            "z": 0,
+            "x": 734.200439453125
+          },
+          "isTrigger": false,
+          "beAttractLevel": "Steady: 32",
+          "_disFromRoleX": 0,
+          "_startRotateAngelZ": 0,
+          "_direction": 1
+        },
+        "spring": {
+          "rotation": {
+            "y": 0,
+            "z": 0,
+            "w": 1,
+            "x": 0
+          },
+          "normal_active": true,
+          "pop_active": false
+        },
+        "type": "ItemSpring",
+        "info": {
+          "index": 1,
+          "_localPosition": {
+            "y": 5.170013427734375,
+            "z": 0,
+            "x": 4.5400390625
+          },
+          "createPlayerUID": 0,
+          "independentAnim": false,
+          "_localEulerAngles": {
+            "y": 0,
+            "z": 0,
+            "x": 0
+          },
+          "baseID": 0,
+          "<ObjectNearestPosX>k__BackingField": 733.6504516601562,
+          "_localScale": {
+            "y": 1,
+            "z": 1,
+            "x": 1
+          },
+          "generateDistance": 15,
+          "_itemType": "ItemSpring: 15"
+        },
+        "position": {
+          "y": -17.489990234375,
+          "z": 0,
+          "x": 734.200439453125
+        }
+      }
+    }
+  ]
+}

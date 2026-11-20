@@ -1315,6 +1315,57 @@ def pending_small_sword(entry,times,observation,player,trajectory_states,context
 PENDING_BLADE_NAMES={'EnemyBlade','EnemyBlade2','EnemyBlade3','EnemyBlade4','EnemyBlade6','EnemyBladeGold'}
 
 
+def pending_spring(entry,template):
+    """Original reset pose for a queued horizontal, non-continuing spring.
+
+    This is model initialization data, never a constructed native GameObject.
+    Parent creation, queue ordering and sufficient native spawn lead must be
+    established separately before a controller relies on the automatic pickup.
+    """
+    from arena_privileged_model import rows
+    try:
+        info=entry['info'];custom=entry['custom']
+        if entry['sync_blocked']:return None,'spring_spawn_sync_blocked'
+        if entry['source']!='native_itemList':raise ValueError('spring_uninstantiated_parent')
+        if (info['_itemType']!='ItemSpring: 15'or entry['custom_type']!='ItemSpringDataStruct'or
+                info.get('independentAnim')or info.get('createPlayerUID')):
+            raise ValueError('spring_native_info_binding')
+        scripts=set(rows(template.get('root_scripts')))
+        if (template.get('missing')or template['type']!='ItemSpring'or template['animated_root']or
+                'ItemSpring'not in scripts or not scripts<={'ItemSpring','ItemBaseCollider'}):
+            raise ValueError('spring_original_prefab_binding')
+        boxes=rows(template['colliders'])
+        if (len(boxes)!=1 or boxes[0]['type']!='BoxCollider'or not boxes[0]['enabled']or
+                not boxes[0]['trigger']or not boxes[0]['direct_root']or len(rows(boxes[0]['vertices']))!=8):
+            raise ValueError('spring_original_root_box_binding')
+        if (custom['_render']!=0 or custom['_needRotate']is not False or custom['_continuePop']is not False or
+                custom['_jumpLimitTime']!=0 or any(abs(info['_localEulerAngles'][a])>1e-8 for a in ('x','y','z'))):
+            raise ValueError('spring_unverified_launch_variant')
+        if (custom['_popSpeed']<=0 or custom['_popAcceleration']<0 or
+                not all(math.isfinite(custom[k])for k in ('_popSpeed','_popAcceleration'))):
+            raise ValueError('spring_native_launch_domain')
+        position=np.array([entry['block_start'][a]+info['_localPosition'][a]for a in ('x','y','z')])
+        scale=np.array([info['_localScale'][a]for a in ('x','y','z')])
+        vertices=np.array([[v[a]for a in ('x','y','z')]for v in rows(boxes[0]['vertices'])])*scale+position
+        if not np.isfinite(vertices).all()or np.min(scale)<=0 or abs(position[2])>1e-8:
+            raise ValueError('spring_native_reset_pose_domain')
+        lo,hi=vertices.min(axis=0),vertices.max(axis=0)
+        if not lo[2]<=0<=hi[2]:raise ValueError('spring_pickup_depth')
+        nearest=info['<ObjectNearestPosX>k__BackingField']
+        guard=.0002+8*abs(float(np.spacing(np.float32(max(1.,abs(position).max())))))
+        if not math.isfinite(nearest)or abs(nearest-lo[0])>guard:
+            raise ValueError('spring_original_nearest_point_disagrees')
+        def vector(v):return dict(zip(('x','y','z'),map(float,v)))
+        collider=dict(id=entry['id']+':trigger',type='BoxCollider',enabled=True,active=True,trigger=True,
+            position=vector(position),center=vector((hi+lo)/2),extents=vector((hi-lo)/2),depth_tilt=False,
+            quad=[dict(x=float(x),y=float(y))for x,y in ((lo[0],lo[1]),(hi[0],lo[1]),(hi[0],hi[1]),(lo[0],hi[1]))])
+        return dict(id=entry['id'],type='ItemSpring',info_identity=entry['info_identity'],info=info,custom=custom,
+            position=vector(position),colliders=[collider],model_initialized_spawn=True,
+            fields=dict(_needRotate=False,isTrigger=False,beAttracting=False,_isRecycled=False),
+            spring=dict(normal_active=True,pop_active=False,rotation=dict(x=0.,y=0.,z=0.,w=1.))),None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
 def pending_blade(entry,times,observation,player,trajectory_states):
     """Source unhit EnemyBlade is stationary; use original inactive box TRS."""
     from arena_privileged_model import Hazard,rows,xy

@@ -48,7 +48,7 @@ if estimate<210000 then
     MR3A.privilegedCached=nil;MR3A.privilegedSize=nil
     return {complete=c,estimate=estimate}
 end
-local paged={enemies=true,mechanism_items=true,supports=true,platforms=true,terrain=true,pending_enemies=true}
+local paged={enemies=true,mechanism_items=true,supports=true,platforms=true,terrain=true,pending_enemies=true,pending_items=true}
 local h,n={},{}
 for k,v in pairs(c)do if paged[k]then n[k]=#v else h[k]=v end end
 assert(MR3A.privilegedSize(h)<210000,'Observation header exceeds native mailbox budget')
@@ -67,7 +67,7 @@ def observe(gate):
     result=gate.call('exec',code=OBSERVATION_PREPARE)
     if 'complete'in result:
         observation=result['complete']
-        for name in ('enemies','mechanism_items','supports','platforms','terrain','pending_enemies'):
+        for name in ('enemies','mechanism_items','supports','platforms','terrain','pending_enemies','pending_items'):
             if observation.get(name)=={}:observation[name]=[]
     else:
         observation=result['head']
@@ -96,13 +96,14 @@ def observe(gate):
 def compare_observation_transport(gate,observation):
     """One same-barrier read through the former paging path, without ticks."""
     packed=deepcopy(gate.observation_transport);started=time.perf_counter();calls=1
-    sizes=dict(enemies=2,mechanism_items=1,supports=8,platforms=8,terrain=16,pending_enemies=2)
+    sizes=dict(enemies=2,mechanism_items=1,supports=8,platforms=8,terrain=16,pending_enemies=2,pending_items=2)
     keys='{'+','.join(f'{name}=true'for name in sizes)+'}'
     result=gate.call('exec',code='MR3A.privilegedCached=MR3A.privileged_state();local c=MR3A.privilegedCached;'
         f'local paged={keys};local h,n={{}},{{}};for k,v in pairs(c)do '
         'if paged[k]then n[k]=#v else h[k]=v end end;return {head=h,counts=n}')
     reference=result['head']
     for name,size in sizes.items():
+        if name not in result['counts']:continue
         reference[name]=[]
         for offset in range(0,result['counts'].get(name,0),size):
             page=gate.call('exec',code=f'local out={{}};local e=MR3A.privilegedCached.{name};'

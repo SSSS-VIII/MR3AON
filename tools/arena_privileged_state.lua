@@ -58,6 +58,15 @@ local function values(obj)
     end
     return out
 end
+local function valueProjection(obj)
+    local data=values(obj);local omitted={}
+    if obj then for _,f in ipairs(fields(obj))do
+        if data[f.Name]==nil and f:GetValue(obj)~=nil then
+            omitted[#omitted+1]={name=f.Name,type=f.FieldType.FullName}
+        end
+    end end
+    return data,{complete=#omitted==0,omitted=omitted}
+end
 local function logicCoroutines()
     -- The client's original Lua_HotfixManager replaces Brambles.ToNextAction
     -- with coroutine.myStart/myWait, not DelayCallFunctionController. Read
@@ -744,6 +753,12 @@ function E.privileged_state()
             local info=field(o,'_itemInfo');local custom=info and field(info,'_itemInfoCustom')
             local item={id=o:GetInstanceID(),type=kind,
                 position=vector(o.transform.position),fields=values(o),info=values(info),custom=values(custom)}
+            item.info_identity=info and info:GetHashCode()or nil
+            if kind=='ItemSpring'then
+                local normal,pop=field(o,'_normalSpring'),field(o,'_popSpring');local q=o.transform.localRotation
+                item.spring={normal_active=normal and normal.activeSelf or false,pop_active=pop and pop.activeSelf or false,
+                    rotation={x=q.x,y=q.y,z=q.z,w=q.w}}
+            end
             if kind=='ItemEvent'then item.action_data=actionData(custom,8)end
             item.colliders={}
             local cs=o.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
@@ -763,7 +778,33 @@ function E.privileged_state()
     -- Read the actual resolved block list as well as spawned colliders. Unity
     -- instantiates terrain incrementally; missing a not-yet-created collider
     -- must not turn a known continuation into an imaginary pit.
-    out.terrain={};out.pending_enemies={};out.spawn_templates={}
+    out.terrain={};out.pending_enemies={};out.pending_items={};out.spawn_templates={}
+    local function springSpawnTemplate()
+        local all=U.Resources.FindObjectsOfTypeAll(typeof(CS.ItemSpring));local original
+        for i=0,all.Length-1 do local o=all[i]
+            if o.name=='ItemSpring'and not o.gameObject.activeInHierarchy then
+                assert(not original,'Ambiguous original spring prefab');original=o
+            end
+        end
+        if not original then return {missing=true}end
+        local root=original.transform;local cs=original.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
+        local result={id=original:GetInstanceID(),type=original:GetType().Name,colliders={},root_scripts={},
+            animated_root=root.gameObject:GetComponent(typeof(U.Animator))~=nil or root.gameObject:GetComponent(typeof(U.Animation))~=nil}
+        local scripts=root.gameObject:GetComponents(typeof(U.MonoBehaviour))
+        for i=0,scripts.Length-1 do if scripts[i]then result.root_scripts[#result.root_scripts+1]=scripts[i]:GetType().Name end end
+        for i=0,cs.Length-1 do local c=cs[i]
+            local row={type=c:GetType().Name,name=c.name,enabled=c.enabled,trigger=c.isTrigger,
+                direct_root=c.transform==root,vertices={}}
+            if row.type=='BoxCollider'then
+                for _,x in ipairs({-1,1})do for _,y in ipairs({-1,1})do for _,z in ipairs({-1,1})do
+                    local p=c.transform:TransformPoint(c.center+U.Vector3(x*c.size.x/2,y*c.size.y/2,z*c.size.z/2))
+                    row.vertices[#row.vertices+1]=vector(root:InverseTransformPoint(p))
+                end end end
+            end
+            result.colliders[#result.colliders+1]=row
+        end
+        return result
+    end
     local staticBladePrefabs
     local function bladeSpawnTemplate(name)
         if not staticBladePrefabs then
@@ -847,13 +888,29 @@ function E.privileged_state()
     local syncObjects=field(CS.LevelManager.Instance,'syncObjectDic')
     local function pendingBlock(b,a,stageIndex,blockIndex,uninstantiated)
         local live=liveBlocks[stageIndex..':'..blockIndex]
+        local function addItem(info,source)
+            local custom=field(info,'_itemInfoCustom')
+            local data,projection=valueProjection(custom)
+            local item={id='pending-item:'..stageIndex..':'..blockIndex..':'..info:GetHashCode(),
+                info_identity=info:GetHashCode(),info=values(info),custom=data,custom_projection=projection,
+                custom_type=custom and custom:GetType().Name,
+                block_start=vector(live and live.transform.position or a),stage_index=stageIndex,block_index=blockIndex,
+                source=source,sync_blocked=syncObjects and syncObjects:ContainsKey(info.baseID)or false}
+            if tostring(info._itemType)=='ItemEvent: 100'then item.action_data=actionData(custom,8)end
+            if tostring(info._itemType)=='ItemSpring: 15'and not out.spawn_templates.spring then
+                out.spawn_templates.spring=springSpawnTemplate()
+            end
+            out.pending_items[#out.pending_items+1]=item
+        end
         local function add(info,source)
             local kind=tostring(info._enemyType);local number=tonumber(kind:match(': (%d+)$'))
             if number and number>10000 then return end -- Same native InitEnemyInfo filter.
             local data=values(info);local custom=field(info,'_enemyInfoCustom')
+            local customData,projection=valueProjection(custom)
             local blocked=syncObjects and syncObjects:ContainsKey(info.baseID)or false
             out.pending_enemies[#out.pending_enemies+1]={id='pending:'..stageIndex..':'..blockIndex..':'..info:GetHashCode(),
-                info_identity=info:GetHashCode(),info=data,custom=values(custom),custom_type=custom and custom:GetType().Name,
+                info_identity=info:GetHashCode(),info=data,custom=customData,custom_projection=projection,
+                custom_type=custom and custom:GetType().Name,
                 block_start=vector(live and live.transform.position or a),stage_index=stageIndex,block_index=blockIndex,
                 source=source,sync_blocked=blocked,vertical_gate=live and field(live,'openGenerateDistanceY')or false}
             if kind=='EnemySmallSword: 250'and not out.spawn_templates.small_sword then
@@ -878,9 +935,15 @@ function E.privileged_state()
             local node=list.First;local count=0
             while node do add(node.Value,'native_enemyList');count=count+1;node=node.Next end
             assert(count==list.Count,'Original spawn queue changed during paused read')
+            local items=field(live,'itemList');assert(items,'Original item queue missing')
+            node=items.First;count=0
+            while node do addItem(node.Value,'native_itemList');count=count+1;node=node.Next end
+            assert(count==items.Count,'Original item queue changed during paused read')
         elseif uninstantiated then
             local infos=field(b,'enemyInfos')
             if infos then for i=0,infos.Count-1 do add(infos[i],'resolved_uninstantiated_block')end end
+            local items=field(b,'itemInfos')
+            if items then for i=0,items.Count-1 do addItem(items[i],'resolved_uninstantiated_block')end end
         end
     end
     if stage and ground then

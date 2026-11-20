@@ -71,6 +71,7 @@ def test_native_numbers_and_all_dense_records_survive_complete_or_packed_reads(t
     enemy=native['enemies'][0]
     native['enemies']=[dict(deepcopy(enemy),id=i+1)for i in range(copies)]
     native['pending_enemies']=[dict(id=i,info=dict(_localPosition=dict(x=17.25,y=4.5,z=0)),source='native_enemyList')for i in range(copies*3)]
+    native['pending_items']=[dict(id=i,info=dict(_itemType='ItemSpring: 15'),source='native_itemList')for i in range(copies)]
     native['note']='中文字段与引号 "、反斜线 \\、换行\n及制表\t'
     gate=LuaGate(tmp_path,native)
     try:
