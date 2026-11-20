@@ -114,6 +114,10 @@ class Motor:
     ground_source: bool = False
     physical_y: float = 0.
     previous_y: float = 0.
+    physical_x: float = 0.
+    previous_x: float = 0.
+    native_air: bool = False
+    native_transfer: bool = False
 
 
 class PlayerModel:
@@ -129,7 +133,7 @@ class PlayerModel:
         self.speed = state['speed']
         self.tick = state['fixedDeltaTime']
         self.clock_age = max(0., state['time']-role.get('fields',{}).get('_lastFixedUpdateTime',state['time']))
-        self.native_slope_ratio = role.get('fields',{}).get('_slopeSpeedRatio')
+        self.shell_dash_speed=role.get('fields',{}).get('_shellDashSpeed',0.)
         self.foot = self.data['_ninjaFootPoint']
         mode = phase(state['physics'])
         used = 2 if mode in ('jump2', 'fall2') else 1 if mode in ('jump', 'fall') else 0
@@ -141,10 +145,23 @@ class PlayerModel:
         if mode=='slideonground':
             self.initial.slide_ticks=timer_ticks(role['fields']['_slideRemainTime'],self.tick,False)
             self.initial.ground_source=True
-        elif mode=='runonground' and (abs(self.initial.offset_field)>1e-6 or abs(self.initial.offset_render)>1e-6):
+        elif mode in ('runonground','runonline','runonlinedown'):
             self.initial.ground_source=True
-        self.initial.physical_y=role.get('fields',{}).get('_lastPosition',state['position'])['y']
-        self.initial.previous_y=role.get('fields',{}).get('_secondLastPosition',state['position'])['y']
+        last=role.get('fields',{}).get('_lastPosition')
+        previous=role.get('fields',{}).get('_secondLastPosition')
+        self.native_samples=last is not None and previous is not None
+        self.initial.native_air=self.native_samples and mode in AIR
+        self.initial.native_transfer=self.native_samples and mode in TRANSFER
+        if last is None:
+            # Legacy captures omitted the native position history. Reconstruct
+            # the constant-velocity anchors from the observed render pose;
+            # current native captures retain their real samples unchanged.
+            age=np.clip(self.clock_age,0.,self.tick)
+            last={a:state['position'][a]+role['velocity'][a]*(self.tick-age)for a in ('x','y')}
+        if previous is None:
+            previous={a:last[a]-role['velocity'][a]*self.tick for a in ('x','y')}
+        self.initial.physical_y,self.initial.previous_y=last['y'],previous['y']
+        self.initial.physical_x,self.initial.previous_x=last['x'],previous['x']
         self.interaction_radius=0.
         for collider in rows(role.get('interaction_colliders')):
             if collider['type'] not in ('SphereCollider','CapsuleCollider'):
@@ -220,6 +237,17 @@ class PlayerModel:
                 return min(connected, key=lambda s: abs(s.height(contact_x,t)-previous.height(contact_x,t)))
         return None
 
+    def ground_step_surface(self,motor,t):
+        current=next((s for s in self.surfaces if s.id==motor.support),None)
+        lengthen=self.rules.get('ground_lengthen')
+        if current and lengthen is not None:
+            following=next((s for s in self.surfaces if s.id!=current.id and
+                abs(s.left-current.right)<.001 and
+                abs(s.height(s.left,t)-current.height(current.right,t))<.001),None)
+            if following:
+                return following if motor.physical_x+motor.offset_render>=following.left+lengthen else current
+        return self.surface(motor,t)
+
     def terrain_clearances(self,motors):
         """Keep planned paths out of native wall/automatic-climb transitions.
 
@@ -256,6 +284,10 @@ class PlayerModel:
     def interaction_bodies(self,motors):
         return np.array([(m.x+m.offset_render,m.y,self.interaction_radius,0.) for m in motors])
 
+    def ground_samples(self,motor,t):
+        motor.physical_y=motor.previous_y=motor.y
+        motor.ground_source=True
+
     def action(self, motor, action, t):
         s = self.surface(motor, t)
         before_mode = motor.mode
@@ -273,6 +305,7 @@ class PlayerModel:
                 fast = motor.y > s.height(motor.x+motor.offset_render,t)+self.foot
                 motor.transfer_speed = self.data['_rollAirDownUpSpeed' if fast else '_rollDownUpSpeed']
             elif motor.mode in AIR and motor.used < 2 or motor.mode in ('runonline', 'runonground', 'slideonground'):
+                motor.native_air=self.native_samples and (motor.mode in REST or motor.native_air)
                 motor.used = motor.used+1 if motor.mode in AIR else 1
                 motor.vy = self.data['_jumpForce2' if motor.used == 2 else '_jumpForce1']
                 motor.mode = 'jump2' if motor.used == 2 else 'jump'
@@ -293,6 +326,7 @@ class PlayerModel:
             elif motor.mode == 'runonground':
                 if 'slide_seconds' not in self.rules:
                     return False
+                if not motor.ground_source:self.ground_samples(motor,t)
                 motor.mode='slideonground';motor.delay=entry_delay
                 motor.slide_ticks=timer_ticks(self.rules['slide_seconds'],self.tick,False)
                 motor.ground_source=True
@@ -300,6 +334,10 @@ class PlayerModel:
                 return False
         else:
             return False
+        motor.native_transfer=self.native_samples and motor.mode in TRANSFER and (before_mode in REST or motor.native_air or motor.native_transfer)
+        if motor.mode not in AIR:motor.native_air=False
+        if motor.mode not in REST:
+            motor.ground_source=False
         motor.lead_mode = before_mode; motor.lead_vy = before_vy
         number = 2 if before_mode in ('jump2','fall2') else 1
         motor.lead_gravity = self.data[f'_upGravity{number}' if before_vy>0 else f'_downGravity{number}']*3.5 if before_mode in AIR else 0.
@@ -325,27 +363,95 @@ class PlayerModel:
         offset = p['_jumpColliderOffset' if jumping else '_normalColliderOffset']
         height = p['_jumpColliderHeight' if jumping else '_normalColliderHeight']*abs(scale['y'])
         radius = p['_normalColliderRadius']*max(abs(scale['x']), abs(scale['z']))
-        return (m.x+m.offset_render+offset['x']*scale['x'], m.y+offset['y']*scale['y'], radius, max(0., height/2-radius))
+        half=max(0.,height/2-radius)
+        support=next((s for s in self.surfaces if s.id==m.support),None)
+        angle=math.atan(support.slope) if mode in REST and support else 0.
+        cosine,sine=math.cos(angle),math.sin(angle)
+        ox,oy=offset['x']*scale['x'],offset['y']*scale['y']
+        # Enclose the original tilted capsule with the planning layer's vertical
+        # capsule. Retain the rotated native local center; no visual box fitting.
+        return (m.x+m.offset_render+ox*cosine-oy*sine,m.y+ox*sine+oy*cosine,
+                radius+abs(half*sine),half*abs(cosine))
 
     def trajectory(self, times, operations=()):
+        if not self.native_samples or len(times)<2:
+            return self._trajectory(times,operations)
+        # Preserve the original fixed-step lattice even for sparse audit times.
+        # Every inner interval contains at most one native update and each key
+        # is consumed at its own time, independent of the requested output grid.
+        times=np.asarray(times,dtype=float)
+        fixed=np.arange(1,math.ceil((self.clock_age+times[-1])/self.tick)+1)*self.tick-self.clock_age
+        knots=np.unique(np.concatenate((times,fixed[(fixed>times[0])&(fixed<times[-1])],
+            np.array([t for t,_ in operations if times[0]<=t<=times[-1]],dtype=float))))
+        body,states,valid=self._trajectory(knots,operations)
+        indices=np.searchsorted(knots,times)
+        return body[indices],[states[i]for i in indices],valid
+
+    def _trajectory(self, times, operations=()):
         motor = replace(self.initial)
         states, bodies, valid = [], [], True
         operation = 0
         for index, t in enumerate(times):
             if index:
                 dt = t-times[index-1]
-                s = self.surface(motor, t)
-                slope = s.slope if s and motor.mode in REST else 0.
+                old_fixed=int(math.floor((self.clock_age+times[index-1]+1e-8)/self.tick))
+                new_fixed=int(math.floor((self.clock_age+t+1e-8)/self.tick))
+                pending_air=(motor.native_air and motor.mode in AIR or motor.native_transfer and motor.mode in TRANSFER) and motor.delay>self.tick+1e-8
+                effective_mode=motor.lead_mode if pending_air else motor.mode
+                if motor.ground_source and motor.mode in REST or pending_air and motor.lead_mode in REST:
+                    if new_fixed>old_fixed:
+                        s=self.ground_step_surface(motor,t)
+                    else:
+                        s=next((s for s in self.surfaces if s.id==motor.support),None)
+                else:
+                    s = self.surface(motor, t)
+                if s and motor.mode=='runonline' and not s.rope:
+                    motor.mode='runonground'
+                    if not motor.ground_source:self.ground_samples(motor,t)
+                elif s and motor.mode=='runonground' and s.rope:
+                    motor.mode='runonline'
+                natural_departure=False
+                if (self.native_samples and new_fixed>old_fixed and motor.mode in REST and
+                        motor.mode!='slideonground' and not pending_air and
+                        (s is None or not s.rope and abs(s.slope)<1e-8 and s.id!=motor.support and
+                         motor.physical_y>s.height(motor.physical_x+motor.offset_render,t)+self.foot+1e-5)):
+                    natural_departure=s is not None
+                    motor.mode='fallfromrun';motor.ground_source=False;motor.native_air=True
+                    if s:motor.support=s.id
+                    effective_mode=motor.mode
+                slope = s.slope if s and effective_mode in REST else 0.
                 # Native SlopeSpeedRatio: speed along a slope, rather than a
                 # horizontal velocity plus an unrelated vertical correction.
                 ratio = 1/math.sqrt(1+slope*slope)
-                if s and abs(s.slope)>1e-8 and s.id == self.initial.support and motor.mode in REST and self.native_slope_ratio is not None:
-                    ratio = self.native_slope_ratio
                 vx = self.speed*ratio
-                old_fixed=int(math.floor((self.clock_age+times[index-1]+1e-8)/self.tick))
-                new_fixed=int(math.floor((self.clock_age+t+1e-8)/self.tick))
                 slide_entered=motor.mode=='slideonground' and motor.delay<=dt+1e-8
-                if slide_entered:
+                if slide_entered and s and abs(s.slope)>1e-8:
+                    valid=False
+                active_slope=bool(s and abs(s.slope)>1e-8 and effective_mode=='runonground')
+                if active_slope:
+                    # ProcessMovementOnGround accelerates the velocity's
+                    # magnitude on a descent, then projects onto its segment.
+                    # SlopeSpeedRatio is a target multiplier, not horizontal VX.
+                    magnitude=math.hypot(motor.vx,motor.lead_vy if pending_air else motor.vy)
+                    descent=max(0.,-s.slope/math.sqrt(1+s.slope*s.slope))
+                    for _ in range(new_fixed-old_fixed):
+                        if descent:
+                            target=(self.data['_moveSpeed']+self.shell_dash_speed)*(1+2*descent)
+                            magnitude=float(np.float32(np.float32(magnitude)+np.float32(
+                                np.float32(target-np.float32(magnitude))*np.float32(self.tick))))
+                        else:
+                            magnitude=self.data['_moveSpeed']+self.shell_dash_speed
+                    vx=magnitude*ratio;motor.vx=vx
+                    if not (motor.ground_source or pending_air):
+                        valid=False
+                elif s and s.rope:
+                    for _ in range(new_fixed-old_fixed):
+                        motor.vx=float(np.float32(np.float32(motor.vx)+np.float32(
+                            np.float32(self.speed-np.float32(motor.vx))*np.float32(self.tick*5))))
+                    vx=motor.vx
+                elif motor.native_air and motor.mode in AIR:
+                    vx=motor.vx
+                elif slide_entered:
                     for _ in range(new_fixed-old_fixed):
                         # Original cubic speed target and Lerp(dt*5), not a
                         # fitted constant slide speed or ordinary run speed.
@@ -369,21 +475,51 @@ class PlayerModel:
                     motor.offset_render=motor.offset_field
                     if motor.mode=='slideonground' and slide_entered:
                         target=self.rules['slide_offset']['x']*self.scale['x'];gain=self.tick*5
-                    elif motor.mode in REST:
-                        target=0.;gain=self.tick*self.speed/10
+                    elif effective_mode in REST:
+                        slope_offset=0.
+                        offset_surface=s if active_slope else None
+                        if effective_mode=='runonline' and s and s.rope:
+                            # OnLine can hand over the ground reference after
+                            # movement, before MoveLogic's final offset tween.
+                            post_x=motor.physical_x+vx*self.tick+motor.offset_render
+                            offset_surface=next((a for a in self.surfaces if not a.rope and
+                                abs(a.left-s.right)<.001 and
+                                abs(a.y-s.height(s.right,t))<.001 and
+                                post_x>=a.left+self.rules.get('ground_lengthen',0.)),None)
+                        if offset_surface:
+                            sine=-offset_surface.slope/math.sqrt(1+offset_surface.slope*offset_surface.slope)
+                            slope_offset=min(10.,32*sine) if sine>0 else 16*sine
+                        target=slope_offset*self.scale['x'];gain=self.tick*self.data['_moveSpeed']/10
                     else:
                         continue
-                    motor.offset_field=float(np.float32(np.float32(motor.offset_field)+np.float32(
-                        np.float32(target-motor.offset_field)*np.float32(gain))))
-                motor.x += vx*dt
-                s = self.surface(motor, t)
+                    if not pending_air:
+                        motor.offset_field=float(np.float32(np.float32(motor.offset_field)+np.float32(
+                            np.float32(target-motor.offset_field)*np.float32(gain))))
+                    if active_slope:
+                        # The same native target receives the additional
+                        # iTween.Vector3Update in ProcessMovementOnGround.
+                        # Its speed is slopeOffset.x/20, including a negative
+                        # value uphill; iTween does not clamp this gain.
+                        motor.offset_field=float(np.float32(np.float32(motor.offset_field)+np.float32(
+                            np.float32(target-motor.offset_field)*np.float32(self.tick*slope_offset/20))))
+                for _ in range(new_fixed-old_fixed):
+                    motor.previous_x=motor.physical_x
+                    motor.physical_x=float(np.float32(np.float32(motor.physical_x)+np.float32(vx*self.tick)))
+                alpha=np.clip((self.clock_age+t-new_fixed*self.tick)/self.tick,0.,1.)
+                motor.x=motor.previous_x+(motor.physical_x-motor.previous_x)*alpha
+                if not (motor.ground_source and motor.mode in REST):
+                    s = self.surface(motor, t)
                 if motor.mode in REST:
                     if s:
                         if motor.mode=='runonline' and not s.rope:
                             motor.mode='runonground'
+                            if not motor.ground_source and abs(s.slope)<1e-8:
+                                self.ground_samples(motor,t)
                         contact=(-self.foot if motor.mode=='runonlinedown' else self.foot-.25 if
                                  motor.mode=='slideonground' and slide_entered else self.foot)
-                        target_y=s.height(motor.x+motor.offset_render,t)+contact
+                        if motor.mode=='runonground' and abs(s.slope)>1e-8:
+                            contact=self.foot*math.sqrt(1+s.slope*s.slope)
+                        target_y=s.height((motor.physical_x if motor.ground_source else motor.x)+motor.offset_render,t)+contact
                         if motor.ground_source:
                             for _ in range(new_fixed-old_fixed):
                                 motor.previous_y=motor.physical_y;motor.physical_y=target_y
@@ -394,9 +530,37 @@ class PlayerModel:
                         motor.support = s.id; motor.used = 0; motor.vy = vx*s.slope+s.vy
                     else:
                         motor.mode = 'fallfromrun'; motor.vy = vx*slope
+                        motor.ground_source=False
                 elif motor.mode in TRANSFER:
                     if s is None:
                         valid = False
+                    elif motor.native_transfer:
+                        for _ in range(new_fixed-old_fixed):
+                            motor.previous_y=motor.physical_y
+                            if pending_air:
+                                if motor.lead_mode in AIR:
+                                    number=2 if motor.lead_mode in ('jump2','fall2') else 1
+                                    g=self.data[f'_upGravity{number}' if motor.lead_vy>0 else f'_downGravity{number}']*3.5
+                                    if motor.lead_mode=='fallfromrun':g=self.data['_downGravity1']*3.5
+                                    motor.lead_vy=float(np.float32(np.float32(motor.lead_vy)+np.float32(g*self.tick)))
+                                    motor.physical_y=float(np.float32(np.float32(motor.physical_y)+np.float32(motor.lead_vy*self.tick)))
+                                elif motor.lead_mode in REST:
+                                    motor.physical_y=s.height(motor.physical_x+motor.offset_render,t)+(-self.foot if motor.lead_mode=='runonlinedown' else self.foot)
+                                else:
+                                    motor.physical_y=float(np.float32(np.float32(motor.physical_y)+np.float32(motor.lead_vy*self.tick)))
+                            else:
+                                top=motor.mode=='rolltolineon'
+                                target=s.height(motor.previous_x+motor.offset_render,t)+(self.foot if top or not s.rope else -self.foot)
+                                speed=motor.transfer_speed or abs(motor.vy) or self.data['_rollDownUpSpeed']
+                                arrived=(motor.previous_y>=target if top else motor.previous_y<=target)
+                                if arrived:
+                                    motor.physical_y=s.height(motor.physical_x+motor.offset_render,t)+(self.foot if top or not s.rope else -self.foot)
+                                    motor.mode=('runonline' if top else 'runonlinedown') if s.rope else 'runonground'
+                                    motor.used=0;motor.support=s.id;motor.vy=0.;motor.ground_source=True;motor.native_transfer=False
+                                else:
+                                    motor.vy=speed if top else -speed
+                                    motor.physical_y=float(np.float32(np.float32(motor.physical_y)+np.float32(motor.vy*self.tick)))
+                        motor.y=motor.previous_y+(motor.physical_y-motor.previous_y)*alpha
                     elif motor.delay > 0:
                         if motor.lead_mode in AIR:
                             motor.y += motor.lead_vy*dt+.5*motor.lead_gravity*dt*dt
@@ -416,9 +580,56 @@ class PlayerModel:
                         motor.y += math.copysign(min(abs(delta), speed*dt), delta)
                         if abs(delta) <= speed*dt:
                             motor.mode = ('runonline' if top else 'runonlinedown') if s.rope else 'runonground'
-                            motor.used = 0; motor.support = s.id
+                            motor.used = 0; motor.support = s.id;motor.vy=0.
+                            if not s.rope and abs(s.slope)<1e-8:
+                                self.ground_samples(motor,t)
                 elif motor.mode in AIR:
-                    if motor.delay > 0:
+                    if motor.native_air:
+                        for _ in range(new_fixed-old_fixed):
+                            motor.previous_y=motor.physical_y
+                            if pending_air and motor.lead_mode in REST and s:
+                                contact=self.foot*math.sqrt(1+s.slope*s.slope) if not s.rope else self.foot
+                                motor.physical_y=s.height(motor.physical_x+motor.offset_render,t)+contact
+                            elif pending_air:
+                                # The key is consumed after this physics update.
+                                number=2 if motor.lead_mode in ('jump2','fall2') else 1
+                                g=self.data[f'_upGravity{number}' if motor.lead_vy>0 else f'_downGravity{number}']*3.5
+                                motor.lead_vy=float(np.float32(np.float32(motor.lead_vy)+np.float32(g*self.tick)))
+                                motor.physical_y=float(np.float32(np.float32(motor.physical_y)+np.float32(motor.lead_vy*self.tick)))
+                            else:
+                                number=2 if motor.used==2 else 1
+                                g=self.data[f'_upGravity{number}' if motor.vy>0 else f'_downGravity{number}']*3.5
+                                if motor.mode=='fallfromrun':g=0. if natural_departure else self.data['_downGravity1']*3.5
+                                motor.vy=max(-40.,float(np.float32(np.float32(motor.vy)+np.float32(g*self.tick))))
+                                motor.physical_y=float(np.float32(np.float32(motor.physical_y)+np.float32(motor.vy*self.tick)))
+                                if motor.vy<=0:
+                                    motor.mode='fall2' if motor.used==2 else 'fall' if motor.used else 'fallfromrun'
+                                    cx=motor.physical_x+motor.offset_render
+                                    contacts=[a for a in self.surfaces if a.contains(cx,t) and
+                                        motor.previous_y<=a.height(motor.previous_x+motor.offset_render,t)+self.foot]
+                                    if contacts:
+                                        a=max(contacts,key=lambda a:a.height(cx,t))
+                                        if not a.rope:
+                                            landing_speed=self.data['_moveSpeed']+self.shell_dash_speed
+                                            if a.slope<0:
+                                                descent=-a.slope/math.sqrt(1+a.slope*a.slope)
+                                                landing_speed=float(np.float32(np.float32(landing_speed)+np.float32(np.float32(landing_speed*2*descent)*np.float32(self.tick))))
+                                            motor.vx=landing_speed/math.sqrt(1+a.slope*a.slope)
+                                            motor.physical_x=float(np.float32(np.float32(motor.previous_x)+np.float32(motor.vx*self.tick)))
+                                            cx=motor.physical_x+motor.offset_render
+                                            motor.x=motor.previous_x+(motor.physical_x-motor.previous_x)*alpha
+                                        contact=self.foot*math.sqrt(1+a.slope*a.slope) if not a.rope else self.foot
+                                        motor.physical_y=a.height(cx,t)+contact
+                                        motor.mode='runonline' if a.rope else 'runonground'
+                                        motor.used=0;motor.support=a.id;motor.native_air=False;motor.ground_source=True
+                                        motor.vy=motor.vx*a.slope+a.vy
+                                        sine=-a.slope/math.sqrt(1+a.slope*a.slope)
+                                        off=(min(10.,32*sine) if sine>0 else 16*sine)*self.scale['x']
+                                        for gain in (self.tick*self.data['_moveSpeed']/10,):
+                                            motor.offset_field=float(np.float32(np.float32(motor.offset_field)+np.float32(
+                                                np.float32(off-motor.offset_field)*np.float32(gain))))
+                        motor.y=motor.previous_y+(motor.physical_y-motor.previous_y)*alpha
+                    elif motor.delay > 0:
                         if motor.lead_mode in REST and s:
                             motor.y = s.height(motor.x+motor.offset_render,t)+self.foot
                         elif motor.lead_mode in AIR:
@@ -443,6 +654,8 @@ class PlayerModel:
                                 motor.y = a.height(contact_x,t)+self.foot
                                 motor.mode = 'runonline' if a.rope else 'runonground'
                                 motor.used = 0; motor.vy = 0.; motor.support = a.id
+                                if not a.rope and abs(a.slope)<1e-8:
+                                    self.ground_samples(motor,t)
                 motor.delay -= dt; motor.collider_delay -= dt; motor.elapsed += dt
             while operation < len(operations) and operations[operation][0] <= t+1e-8:
                 valid &= self.action(motor, operations[operation][1], t)

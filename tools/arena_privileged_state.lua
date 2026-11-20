@@ -225,6 +225,9 @@ function E.privileged_state()
     local reverseOffset=ninjaType:GetField('InAirOffsetWhenEnterRollToLineDown',staticFlags)
     assert(reverseFlag and reverseOffset,'Original reversal rules missing')
     out.role.rules={reverse_fast_enabled=reverseFlag:GetValue(nil),reverse_fast_offset=reverseOffset:GetValue(nil)}
+    local groundLengthen=typeof(CS.GameManager):GetField('_groundLengthen',staticFlags)
+    assert(groundLengthen,'Original ground range rule missing')
+    out.role.rules.ground_lengthen=groundLengthen:GetValue(nil)
     out.role.rules.slide_seconds=field(CS.NinjaController.Instance,'_slideTime')
     local slideOffset=field(CS.NinjaController.Instance,'_slideOffset')
     if slideOffset then out.role.rules.slide_offset=vector(slideOffset)end

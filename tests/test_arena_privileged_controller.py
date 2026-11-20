@@ -54,13 +54,13 @@ def test_native_jump_velocity_and_gravity_change_the_forecast(native):
     assert states2[-1].y > states[-1].y
 
 
-def test_slope_moves_role_vertically_and_finite_endpoint_is_not_extrapolated(native):
+def test_finite_rope_endpoint_is_not_extrapolated(native):
     model = PlayerModel(native)
     m = model.initial
-    model.surfaces = [Surface(m.support, m.x-1, m.x+1, m.y-.75-.5, .5, True)]
+    model.surfaces = [Surface(m.support, m.x-1, m.x+1, m.y-.75, 0., True)]
     model.initial.mode = 'runonline'
     _, states, _ = model.trajectory(np.array([0., .02, .04, .08, .12]))
-    assert states[1].y > states[0].y
+    assert states[1].y == pytest.approx(states[0].y)
     assert states[-1].mode == 'fallfromrun'
 
 
@@ -241,14 +241,18 @@ def test_current_air_ground_reference_wins_over_base_ground(native):
     assert states[-1].y==pytest.approx(3.75)
 
 
-def test_native_current_slope_ratio_is_consumed(native):
-    native['state']['physics']='runOnLine: 1'
-    native['role']['fields']={'_slopeSpeedRatio':.8}
-    model=PlayerModel(native)
-    m=model.initial
-    model.surfaces=[Surface(m.support,m.x-1,m.x+5,m.y-.75-.5,.5,True)]
-    _,states,_=model.trajectory(np.array([0.,.02]))
-    assert states[-1].x-states[0].x==pytest.approx(native['state']['speed']*.8*.02)
+def test_stale_ground_slope_ratio_does_not_rescale_flat_rope(native):
+    # The original field persists after leaving a descent. It is a ground
+    # target multiplier, not a global horizontal movement multiplier.
+    displacements=[]
+    for ratio in (1.,1.8):
+        observation=deepcopy(native)
+        observation['role'].setdefault('fields',{})['_slopeSpeedRatio']=ratio
+        model=PlayerModel(observation)
+        _,states,_=model.trajectory(np.array([0.,.02]))
+        displacements.append(states[-1].x-states[0].x)
+    assert displacements[0]==pytest.approx(displacements[1])
+    assert displacements[0]==pytest.approx(native['state']['speed']*.02)
 
 
 def test_original_spider_drop_flex_and_interpolation_pairs():
