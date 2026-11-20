@@ -1225,7 +1225,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
             result.append(Hazard(collider['id'],item['id'],item['type'],center,extent,
                 np.ones(len(times),bool),item.get('source','Avoid native ItemSpring pickup; PopBySpring remains unsupported'),
                 approximate=True,geometry='obb'if quads is not None else'sphere'if collider['type']=='SphereCollider'else'aabb',
-                quads=quads,interaction=True))
+                quads=quads,interaction=True,padding=collider.get('planning_padding',0.)))
     return result, unsupported
 
 

@@ -1622,6 +1622,12 @@ def configure_pending_pickups(player):
     for entry in rows(o.get('pending_items')):
         if entry['sync_blocked']:continue
         kind=entry['info']['_itemType'].split(':')[0];template=templates.get(kind,{})
+        if kind=='ItemSpring':
+            if entry['id']in player.modelled_pending_items:continue
+            item,reason=pending_spring_contact(entry,o.get('spawn_templates',{}).get('spring',{}),o)
+            if item is not None:
+                player.contact_avoidance.append(item);player.modelled_pending_items.add(entry['id'])
+            continue
         if kind=='ItemFixed'and passive_fixed_item(entry,template,o):
             player.modelled_pending_items.add(entry['id']);continue
         if kind not in ('ItemMagnet','ItemElementBall','ItemSkull'):continue
@@ -1696,6 +1702,87 @@ def skill_issues(role):
             issues.append(prefix+row['type'])
     if data.get('move_skill')is not None:issues.append('active_move_skill:'+data['move_skill'])
     return sorted(set(issues))
+
+
+def pending_spring_contact(entry,template,observation):
+    """Original nonrotating root trigger; avoid unknown angled/continuous pop.
+
+    This does not grant launch semantics. The box is present conservatively
+    before native birth, so an action touching it is rejected using the real
+    pickup capsule. Uninitialized ObjectNearestPosX is not a location.
+    """
+    from arena_privileged_model import rows
+    try:
+        info=entry['info'];custom=entry['custom']
+        if (entry.get('source')not in ('native_itemList','resolved_uninstantiated_block')or
+                entry.get('custom_projection',{}).get('complete')is not True or entry['sync_blocked']or
+                info['_itemType']!='ItemSpring: 15'or entry['custom_type']!='ItemSpringDataStruct'or
+                info.get('baseID')!=0 or info.get('independentAnim')or info.get('createPlayerUID')):
+            raise ValueError('spring_contact_original_info_binding')
+        if (template.get('missing')or template.get('type')!='ItemSpring'or
+                template.get('source_stationary_reset')is not True or rows(template.get('unknown_hooks'))or
+                template.get('callbacks_clear')is not True or template.get('initial_is_trigger')is not False or
+                template.get('animated_root',True)or rows(template.get('root_scripts'))!=['ItemSpring']or
+                rows(template.get('component_types'))!=['ItemSpring']or
+                template.get('direction_mode')!='LeftToRight: 2'or observation['camera']['direction']!=1):
+            raise ValueError('spring_contact_unbound_source_or_root')
+        proof=template.get('item_base_reset',{})
+        if (any(proof.get(k)is not True for k in ('bound','body_equal','environment_bound','utility_bound','utility_module_equal'))or
+                proof.get('source')!='@manager/Lua_HotfixManager'or proof.get('utility_source')!='@common/util'or
+                proof.get('utility_first')!=392 or proof.get('utility_last')!=400):
+            raise ValueError('spring_contact_original_lua_reset_unbound')
+        body=template.get('physics')
+        if body and (body.get('kinematic')is not True or body.get('gravity')is not False):
+            raise ValueError('spring_contact_dynamic_root')
+        allowed={'UnityEngine.Transform','UnityEngine.BoxCollider','UnityEngine.SpriteRenderer',
+                 'UnityEngine.Animation','UnityEngine.Animator','UnityEngine.ParticleSystem',
+                 'UnityEngine.ParticleSystemRenderer','UnityEngine.MeshRenderer','UnityEngine.MeshFilter',
+                 'UnityEngine.Rigidbody','ItemSpring'}
+        components=rows(template['components'])
+        if (bool(body)!=any(c['type']=='UnityEngine.Rigidbody'for c in components)or
+                len(rows(template['animators']))!=sum(c['type']=='UnityEngine.Animator'for c in components)or
+                len(rows(template['legacy_animations']))!=sum(c['type']=='UnityEngine.Animation'for c in components)):
+            raise ValueError('spring_contact_missing_component_proof')
+        if (not components or any(c['type']not in allowed or c['type']=='UnityEngine.Rigidbody'and not c['on_root']for c in components)or
+                any(a['on_root']or a['apply_root_motion']or a.get('behaviours_bound')is not True or a.get('behaviour_count')!=0
+                    for a in rows(template['animators']))or
+                any(a['on_root']for a in rows(template['legacy_animations']))):
+            raise ValueError('spring_contact_animation_or_component_can_move_root')
+        flag=observation['role']['fields']['<AttractItemLevelValue>k__BackingField'];spring=observation['role']['spring_attraction']
+        if (template.get('be_attract_level')!='Steady: 32'or template.get('attraction_manager_present')is not True or
+                template.get('global_attract')is not False or any(not isinstance(v,(int,float))or not math.isfinite(v)or
+                    v<0 or v!=int(v)or int(v)&32 for v in (flag,spring))):
+            raise ValueError('spring_contact_attraction_unbound')
+        keys={'_render','_needRotate','_continuePop','_popSpeed','_popAcceleration','_jumpLimitTime',
+              '_disFromRoleX','_cameraFollowNinja','_startRotateAngelZ','_endRotateAngelZ','_rotateAngelPerSecond'}
+        if (set(custom)!=keys or custom['_render']!=0 or custom['_needRotate']is not False or
+                not isinstance(custom['_continuePop'],bool)or not isinstance(custom['_cameraFollowNinja'],bool)or
+                not all(isinstance(v,(int,float))and math.isfinite(v)for v in custom.values())):
+            raise ValueError('spring_contact_unverified_custom_variant')
+        p=np.array([entry['block_start'][a]+info['_localPosition'][a]for a in ('x','y','z')]);scale=np.array([info['_localScale'][a]for a in ('x','y','z')])
+        angles=info['_localEulerAngles'];theta=math.radians(angles['z'])
+        if (not np.isfinite([*p,*scale,theta]).all()or min(scale)<=0 or abs(p[2])>1e-8 or
+                any(abs(angles[a])>1e-8 for a in ('x','y'))):raise ValueError('spring_contact_reset_pose_domain')
+        boxes=rows(template['colliders'])
+        if (len(boxes)!=1 or boxes[0]['type']!='BoxCollider'or not boxes[0]['trigger']or not boxes[0]['enabled']or
+                not boxes[0]['direct_root']or len(rows(boxes[0]['vertices']))!=8):raise ValueError('spring_contact_original_root_box')
+        vertices=np.array([[v[a]for a in ('x','y','z')]for v in boxes[0]['vertices']]);lo=vertices.min(axis=0);hi=vertices.max(axis=0)
+        if not np.isfinite(vertices).all()or np.min(hi-lo)<=0:raise ValueError('spring_contact_box_domain')
+        expected=np.array([[x,y,z]for x in (lo[0],hi[0])for y in (lo[1],hi[1])for z in (lo[2],hi[2])])
+        if not all(np.min(np.linalg.norm(vertices-v,axis=1))<1e-6 for v in expected):raise ValueError('spring_contact_root_vertices_not_box')
+        rotation=np.array([[math.cos(theta),-math.sin(theta),0.],[math.sin(theta),math.cos(theta),0.],[0.,0.,1.]])
+        posed=(rotation@(vertices*scale).T).T+p;bottom=posed.min(axis=0);top=posed.max(axis=0)
+        if not bottom[2]<=0<=top[2]:raise ValueError('spring_contact_pickup_depth')
+        quad=[]
+        for x,y in ((lo[0],lo[1]),(hi[0],lo[1]),(hi[0],hi[1]),(lo[0],hi[1])):
+            point=rotation@(np.array([x,y,0.])*scale)+p;quad.append(dict(x=float(point[0]),y=float(point[1])))
+        vector=lambda v:dict(zip(('x','y','z'),map(float,v)))
+        padding=.0002+32*abs(float(np.spacing(np.float32(max(1.,abs(posed).max())))))
+        collider=dict(id=str(entry['id'])+':avoid-contact',type='BoxCollider',enabled=True,active=True,trigger=True,
+            center=vector((top+bottom)/2),extents=vector((top-bottom)/2),quad=quad,planning_padding=padding)
+        return dict(id=entry['id'],type='ItemSpring',info_identity=entry['info_identity'],position=vector(p),
+            colliders=[collider],source='Avoid original stationary spring trigger; angled/continuous launch not granted'),None
+    except (KeyError,ValueError,TypeError)as error:return None,str(error)
 
 
 def pending_spring(entry,template):

@@ -1039,7 +1039,83 @@ function E.privileged_state()
         if not original then return {missing=true}end
         local root=original.transform;local cs=original.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
         local result={id=original:GetInstanceID(),type=original:GetType().Name,colliders={},root_scripts={},
+            component_types={},components={},animators={},legacy_animations={},source_stationary_reset=true,unknown_hooks={},callbacks_clear=true,
+            animated_tree=original:GetComponentsInChildren(typeof(U.Animator),true).Length>0 or
+                original:GetComponentsInChildren(typeof(U.Animation),true).Length>0,
             animated_root=root.gameObject:GetComponent(typeof(U.Animator))~=nil or root.gameObject:GetComponent(typeof(U.Animation))~=nil}
+        local allScripts=original:GetComponentsInChildren(typeof(U.MonoBehaviour),true)
+        for i=0,allScripts.Length-1 do result.component_types[#result.component_types+1]=allScripts[i]and allScripts[i]:GetType().FullName or 'missing_component'end
+        for _,name in ipairs({'conditionActionEvent','normalActionEvent','collisionActionEvent',
+                'collisionExitActionEvent','btAnimatorEvent','conditionParamActionEvent','syncComponent'})do
+            if field(original,name)~=nil then result.callbacks_clear=false end
+        end
+        local graphs=field(original,'allGraphOwners');if graphs and graphs.Count>0 then result.callbacks_clear=false end
+        local rb=root:GetComponent(typeof(U.Rigidbody))
+        result.physics=rb and {kinematic=rb.isKinematic,gravity=rb.useGravity}or nil
+        local allComponents=original:GetComponentsInChildren(typeof(U.Component),true)
+        for i=0,allComponents.Length-1 do local component=allComponents[i]
+            result.components[#result.components+1]={type=component and component:GetType().FullName or 'missing_component',on_root=component and component.transform==root or false}
+        end
+        local animators=original:GetComponentsInChildren(typeof(U.Animator),true)
+        local instanceFlags=CS.System.Reflection.BindingFlags.__CastFrom(52)
+        local getBehaviours=typeof(U.Animator):GetMethod('InternalGetBehaviours',instanceFlags)
+        for i=0,animators.Length-1 do local animator=animators[i]
+            local row={on_root=animator.transform==root,apply_root_motion=animator.applyRootMotion,behaviours_bound=false}
+            local ok,count=pcall(function()
+                assert(getBehaviours,'Animator behaviour reader unavailable')
+                local args=CS.System.Array.CreateInstance(typeof(CS.System.Object),1);args[0]=typeof(U.StateMachineBehaviour)
+                local behaviours=getBehaviours:Invoke(animator,CS.System.Reflection.BindingFlags.__CastFrom(0),nil,args,nil);return behaviours.Length
+            end)
+            row.behaviours_bound=ok;row.behaviour_count=ok and count or -1;row.behaviours_error=not ok and tostring(count)or nil
+            result.animators[#result.animators+1]=row
+        end
+        local legacy=original:GetComponentsInChildren(typeof(U.Animation),true)
+        for i=0,legacy.Length-1 do result.legacy_animations[#result.legacy_animations+1]={on_root=legacy[i].transform==root}end
+        local flags=CS.System.Reflection.BindingFlags.__CastFrom(56)
+        local gmField=typeof(CS.GameManager):GetField('<Instance>k__BackingField',flags)
+        local gm=gmField and gmField:GetValue(nil)
+        result.direction_mode=gm and tostring(field(gm,'_curDirMode'))or 'unavailable'
+        result.be_attract_level=tostring(field(original,'beAttractLevel'))
+        result.initial_is_trigger=field(original,'isTrigger')
+        local manager=existingSingleton(typeof(CS.ItemManager))
+        result.attraction_manager_present=manager~=nil
+        result.global_attract=manager and manager:IsItemCanAttracted(field(original,'beAttractLevel'))or false
+        for _,entry in ipairs({{typeof(CS.ItemSpring),'ResetItemInfo'},{typeof(CS.ItemSpring),'MyFixedUpdate'},
+                {typeof(CS.ItemSpring),'FixedUpdateMovement'},{typeof(CS.ItemSpring),'CountDown'},
+                {typeof(CS.ItemSpring),'JudgeResume'},{typeof(CS.ItemSpring),'Rotate'},
+                {typeof(CS.ItemSpring),'get_NeedRotate'},{typeof(CS.ItemSpring),'set_NeedRotate'},
+                {typeof(CS.ItemSpring),'Recycle'},{typeof(CS.ItemBase),'MyFixedUpdate'},
+                {typeof(CS.ItemBase),'ResetItemInfo'}})do
+            local hook=entry[1]:GetField('__Hotfix0_'..entry[2],flags)
+            local value=hook and hook:GetValue(nil)
+            local known=false
+            if value~=nil and entry[1]==typeof(CS.ItemBase)and entry[2]=='ResetItemInfo'then
+                local proof={body_equal=false,environment_bound=false,utility_bound=false}
+                local ok=pcall(function()
+                    local f=value.Target;assert(type(f)=='function')
+                    local dump=string.dump(f,true)
+                    -- Lua 5.3 stripped prototype: preserve every opcode,
+                    -- constant and upvalue descriptor; omit only root lines.
+                    assert(dump:sub(1,5)==string.char(27)..'LuaS'and #dump==763)
+                    local normalized=dump:sub(1,35)..string.rep(string.char(0),8)..dump:sub(44)
+                    local hex=normalized:gsub('.',function(c)return string.format('%02x',string.byte(c))end)
+                    proof.body_equal=hex=='1b4c7561530019930d0a1a0a04080408087856000000000000000000000028774002000000000000000000020005470000008c004000064140000781400207c1400207014102a44080010a40808287804100a24000001e4000808cc04100a440000187404200878042010a8000840a00c3850a80c3860a00c4878c404400a44000018640400087c04401870045010a8000898740c5005f8045011e4002808740c50087c04501208000881e4001808c0046000741c50007c145020e414602a44080011e8000808c00460001010400a44080018c004000064140000781400207c1400207814602a440800187c046001f8045011e0001808600c700c00000000b4100000a01c48da44080018640470087804701c7c04700a4800001c6004800c7808001e20000001e4001800741c8015f0044021e80008001410600224100001e000080010104000a00818d2600800022000000040d496e766f6b65416374696f6e04034353040a436f6d416374696f6e0419436f6d706f6e656e74416374696f6e436f6e646974696f6e0407416374697665040a5f6974656d496e666f040d5f696e697469616c697a6564040b496e697469616c697a650411466f726365536574506f736974696f6e040a7472616e73666f726d0409706f736974696f6e040d626541747472616374696e670100040f6265417474726163745370656564030000000000002840040b73686f6f74496e646578130000000000000000040e4164644163746976654974656d0407706172656e74040c4974656d4d616e616765720409496e7374616e636504105f6974656d496e666f437573746f6d0004085f72656e646572040e53657452656e64657254797065130100000000000000040d41637469766546696e69736804126c75615f697347656e6572616c53796e63040b736166655f737461746504055574696c0409456e756d32496e7404094974656d54797065041043666747616d654974656d496e666f040e697347656e6572616c53796e63020000000000010000000000000000000000000000000000'
+                    local n,env=debug.getupvalue(f,1);local name,util=debug.getupvalue(f,2)
+                    proof.environment_bound=n=='_ENV'and env==_G
+                    local detail=util and type(util.safe_state)=='function'and debug.getinfo(util.safe_state,'S')or{}
+                    proof.utility_source=detail.source;proof.utility_first=detail.linedefined;proof.utility_last=detail.lastlinedefined
+                    proof.utility_module_equal=util==package.loaded['common/util']
+                    proof.utility_bound=name=='util'and util==package.loaded['common/util']and
+                        detail.source=='@common/util'and detail.linedefined==392 and detail.lastlinedefined==400
+                    proof.source=debug.getinfo(f,'S').source
+                end)
+                proof.bound=ok and proof.body_equal and proof.environment_bound and proof.utility_bound
+                result.item_base_reset=proof;known=proof.bound
+            end
+            if not hook or value~=nil and not known then
+                result.source_stationary_reset=false;result.unknown_hooks[#result.unknown_hooks+1]=entry[1].Name..'.'..entry[2]
+            end
+        end
         local scripts=root.gameObject:GetComponents(typeof(U.MonoBehaviour))
         for i=0,scripts.Length-1 do if scripts[i]then result.root_scripts[#result.root_scripts+1]=scripts[i]:GetType().Name end end
         for i=0,cs.Length-1 do local c=cs[i]
