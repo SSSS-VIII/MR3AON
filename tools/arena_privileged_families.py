@@ -79,7 +79,42 @@ def progression_marker(item):
             and item.get('custom',{}).get('_render')==0
             and item['fields'].get('_pickupRecycle') is True):
         return spec[1]
+    if (item['type']=='ItemEvent'and item.get('info',{}).get('_itemType')=='ItemEvent: 100'and
+            item.get('custom',{}).get('_render')==0 and item['fields'].get('_pickupRecycle')is True):
+        return resurgence_marker(item)
     return None
+
+
+def resurgence_marker(item):
+    """Only the original no-parameter special-revive-region flag actions.
+
+    HandleNoParamAction cases 54/55 call LevelManager.SpecialResurgence's
+    boolean setter. They do not revive, move, protect or heal a living role.
+    Any other action, nested/truncated payload or execution mode stays unknown.
+    """
+    from arena_privileged_model import rows
+    try:
+        data=item['action_data']
+        if data['type']!='ItemEventDataStruct'or data.get('truncated'):return None
+        sequence=data['fields']['_levelActionDataList']
+        if sequence.get('truncated'):return None
+        actions=rows(sequence['items']);controls=[]
+        if not actions:return None
+        for action in actions:
+            f=action['fields'];groups=f['_finalParamList']
+            if (action['type']!='Ninja3.LevelAction.LevelActionData'or action.get('truncated')or f['_actionType']!='NoParamAction: 8'or
+                    not math.isfinite(f['_nextActionTime'])or f['_nextActionTime']<0 or groups.get('truncated')):return None
+            parameters=rows(groups['items'])
+            if not parameters:return None
+            for group in parameters:
+                g=group['fields'];control=g['_controllType']
+                if (group['type']!='Ninja3.LevelAction.NoParamActionParamGroup'or group.get('truncated')or g['_exeType']!='Normal: 0'or
+                        not math.isfinite(g['_nextGroupTime'])or g['_nextGroupTime']<0 or
+                        control not in ('EnterSepcialResurgence: 54','EndSepcialResurgence: 55')):return None
+                controls.append(control)
+        return ('special_resurgence_start'if set(controls)=={'EnterSepcialResurgence: 54'}else
+                'special_resurgence_end'if set(controls)=={'EndSepcialResurgence: 55'}else 'special_resurgence_flags')
+    except (KeyError,ValueError,TypeError):return None
 
 
 def curve_range(keys,lower=0.,upper=1.):
@@ -931,8 +966,17 @@ def spider_entry(enemy,times,observation,player,trajectory_states=None):
     if f.get('_renderType')!=0 or enemy.get('custom_type')!='EnemySpiderDataStruct':
         return None,'spider_unverified_entry_render'
     hurt=[c for c in rows(enemy['colliders'])if c.get('damage_kind')]
+    def original_root_sphere(c):
+        if np.linalg.norm(xy(c['center'])-xy(enemy['position']))<=.0001:return True
+        # EnemyMuppetBomb inherits Spider's movement unchanged; its original
+        # root-aligned Bomb sphere has an authored (.03,-.03) local center.
+        # This is a rigid center offset, not an animation or a drop margin.
+        return (enemy['type']=='EnemyMuppetBomb'and
+            c.get('position')is not None and np.linalg.norm(xy(c['position'])-xy(enemy['position']))<=.0001 and
+            abs(c['rotation_z']-enemy['rotation_z'])<.0001 and not c.get('spine_follow')and
+            not c.get('depth_tilt'))
     if len(hurt)!=1 or any(c['type']!='SphereCollider' or c.get('damage_owner')!=enemy['id']
-            or not c['enabled'] or not c['active'] or np.linalg.norm(xy(c['center'])-xy(enemy['position']))>.0001
+            or not c['enabled'] or not c['active'] or not original_root_sphere(c)
             or max(abs(c['scale'][a]-enemy['scale'][a])for a in ('x','y','z'))>.0001 for c in hurt):
         return None,'spider_unverified_entry_shape'
     role=observation['role']['fields'];actual=role.get('_lastRoleObjPos')

@@ -901,7 +901,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
                 # TriggerFeedback changes the render child's local position
                 # and scale along authored curves; a frozen sphere is wrong.
                 unsupported.append(dict(id=enemy['id'],type=kind,reason='spider_bite_feedback_geometry'));continue
-            if mode=='none' and kind=='EnemySpider':
+            if mode=='none' and kind in ('EnemySpider','EnemyMuppetBomb'):
                 from arena_privileged_families import spider_entry
                 predicted,reason=spider_entry(enemy,times,observation,player,trajectory_states)
                 if predicted is None:
@@ -960,7 +960,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
                 continue
             center = xy(c['center'])[None, :]+delta
             extent = np.tile(xy(c['extents']), (len(times), 1))*growth[:, None]
-            if kind=='EnemySpider' and mode=='none':
+            if kind in ('EnemySpider','EnemyMuppetBomb') and mode=='none':
                 extent[:,1]+=spread
             if kind=='EnemyRollingBase' and 'envelope_spread'in predicted[5]:
                 extent+=predicted[5]['envelope_spread']
@@ -1008,7 +1008,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
                     padding=float(lever*predicted[5]['angular_padding']);approximate=True
                 elif kind in ('EnemyStraightBack','EnemySmallSword') and len(predicted)>5:
                     padding=float(predicted[5]['position_padding']);approximate=True
-            geometry=('aabb' if kind in ('EnemyAlarmShooter','EnemyBramblesSingleThorn','EnemyBrambleCollider')or kind=='EnemySpider' and mode=='none' or
+            geometry=('aabb' if kind in ('EnemyAlarmShooter','EnemyBramblesSingleThorn','EnemyBrambleCollider')or kind in ('EnemySpider','EnemyMuppetBomb') and mode=='none' or
                       kind=='EnemyRollingBase' and 'envelope_spread'in predicted[5] else
                       'sphere' if c['type']=='SphereCollider' or kind in ('EnemyFruitPinball','EnemyPiranha') else
                       'obb' if quads is not None else 'aabb')
