@@ -14,6 +14,7 @@ import numpy as np
 REST = {'runonline', 'runonlinedown', 'runonground', 'slideonground'}
 AIR = {'jump', 'fall', 'jump2', 'fall2', 'fallfromrun'}
 TRANSFER = {'rolltolineon', 'rolltolinedown', 'rolltoground'}
+POP = {'popfall'}
 
 
 def rows(value):
@@ -187,7 +188,17 @@ class PlayerModel:
             self.initial.transfer_speed = (role['velocity']['y'] if mode=='rolltolineon'
                                            else abs(role['velocity']['y']))
         self.unsupported = []
-        if mode not in REST | AIR | TRANSFER:
+        self.popfall_supported=False
+        if mode=='popfall':
+            f=role['fields'];direction=f.get('_popDirection',{})
+            self.popfall_supported=(self.native_samples and f.get('_continuePop')is False and
+                f.get('_popCanJump')is False and direction.get('x')==1 and direction.get('y')==0 and
+                direction.get('z')==0 and self.initial.vx>0 and self.initial.vy<=0 and
+                not rows(observation['platforms']) and '_downGravity3'in self.data and
+                all(math.isfinite(v)for v in (self.initial.vx,self.initial.vy,self.data['_downGravity3'])) and
+                role['velocity'].get('z',0)==0)
+            if not self.popfall_supported:self.unsupported.append('native_popfall_variant')
+        if mode not in REST | AIR | TRANSFER | POP:
             self.unsupported.append('role:'+mode)
         if role.get('mounted') or role.get('god'):
             self.unsupported.append('protected_or_mounted_role')
@@ -304,6 +315,10 @@ class PlayerModel:
         motor.ground_source=True
 
     def action(self, motor, action, t):
+        if motor.mode in POP:
+            # This reducer only covers the original no-jump launch interval.
+            # Enabling pop jump/interrupt needs its own UI transition proof.
+            return False
         s = self.surface(motor, t)
         before_mode = motor.mode
         before_vy = motor.vy
@@ -457,7 +472,9 @@ class PlayerModel:
                 slide_entered=motor.mode=='slideonground' and motor.delay<=dt+1e-8
                 active_slope=bool(s and abs(s.slope)>1e-8 and
                     (effective_mode=='runonground'or slide_entered and s.slope<0))
-                if active_slope:
+                if motor.mode in POP:
+                    vx=motor.vx
+                elif active_slope:
                     # ProcessMovementOnGround accelerates the velocity's
                     # magnitude on a descent, then projects onto its segment.
                     # SlopeSpeedRatio is a target multiplier, not horizontal VX.
@@ -580,6 +597,31 @@ class PlayerModel:
                     else:
                         motor.mode = 'fallfromrun'; motor.vy = vx*slope
                         motor.ground_source=False
+                elif motor.mode in POP:
+                    valid &= self.popfall_supported
+                    for _ in range(new_fixed-old_fixed):
+                        motor.previous_y=motor.physical_y
+                        # UpdateGravity maps PopFall to _downGravity3. Native
+                        # ProcessPop adds gravity before moving, with a -40
+                        # terminal speed and unchanged horizontal velocity.
+                        gravity=np.float32(np.float32(self.data['_downGravity3'])*np.float32(self.tick))
+                        gravity=np.float32(gravity*np.float32(3.5))
+                        motor.vy=max(-40.,float(np.float32(np.float32(motor.vy)+gravity)))
+                        next_y=float(np.float32(np.float32(motor.physical_y)+np.float32(motor.vy*self.tick)))
+                        cx=motor.physical_x+motor.offset_render
+                        supports=[a for a in self.surfaces if a.contains(cx,t)and not a.platform]
+                        # ProcessPopFallNormal uses the integrated position,
+                        # unlike the ordinary fall's pre-step landing test.
+                        support=next((a for a in supports if a.id==motor.support),None)
+                        if support is None and supports:support=max(supports,key=lambda a:a.height(cx,t))
+                        if support and abs(support.slope)>1e-8:
+                            valid=False
+                        if support and next_y<=support.height(cx,t)+self.foot:
+                            motor.physical_y=support.height(cx,t)+self.foot
+                            motor.mode='runonline'if support.rope else'runonground'
+                            motor.used=0;motor.support=support.id;motor.vy=0.;motor.ground_source=True
+                        else:motor.physical_y=next_y
+                    motor.y=motor.previous_y+(motor.physical_y-motor.previous_y)*alpha
                 elif motor.mode in TRANSFER:
                     if s is None:
                         valid = False
@@ -835,6 +877,10 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
     for enemy in rows(observation['enemies']):
         f, custom, kind = enemy['fields'], enemy['custom'], enemy['type']
         if f.get('_dead') or f.get('_isRecycled'):
+            continue
+        if (kind in ('EnemyFlyBamboo','EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter')and
+                (player.initial.mode in POP or trajectory_states is not None and any(m.mode in POP for m in trajectory_states))):
+            unsupported.append(dict(id=enemy['id'],type=kind,reason='spring_pop_camera_transition_not_validated'))
             continue
         if kind=='EnemyFruitMuppet':
             from arena_privileged_families import collectible_kind

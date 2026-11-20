@@ -456,3 +456,11 @@ v198/v201的1590个新生攻击框（含32个从未实例化地形配置开始�
 reader增长后，嵌套JSON直接加载57KB源码两次未收到桥应答；短命令读取同一受管实例传输的确切源文件可立即加载。正式install现采用InstanceSession.adb传输原始字节、原Lua load并清理临时远端文件，不缩减任何观测字段，也未换桥/ADB入口；失败清理与大源文件边界有两项保护。未确定原JSON解析器的精确阈值，不把现象写成固定64KB协议上限。
 
 该采样还保留了真实弹簧触发：普通14速经原PopBySpring变成约24.375，落地后再回正常速度。既有规划只避开已出现的ItemSpring；完整弹簧出生、拾取时刻、Pop运动/落地及操作权限仍待，不能用普通速度预测替代。此问题与竹刃几何校准分列，后续继续原方法/原生逐帧对照。
+
+### 已发射后的水平PopFall原物理帧（v206–v208）
+
+原Ninja.UpdateGravity跳表的22/23分别读取NinjaData偏移0x28/0x40；运行时只读FieldInfo偏移核对为_downGravity1/_downGravity3，并非凭数值相同拿_downGravity2代替。ProcessPopFall每原物理帧先单精度加重力（乘3.5、终速−40）后位移，水平速度保持发射结果；ProcessPopFallNormal按已积分的新Y判落地，普通fall的旧Y落地测试不能复用。落地同帧保留发射VX，下一原地面帧才回普通速度。首版仅接已发射、非连续、不可跳、水平向右、无移动浮台/坡面落点的PopFall；其他方向、连续/可跳、输入中断及相机发射联动明确拒绝。613项相关回归通过。
+
+原v198已发射片段196对（含76个落地或落地后配对），中心最大误差1.547毫米、P95约1.112毫米；6个原角色/地形/物品通道夹具与重力字段反例、未知变体/操作拒绝保留。原掉血0的这一短片段只是动作校准，不是整板路线或容差证书。旧未触发弹簧仍按原交互框避让，拾取/首个PopUp/生成时刻尚未接入，不能声称已经可以规划完整弹簧板。
+
+原TriggerEnterCallBack取弹簧LastPosition、局部旋转作用于Vector3.right，再调用原PopBySpring(popPos,popDir,continuePop,popSpeed,popAcceleration,cameraFollow,jumpLimitTime)。此次25速水平发射的首个PopUp在原二次阻力下成为24.375；随后的PopFall不再继续减这项。继续完整拾取链前须核对原固定步碰撞与渲染插值顺序，而不是根据一张截图已相交就立即改角色状态。
