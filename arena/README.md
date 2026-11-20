@@ -535,3 +535,6 @@ v255使用与v245相同12041/seed74545独立新入口，182次决策、6键/零�
 同时新增只读collect_effects通道：沿原GameEventManager.instance和其实际Buff/Passive引用读取，不调用会创建单例的getter；GameMessageManager.instance及triggerTypeStr/_messageDelegate只读查条件11，原缓存未命中使用源码字面量CfgTriggerType_11，不填充缓存。Buff数量/目标/定义/等待加入列表、被动有效列表、条件11监听和9个原生分派槽全部校验；任一非空或未知都明确停止，不将装备被动等忽略成无害计分。原Lua数据表可以已缓存：原TriggerTarBuffCondition在目标列表空时返回，原Passive TriggerCondition在有效列表空时返回，不会进入Lua；不能把表已初始化误当活动效果。
 
 原6004入口的28个红币待生成项及实际模板均通过；0.5秒11次原取样持续5000血、空事件闭包保持一致。这段并未证明这些红币已经拾取，更不算整板路线。安装后原同点一次Lua请求内双读完全相同，跨请求状态只有render frame变化。746项相关回归通过后依赖先行启用，后续独立6008实机前进另记。
+
+
+v263在原6008/seed74563独立新入口，121次决策、零键/零回档前进6.050秒/120.971米持续5000血；原条件11闭包在所有观测中一致，累计1708个红币pending观测不再误拒绝（不是1708枚独立红币）。随后在block11因下一块EnemyGoldHook尚未建模初始化而停止，未通过整板。冻结源码一致、墙钟51.594秒；原生GoldHook出生后的摆动已有模型，接下来按SetHookRadius原尺寸和完整转动外包补未出生体。
