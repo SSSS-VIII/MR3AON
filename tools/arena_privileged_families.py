@@ -27,6 +27,8 @@ FAMILIES = {
     'EnemyEliteSpider': 'native_drop_elastic_flex_before_damage_relocation',
     'EnemyEliteDart': 'native_straight_fly_before_death_fall',
     'EnemyFlyFairy': 'native_sine_curve_after_entry_motion',
+    'EnemyArrow': 'native_untracked_ballistic_arrow_and_soil_envelope',
+    'EnemyKill': 'stationary_original_shape_before_contact_recycle',
 }
 
 
@@ -63,6 +65,55 @@ def forecast(enemy, times, observation, player):
     if kind in ('EnemyPinball','EnemyBlowFish'):
         from arena_privileged_pinball import forecast as pinball
         return pinball(enemy,times,observation,player)
+    if kind=='EnemyArrow':
+        mode=int(f['_enemyState'].rsplit(':',1)[1])
+        if mode==4:
+            # The enum can already be onGround while BaseObject is still
+            # interpolating its final impact tick. Preserve the root settling.
+            positions,_=native_steps(enemy,times,observation,lambda pos,dt:(pos,0.))
+            return (positions-xy(enemy['position']),angles,
+                    'EnemyArrow.StateLogic; native embedded collider settling'),None
+        if mode not in (0,1,2,3):
+            return None,'arrow_phase:'+str(mode)
+        if f['_isAimNinjaX']:
+            return None,'arrow_native_aim_tween'
+        if int(f['_arrowType'].rsplit(':',1)[1])==2:
+            return None,'arrow_behind_player_relocation'
+        vx,vy=np.float32(f['_velocityX']),np.float32(f['_velocityY'])
+        waiting=np.float32(f['_stayTime']);rotation=math.radians(enemy['rotation_z']);start=rotation
+        elapsed=0.
+        def update(pos,dt):
+            nonlocal mode,vx,vy,waiting,rotation,elapsed
+            elapsed+=dt
+            if mode==1:
+                if pos[0]<player.initial.x+player.speed*elapsed+f['_activeDistance']:
+                    mode=2
+            elif mode==2:
+                waiting=np.float32(waiting-np.float32(dt))
+                if waiting<0:mode=3
+            elif mode==3:
+                # StateLogic first moves using the old velocities, then
+                # changes gravity/acceleration and aligns the arrow to them.
+                pos[0]=np.float32(pos[0]-np.float32(vx*dt))
+                pos[1]=np.float32(pos[1]+np.float32(vy*dt))
+                vy=np.float32(vy-np.float32(np.float32(f['_gravity']*dt)*np.float32(3.5)))
+                vx=np.float32(vx+np.float32(np.float32(f['_velocityAccX']*dt)*np.float32(3.5)))
+                if vx==0:vx=np.float32(.001)  # native float at 0x11b24f4
+                theta=math.atan2(vy,vx)+f['_rotateZRandom'];rotation=-theta
+                tip=pos[1]-f['_deepInGround']*abs(math.sin(theta))
+                if tip<=f['_currGroundY']:
+                    pos[1]=np.float32(f['_currGroundY']+f['_deepInGround']*abs(math.sin(theta)));mode=4
+            return pos,(rotation-start+math.pi)%(2*math.pi)-math.pi
+        positions,angles=native_steps(enemy,times,observation,update)
+        # UpdateCollider clips the embedded portion of the original box.
+        # Its complete untrimmed box encloses that future subset. Never grow
+        # an already-clipped box back by guessing its mesh dimensions.
+        if not enemy.get('untrimmed_colliders') and any(
+                c.get('damage_kind') and c['scale']['x']!=enemy['scale']['x']
+                for c in enemy['colliders']):
+            return None,'arrow_partially_clipped_flight_shape'
+        return (positions-xy(enemy['position']),angles,
+                'EnemyArrow.StateLogic/ShootIntoGround; untrimmed soil envelope'),None
     if kind == 'EnemyHideBlade':
         mode = phase(f['_enemyState'])
         if not enemy.get('grown_colliders'):
@@ -77,12 +128,12 @@ def forecast(enemy, times, observation, player):
         # cannot miss the disabled/zero-scale warning phase.
         return (zero,angles,'EnemyHideBlade.ProcessState/GrowingOut; original full tween target envelope',
                 times>=activation),None
-    if kind in ('EnemyBlade', 'EnemySpiderWeb'):
+    if kind in ('EnemyBlade', 'EnemySpiderWeb','EnemyKill'):
         # Blade's feedback rotation only starts after a trigger hit. Ordinary
         # living blades and webs have no autonomous movement in these sources.
         if kind == 'EnemyBlade' and f.get('_bCollider') and f.get('_triggerFeedbackRotate'):
             return None, 'blade_trigger_feedback_rotation'
-        return (zero, angles, source), None
+        return (zero, angles, 'EnemyBase.FixedUpdateMovement; original stationary shape' if kind=='EnemyKill' else source), None
     if kind in ('EnemyDart','EnemyEliteDart'):
         # EliteDart overrides FixedUpdateMovement with StraightFly's method;
         # its separate gravity is exclusively the already-dead branch. Both
@@ -91,15 +142,20 @@ def forecast(enemy, times, observation, player):
         if mode not in ('none', 'fly'):
             return None, 'straight_fly_phase:'+mode
         velocity = xy(f['_velocity'])
-        if mode == 'none':
-            # Original StateUpdate changes to fly after crossing right+2;
-            # movement is first applied on the following physical tick.
-            edge = observation['camera']['right']['x']+2.
-            enter = max(0., (enemy['position']['x']-edge)/max(.001, player.speed))
-            delay = math.ceil(enter/player.tick)*player.tick+player.tick
-        else:
-            delay = 0.
-        zero = np.maximum(0., times-delay)[:, None]*velocity
+        elapsed=0.
+        def update(pos,dt):
+            nonlocal mode,elapsed
+            elapsed+=dt
+            if mode=='none':
+                # EnterScreen changes the phase only. In particular the first
+                # fly observation can have equal physical position samples;
+                # root+t*velocity would skip that original interpolation lag.
+                if pos[0]<observation['camera']['right']['x']+2.+player.speed*elapsed:
+                    mode='fly'
+                return pos,0.
+            return np.asarray(pos+np.float32(dt)*velocity,dtype=np.float32),0.
+        positions,_=native_steps(enemy,times,observation,update)
+        zero=positions-xy(enemy['position'])
         # RotateUpdate runs at the render clock, independently of fly state.
         angles = np.deg2rad(c['_speedRotate'])*times
         return (zero, angles, 'EnemyStraightFly.StateUpdate + EnemyDart.RotateUpdate'), None
@@ -162,24 +218,51 @@ def forecast(enemy, times, observation, player):
         return (zero, angles, 'EnemyMace.ProcessState'), None
     if kind in ('EnemyHook','EnemyBambooThorn'):
         mode = phase(f['_enemyState'])
-        if mode != 'rotation':
+        waiting_entry=mode=='none'
+        if mode not in ('none','rotation'):
             return None, 'hook_entry_phase:'+mode
         if not enemy.get('rotation_samples'):
             return None,'native_pendulum_rotation_samples_missing'
         theta = np.float32(np.deg2rad(enemy['rotation_samples']['last']))
         previous = np.deg2rad(enemy['rotation_samples']['previous'])
         omega = np.float32(f['_currAngularSpeed']); start = math.radians(enemy['rotation_z'])
+        maximum_speed=abs(float(omega))
         age = max(0., observation['state']['time']-f['_lastFixedUpdateTime'])
         steps = 0
         for i, t in enumerate(times):
             wanted = int(math.floor((age+t+1e-8)/player.tick))
             while steps < wanted:
                 previous=float(theta)
-                omega = np.float32(omega-np.float32(f['_gravityAcc']*player.tick*math.sin(theta)))
-                theta = np.float32(theta+np.float32(omega*player.tick)); steps += 1
+                steps+=1
+                if mode=='none':
+                    # Hook's waiting branch switches to rotation at the
+                    # original camera edge + 2; it does not integrate that
+                    # activation tick. BambooThorn uses the same dispatch.
+                    elapsed=steps*player.tick-age
+                    # FixedUpdate reads the camera cached by the preceding
+                    # 60 Hz render frame, before this frame's LateUpdate. A
+                    # continuous camera here can start the pendulum one full
+                    # native tick early even with the correct physics age.
+                    elapsed=max(0.,(math.ceil(elapsed*60-1e-6)-1)/60)
+                    if enemy['position']['x']<observation['camera']['right']['x']+2+player.speed*elapsed:
+                        mode='rotation'
+                else:
+                    omega = np.float32(omega-np.float32(f['_gravityAcc']*player.tick*math.sin(theta)))
+                    theta = np.float32(theta+np.float32(omega*player.tick))
+                    maximum_speed=max(maximum_speed,abs(float(omega)))
             alpha=np.clip((age+t-steps*player.tick)/player.tick,0.,1.)
             difference=(float(theta)-previous+math.pi)%(2*math.pi)-math.pi
             blend=complex(1-alpha,0)+alpha*complex(math.cos(difference/2),math.sin(difference/2))
             angles[i] = previous+2*math.atan2(blend.imag,blend.real)-start
+        if waiting_entry:
+            # Camera cached position can straddle a render and physics update.
+            # Do not claim a point-perfect future activation clock: enclose all
+            # adjacent native activation ticks using an angular speed bound.
+            # Once the actual phase is rotation, the exact native clock above
+            # applies and this additional envelope disappears.
+            radius=math.ceil((player.tick+1/60)/player.tick)*player.tick
+            angular_bound=radius*(maximum_speed+abs(f['_gravityAcc'])*(radius+player.tick))
+            return (zero,angles,kind+'.ProcessState; native camera-cache activation envelope',
+                    None,None,dict(angular_padding=angular_bound,activation_uncertainty_seconds=radius)),None
         return (zero, angles, kind+'.ProcessState'), None
     return None, 'motion_model_missing'

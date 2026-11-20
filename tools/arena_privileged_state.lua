@@ -40,6 +40,34 @@ local function values(obj)
     end
     return out
 end
+local function actionData(obj,depth,budget)
+    -- Traverse only authored action data, never its owner/manager graph.
+    -- Unknown or truncated data stays explicit for the planning layer.
+    budget=budget or {remaining=2048}
+    budget.remaining=budget.remaining-1
+    if budget.remaining<0 then return {truncated=true}end
+    if obj==nil then return nil end
+    if type(obj)=='string' and #obj>512 then return {type='System.String',truncated=true,length=#obj}end
+    if type(obj)~='userdata'then return obj end
+    local tp=obj:GetType();local name=tp.FullName
+    if tp.IsEnum then return tostring(obj)end
+    if name=='UnityEngine.Vector3'then return vector(obj)end
+    if name=='UnityEngine.Vector2'then return {x=obj.x,y=obj.y}end
+    if depth<=0 then return {type=name,truncated=true}end
+    if typeof(CS.System.Collections.IList):IsAssignableFrom(tp)then
+        local count=tp.IsArray and obj.Length or obj.Count;local out={type=name,items={}}
+        out.truncated=count>128
+        for i=0,math.min(count-1,127)do out.items[#out.items+1]=actionData(obj[i],depth-1,budget)end
+        return out
+    end
+    if string.sub(name,1,19)~='Ninja3.LevelAction.' and name~='ItemEventDataStruct'
+            and name~='PointV3' and name~='PointV2' then
+        return {type=name,unmapped_reference=true}
+    end
+    local out={type=name,fields={}}
+    for _,f in ipairs(fields(obj))do out.fields[f.Name]=actionData(f:GetValue(obj),depth-1,budget)end
+    return out
+end
 local function shape(c)
     local tp=c:GetType().Name
     local out={id=c:GetInstanceID(),name=c.name,type=tp,enabled=c.enabled,
@@ -56,13 +84,26 @@ local function shape(c)
             out.quad[#out.quad+1]=vector(p)
             lo=U.Vector3.Min(lo,p);hi=U.Vector3.Max(hi,p)
         end
+        local matrix=c.transform.localToWorldMatrix
+        out.depth_tilt=math.abs(matrix.m02)+math.abs(matrix.m12)>0.00001
+        if out.depth_tilt then
+            out.quad=nil
+            for _,x in ipairs({-1,1})do for _,y in ipairs({-1,1})do for _,z in ipairs({-1,1})do
+                local p=c.transform:TransformPoint(c.center+U.Vector3(x*c.size.x/2,y*c.size.y/2,z*c.size.z/2))
+                lo=U.Vector3.Min(lo,p);hi=U.Vector3.Max(hi,p)
+            end end end
+        end
         out.center=vector(c.transform:TransformPoint(c.center))
         out.extents=vector((hi-lo)/2)
-        out.extents.z=math.abs(c.size.z*c.transform.lossyScale.z/2)
+        if not out.depth_tilt then out.extents.z=math.abs(c.size.z*c.transform.lossyScale.z/2)end
     elseif tp=='SphereCollider'or tp=='CapsuleCollider'then
         out.local_center=vector(c.center);out.center=vector(c.transform:TransformPoint(c.center))
         out.radius=c.radius
         if tp=='CapsuleCollider'then out.height=c.height;out.direction=c.direction end
+        if tp=='SphereCollider'then
+            local s=c.transform.lossyScale;local r=c.radius*math.max(math.abs(s.x),math.abs(s.y),math.abs(s.z))
+            out.extents={x=r,y=r,z=r}
+        end
     end
     local attack=c.gameObject:GetComponent(typeof(CS.EnemyAttackModule))
     local callback=c.gameObject:GetComponent(typeof(CS.EnemyBaseCollider))
@@ -71,31 +112,44 @@ local function shape(c)
     if owner then out.damage_owner=owner:GetInstanceID()end
     return out
 end
-local function grownShape(c,tween)
-    -- Evaluate the original tween target TRS without changing a Transform.
+local function posedShape(c,root,targetScale,targetPosition)
+    -- Evaluate an authored local TRS without changing any Transform.
     -- A hidden blade has zero Y scale: its current bounds cannot describe
     -- tomorrow's attack volume, nor can that singular matrix be inverted.
     if c:GetType().Name~='BoxCollider'then return nil end
-    local root=tween.transform;local chain={};local t=c.transform
+    local chain={};local t=c.transform
     for depth=1,32 do
         if t==root then break end
         if not t then return nil end
         chain[#chain+1]=t;t=t.parent
     end
     if t~=root then return nil end
-    local target=field(tween,'to')
-    if not target then return nil end
-    local matrix=root.parent.localToWorldMatrix*U.Matrix4x4.TRS(root.localPosition,root.localRotation,target)
+    local matrix=root.parent.localToWorldMatrix*U.Matrix4x4.TRS(targetPosition,root.localRotation,targetScale)
     for i=#chain,1,-1 do local v=chain[i]
         matrix=matrix*U.Matrix4x4.TRS(v.localPosition,v.localRotation,v.localScale)
     end
-    local out=shape(c);out.quad={};out.grown_target=true
+    local out=shape(c);out.quad={};out.authored_pose=true
     local lo,hi=U.Vector3(1e9,1e9,1e9),U.Vector3(-1e9,-1e9,-1e9)
     for _,sign in ipairs({{-1,-1},{1,-1},{1,1},{-1,1}})do
         local p=matrix:MultiplyPoint3x4(c.center+U.Vector3(sign[1]*c.size.x/2,sign[2]*c.size.y/2,0))
         out.quad[#out.quad+1]=vector(p);lo=U.Vector3.Min(lo,p);hi=U.Vector3.Max(hi,p)
     end
+    out.depth_tilt=math.abs(matrix.m02)+math.abs(matrix.m12)>0.00001
+    if out.depth_tilt then
+        out.quad=nil
+        for _,x in ipairs({-1,1})do for _,y in ipairs({-1,1})do for _,z in ipairs({-1,1})do
+            local p=matrix:MultiplyPoint3x4(c.center+U.Vector3(x*c.size.x/2,y*c.size.y/2,z*c.size.z/2))
+            lo=U.Vector3.Min(lo,p);hi=U.Vector3.Max(hi,p)
+        end end end
+    end
     out.center=vector((hi+lo)/2);out.extents=vector((hi-lo)/2)
+    return out
+end
+local function grownShape(c,tween)
+    local target=field(tween,'to')
+    if not target then return nil end
+    local out=posedShape(c,tween.transform,target,tween.transform.localPosition)
+    if out then out.grown_target=true end
     return out
 end
 function E.privileged_state()
@@ -107,6 +161,7 @@ function E.privileged_state()
         reflection_right=vector(camera:GetScreenRightTopPos_Reflection(0)),
         position=vector(camera.LastPosition),direction=CS.GameManager.Instance.CurrDirModeNum}
     out.role.fields=values(n);out.role.velocity=vector(n.Velocity);out.role.gravity=n.Gravity
+    out.role.slope_state=n.SlopeState
     local staticFlags=CS.System.Reflection.BindingFlags.__CastFrom(56)
     local ninjaType=typeof(CS.Ninja)
     local reverseFlag=ninjaType:GetField('isEnterRollToLineDownReviseVelocityFlag',staticFlags)
@@ -117,11 +172,13 @@ function E.privileged_state()
     local slideOffset=field(CS.NinjaController.Instance,'_slideOffset')
     if slideOffset then out.role.rules.slide_offset=vector(slideOffset)end
     out.role.data=values(field(n,'_ninjaData'));out.role.collider_parameters=values(field(n,'_ninjiaCollider'))
-    out.role.colliders={};out.role.god=n:IsGodMode();out.role.mounted=n.IsMountState
+    out.role.colliders={};out.role.interaction_colliders={};out.role.god=n:IsGodMode();out.role.mounted=n.IsMountState
     local cols=n.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
     for i=0,cols.Length-1 do local c=cols[i]
         if c.enabled and c.gameObject.activeInHierarchy and c.name=='Role'then
             out.role.colliders[#out.role.colliders+1]=shape(c)
+        elseif c.name=='ColliderForItem'then
+            out.role.interaction_colliders[#out.role.interaction_colliders+1]=shape(c)
         end
     end
     local ground=n._GroundCollider
@@ -177,6 +234,22 @@ function E.privileged_state()
                     if grown and grown.damage_owner==row.id then row.grown_colliders[#row.grown_colliders+1]=grown end
                 end
             end
+            if row.type=='EnemyArrow'then
+                -- Native ResetEnemyInfo resets this object's local position
+                -- to zero and scale to one. UpdateCollider only clips that
+                -- authored box into the soil; recover it without undoing the
+                -- live Transform or using the image/mesh size as collision.
+                local colliderObject=field(o,'_colliderObject')
+                if colliderObject then
+                    row.untrimmed_colliders={}
+                    for j=0,cs.Length-1 do local c=cs[j]
+                        local full=posedShape(c,colliderObject.transform,U.Vector3.one,U.Vector3.zero)
+                        if full and full.damage_owner==row.id then
+                            row.untrimmed_colliders[#row.untrimmed_colliders+1]=full
+                        end
+                    end
+                end
+            end
             out.enemies[#out.enemies+1]=row
         end
     end
@@ -187,8 +260,15 @@ function E.privileged_state()
         if physicalItems[kind] and o.gameObject.activeInHierarchy and o.isActive and
                 o.transform.position.x>p.x-2 and o.transform.position.x<p.x+80 then
             local info=field(o,'_itemInfo');local custom=info and field(info,'_itemInfoCustom')
-            out.mechanism_items[#out.mechanism_items+1]={id=o:GetInstanceID(),type=kind,
+            local item={id=o:GetInstanceID(),type=kind,
                 position=vector(o.transform.position),fields=values(o),info=values(info),custom=values(custom)}
+            if kind=='ItemEvent'then item.action_data=actionData(custom,8)end
+            item.colliders={}
+            local cs=o.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
+            for j=0,cs.Length-1 do local c=cs[j];local owner=c:GetComponentInParent(typeof(CS.ItemBase))
+                if owner and owner:GetInstanceID()==item.id then item.colliders[#item.colliders+1]=shape(c)end
+            end
+            out.mechanism_items[#out.mechanism_items+1]=item
         end
     end
     local level=CS.LevelManager.Instance.GameLevelInfo

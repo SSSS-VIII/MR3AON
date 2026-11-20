@@ -39,6 +39,23 @@ def install_file(client, source, name, mode=400):
                  f'chmod {mode} {PRIVATE}/{name}')
 
 
+def attach_transport(client):
+    """The activity may have launched before its Android process exists."""
+    text=client.shell(f'pidof {PACKAGE} || true').strip()
+    if not text:
+        return False
+    if not text.isdecimal():
+        raise RuntimeError(f'Expected one exact original client process, got {text!r}')
+    result=client.vm.command(f'am attach-agent {text} '
+        f'{PRIVATE}/checkpoint-transport.so={PRIVATE}/checkpoint-early.lua 2>&1',timeout=30)
+    if not result['exit_code']:
+        return True
+    if 'Unknown process' in result['text'] or 'No process found' in result['text']:
+        return False
+    raise RuntimeError(f"Original transport attach failed for pid {text}: "
+                       f"exit={result['exit_code']}, output={result['text']!r}")
+
+
 def start(vm, *, seed=55200, chapter=1, level=5):
     if not vm.request('status')['result']['checkpoint_enabled']:
         raise RuntimeError('Start the search client only after all guest drives use COW')
@@ -69,7 +86,7 @@ def start(vm, *, seed=55200, chapter=1, level=5):
     sent = False
     while time.monotonic() < deadline:
         if not sent:
-            client.shell(f'am attach-agent {PACKAGE} {PRIVATE}/checkpoint-transport.so={PRIVATE}/checkpoint-early.lua')
+            attach_transport(client)
         vm.request('run', ms=1000)
         text = client.shell(f'if test -s {CONTROL}/boot-launch.txt; then cat {CONTROL}/boot-launch.txt; fi')
         if text.startswith('ERROR'):

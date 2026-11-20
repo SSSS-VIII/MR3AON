@@ -34,6 +34,26 @@ SOURCES=('arena_privileged_batch.py','arena_privileged_catalog.py','arena_privil
     'arena_checkpoint_lab/timing_margin.py','arena_checkpoint_lab/endpoint_rollout.py')
 
 
+class EntryTimeoutRestored(RuntimeError):
+    """One original entry timed out; its complete pre-entry VM was restored."""
+
+
+def initialize_case(gate,case,progress,seed):
+    before=gate.call('state');point=gate.snapshot()['result']['id']
+    try:
+        return initialize(gate,case,progress,seed=seed)
+    except TimeoutError as error:
+        if getattr(gate.vm,'uncertain_operation',None):
+            raise
+        gate.restore(point)
+        if gate.call('state')!=before:
+            raise RuntimeError('Timed-out entry restore differs from its complete native baseline') from error
+        raise EntryTimeoutRestored(str(error)) from error
+    finally:
+        if not getattr(gate.vm,'uncertain_operation',None) and point in gate.points:
+            gate.drop(point)
+
+
 def install(gate, source_root=ROOT/'tools'):
     # The mailbox is bounded by encoded UTF-8 bytes, not Lua source length.
     # A small bounded chunk count avoids an expensive command per short line.
@@ -52,6 +72,22 @@ def atomic(path,value):
     temporary=path.with_suffix('.tmp')
     temporary.write_text(json.dumps(json_safe(value),ensure_ascii=False,indent=2,allow_nan=False)+'\n')
     temporary.replace(path)
+
+
+def pending_cases(cases,ledger,revision,requested=()):
+    """Cover untouched contexts before revisiting a failed source revision."""
+    def priority(c):
+        missing=len(c['unimplemented_enemy_classes'])+len(c['unbound_enemy_ids'])
+        return (bool(ledger[c['key']]['attempts']),missing>0,c['kind']!='ordinary',
+                c['level'] not in (5,6),c['slot']!=1,missing,c['key'])
+    explicit=list(dict.fromkeys(requested))
+    work=[cases[key] for key in explicit]
+    work.extend(sorted((c for key,c in cases.items() if key not in explicit),key=priority))
+    # Native nominal exits retain their frozen evidence for later certification;
+    # model updates must not regenerate them or starve the rest of the catalog.
+    return [c for c in work if not ledger[c['key']]['nominal_complete']
+            and not any(a.get('revision')==revision and a.get('finished_at')
+                        for a in ledger[c['key']]['attempts'])]
 
 
 def main():
@@ -78,6 +114,7 @@ def main():
     atomic(args.queue/'native-environment-hashes.json',native_hashes)
     path=args.queue/'coverage.json'
     state=json.loads(path.read_text()) if path.exists() else dict(schema=1,cases={},active=None)
+    state.pop('stopped_reason',None)
     for key,case in manifest['cases'].items():
         state['cases'].setdefault(key,dict(status='pending',attempts=[],nominal_complete=False,timing_robust=False))
     state.update(source_hashes=source_hashes,revision=revision,denominator=manifest['counts'])
@@ -92,19 +129,8 @@ def main():
     unknown=set(args.case)-manifest['cases'].keys()
     if unknown:
         parser.error('Unknown canonical contexts: '+', '.join(sorted(unknown)))
-    def priority(c):
-        missing=len(c['unimplemented_enemy_classes'])+len(c['unbound_enemy_ids'])
-        return (missing>0,c['kind']!='ordinary',c['level'] not in (5,6),c['slot']!=1,missing,c['key'])
     def pending():
-        work=[manifest['cases'][key] for key in dict.fromkeys(args.case)]
-        work.extend(sorted((c for key,c in manifest['cases'].items() if key not in args.case),key=priority))
-        # A model patch changes proposal generation, not the original route
-        # already witnessed in the unchanged game environment. Keep its frozen
-        # evidence and certify it later; do not starve all other boards by
-        # regenerating the first successful case after every modelling edit.
-        return [c for c in work if not state['cases'][c['key']]['nominal_complete']
-                and not any(a.get('revision')==revision and a.get('finished_at')
-                                         for a in state['cases'][c['key']]['attempts'])]
+        return pending_cases(manifest['cases'],state['cases'],revision,args.case)
     work=pending()
     save()
     if not work:
@@ -170,7 +196,7 @@ def main():
                     attempt['progress']=value;save()
                     print(json.dumps(json_safe(dict(case=key,**value)),ensure_ascii=False),flush=True)
                 try:
-                    entry=initialize(gate,case,progress,seed=75200)
+                    entry=initialize_case(gate,case,progress,seed=75200)
                     attempt['entry']=entry;prepare(gate);install(gate,source_dir)
                     item['status']='searching';attempt['status']='searching';save()
                     result=expert(gate,folder,wall_seconds=args.wall_seconds,progress=progress,
@@ -185,7 +211,8 @@ def main():
                 except KeyboardInterrupt:
                     attempt['status']=item['status']='interrupted';raise
                 except Exception as error:
-                    attempt.update(status='error',error=repr(error));item['status']='error'
+                    status='entry_timeout_restored' if isinstance(error,EntryTimeoutRestored) else 'error'
+                    attempt.update(status=status,error=repr(error));item['status']=status
                     if isinstance(error,TimeoutError) or gate.waiting or getattr(vm,'uncertain_operation',None):
                         raise
                 finally:

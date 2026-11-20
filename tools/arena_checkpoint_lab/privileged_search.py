@@ -21,17 +21,22 @@ from timing_margin import verify
 def observe(gate):
     """Read one paused observation without exceeding the native mailbox.
 
-    Dense fixed patterns can contain dozens of enemies. Keep the original
-    17-digit gate encoding, read their records in bounded pages, and verify
-    that no native state changed while assembling the one observation.
+    Dense fixed patterns contain dozens of enemies and authored event actions.
+    Keep the original 17-digit gate encoding, read list records in bounded
+    pages, and verify that no native state changed while assembling them.
     """
+    sizes=dict(enemies=2,mechanism_items=1,supports=8,platforms=8,terrain=16)
+    keys='{'+','.join(f'{name}=true' for name in sizes)+'}'
     result=gate.call('exec',code="MR3A.privilegedCached=MR3A.privileged_state();local c=MR3A.privilegedCached;"
-        "local h={};for k,v in pairs(c)do if k~='enemies'then h[k]=v end end;return {head=h,count=#c.enemies}")
-    observation=result['head'];observation['enemies']=[]
-    for offset in range(0,result['count'],2):
-        page=gate.call('exec',code=f'local out={{}};local e=MR3A.privilegedCached.enemies;'
-            f'for i={offset+1},math.min({offset+2},#e)do out[#out+1]=e[i]end;return out')
-        observation['enemies'].extend(page or [])
+        f"local paged={keys};local h,n={{}},{{}};for k,v in pairs(c)do "
+        "if paged[k]then n[k]=#v else h[k]=v end end;return {head=h,counts=n}")
+    observation=result['head']
+    for name,size in sizes.items():
+        observation[name]=[]
+        for offset in range(0,result['counts'].get(name,0),size):
+            page=gate.call('exec',code=f'local out={{}};local e=MR3A.privilegedCached.{name};'
+                f'for i={offset+1},math.min({offset+size},#e)do out[#out+1]=e[i]end;return out')
+            observation[name].extend(page or [])
     gate.call('exec',code='MR3A.privilegedCached=nil;return true')
     if gate.view['state']!=observation['state']:
         raise RuntimeError('Paused native state changed during paged observation')
@@ -112,7 +117,13 @@ def run(gate, output, *, max_decisions=4000,max_backtracks=80,wall_seconds=1800,
                 previous_controller=deepcopy(controller)
                 proposal=controller.decide(observation);report['decisions']+=1
                 if proposal.reason=='unsupported_native_mechanism':
-                    report.update(status='unsupported_native_mechanism',missing=asdict(proposal));break
+                    report.update(status='unsupported_native_mechanism',missing=asdict(proposal),
+                                  missing_observation=observation)
+                    # Keep the exact first unsupported phase, including new
+                    # objects absent from the preceding executed interval.
+                    stream.write(json.dumps(json_safe(dict(index=index,observation=observation,
+                        proposal=asdict(proposal),executed=False)),ensure_ascii=False,allow_nan=False)+'\n')
+                    stream.flush();break
                 if proposal.reason in ('no_safe_action_window','selected_internal_window_invalidated'):
                     if backtrack(dict(reason=proposal.reason,proposal=asdict(proposal))):
                         save();continue

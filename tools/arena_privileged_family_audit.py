@@ -57,7 +57,8 @@ def audit(observations, *, offsets=(1,2,5)):
                     result['position_error_without_injury_or_blade_feedback_m'].append(error)
                 # A target-growth envelope intentionally overestimates a
                 # partially extended blade. Report its containment separately.
-                miss=np.maximum(0.,np.abs(position-hazard.centers[-1])+extent-hazard.extents[-1])
+                result['planning_padding_m'].append(hazard.padding)
+                miss=np.maximum(0.,np.abs(position-hazard.centers[-1])+extent-hazard.extents[-1]-hazard.padding)
                 result['aabb_containment_excess_m'].append(float(np.linalg.norm(miss)))
                 result['extent_error_m'].append(float(np.linalg.norm(extent-hazard.extents[-1])))
     return dict(types={kind:{name:summarize(v) for name,v in values.items()} for kind,values in stats.items()},

@@ -145,6 +145,23 @@ class PlayerModel:
             self.initial.ground_source=True
         self.initial.physical_y=role.get('fields',{}).get('_lastPosition',state['position'])['y']
         self.initial.previous_y=role.get('fields',{}).get('_secondLastPosition',state['position'])['y']
+        self.interaction_radius=0.
+        for collider in rows(role.get('interaction_colliders')):
+            if collider['type'] not in ('SphereCollider','CapsuleCollider'):
+                continue
+            scale=max(abs(collider['scale'][axis]) for axis in ('x','y','z'))
+            radius=collider['radius']*scale
+            if collider['type']=='CapsuleCollider':
+                axis=('x','y','z')[collider['direction']]
+                radial=max(abs(collider['scale'][a]) for a in ('x','y','z') if a!=axis)
+                radius=max(collider['radius']*radial,
+                           collider['height']*abs(collider['scale'][axis])/2)
+            # Enclose both original pickup profiles at the role-object root;
+            # the normal hurt capsule is much narrower than the pickup zone.
+            offset=xy(collider['center'])-xy(state['position'])
+            offset[0]-=self.initial.offset_render
+            self.interaction_radius=max(self.interaction_radius,radius+np.linalg.norm(offset))
+        self.contact_avoidance=[]
         current_platform = next((p for p in rows(observation['platforms']) if p['is_current']),None)
         if current_platform is not None:
             self.initial.support = current_platform['id']
@@ -165,16 +182,29 @@ class PlayerModel:
         for row in rows(observation.get('terrain')):
             if (phase(row['kind']) not in ('line','ground') and
                     self.initial.x <= row['start']['x'] <= self.initial.x+self.speed*1.8):
-                self.unsupported.append('terrain:'+row['kind'])
+                vertical_link=(phase(row['kind'])=='link' and
+                               abs(row['finish']['x']-row['start']['x'])<.0001)
+                if not vertical_link or '_climbDistance' not in self.data:
+                    self.unsupported.append('terrain:'+row['kind'])
         if observation.get('camera',{}).get('direction',1) != 1:
             self.unsupported.append('reverse_running_direction')
         for item in rows(observation.get('mechanism_items')):
             dx=item['position']['x']-self.initial.x
+            native_static_spring=(item['type']=='ItemSpring' and
+                item['fields'].get('_needRotate') is False and
+                item['fields'].get('isTrigger') is False and
+                not item['fields'].get('beAttracting') and self.interaction_radius>0 and
+                any(c.get('trigger') for c in rows(item.get('colliders'))) and
+                all(c['type'] in ('BoxCollider','SphereCollider') for c in rows(item.get('colliders'))))
+            if native_static_spring:
+                self.contact_avoidance.append(item)
+                continue
             if -1<dx<self.speed*1.8+3:
                 self.unsupported.append('item:'+item['type'])
 
     def surface(self, motor, t):
-        available = [s for s in self.surfaces if s.contains(motor.x, t)]
+        contact_x=motor.x+motor.offset_render
+        available = [s for s in self.surfaces if s.contains(contact_x, t)]
         current = next((s for s in available if s.id == motor.support), None)
         if current is not None:
             return current
@@ -182,10 +212,49 @@ class PlayerModel:
         # only to a geometrically connected segment, never an extrapolated line.
         previous = next((s for s in self.surfaces if s.id == motor.support), None)
         if previous:
-            connected = [s for s in available if abs(s.height(motor.x, t)-previous.height(motor.x, t)) < .05]
+            connected = [s for s in available if
+                         abs(s.height(contact_x,t)-previous.height(contact_x,t))<.05 or
+                         abs(s.right-previous.left)<.001 and abs(s.height(s.right,t)-previous.height(previous.left,t))<.001 or
+                         abs(s.left-previous.right)<.001 and abs(s.height(s.left,t)-previous.height(previous.right,t))<.001]
             if connected:
-                return min(connected, key=lambda s: abs(s.height(motor.x, t)-previous.height(motor.x, t)))
+                return min(connected, key=lambda s: abs(s.height(contact_x,t)-previous.height(contact_x,t)))
         return None
+
+    def terrain_clearances(self,motors):
+        """Keep planned paths out of native wall/automatic-climb transitions.
+
+        Ninja.MoveLogic examines the next vertical link within climbDistance
+        using the role-object position, not the hurt capsule's bottom. A high
+        link can kill a grounded role before it even reaches the wall. Until
+        automatic climb is separately validated, require crossing above the
+        link: this is a conservative planning restriction, not new game damage.
+        Descending links remain actual finite-support/free-fall transitions.
+        """
+        distance=np.full(len(motors),math.inf)
+        for row in rows(self.observation.get('terrain')):
+            a,b=row['start'],row['finish']
+            kind=phase(row['kind'])
+            reach=self.data.get('_climbDistance',0.)
+            for i,m in enumerate(motors):
+                x=m.x+m.offset_render
+                if kind=='link' and abs(b['x']-a['x'])<.0001 and b['y']>a['y'] and abs(x-a['x'])<=reach:
+                    distance[i]=min(distance[i],m.y-b['y'])
+                elif kind=='ground' and a['x']-reach<=x<=b['x']:
+                    # Same-height rope -> ground is also a wall for a role
+                    # hanging underneath. Native movement clamps at left minus
+                    # climbDistance; the scrolling camera then kills it. It is
+                    # never a traversable continuation of runOnLineDown.
+                    height=a['y']+(b['y']-a['y'])*(max(a['x'],x)-a['x'])/max(.0001,b['x']-a['x'])
+                    distance[i]=min(distance[i],m.y-height)
+                if row.get('death_offset_y') and a['x']-reach<=x<=b['x']:
+                    # Ninja.CheckIsDieTerrain uses mean endpoint Y + offset,
+                    # rather than the point's interpolated slope height.
+                    limit=(a['y']+b['y'])/2+row['death_offset_y']
+                    distance[i]=min(distance[i],m.y-limit)
+        return distance
+
+    def interaction_bodies(self,motors):
+        return np.array([(m.x+m.offset_render,m.y,self.interaction_radius,0.) for m in motors])
 
     def action(self, motor, action, t):
         s = self.surface(motor, t)
@@ -201,7 +270,7 @@ class PlayerModel:
             motor.ground_source=False
             if motor.mode in ('runonlinedown', 'rolltolinedown') and s and s.rope:
                 motor.mode = 'rolltolineon'; motor.delay = entry_delay
-                fast = motor.y > s.height(motor.x,t)+self.foot
+                fast = motor.y > s.height(motor.x+motor.offset_render,t)+self.foot
                 motor.transfer_speed = self.data['_rollAirDownUpSpeed' if fast else '_rollDownUpSpeed']
             elif motor.mode in AIR and motor.used < 2 or motor.mode in ('runonline', 'runonground', 'slideonground'):
                 motor.used = motor.used+1 if motor.mode in AIR else 1
@@ -219,7 +288,7 @@ class PlayerModel:
                 motor.mode = 'rolltolinedown' if s.rope else 'rolltoground'
                 motor.delay = entry_delay
                 fast = before_mode in AIR or (before_mode=='rolltolineon' and self.rules['reverse_fast_enabled']
-                       and motor.y>s.y+self.foot+self.rules['reverse_fast_offset'])
+                       and motor.y>s.height(motor.x+motor.offset_render,t)+self.foot+self.rules['reverse_fast_offset'])
                 motor.transfer_speed = self.data['_rollAirDownUpSpeed' if fast else '_rollDownUpSpeed']
             elif motor.mode == 'runonground':
                 if 'slide_seconds' not in self.rules:
@@ -270,7 +339,7 @@ class PlayerModel:
                 # Native SlopeSpeedRatio: speed along a slope, rather than a
                 # horizontal velocity plus an unrelated vertical correction.
                 ratio = 1/math.sqrt(1+slope*slope)
-                if s and s.id == self.initial.support and motor.mode in REST and self.native_slope_ratio is not None:
+                if s and abs(s.slope)>1e-8 and s.id == self.initial.support and motor.mode in REST and self.native_slope_ratio is not None:
                     ratio = self.native_slope_ratio
                 vx = self.speed*ratio
                 old_fixed=int(math.floor((self.clock_age+times[index-1]+1e-8)/self.tick))
@@ -310,9 +379,11 @@ class PlayerModel:
                 s = self.surface(motor, t)
                 if motor.mode in REST:
                     if s:
+                        if motor.mode=='runonline' and not s.rope:
+                            motor.mode='runonground'
                         contact=(-self.foot if motor.mode=='runonlinedown' else self.foot-.25 if
                                  motor.mode=='slideonground' and slide_entered else self.foot)
-                        target_y=s.height(motor.x,t)+contact
+                        target_y=s.height(motor.x+motor.offset_render,t)+contact
                         if motor.ground_source:
                             for _ in range(new_fixed-old_fixed):
                                 motor.previous_y=motor.physical_y;motor.physical_y=target_y
@@ -331,14 +402,14 @@ class PlayerModel:
                             motor.y += motor.lead_vy*dt+.5*motor.lead_gravity*dt*dt
                             motor.lead_vy += motor.lead_gravity*dt
                         elif motor.lead_mode in REST:
-                            motor.y = s.height(motor.x,t)+(-self.foot if motor.lead_mode=='runonlinedown' else self.foot)
+                            motor.y = s.height(motor.x+motor.offset_render,t)+(-self.foot if motor.lead_mode=='runonlinedown' else self.foot)
                         elif motor.lead_mode in TRANSFER:
-                            destination=s.height(motor.x,t)+(self.foot if motor.lead_mode=='rolltolineon'else -self.foot if s.rope else self.foot)
+                            destination=s.height(motor.x+motor.offset_render,t)+(self.foot if motor.lead_mode=='rolltolineon'else -self.foot if s.rope else self.foot)
                             move=motor.lead_vy*dt
                             motor.y += math.copysign(min(abs(destination-motor.y),abs(move)),move) if move else 0.
                     else:
                         top = motor.mode == 'rolltolineon'
-                        target = s.height(motor.x, t)+(self.foot if top or not s.rope else -self.foot)
+                        target = s.height(motor.x+motor.offset_render,t)+(self.foot if top or not s.rope else -self.foot)
                         speed = motor.transfer_speed or abs(motor.vy) or self.data['_rollDownUpSpeed']
                         delta = target-motor.y
                         motor.vy = math.copysign(speed, delta)
@@ -349,7 +420,7 @@ class PlayerModel:
                 elif motor.mode in AIR:
                     if motor.delay > 0:
                         if motor.lead_mode in REST and s:
-                            motor.y = s.height(motor.x, t)+self.foot
+                            motor.y = s.height(motor.x+motor.offset_render,t)+self.foot
                         elif motor.lead_mode in AIR:
                             motor.y += motor.lead_vy*dt+.5*motor.lead_gravity*dt*dt
                             motor.lead_vy += motor.lead_gravity*dt
@@ -363,12 +434,13 @@ class PlayerModel:
                         motor.vy = max(-40., motor.vy+gravity*dt)
                         if motor.vy <= 0:
                             motor.mode = 'fall2' if motor.used == 2 else 'fall' if motor.used else 'fallfromrun'
-                            contacts = [a for a in self.surfaces if a.contains(motor.x, t)
-                                        and before >= a.height(motor.x, t)+self.foot-.01
-                                        and motor.y <= a.height(motor.x, t)+self.foot]
+                            contact_x=motor.x+motor.offset_render
+                            contacts = [a for a in self.surfaces if a.contains(contact_x,t)
+                                        and before >= a.height(contact_x,t)+self.foot-.01
+                                        and motor.y <= a.height(contact_x,t)+self.foot]
                             if contacts:
-                                a = max(contacts, key=lambda a: a.height(motor.x, t))
-                                motor.y = a.height(motor.x, t)+self.foot
+                                a = max(contacts,key=lambda a:a.height(contact_x,t))
+                                motor.y = a.height(contact_x,t)+self.foot
                                 motor.mode = 'runonline' if a.rope else 'runonground'
                                 motor.used = 0; motor.vy = 0.; motor.support = a.id
                 motor.delay -= dt; motor.collider_delay -= dt; motor.elapsed += dt
@@ -397,6 +469,8 @@ class Hazard:
     approximate: bool = False
     geometry: str = 'aabb'
     quads: np.ndarray | None = None
+    interaction: bool = False
+    padding: float = 0.
 
 
 def spider_positions(enemy, times, *, stamp, tick):
@@ -452,6 +526,10 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
     for enemy in rows(observation['enemies']):
         f, custom, kind = enemy['fields'], enemy['custom'], enemy['type']
         if f.get('_dead') or f.get('_isRecycled'):
+            continue
+        if kind not in ('EnemyBlade','EnemySpiderWeb','EnemyKill','EnemyHideBlade') and any(
+                c.get('depth_tilt') for c in rows(enemy['colliders'])):
+            unsupported.append(dict(id=enemy['id'],type=kind,reason='spatial_rotation_requires_3D_forecast'))
             continue
         mode = phase(f.get('_enemyState', f.get('_currState', 'unknown')))
         tick = observation['state']['fixedDeltaTime']
@@ -546,6 +624,8 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                 active = predicted[3]
             if kind=='EnemyHideBlade':
                 colliders = [c for c in rows(enemy['grown_colliders']) if c.get('damage_kind')]
+            elif kind=='EnemyArrow' and mode!='onground' and enemy.get('untrimmed_colliders'):
+                colliders = [c for c in rows(enemy['untrimmed_colliders']) if c.get('damage_kind')]
         for c in colliders:
             if kind not in ('EnemyFlyBamboo','EnemyHideBlade') and not c['active']:
                 continue
@@ -557,6 +637,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                 radius=c['radius']*np.max(np.abs(predicted[4]*child_scale),axis=1)
                 extent=np.tile(radius[:,None],(1,2))
             quads = None
+            padding=0.
             if kind not in ('EnemyStraightBat','EnemyFlyBamboo','EnemySpider','EnemyMuppetBomb','EnemyEliteSpider'):
                 pivot = xy(enemy['position'])
                 rot = np.stack((np.stack((np.cos(angles),-np.sin(angles)),axis=-1),
@@ -567,8 +648,25 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                     quads = np.einsum('nij,kj->nki',rot,quad)+pivot+delta[:,None,:]
                     center = quads.mean(axis=1)
                     extent = (quads.max(axis=1)-quads.min(axis=1))/2
+                if kind in ('EnemyHook','EnemyBambooThorn') and len(predicted)>5:
+                    if c.get('quad'):
+                        lever=np.linalg.norm(np.array([xy(p)for p in c['quad']])-pivot,axis=1).max()
+                    else:
+                        lever=np.linalg.norm(xy(c['center'])-pivot)+np.linalg.norm(xy(c['extents']))
+                    padding=float(lever*predicted[5]['angular_padding']);approximate=True
             result.append(Hazard(c['id'], enemy['id'], kind, center, extent, active, source, approximate,
-                                 'sphere' if c['type']=='SphereCollider' else 'obb' if quads is not None else 'aabb', quads))
+                                 'sphere' if c['type']=='SphereCollider' else 'obb' if quads is not None else 'aabb', quads,
+                                 padding=padding))
+    for item in player.contact_avoidance:
+        for collider in rows(item['colliders']):
+            if not collider.get('trigger'):
+                continue
+            center=np.tile(xy(collider['center']),(len(times),1))
+            extent=np.tile(xy(collider['extents']),(len(times),1))
+            quads=np.tile(np.array([xy(p)for p in collider['quad']]),(len(times),1,1)) if collider.get('quad') else None
+            result.append(Hazard(collider['id'],item['id'],item['type'],center,extent,
+                np.ones(len(times),bool),'Avoid native ItemSpring pickup; PopBySpring remains unsupported',
+                approximate=True,geometry='obb' if quads is not None else 'aabb',quads=quads,interaction=True))
     return result, unsupported
 
 
@@ -578,6 +676,8 @@ def clearance(body, hazard):
     Original OBBs are currently enclosed by their native world AABB. Rounding
     is retained for SphereCollider/role capsules; no visual boxes are involved.
     """
+    if hazard.padding:
+        return clearance(body,replace(hazard,padding=0.))-hazard.padding
     if hazard.quads is not None:
         from arena_privileged_geometry import capsule_quad
         return capsule_quad(body,hazard.quads,hazard.active)

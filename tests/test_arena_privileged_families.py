@@ -26,12 +26,28 @@ def test_half_second_native_future_matches_source_reducer_or_authored_envelope(c
         if not c or not c['active'] or not c['enabled']:
             continue
         actual=np.array([c['center'][a] for a in ('x','y')])
-        if case['kind']=='EnemyHideBlade':
+        if case.get('conservative_timing_envelope'):
+            assert h.approximate and h.padding>0
+            extent=np.array([c['extents'][a] for a in ('x','y')])
+            assert np.all(np.abs(h.centers[-1]-actual)+extent<=h.extents[-1]+h.padding+.001)
+        elif case['kind']=='EnemyHideBlade' or case.get('conservative_envelope'):
             actual_extent=np.array([c['extents'][a] for a in ('x','y')])
             assert np.all(h.centers[-1]-h.extents[-1]<=actual-actual_extent+.001)
             assert np.all(h.centers[-1]+h.extents[-1]>=actual+actual_extent-.001)
+            if case['kind']=='EnemyArrow':
+                # AABB containment alone can conceal a wrong shaft angle.
+                # Check every actual corner against all original box edges.
+                outer=h.quads[-1];inner=np.array([[p['x'],p['y']]for p in c['quad']])
+                edges=np.roll(outer,-1,axis=0)-outer
+                signed_area=np.sum(outer[:,0]*np.roll(outer[:,1],-1)-
+                                   outer[:,1]*np.roll(outer[:,0],-1))
+                for origin,edge in zip(outer,edges):
+                    relative=inner-origin
+                    side=(edge[0]*relative[:,1]-edge[1]*relative[:,0])*np.sign(signed_area)
+                    assert np.all(side>=-.0015*np.linalg.norm(edge))
         else:
-            assert np.linalg.norm(h.centers[-1]-actual)<.011
+            tolerance=.001 if case['kind']=='EnemyEliteDart' else .011
+            assert np.linalg.norm(h.centers[-1]-actual)<tolerance
             if case['kind']=='EnemyPinball':
                 extent=np.array([c['extents'][a] for a in ('x','y')])
                 assert np.linalg.norm(h.extents[-1]-extent)<.0001

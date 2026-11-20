@@ -41,3 +41,23 @@ def test_guest_environment_uses_current_scripts_and_valid_Lua_UTF8_literals():
     assert '从第' in client.code
     assert '\\u' not in client.code
     assert '/checkpoint-payload/environment.lua' not in client.code
+
+
+def test_cold_transport_waits_for_exact_process_and_retains_attach_diagnostics():
+    from arena_checkpoint_lab.boot_client import attach_transport
+    class Client:
+        pid='';result=dict(exit_code=0,text='')
+        def shell(self,command):return self.pid
+        @property
+        def vm(self):return self
+        def command(self,command,timeout):
+            self.sent=command;return self.result
+    client=Client()
+    assert not attach_transport(client) and not hasattr(client,'sent')
+    client.pid='1234';assert attach_transport(client)
+    assert 'am attach-agent 1234 ' in client.sent and '2>&1' in client.sent
+    client.result=dict(exit_code=255,text='Error: Unknown process: 1234')
+    assert not attach_transport(client)
+    client.result=dict(exit_code=255,text='Permission denied')
+    with pytest.raises(RuntimeError,match='Permission denied'):
+        attach_transport(client)

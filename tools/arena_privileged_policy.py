@@ -63,7 +63,9 @@ class InternalController:
                 valid &= input_ready(operations[0][1],operations[0][0])
             evidence['evaluated'] += 1
             actual_hazards = hazard_forecasts(observation, times, player, motors)[0] if coupled else hazards
-            distances = [clearance(body, hazard) for hazard in actual_hazards]
+            interaction_body=player.interaction_bodies(motors) if any(h.interaction for h in actual_hazards) else None
+            distances = [clearance(interaction_body if hazard.interaction else body, hazard) for hazard in actual_hazards]
+            distances.append(player.terrain_clearances(motors))
             distance = np.minimum.reduce(distances) if distances else np.full(len(times), math.inf)
             collision = np.flatnonzero(distance <= .025)
             # A discontinuous/dead surface is not covered by collision checks
