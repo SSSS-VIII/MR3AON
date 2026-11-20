@@ -77,3 +77,10 @@ def test_native_pending_stop_does_not_extrapolate_preceding_actor_speed():
     assert FIXTURE['pending_speed_stop']['after']['speed']==0
     result,reason=rotating_electric(e,np.array([0.,.1]),o,PlayerModel(o))
     assert result is None and reason=='rotating_electric_pending_actor_speed_stop'
+
+
+def test_zero_speed_after_release_is_not_assumed_to_stay_zero():
+    o=deepcopy(FIXTURE['cases'][0]['before']);o['state']['speed']=0
+    o['role']['fields']['_runStopped']=False
+    result,reason=rotating_electric(o['enemies'][0],np.array([0.,.1]),o,PlayerModel(o))
+    assert result is None and reason=='rotating_electric_unverified_zero_or_resuming_actor_speed'

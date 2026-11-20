@@ -1,0 +1,3960 @@
+{
+  "schema": 1,
+  "source": "debug/arena-client/privileged-controller-v2/native-electric-v110-L8-M71-S2-B8019.jsonl",
+  "cases": [
+    {
+      "name": "carrier_ground_offset_persists",
+      "before": {
+        "privileged": true,
+        "special_task": {
+          "observed": true,
+          "active": false,
+          "fields": {}
+        },
+        "support_id": -792046,
+        "terrain": [
+          {
+            "block_index": 1,
+            "id": "resolved:1:1",
+            "start": {
+              "y": 0,
+              "z": 0,
+              "x": 60
+            },
+            "kind": "ground: 1",
+            "speed": 20,
+            "death_offset_y": 0,
+            "hidden": false,
+            "finish": {
+              "y": 0,
+              "z": 0,
+              "x": 76
+            },
+            "stage_index": 1
+          },
+          {
+            "block_index": 2,
+            "id": "resolved:1:2",
+            "start": {
+              "y": 0,
+              "z": 0,
+              "x": 76
+            },
+            "kind": "ground: 1",
+            "speed": 20,
+            "death_offset_y": 0,
+            "hidden": false,
+            "finish": {
+              "y": 0,
+              "z": 0,
+              "x": 88
+            },
+            "stage_index": 1
+          },
+          {
+            "block_index": 3,
+            "id": "resolved:1:3",
+            "start": {
+              "y": 0,
+              "z": 0,
+              "x": 88
+            },
+            "kind": "line: 0",
+            "speed": 20,
+            "death_offset_y": 0,
+            "hidden": false,
+            "finish": {
+              "y": 0,
+              "z": 0,
+              "x": 248
+            },
+            "stage_index": 1
+          }
+        ],
+        "platforms": {},
+        "board": {
+          "block_index": 1,
+          "finish": {
+            "y": 2,
+            "z": 0,
+            "x": 576
+          },
+          "map_id": 71,
+          "stage_start": 36,
+          "stage_id": 8019,
+          "stage_index": 1
+        },
+        "camera": {
+          "real_right": {
+            "y": 6.556349277496338,
+            "z": 0,
+            "x": 96.11214447021484
+          },
+          "right": {
+            "y": 8,
+            "z": -11,
+            "x": 98.01197052001953
+          },
+          "position": {
+            "y": 2,
+            "z": 0,
+            "x": 88.01197052001953
+          },
+          "direction": 1,
+          "reflection_right": {
+            "y": 6.5,
+            "z": -11,
+            "x": 95.61200714111328
+          },
+          "fields": {
+            "isNeedUpdateAspectOffset": true,
+            "<StopFollowNinja>k__BackingField": false,
+            "_cameraOffset": {
+              "y": 2,
+              "z": 0,
+              "x": 16.399993896484375
+            },
+            "_lastFixedUpdateTime": 441.67999267578125,
+            "_focusAcc": 0,
+            "_shakeRangeScale": 1,
+            "_recordRealScreenRTRefPos": {
+              "y": 4.556349277496338,
+              "z": 0,
+              "x": 8.100176811218262
+            },
+            "_screenPosInitialized": true,
+            "_lastLocalPositionSupport": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "_speedXLerp": 4,
+            "_floatCurRollFrameTime": 0,
+            "_loopShake": true,
+            "_shiftSpeed": 5,
+            "_cameraOffset_bossP2": {
+              "y": 2,
+              "z": 0,
+              "x": 0
+            },
+            "_cameraRotate": false,
+            "<isActive>k__BackingField": true,
+            "<DefaultCameraZ>k__BackingField": -11,
+            "_currShiftPriority": "None: 0",
+            "_ctrlAnimEnable": false,
+            "_cameraMode": 0,
+            "_lbRealPos": {
+              "y": -2.556349277496338,
+              "z": 0,
+              "x": 79.91179656982422
+            },
+            "_targetCameraRoll": 0,
+            "_shiftSpeedCannotToSmallOnce": false,
+            "_lastPositionMainCamera": {
+              "y": 2,
+              "z": -11,
+              "x": 87.61200714111328
+            },
+            "_focusRemainTime": 0,
+            "_slowDownCameraAccelerated": 0,
+            "_rtPos": {
+              "y": 8,
+              "z": -11,
+              "x": 98.01197052001953
+            },
+            "_targetCameraOffset": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "IsIgnoreOtherSpeed": false,
+            "flyItemLerpFactor": 0,
+            "_tarFieldView": 45,
+            "_speedYLerp": 2,
+            "banUpdatetAspectOffset": false,
+            "_cameraOffset_tosky": {
+              "y": 30,
+              "z": 0,
+              "x": 1
+            },
+            "_animCtrlAutoEnd": false,
+            "_focusSpeed": 5,
+            "_secondLocalPositionSupport": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "_cameraShift": false,
+            "_lbPos": {
+              "y": -4,
+              "z": -11,
+              "x": 78.01197052001953
+            },
+            "_movingAspectOffsetCoid": 0,
+            "originalFOV": 45,
+            "_currShiftCurveProgress": 0,
+            "_isShakeCamera": true,
+            "_floatRollAllFrameTime": 0,
+            "_secondLastPosition": {
+              "y": 2,
+              "z": 0,
+              "x": 87.61200714111328
+            },
+            "_ratateSpeed": 0,
+            "_shiftStartOffset": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "_defaultFieldView": 45,
+            "_currRotatePriority": "None: 0",
+            "_bBossP2": false,
+            "_currFocusType": "None: 0",
+            "_cameraSupportSpeedRe": 0,
+            "_lastLocalPositionMainCamera": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_screenWidth": 1920,
+            "_cameraOffsetType": "onGround: 2",
+            "_supportOriZ": -11,
+            "_shiftAcc": 0,
+            "cameraWidth": 10,
+            "_shakeOverTime": 0,
+            "_shakeOverRemainTime": 0,
+            "_rotateIgnoreTimeScale": false,
+            "_gameEndSlowDown": false,
+            "_cameraOffset_lineDown": {
+              "y": 1,
+              "z": 0,
+              "x": 8
+            },
+            "_shakeDeltaTime": 0.049986932426691055,
+            "_recordScreenLBRefPos": {
+              "y": -6,
+              "z": -11,
+              "x": -10
+            },
+            "_currShakeIndex": 1,
+            "_recordLastPos": {
+              "y": 2,
+              "z": 0,
+              "x": 6
+            },
+            "_rtRealPos": {
+              "y": 6.556349277496338,
+              "z": 0,
+              "x": 96.11214447021484
+            },
+            "_recordScreenRTRefPos": {
+              "y": 6,
+              "z": -11,
+              "x": 10
+            },
+            "_secondLocalPositionMainCamera": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "<forceSetCameraLocalPosZero>k__BackingField": false,
+            "_lastFieldView": 45,
+            "_shakeTime": 7.4166693687438965,
+            "speed": 20,
+            "_shiftIgnoreTimeScale": false,
+            "_fieldViewChangeSpeed": 0,
+            "_cameraOffset_onsky": {
+              "y": 30,
+              "z": 0,
+              "x": 8
+            },
+            "ninjaRelayOutScreenFollow": false,
+            "_recordRealScreenLBRefPos": {
+              "y": -4.556349277496338,
+              "z": 0,
+              "x": -8.100176811218262
+            },
+            "<OnSkySteady>k__BackingField": false,
+            "_reflectCameraPositionY": 0,
+            "_screenHeight": 1080,
+            "_cameraOffset_line": {
+              "y": 2,
+              "z": 0,
+              "x": 8
+            },
+            "_secondLastFieldView": 45,
+            "_cameraSpeed": 19.9981689453125,
+            "_slowDownDis": 5,
+            "_lastPosition": {
+              "y": 2,
+              "z": 0,
+              "x": 88.01197052001953
+            },
+            "_cameraOffset_ground": {
+              "y": 2,
+              "z": 0,
+              "x": 8
+            },
+            "_focusing": false,
+            "cameraHeight": 6
+          }
+        },
+        "supports": [
+          {
+            "block_index": 3,
+            "id": -792060,
+            "is_ground": false,
+            "info": {
+              "isNeedShowSpeedUp": true,
+              "_canClimb": true,
+              "_groundType": "line: 0",
+              "_cameraOffsetAnchorY": 0,
+              "_isDeadBlockOffsetY": 0,
+              "_initialDeadBlockOffsetY": 0,
+              "_ninjaSpeed": 20,
+              "_infiniteLoop": false,
+              "_hideGround": false,
+              "_repeatTimesMin": 1,
+              "_posZ": 0,
+              "_repeatTimesMax": 1
+            },
+            "stage_index": 1,
+            "is_line": true,
+            "finish": {
+              "y": 0,
+              "z": 0,
+              "x": 248
+            },
+            "start": {
+              "y": 0,
+              "z": 0,
+              "x": 88
+            }
+          },
+          {
+            "block_index": 1,
+            "id": -792046,
+            "is_ground": true,
+            "info": {
+              "isNeedShowSpeedUp": true,
+              "_canClimb": true,
+              "_groundType": "ground: 1",
+              "_cameraOffsetAnchorY": 0,
+              "_isDeadBlockOffsetY": 0,
+              "_initialDeadBlockOffsetY": 0,
+              "_ninjaSpeed": 20,
+              "_infiniteLoop": false,
+              "_hideGround": false,
+              "_repeatTimesMin": 1,
+              "_posZ": 0,
+              "_repeatTimesMax": 1
+            },
+            "stage_index": 1,
+            "is_line": false,
+            "finish": {
+              "y": 0,
+              "z": 0,
+              "x": 76
+            },
+            "start": {
+              "y": 0,
+              "z": 0,
+              "x": 60
+            }
+          },
+          {
+            "block_index": 2,
+            "id": -792018,
+            "is_ground": true,
+            "info": {
+              "isNeedShowSpeedUp": true,
+              "_canClimb": true,
+              "_groundType": "ground: 1",
+              "_cameraOffsetAnchorY": 0,
+              "_isDeadBlockOffsetY": 0,
+              "_initialDeadBlockOffsetY": 0,
+              "_ninjaSpeed": 20,
+              "_infiniteLoop": false,
+              "_hideGround": false,
+              "_repeatTimesMin": 1,
+              "_posZ": 0,
+              "_repeatTimesMax": 1
+            },
+            "stage_index": 1,
+            "is_line": false,
+            "finish": {
+              "y": 0,
+              "z": 0,
+              "x": 88
+            },
+            "start": {
+              "y": 0,
+              "z": 0,
+              "x": 76
+            }
+          }
+        ],
+        "schema": 1,
+        "state": {
+          "time": 441.6952819824219,
+          "health": 5000,
+          "colliders": [
+            {
+              "radius": 0.20000000298023224,
+              "name": "Role",
+              "enabled": true,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "height": 1.7999999523162842,
+              "extents": {
+                "y": 0.4679999351501465,
+                "z": 0.20000000298023224,
+                "x": 0.1999969482421875
+              },
+              "localCenter": {
+                "y": 0,
+                "z": 0,
+                "x": 0.10000000149011612
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 76.16929626464844
+              }
+            },
+            {
+              "type": "SphereCollider",
+              "extents": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 76.11729431152344
+              },
+              "name": "ColliderForItem",
+              "trigger": true,
+              "enabled": false
+            },
+            {
+              "radius": 0.41999998688697815,
+              "name": "ColliderForItem",
+              "enabled": true,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "height": 2.5,
+              "extents": {
+                "y": 0.6499999761581421,
+                "z": 0.41999998688697815,
+                "x": 0.4199981689453125
+              },
+              "localCenter": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 76.11729431152344
+              }
+            },
+            {
+              "radius": 0.6800000071525574,
+              "name": "ColliderAtMount",
+              "enabled": false,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "height": 6.460000038146973,
+              "extents": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "localCenter": {
+                "y": -0.36000001430511475,
+                "z": 0,
+                "x": 0.8299999833106995
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 76.11729431152344
+              }
+            }
+          ],
+          "level": 8,
+          "fixedDeltaTime": 0.019999999552965164,
+          "state": "Game: 8",
+          "offline": true,
+          "mode": 6,
+          "speed": 20,
+          "score": 2598046.887901306,
+          "healthMultiplier": 50,
+          "maxHealth": 5000,
+          "position": {
+            "y": 0.75,
+            "z": 0,
+            "x": 76.11729431152344
+          },
+          "coins": 0,
+          "only": true,
+          "distance": 13380.5107421875,
+          "episodeTime": 2.9599978923797607,
+          "combatFamily": 3,
+          "timeScale": 0,
+          "episodeFrame": 148,
+          "seed": 74410,
+          "physics": "runOnGround: 5",
+          "frame": 216591,
+          "chapter": 1,
+          "content": "Running: 1"
+        },
+        "mechanism_items": {},
+        "enemies": [],
+        "role": {
+          "colliders": [
+            {
+              "parent_active": true,
+              "radius": 0.20000000298023224,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "position": {
+                "y": 0.75,
+                "z": 0,
+                "x": 76.11729431152344
+              },
+              "local_center": {
+                "y": 0,
+                "z": 0,
+                "x": 0.10000000149011612
+              },
+              "tag": "Player_Ninja",
+              "name": "Role",
+              "scale": {
+                "y": 0.5199999809265137,
+                "z": 1,
+                "x": 0.5199999809265137
+              },
+              "enabled": true,
+              "rotation_z": 0,
+              "id": -811510,
+              "height": 1.7999999523162842,
+              "active": true,
+              "extents": {
+                "y": 0.4679999351501465,
+                "z": 0.20000000298023224,
+                "x": 0.1999969482421875
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 76.16929626464844
+              }
+            }
+          ],
+          "mounted": false,
+          "slope_state": 0,
+          "gravity": 0,
+          "interaction_colliders": [
+            {
+              "id": -811516,
+              "parent_active": true,
+              "local_center": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "radius": 0.4000000059604645,
+              "name": "ColliderForItem",
+              "active": true,
+              "enabled": false,
+              "extents": {
+                "y": 0.4000000059604645,
+                "z": 0.4000000059604645,
+                "x": 0.4000000059604645
+              },
+              "type": "SphereCollider",
+              "tag": "RoleForItem",
+              "rotation_z": 0,
+              "position": {
+                "y": 0.75,
+                "z": 0,
+                "x": 76.11729431152344
+              },
+              "scale": {
+                "y": 0.5199999809265137,
+                "z": 1,
+                "x": 0.5199999809265137
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 76.11729431152344
+              }
+            },
+            {
+              "parent_active": true,
+              "radius": 0.41999998688697815,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "position": {
+                "y": 0.75,
+                "z": 0,
+                "x": 76.11729431152344
+              },
+              "local_center": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "tag": "RoleForItem",
+              "name": "ColliderForItem",
+              "scale": {
+                "y": 0.5199999809265137,
+                "z": 1,
+                "x": 0.5199999809265137
+              },
+              "enabled": true,
+              "rotation_z": 0,
+              "id": -811520,
+              "height": 2.5,
+              "active": true,
+              "extents": {
+                "y": 0.6499999761581421,
+                "z": 0.41999998688697815,
+                "x": 0.4199981689453125
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 76.11729431152344
+              }
+            }
+          ],
+          "velocity": {
+            "y": 0,
+            "z": 0,
+            "x": 20
+          },
+          "fields": {
+            "fall3Glide": false,
+            "commonAcc": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "sinkRemainHeight": 0,
+            "fireFlyStartSpeed": 0,
+            "_lastFixedUpdateTime": 441.67999267578125,
+            "<PullingOutWeapon>k__BackingField": false,
+            "_dieOnWaterAcc": 2,
+            "_gravity": 0,
+            "<_jumpFromPoint>k__BackingField": {
+              "y": 4.480503082275391,
+              "z": 0,
+              "x": 41.81138229370117
+            },
+            "_toothDashSpeed": 0,
+            "hurtAudio": "None: 0",
+            "_touchMoveCheckStuck": true,
+            "_soulRemaindTime": 0,
+            "minHealthFlag": 0,
+            "_dieBySpiderOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_fireFlyHeight": 0,
+            "m_hitMaterial": "Flesh: 2",
+            "_targetY": 0,
+            "_touchMoveLimitYMin": 0,
+            "_headTwistOff": false,
+            "m_slopState": 0,
+            "dragChangedCollider": false,
+            "<RunStopSlowEnd>k__BackingField": false,
+            "_lockedMaxLifeValue": 0,
+            "_canRebormFrame": 0,
+            "allDisplayVisible": true,
+            "_windDashTarSpeed": 0,
+            "fireLegEndShootRemain": 0,
+            "lastHurtEnemyIndex": -1,
+            "skillGlideMaxTime": 0,
+            "findResurgenceDis": 0,
+            "WaitForSlope": 0,
+            "_dragDisappear": false,
+            "_bCloneAttack": false,
+            "skillGlideRemainTime": 0,
+            "<SkipAnimationInCustomJump>k__BackingField": false,
+            "nextResetJumpAutoJump2": false,
+            "_fastGlide": false,
+            "_stateBeforeSuspend": "none: 0",
+            "__ninjaPhysicsState": "runOnGround: 5",
+            "_stopRunTime": 1.5,
+            "<IsRideItemState>k__BackingField": false,
+            "_canYield": false,
+            "checkGodTimes": 0,
+            "_popCurrSpeed": 0,
+            "_shellDash": false,
+            "deadEscapeEnable": false,
+            "isDuringDisappear": false,
+            "<isActive>k__BackingField": true,
+            "<AttractItemLevelValue>k__BackingField": 0,
+            "_killBySkill": false,
+            "_secondLastPosition": {
+              "y": 0.75,
+              "z": 0,
+              "x": 75.81150817871094
+            },
+            "m_ninjaID": 1,
+            "<IsSuspend>k__BackingField": false,
+            "_tarYRelativeCamera": 0,
+            "<StandAftGetUp>k__BackingField": false,
+            "<RelayInvincibleRemainTime>k__BackingField": 0,
+            "_stuckHorizontal": true,
+            "<BeBlocked>k__BackingField": false,
+            "_fireFlyAcc": -20,
+            "_attackTime": 2,
+            "_caculateAtLevelBlockFlag": false,
+            "first0": true,
+            "_glided": false,
+            "<IsMountState>k__BackingField": false,
+            "<HurtComatose>k__BackingField": false,
+            "damageReduceValue": 0,
+            "_lastUpBottonDown": false,
+            "_buffEfectOffset": {
+              "y": 3,
+              "z": 0,
+              "x": 0.20000000298023224
+            },
+            "<IsAngreState>k__BackingField": false,
+            "_attackBossMode": false,
+            "_isRecycled": false,
+            "_noHurtTime": 2.9599978923797607,
+            "_ninjaHide": false,
+            "_cloneAttackSpeed": 60,
+            "_ninjaTouchMove": false,
+            "skillGlideDecreaseSpeed": 1,
+            "suspendTargetY": 0,
+            "skillGlideIncreaseSpeed": 2,
+            "dashTarOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "resetJumpTimes": false,
+            "_thunderDash": false,
+            "_breakDragCount": 0,
+            "skillGlide": false,
+            "_dieUnderWater": false,
+            "_onBoatState": "Stand: 0",
+            "stateScrollSource": "None: 100",
+            "first3": true,
+            "damageReduceEnable": false,
+            "dieAudio": "Game_Role1_Common_Hurt: 130001",
+            "_beDragToUnderground": false,
+            "_popCanJump": false,
+            "curSkillFireLegEnd": false,
+            "_ninjaTimeStop": false,
+            "first1": true,
+            "m_attackMaterial": "Sharp: 2",
+            "_yRelativeCamera": 0,
+            "_weaponScale": 1,
+            "m_skinID": 1,
+            "_slideSmokeCreateTime": 0,
+            "resetJumpTimesNew": 0,
+            "scrollParam": 1,
+            "stateScrollType": "None: 100",
+            "_onBoatSitTime": 0,
+            "__ninjaPrePhysicsState": "fall: 15",
+            "_offsetToNinja": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_dashIndex": 0,
+            "scrollType": "None: 100",
+            "scrollSource": "ScrollItem: 0",
+            "_isDefense": false,
+            "_popDirection": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "IsSoulState": false,
+            "lastReduceWeaponTime": -1000,
+            "newXiaoheiBeforeState": "none: 0",
+            "fireFlyTarSpeed": 0,
+            "_glideRemaindTime": 0,
+            "newXiaoheiSuspend": 0,
+            "_dashSlowDown": false,
+            "punctuationOffset": {
+              "y": 1.2999999523162842,
+              "z": 0,
+              "x": 1.2000000476837158
+            },
+            "_currWindDashSpeed": 0,
+            "btState": 0,
+            "triggerStart": true,
+            "skillGlideState": "none: 0",
+            "_canBreakDrag": false,
+            "_dragTime": 0,
+            "<ScrollInvincibleRemaindTime>k__BackingField": 0,
+            "_slideRemainTime": 0,
+            "_windBlinkFallRemaindTime": 0,
+            "<GetUpping>k__BackingField": false,
+            "rebornLeftTimes": 0,
+            "<FinishWaitOut>k__BackingField": false,
+            "_forbidAllAnim": false,
+            "_beDragWaitEnd": false,
+            "_hurtAttenuationRemainTime": 0,
+            "_beDrag": false,
+            "_reviveCount": 0,
+            "_fastGlideLoopAudio": "None: 0",
+            "_fastGlideAudioInstanceID": 0,
+            "recordNinjaDie": false,
+            "<EndLevelWaitOut>k__BackingField": false,
+            "_fastGlideTargetSpeed": 30,
+            "_firstFastGlide": true,
+            "_isQuickRoll": false,
+            "continuePopTimeRemain": 0,
+            "<SealFlagValue>k__BackingField": 0,
+            "accTime": 0,
+            "m_roleID": 1,
+            "_accelerat": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_lastRoleObjPos": {
+              "y": 0.75,
+              "z": 0,
+              "x": 76.21150970458984
+            },
+            "rebornCountDownTime": 0,
+            "_fireFlyTime": 0,
+            "_fireFlyStartGroundY": 0,
+            "_currRoleObjOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "StartDashForbidOperate": false,
+            "windEffectOffset": {
+              "y": 0.9599999785423279,
+              "z": 0,
+              "x": 1.0299999713897705
+            },
+            "_isClone": false,
+            "_windDashAcc": 20,
+            "_waitToSlide": false,
+            "<FallDown>k__BackingField": false,
+            "_curScrollRoleID": 0,
+            "_windDash": false,
+            "_hpBarOffset": {
+              "y": 1.8300000429153442,
+              "z": 0,
+              "x": 0
+            },
+            "_touchMoveLimitYMax": 0,
+            "landingPos": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_runStopped": false,
+            "_cameraShiftCtrling": false,
+            "_originNinjFootPoint": 0,
+            "_shellDashSpeed": 0,
+            "fireLegEndShootTime": 1.2000000476837158,
+            "_continuePop": false,
+            "_slopeOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_btRecycleFlag": false,
+            "_skillSuspendSpeed": 10,
+            "_lastDownButtonDown": false,
+            "_changeDirection": true,
+            "_isRevive": false,
+            "_inJump4": false,
+            "first2": true,
+            "_getStuck": false,
+            "_moveDirection": {
+              "y": 1,
+              "z": 0,
+              "x": 2
+            },
+            "damageReduceType": 0,
+            "_soulTotalTime": 0,
+            "changeState": false,
+            "_stuckPos": 0,
+            "_skillSuspendPreState": "none: 0",
+            "_touchMoveLimitBanFrame": -1,
+            "<BeBlockedStayX>k__BackingField": 0,
+            "<StopImmediate>k__BackingField": false,
+            "_xDragSpeed": 0,
+            "<WeaponShootPoint>k__BackingField": {
+              "y": 0.75,
+              "z": 0,
+              "x": 76.21150970458984
+            },
+            "showBlood": true,
+            "autoRecoverForbidFlag": 0,
+            "_lastNinjaPhysicsState": "runOnGround: 5",
+            "<PopCameraFollow>k__BackingField": false,
+            "_currHurtAttenuationRatio": 1,
+            "isRevivedBefore": false,
+            "_isInitCoroutine": false,
+            "suspendRange": 1,
+            "befFireLegState": "none: 0",
+            "_touchMoveLerpSpeed": 1,
+            "itemPapercraneFlag": 0,
+            "fireLegSuspendRefCameraY": 0,
+            "_stuckByBlock": true,
+            "fireLegHeight": 0,
+            "nextResetJumpAutoGlide": false,
+            "_velocity": {
+              "y": 0,
+              "z": 0,
+              "x": 20
+            },
+            "_currBlinkVelocity": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_slowDownAcc": -10,
+            "_currBlinkTarPos": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "rectSide": "None: 4",
+            "_lastNinjaControllerType": "onGround: 1",
+            "_moveSpeedBefStopRun": 20,
+            "_ninjaControllerType": "onGround: 1",
+            "<StuckEndRecover>k__BackingField": false,
+            "_popAcceleration": 0,
+            "_hurtCheckTimes": 0.2199999988079071,
+            "_healingState": false,
+            "_fireDashAcceleration": 0,
+            "_hurtOffsetTime": 0,
+            "_lastPosition": {
+              "y": 0.75,
+              "z": 0,
+              "x": 76.21150970458984
+            },
+            "_slopeSpeedRatio": 1,
+            "<CameraFollowNinja>k__BackingField": false,
+            "fireFlyStartOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_currentAttackTime": 0,
+            "m_uid": 0
+          },
+          "collider_parameters": {
+            "_rollColliderHeight": 0.10000000149011612,
+            "_normalColliderHeight": 1.7999999523162842,
+            "_slideColliderOffset": {
+              "y": -0.30000001192092896,
+              "z": 0,
+              "x": 0.05000000074505806
+            },
+            "_rollColliderOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0.05000000074505806
+            },
+            "_jumpColliderOffset": {
+              "y": 0.30000001192092896,
+              "z": 0,
+              "x": 0.10000000149011612
+            },
+            "_normalColliderRadius": 0.20000000298023224,
+            "_rollColliderRadius": 0.10000000149011612,
+            "_jumpColliderHeight": 1.2000000476837158,
+            "_normalColliderOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0.10000000149011612
+            }
+          },
+          "data": {
+            "_jumpForce4": 8.5,
+            "_jumpForce2": 12.5,
+            "_normalGravity": -19.799999237060547,
+            "_glideMinSpeed": -2,
+            "_rollDownUpSpeed": 8,
+            "_downGravity1": -9,
+            "_upGravity1": -25,
+            "_upGravity2": -9.800000190734863,
+            "_jumpForce3": 12,
+            "_jumpForce1": 23.5,
+            "_ninjaFootPoint": 0.75,
+            "_climbDistance": 0.800000011920929,
+            "_downGravity2": -9.800000190734863,
+            "_moveSpeed": 20,
+            "_rollAirDownUpSpeed": 28,
+            "_glideAccSpeed": 1,
+            "_glideMaxSpeed": 2.5,
+            "_driveForce": 5,
+            "_glideUpForce": 5,
+            "_downGravity3": -9.800000190734863,
+            "_ninjaHeight": 1,
+            "_downGravity4": -9.800000190734863,
+            "_upGravity4": -9.800000190734863,
+            "_upGravity3": -9.800000190734863
+          },
+          "god": false,
+          "rules": {
+            "slide_offset": {
+              "y": 0,
+              "z": 0,
+              "x": 4
+            },
+            "ground_lengthen": 0.30000001192092896,
+            "slide_seconds": 0.5,
+            "reverse_fast_offset": 5,
+            "reverse_fast_enabled": true
+          }
+        }
+      },
+      "after": {
+        "state": {
+          "time": 442.1952819824219,
+          "health": 5000,
+          "colliders": [
+            {
+              "radius": 0.20000000298023224,
+              "name": "Role",
+              "enabled": true,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "height": 1.7999999523162842,
+              "extents": {
+                "y": 0.4679999351501465,
+                "z": 0.20000000298023224,
+                "x": 0.1999969482421875
+              },
+              "localCenter": {
+                "y": 0,
+                "z": 0,
+                "x": 0.10000000149011612
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 86.1693344116211
+              }
+            },
+            {
+              "type": "SphereCollider",
+              "extents": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 86.1173324584961
+              },
+              "name": "ColliderForItem",
+              "trigger": true,
+              "enabled": false
+            },
+            {
+              "radius": 0.41999998688697815,
+              "name": "ColliderForItem",
+              "enabled": true,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "height": 2.5,
+              "extents": {
+                "y": 0.6499999761581421,
+                "z": 0.41999998688697815,
+                "x": 0.4199981689453125
+              },
+              "localCenter": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 86.1173324584961
+              }
+            },
+            {
+              "radius": 0.6800000071525574,
+              "name": "ColliderAtMount",
+              "enabled": false,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "height": 6.460000038146973,
+              "extents": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "localCenter": {
+                "y": -0.36000001430511475,
+                "z": 0,
+                "x": 0.8299999833106995
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 86.1173324584961
+              }
+            }
+          ],
+          "level": 8,
+          "fixedDeltaTime": 0.019999999552965164,
+          "state": "Game: 8",
+          "offline": true,
+          "mode": 6,
+          "speed": 20,
+          "score": 2599046.8917160034,
+          "healthMultiplier": 50,
+          "maxHealth": 5000,
+          "position": {
+            "y": 0.75,
+            "z": 0,
+            "x": 86.1173324584961
+          },
+          "coins": 0,
+          "only": true,
+          "distance": 13390.5205078125,
+          "episodeTime": 3.4599974155426025,
+          "combatFamily": 3,
+          "timeScale": 0,
+          "episodeFrame": 173,
+          "seed": 74410,
+          "physics": "runOnGround: 5",
+          "frame": 216771,
+          "chapter": 1,
+          "content": "Running: 1"
+        },
+        "camera": {
+          "real_right": {
+            "y": 6.556349277496338,
+            "z": 0,
+            "x": 106.11175537109375
+          },
+          "right": {
+            "y": 8,
+            "z": -11,
+            "x": 108.01158142089844
+          },
+          "position": {
+            "y": 2,
+            "z": 0,
+            "x": 98.01158142089844
+          },
+          "direction": 1,
+          "reflection_right": {
+            "y": 6.5,
+            "z": -11,
+            "x": 105.61158752441406
+          },
+          "fields": {
+            "isNeedUpdateAspectOffset": true,
+            "<StopFollowNinja>k__BackingField": false,
+            "_cameraOffset": {
+              "y": 2,
+              "z": 0,
+              "x": 16.399993896484375
+            },
+            "_lastFixedUpdateTime": 442.17999267578125,
+            "_focusAcc": 0,
+            "_shakeRangeScale": 1,
+            "_recordRealScreenRTRefPos": {
+              "y": 4.556349277496338,
+              "z": 0,
+              "x": 8.100176811218262
+            },
+            "_screenPosInitialized": true,
+            "_lastLocalPositionSupport": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "_speedXLerp": 4,
+            "_floatCurRollFrameTime": 0,
+            "_loopShake": true,
+            "_shiftSpeed": 5,
+            "_cameraOffset_bossP2": {
+              "y": 2,
+              "z": 0,
+              "x": 0
+            },
+            "_cameraRotate": false,
+            "<isActive>k__BackingField": true,
+            "<DefaultCameraZ>k__BackingField": -11,
+            "_currShiftPriority": "None: 0",
+            "_ctrlAnimEnable": false,
+            "_cameraMode": 0,
+            "_lbRealPos": {
+              "y": -2.556349277496338,
+              "z": 0,
+              "x": 89.91140747070312
+            },
+            "_targetCameraRoll": 0,
+            "_shiftSpeedCannotToSmallOnce": false,
+            "_lastPositionMainCamera": {
+              "y": 2,
+              "z": -11,
+              "x": 97.61158752441406
+            },
+            "_focusRemainTime": 0,
+            "_slowDownCameraAccelerated": 0,
+            "_rtPos": {
+              "y": 8,
+              "z": -11,
+              "x": 108.01158142089844
+            },
+            "_targetCameraOffset": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "IsIgnoreOtherSpeed": false,
+            "flyItemLerpFactor": 0,
+            "_tarFieldView": 45,
+            "_speedYLerp": 2,
+            "banUpdatetAspectOffset": false,
+            "_cameraOffset_tosky": {
+              "y": 30,
+              "z": 0,
+              "x": 1
+            },
+            "_animCtrlAutoEnd": false,
+            "_focusSpeed": 5,
+            "_secondLocalPositionSupport": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "_cameraShift": false,
+            "_lbPos": {
+              "y": -4,
+              "z": -11,
+              "x": 88.01158142089844
+            },
+            "_movingAspectOffsetCoid": 0,
+            "originalFOV": 45,
+            "_currShiftCurveProgress": 0,
+            "_isShakeCamera": true,
+            "_floatRollAllFrameTime": 0,
+            "_secondLastPosition": {
+              "y": 2,
+              "z": 0,
+              "x": 97.61158752441406
+            },
+            "_ratateSpeed": 0,
+            "_shiftStartOffset": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "_defaultFieldView": 45,
+            "_currRotatePriority": "None: 0",
+            "_bBossP2": false,
+            "_currFocusType": "None: 0",
+            "_cameraSupportSpeedRe": 0,
+            "_lastLocalPositionMainCamera": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_screenWidth": 1920,
+            "_cameraOffsetType": "onGround: 2",
+            "_supportOriZ": -11,
+            "_shiftAcc": 0,
+            "cameraWidth": 10,
+            "_shakeOverTime": 0,
+            "_shakeOverRemainTime": 0,
+            "_rotateIgnoreTimeScale": false,
+            "_gameEndSlowDown": false,
+            "_cameraOffset_lineDown": {
+              "y": 1,
+              "z": 0,
+              "x": 8
+            },
+            "_shakeDeltaTime": 0.1666666716337204,
+            "_recordScreenLBRefPos": {
+              "y": -6,
+              "z": -11,
+              "x": -10
+            },
+            "_currShakeIndex": 4,
+            "_recordLastPos": {
+              "y": 2,
+              "z": 0,
+              "x": 6
+            },
+            "_rtRealPos": {
+              "y": 6.556349277496338,
+              "z": 0,
+              "x": 106.11175537109375
+            },
+            "_recordScreenRTRefPos": {
+              "y": 6,
+              "z": -11,
+              "x": 10
+            },
+            "_secondLocalPositionMainCamera": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "<forceSetCameraLocalPosZero>k__BackingField": false,
+            "_lastFieldView": 45,
+            "_shakeTime": 6.91654109954834,
+            "speed": 20,
+            "_shiftIgnoreTimeScale": false,
+            "_fieldViewChangeSpeed": 0,
+            "_cameraOffset_onsky": {
+              "y": 30,
+              "z": 0,
+              "x": 8
+            },
+            "ninjaRelayOutScreenFollow": false,
+            "_recordRealScreenLBRefPos": {
+              "y": -4.556349277496338,
+              "z": 0,
+              "x": -8.100176811218262
+            },
+            "<OnSkySteady>k__BackingField": false,
+            "_reflectCameraPositionY": 0,
+            "_screenHeight": 1080,
+            "_cameraOffset_line": {
+              "y": 2,
+              "z": 0,
+              "x": 8
+            },
+            "_secondLastFieldView": 45,
+            "_cameraSpeed": 19.99969482421875,
+            "_slowDownDis": 5,
+            "_lastPosition": {
+              "y": 2,
+              "z": 0,
+              "x": 98.01158142089844
+            },
+            "_cameraOffset_ground": {
+              "y": 2,
+              "z": 0,
+              "x": 8
+            },
+            "_focusing": false,
+            "cameraHeight": 6
+          }
+        }
+      },
+      "scope": "Native camera calibration from passive run with original damage; paired interval has no injury, not a route."
+    },
+    {
+      "name": "ground_to_rope_restores_offset",
+      "before": {
+        "privileged": true,
+        "special_task": {
+          "observed": true,
+          "active": false,
+          "fields": {}
+        },
+        "support_id": -792018,
+        "terrain": [
+          {
+            "block_index": 2,
+            "id": "resolved:1:2",
+            "start": {
+              "y": 0,
+              "z": 0,
+              "x": 76
+            },
+            "kind": "ground: 1",
+            "speed": 20,
+            "death_offset_y": 0,
+            "hidden": false,
+            "finish": {
+              "y": 0,
+              "z": 0,
+              "x": 88
+            },
+            "stage_index": 1
+          },
+          {
+            "block_index": 3,
+            "id": "resolved:1:3",
+            "start": {
+              "y": 0,
+              "z": 0,
+              "x": 88
+            },
+            "kind": "line: 0",
+            "speed": 20,
+            "death_offset_y": 0,
+            "hidden": false,
+            "finish": {
+              "y": 0,
+              "z": 0,
+              "x": 248
+            },
+            "stage_index": 1
+          }
+        ],
+        "platforms": {},
+        "board": {
+          "block_index": 2,
+          "finish": {
+            "y": 2,
+            "z": 0,
+            "x": 576
+          },
+          "map_id": 71,
+          "stage_start": 36,
+          "stage_id": 8019,
+          "stage_index": 1
+        },
+        "camera": {
+          "real_right": {
+            "y": 6.556349277496338,
+            "z": 0,
+            "x": 106.11175537109375
+          },
+          "right": {
+            "y": 8,
+            "z": -11,
+            "x": 108.01158142089844
+          },
+          "position": {
+            "y": 2,
+            "z": 0,
+            "x": 98.01158142089844
+          },
+          "direction": 1,
+          "reflection_right": {
+            "y": 6.5,
+            "z": -11,
+            "x": 105.61158752441406
+          },
+          "fields": {
+            "isNeedUpdateAspectOffset": true,
+            "<StopFollowNinja>k__BackingField": false,
+            "_cameraOffset": {
+              "y": 2,
+              "z": 0,
+              "x": 16.399993896484375
+            },
+            "_lastFixedUpdateTime": 442.17999267578125,
+            "_focusAcc": 0,
+            "_shakeRangeScale": 1,
+            "_recordRealScreenRTRefPos": {
+              "y": 4.556349277496338,
+              "z": 0,
+              "x": 8.100176811218262
+            },
+            "_screenPosInitialized": true,
+            "_lastLocalPositionSupport": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "_speedXLerp": 4,
+            "_floatCurRollFrameTime": 0,
+            "_loopShake": true,
+            "_shiftSpeed": 5,
+            "_cameraOffset_bossP2": {
+              "y": 2,
+              "z": 0,
+              "x": 0
+            },
+            "_cameraRotate": false,
+            "<isActive>k__BackingField": true,
+            "<DefaultCameraZ>k__BackingField": -11,
+            "_currShiftPriority": "None: 0",
+            "_ctrlAnimEnable": false,
+            "_cameraMode": 0,
+            "_lbRealPos": {
+              "y": -2.556349277496338,
+              "z": 0,
+              "x": 89.91140747070312
+            },
+            "_targetCameraRoll": 0,
+            "_shiftSpeedCannotToSmallOnce": false,
+            "_lastPositionMainCamera": {
+              "y": 2,
+              "z": -11,
+              "x": 97.61158752441406
+            },
+            "_focusRemainTime": 0,
+            "_slowDownCameraAccelerated": 0,
+            "_rtPos": {
+              "y": 8,
+              "z": -11,
+              "x": 108.01158142089844
+            },
+            "_targetCameraOffset": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "IsIgnoreOtherSpeed": false,
+            "flyItemLerpFactor": 0,
+            "_tarFieldView": 45,
+            "_speedYLerp": 2,
+            "banUpdatetAspectOffset": false,
+            "_cameraOffset_tosky": {
+              "y": 30,
+              "z": 0,
+              "x": 1
+            },
+            "_animCtrlAutoEnd": false,
+            "_focusSpeed": 5,
+            "_secondLocalPositionSupport": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "_cameraShift": false,
+            "_lbPos": {
+              "y": -4,
+              "z": -11,
+              "x": 88.01158142089844
+            },
+            "_movingAspectOffsetCoid": 0,
+            "originalFOV": 45,
+            "_currShiftCurveProgress": 0,
+            "_isShakeCamera": true,
+            "_floatRollAllFrameTime": 0,
+            "_secondLastPosition": {
+              "y": 2,
+              "z": 0,
+              "x": 97.61158752441406
+            },
+            "_ratateSpeed": 0,
+            "_shiftStartOffset": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "_defaultFieldView": 45,
+            "_currRotatePriority": "None: 0",
+            "_bBossP2": false,
+            "_currFocusType": "None: 0",
+            "_cameraSupportSpeedRe": 0,
+            "_lastLocalPositionMainCamera": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_screenWidth": 1920,
+            "_cameraOffsetType": "onGround: 2",
+            "_supportOriZ": -11,
+            "_shiftAcc": 0,
+            "cameraWidth": 10,
+            "_shakeOverTime": 0,
+            "_shakeOverRemainTime": 0,
+            "_rotateIgnoreTimeScale": false,
+            "_gameEndSlowDown": false,
+            "_cameraOffset_lineDown": {
+              "y": 1,
+              "z": 0,
+              "x": 8
+            },
+            "_shakeDeltaTime": 0.1666666716337204,
+            "_recordScreenLBRefPos": {
+              "y": -6,
+              "z": -11,
+              "x": -10
+            },
+            "_currShakeIndex": 4,
+            "_recordLastPos": {
+              "y": 2,
+              "z": 0,
+              "x": 6
+            },
+            "_rtRealPos": {
+              "y": 6.556349277496338,
+              "z": 0,
+              "x": 106.11175537109375
+            },
+            "_recordScreenRTRefPos": {
+              "y": 6,
+              "z": -11,
+              "x": 10
+            },
+            "_secondLocalPositionMainCamera": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "<forceSetCameraLocalPosZero>k__BackingField": false,
+            "_lastFieldView": 45,
+            "_shakeTime": 6.91654109954834,
+            "speed": 20,
+            "_shiftIgnoreTimeScale": false,
+            "_fieldViewChangeSpeed": 0,
+            "_cameraOffset_onsky": {
+              "y": 30,
+              "z": 0,
+              "x": 8
+            },
+            "ninjaRelayOutScreenFollow": false,
+            "_recordRealScreenLBRefPos": {
+              "y": -4.556349277496338,
+              "z": 0,
+              "x": -8.100176811218262
+            },
+            "<OnSkySteady>k__BackingField": false,
+            "_reflectCameraPositionY": 0,
+            "_screenHeight": 1080,
+            "_cameraOffset_line": {
+              "y": 2,
+              "z": 0,
+              "x": 8
+            },
+            "_secondLastFieldView": 45,
+            "_cameraSpeed": 19.99969482421875,
+            "_slowDownDis": 5,
+            "_lastPosition": {
+              "y": 2,
+              "z": 0,
+              "x": 98.01158142089844
+            },
+            "_cameraOffset_ground": {
+              "y": 2,
+              "z": 0,
+              "x": 8
+            },
+            "_focusing": false,
+            "cameraHeight": 6
+          }
+        },
+        "supports": [
+          {
+            "block_index": 3,
+            "id": -792060,
+            "is_ground": false,
+            "info": {
+              "isNeedShowSpeedUp": true,
+              "_canClimb": true,
+              "_groundType": "line: 0",
+              "_cameraOffsetAnchorY": 0,
+              "_isDeadBlockOffsetY": 0,
+              "_initialDeadBlockOffsetY": 0,
+              "_ninjaSpeed": 20,
+              "_infiniteLoop": false,
+              "_hideGround": false,
+              "_repeatTimesMin": 1,
+              "_posZ": 0,
+              "_repeatTimesMax": 1
+            },
+            "stage_index": 1,
+            "is_line": true,
+            "finish": {
+              "y": 0,
+              "z": 0,
+              "x": 248
+            },
+            "start": {
+              "y": 0,
+              "z": 0,
+              "x": 88
+            }
+          },
+          {
+            "block_index": 2,
+            "id": -792018,
+            "is_ground": true,
+            "info": {
+              "isNeedShowSpeedUp": true,
+              "_canClimb": true,
+              "_groundType": "ground: 1",
+              "_cameraOffsetAnchorY": 0,
+              "_isDeadBlockOffsetY": 0,
+              "_initialDeadBlockOffsetY": 0,
+              "_ninjaSpeed": 20,
+              "_infiniteLoop": false,
+              "_hideGround": false,
+              "_repeatTimesMin": 1,
+              "_posZ": 0,
+              "_repeatTimesMax": 1
+            },
+            "stage_index": 1,
+            "is_line": false,
+            "finish": {
+              "y": 0,
+              "z": 0,
+              "x": 88
+            },
+            "start": {
+              "y": 0,
+              "z": 0,
+              "x": 76
+            }
+          }
+        ],
+        "schema": 1,
+        "state": {
+          "time": 442.1952819824219,
+          "health": 5000,
+          "colliders": [
+            {
+              "radius": 0.20000000298023224,
+              "name": "Role",
+              "enabled": true,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "height": 1.7999999523162842,
+              "extents": {
+                "y": 0.4679999351501465,
+                "z": 0.20000000298023224,
+                "x": 0.1999969482421875
+              },
+              "localCenter": {
+                "y": 0,
+                "z": 0,
+                "x": 0.10000000149011612
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 86.1693344116211
+              }
+            },
+            {
+              "type": "SphereCollider",
+              "extents": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 86.1173324584961
+              },
+              "name": "ColliderForItem",
+              "trigger": true,
+              "enabled": false
+            },
+            {
+              "radius": 0.41999998688697815,
+              "name": "ColliderForItem",
+              "enabled": true,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "height": 2.5,
+              "extents": {
+                "y": 0.6499999761581421,
+                "z": 0.41999998688697815,
+                "x": 0.4199981689453125
+              },
+              "localCenter": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 86.1173324584961
+              }
+            },
+            {
+              "radius": 0.6800000071525574,
+              "name": "ColliderAtMount",
+              "enabled": false,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "height": 6.460000038146973,
+              "extents": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "localCenter": {
+                "y": -0.36000001430511475,
+                "z": 0,
+                "x": 0.8299999833106995
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 86.1173324584961
+              }
+            }
+          ],
+          "level": 8,
+          "fixedDeltaTime": 0.019999999552965164,
+          "state": "Game: 8",
+          "offline": true,
+          "mode": 6,
+          "speed": 20,
+          "score": 2599046.8917160034,
+          "healthMultiplier": 50,
+          "maxHealth": 5000,
+          "position": {
+            "y": 0.75,
+            "z": 0,
+            "x": 86.1173324584961
+          },
+          "coins": 0,
+          "only": true,
+          "distance": 13390.5205078125,
+          "episodeTime": 3.4599974155426025,
+          "combatFamily": 3,
+          "timeScale": 0,
+          "episodeFrame": 173,
+          "seed": 74410,
+          "physics": "runOnGround: 5",
+          "frame": 216771,
+          "chapter": 1,
+          "content": "Running: 1"
+        },
+        "mechanism_items": {},
+        "enemies": [],
+        "role": {
+          "colliders": [
+            {
+              "parent_active": true,
+              "radius": 0.20000000298023224,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "position": {
+                "y": 0.75,
+                "z": 0,
+                "x": 86.1173324584961
+              },
+              "local_center": {
+                "y": 0,
+                "z": 0,
+                "x": 0.10000000149011612
+              },
+              "tag": "Player_Ninja",
+              "name": "Role",
+              "scale": {
+                "y": 0.5199999809265137,
+                "z": 1,
+                "x": 0.5199999809265137
+              },
+              "enabled": true,
+              "rotation_z": 0,
+              "id": -811510,
+              "height": 1.7999999523162842,
+              "active": true,
+              "extents": {
+                "y": 0.4679999351501465,
+                "z": 0.20000000298023224,
+                "x": 0.1999969482421875
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 86.1693344116211
+              }
+            }
+          ],
+          "mounted": false,
+          "slope_state": 0,
+          "gravity": 0,
+          "interaction_colliders": [
+            {
+              "id": -811516,
+              "parent_active": true,
+              "local_center": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "radius": 0.4000000059604645,
+              "name": "ColliderForItem",
+              "active": true,
+              "enabled": false,
+              "extents": {
+                "y": 0.4000000059604645,
+                "z": 0.4000000059604645,
+                "x": 0.4000000059604645
+              },
+              "type": "SphereCollider",
+              "tag": "RoleForItem",
+              "rotation_z": 0,
+              "position": {
+                "y": 0.75,
+                "z": 0,
+                "x": 86.1173324584961
+              },
+              "scale": {
+                "y": 0.5199999809265137,
+                "z": 1,
+                "x": 0.5199999809265137
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 86.1173324584961
+              }
+            },
+            {
+              "parent_active": true,
+              "radius": 0.41999998688697815,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "position": {
+                "y": 0.75,
+                "z": 0,
+                "x": 86.1173324584961
+              },
+              "local_center": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "tag": "RoleForItem",
+              "name": "ColliderForItem",
+              "scale": {
+                "y": 0.5199999809265137,
+                "z": 1,
+                "x": 0.5199999809265137
+              },
+              "enabled": true,
+              "rotation_z": 0,
+              "id": -811520,
+              "height": 2.5,
+              "active": true,
+              "extents": {
+                "y": 0.6499999761581421,
+                "z": 0.41999998688697815,
+                "x": 0.4199981689453125
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 86.1173324584961
+              }
+            }
+          ],
+          "velocity": {
+            "y": 0,
+            "z": 0,
+            "x": 20
+          },
+          "fields": {
+            "fall3Glide": false,
+            "commonAcc": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "sinkRemainHeight": 0,
+            "fireFlyStartSpeed": 0,
+            "_lastFixedUpdateTime": 442.17999267578125,
+            "<PullingOutWeapon>k__BackingField": false,
+            "_dieOnWaterAcc": 2,
+            "_gravity": 0,
+            "<_jumpFromPoint>k__BackingField": {
+              "y": 4.480503082275391,
+              "z": 0,
+              "x": 41.81138229370117
+            },
+            "_toothDashSpeed": 0,
+            "hurtAudio": "None: 0",
+            "_touchMoveCheckStuck": true,
+            "_soulRemaindTime": 0,
+            "minHealthFlag": 0,
+            "_dieBySpiderOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_fireFlyHeight": 0,
+            "m_hitMaterial": "Flesh: 2",
+            "_targetY": 0,
+            "_touchMoveLimitYMin": 0,
+            "_headTwistOff": false,
+            "m_slopState": 0,
+            "dragChangedCollider": false,
+            "<RunStopSlowEnd>k__BackingField": false,
+            "_lockedMaxLifeValue": 0,
+            "_canRebormFrame": 0,
+            "allDisplayVisible": true,
+            "_windDashTarSpeed": 0,
+            "fireLegEndShootRemain": 0,
+            "lastHurtEnemyIndex": -1,
+            "skillGlideMaxTime": 0,
+            "findResurgenceDis": 0,
+            "WaitForSlope": 0,
+            "_dragDisappear": false,
+            "_bCloneAttack": false,
+            "skillGlideRemainTime": 0,
+            "<SkipAnimationInCustomJump>k__BackingField": false,
+            "nextResetJumpAutoJump2": false,
+            "_fastGlide": false,
+            "_stateBeforeSuspend": "none: 0",
+            "__ninjaPhysicsState": "runOnGround: 5",
+            "_stopRunTime": 1.5,
+            "<IsRideItemState>k__BackingField": false,
+            "_canYield": false,
+            "checkGodTimes": 0,
+            "_popCurrSpeed": 0,
+            "_shellDash": false,
+            "deadEscapeEnable": false,
+            "isDuringDisappear": false,
+            "<isActive>k__BackingField": true,
+            "<AttractItemLevelValue>k__BackingField": 0,
+            "_killBySkill": false,
+            "_secondLastPosition": {
+              "y": 0.75,
+              "z": 0,
+              "x": 85.8115463256836
+            },
+            "m_ninjaID": 1,
+            "<IsSuspend>k__BackingField": false,
+            "_tarYRelativeCamera": 0,
+            "<StandAftGetUp>k__BackingField": false,
+            "<RelayInvincibleRemainTime>k__BackingField": 0,
+            "_stuckHorizontal": true,
+            "<BeBlocked>k__BackingField": false,
+            "_fireFlyAcc": -20,
+            "_attackTime": 2,
+            "_caculateAtLevelBlockFlag": false,
+            "first0": true,
+            "_glided": false,
+            "<IsMountState>k__BackingField": false,
+            "<HurtComatose>k__BackingField": false,
+            "damageReduceValue": 0,
+            "_lastUpBottonDown": false,
+            "_buffEfectOffset": {
+              "y": 3,
+              "z": 0,
+              "x": 0.20000000298023224
+            },
+            "<IsAngreState>k__BackingField": false,
+            "_attackBossMode": false,
+            "_isRecycled": false,
+            "_noHurtTime": 3.4599974155426025,
+            "_ninjaHide": false,
+            "_cloneAttackSpeed": 60,
+            "_ninjaTouchMove": false,
+            "skillGlideDecreaseSpeed": 1,
+            "suspendTargetY": 0,
+            "skillGlideIncreaseSpeed": 2,
+            "dashTarOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "resetJumpTimes": false,
+            "_thunderDash": false,
+            "_breakDragCount": 0,
+            "skillGlide": false,
+            "_dieUnderWater": false,
+            "_onBoatState": "Stand: 0",
+            "stateScrollSource": "None: 100",
+            "first3": true,
+            "damageReduceEnable": false,
+            "dieAudio": "Game_Role1_Common_Hurt: 130001",
+            "_beDragToUnderground": false,
+            "_popCanJump": false,
+            "curSkillFireLegEnd": false,
+            "_ninjaTimeStop": false,
+            "first1": true,
+            "m_attackMaterial": "Sharp: 2",
+            "_yRelativeCamera": 0,
+            "_weaponScale": 1,
+            "m_skinID": 1,
+            "_slideSmokeCreateTime": 0,
+            "resetJumpTimesNew": 0,
+            "scrollParam": 1,
+            "stateScrollType": "None: 100",
+            "_onBoatSitTime": 0,
+            "__ninjaPrePhysicsState": "fall: 15",
+            "_offsetToNinja": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_dashIndex": 0,
+            "scrollType": "None: 100",
+            "scrollSource": "ScrollItem: 0",
+            "_isDefense": false,
+            "_popDirection": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "IsSoulState": false,
+            "lastReduceWeaponTime": -1000,
+            "newXiaoheiBeforeState": "none: 0",
+            "fireFlyTarSpeed": 0,
+            "_glideRemaindTime": 0,
+            "newXiaoheiSuspend": 0,
+            "_dashSlowDown": false,
+            "punctuationOffset": {
+              "y": 1.2999999523162842,
+              "z": 0,
+              "x": 1.2000000476837158
+            },
+            "_currWindDashSpeed": 0,
+            "btState": 0,
+            "triggerStart": true,
+            "skillGlideState": "none: 0",
+            "_canBreakDrag": false,
+            "_dragTime": 0,
+            "<ScrollInvincibleRemaindTime>k__BackingField": 0,
+            "_slideRemainTime": 0,
+            "_windBlinkFallRemaindTime": 0,
+            "<GetUpping>k__BackingField": false,
+            "rebornLeftTimes": 0,
+            "<FinishWaitOut>k__BackingField": false,
+            "_forbidAllAnim": false,
+            "_beDragWaitEnd": false,
+            "_hurtAttenuationRemainTime": 0,
+            "_beDrag": false,
+            "_reviveCount": 0,
+            "_fastGlideLoopAudio": "None: 0",
+            "_fastGlideAudioInstanceID": 0,
+            "recordNinjaDie": false,
+            "<EndLevelWaitOut>k__BackingField": false,
+            "_fastGlideTargetSpeed": 30,
+            "_firstFastGlide": true,
+            "_isQuickRoll": false,
+            "continuePopTimeRemain": 0,
+            "<SealFlagValue>k__BackingField": 0,
+            "accTime": 0,
+            "m_roleID": 1,
+            "_accelerat": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_lastRoleObjPos": {
+              "y": 0.75,
+              "z": 0,
+              "x": 86.2115478515625
+            },
+            "rebornCountDownTime": 0,
+            "_fireFlyTime": 0,
+            "_fireFlyStartGroundY": 0,
+            "_currRoleObjOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "StartDashForbidOperate": false,
+            "windEffectOffset": {
+              "y": 0.9599999785423279,
+              "z": 0,
+              "x": 1.0299999713897705
+            },
+            "_isClone": false,
+            "_windDashAcc": 20,
+            "_waitToSlide": false,
+            "<FallDown>k__BackingField": false,
+            "_curScrollRoleID": 0,
+            "_windDash": false,
+            "_hpBarOffset": {
+              "y": 1.8300000429153442,
+              "z": 0,
+              "x": 0
+            },
+            "_touchMoveLimitYMax": 0,
+            "landingPos": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_runStopped": false,
+            "_cameraShiftCtrling": false,
+            "_originNinjFootPoint": 0,
+            "_shellDashSpeed": 0,
+            "fireLegEndShootTime": 1.2000000476837158,
+            "_continuePop": false,
+            "_slopeOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_btRecycleFlag": false,
+            "_skillSuspendSpeed": 10,
+            "_lastDownButtonDown": false,
+            "_changeDirection": true,
+            "_isRevive": false,
+            "_inJump4": false,
+            "first2": true,
+            "_getStuck": false,
+            "_moveDirection": {
+              "y": 1,
+              "z": 0,
+              "x": 2
+            },
+            "damageReduceType": 0,
+            "_soulTotalTime": 0,
+            "changeState": false,
+            "_stuckPos": 0,
+            "_skillSuspendPreState": "none: 0",
+            "_touchMoveLimitBanFrame": -1,
+            "<BeBlockedStayX>k__BackingField": 0,
+            "<StopImmediate>k__BackingField": false,
+            "_xDragSpeed": 0,
+            "<WeaponShootPoint>k__BackingField": {
+              "y": 0.75,
+              "z": 0,
+              "x": 86.2115478515625
+            },
+            "showBlood": true,
+            "autoRecoverForbidFlag": 0,
+            "_lastNinjaPhysicsState": "runOnGround: 5",
+            "<PopCameraFollow>k__BackingField": false,
+            "_currHurtAttenuationRatio": 1,
+            "isRevivedBefore": false,
+            "_isInitCoroutine": false,
+            "suspendRange": 1,
+            "befFireLegState": "none: 0",
+            "_touchMoveLerpSpeed": 1,
+            "itemPapercraneFlag": 0,
+            "fireLegSuspendRefCameraY": 0,
+            "_stuckByBlock": true,
+            "fireLegHeight": 0,
+            "nextResetJumpAutoGlide": false,
+            "_velocity": {
+              "y": 0,
+              "z": 0,
+              "x": 20
+            },
+            "_currBlinkVelocity": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_slowDownAcc": -10,
+            "_currBlinkTarPos": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "rectSide": "None: 4",
+            "_lastNinjaControllerType": "onGround: 1",
+            "_moveSpeedBefStopRun": 20,
+            "_ninjaControllerType": "onGround: 1",
+            "<StuckEndRecover>k__BackingField": false,
+            "_popAcceleration": 0,
+            "_hurtCheckTimes": 0.040000028908252716,
+            "_healingState": false,
+            "_fireDashAcceleration": 0,
+            "_hurtOffsetTime": 0,
+            "_lastPosition": {
+              "y": 0.75,
+              "z": 0,
+              "x": 86.2115478515625
+            },
+            "_slopeSpeedRatio": 1,
+            "<CameraFollowNinja>k__BackingField": false,
+            "fireFlyStartOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_currentAttackTime": 0,
+            "m_uid": 0
+          },
+          "collider_parameters": {
+            "_rollColliderHeight": 0.10000000149011612,
+            "_normalColliderHeight": 1.7999999523162842,
+            "_slideColliderOffset": {
+              "y": -0.30000001192092896,
+              "z": 0,
+              "x": 0.05000000074505806
+            },
+            "_rollColliderOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0.05000000074505806
+            },
+            "_jumpColliderOffset": {
+              "y": 0.30000001192092896,
+              "z": 0,
+              "x": 0.10000000149011612
+            },
+            "_normalColliderRadius": 0.20000000298023224,
+            "_rollColliderRadius": 0.10000000149011612,
+            "_jumpColliderHeight": 1.2000000476837158,
+            "_normalColliderOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0.10000000149011612
+            }
+          },
+          "data": {
+            "_jumpForce4": 8.5,
+            "_jumpForce2": 12.5,
+            "_normalGravity": -19.799999237060547,
+            "_glideMinSpeed": -2,
+            "_rollDownUpSpeed": 8,
+            "_downGravity1": -9,
+            "_upGravity1": -25,
+            "_upGravity2": -9.800000190734863,
+            "_jumpForce3": 12,
+            "_jumpForce1": 23.5,
+            "_ninjaFootPoint": 0.75,
+            "_climbDistance": 0.800000011920929,
+            "_downGravity2": -9.800000190734863,
+            "_moveSpeed": 20,
+            "_rollAirDownUpSpeed": 28,
+            "_glideAccSpeed": 1,
+            "_glideMaxSpeed": 2.5,
+            "_driveForce": 5,
+            "_glideUpForce": 5,
+            "_downGravity3": -9.800000190734863,
+            "_ninjaHeight": 1,
+            "_downGravity4": -9.800000190734863,
+            "_upGravity4": -9.800000190734863,
+            "_upGravity3": -9.800000190734863
+          },
+          "god": false,
+          "rules": {
+            "slide_offset": {
+              "y": 0,
+              "z": 0,
+              "x": 4
+            },
+            "ground_lengthen": 0.30000001192092896,
+            "slide_seconds": 0.5,
+            "reverse_fast_offset": 5,
+            "reverse_fast_enabled": true
+          }
+        }
+      },
+      "after": {
+        "state": {
+          "time": 442.6952819824219,
+          "health": 5000,
+          "colliders": [
+            {
+              "radius": 0.20000000298023224,
+              "name": "Role",
+              "enabled": true,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "height": 1.7999999523162842,
+              "extents": {
+                "y": 0.4679999351501465,
+                "z": 0.20000000298023224,
+                "x": 0.1999969482421875
+              },
+              "localCenter": {
+                "y": 0,
+                "z": 0,
+                "x": 0.10000000149011612
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 96.16937255859375
+              }
+            },
+            {
+              "type": "SphereCollider",
+              "extents": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 96.11737060546875
+              },
+              "name": "ColliderForItem",
+              "trigger": true,
+              "enabled": false
+            },
+            {
+              "radius": 0.41999998688697815,
+              "name": "ColliderForItem",
+              "enabled": true,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "height": 2.5,
+              "extents": {
+                "y": 0.6499999761581421,
+                "z": 0.41999998688697815,
+                "x": 0.4199981689453125
+              },
+              "localCenter": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 96.11737060546875
+              }
+            },
+            {
+              "radius": 0.6800000071525574,
+              "name": "ColliderAtMount",
+              "enabled": false,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "height": 6.460000038146973,
+              "extents": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "localCenter": {
+                "y": -0.36000001430511475,
+                "z": 0,
+                "x": 0.8299999833106995
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 96.11737060546875
+              }
+            }
+          ],
+          "level": 8,
+          "fixedDeltaTime": 0.019999999552965164,
+          "state": "Game: 8",
+          "offline": true,
+          "mode": 6,
+          "speed": 20,
+          "score": 2600046.8955307007,
+          "healthMultiplier": 50,
+          "maxHealth": 5000,
+          "position": {
+            "y": 0.75,
+            "z": 0,
+            "x": 96.11737060546875
+          },
+          "coins": 0,
+          "only": true,
+          "distance": 13400.5302734375,
+          "episodeTime": 3.9599969387054443,
+          "combatFamily": 3,
+          "timeScale": 0,
+          "episodeFrame": 198,
+          "seed": 74410,
+          "physics": "runOnLine: 1",
+          "frame": 216937,
+          "chapter": 1,
+          "content": "Running: 1"
+        },
+        "camera": {
+          "real_right": {
+            "y": 6.556349277496338,
+            "z": 0,
+            "x": 109.43460845947266
+          },
+          "right": {
+            "y": 8,
+            "z": -11,
+            "x": 111.33443450927734
+          },
+          "position": {
+            "y": 2,
+            "z": 0,
+            "x": 101.33443450927734
+          },
+          "direction": 1,
+          "reflection_right": {
+            "y": 6.5,
+            "z": -11,
+            "x": 109.0842514038086
+          },
+          "fields": {
+            "isNeedUpdateAspectOffset": true,
+            "<StopFollowNinja>k__BackingField": false,
+            "_cameraOffset": {
+              "y": 2,
+              "z": 0,
+              "x": 8
+            },
+            "_lastFixedUpdateTime": 442.67999267578125,
+            "_focusAcc": 0,
+            "_shakeRangeScale": 1,
+            "_recordRealScreenRTRefPos": {
+              "y": 4.556349277496338,
+              "z": 0,
+              "x": 8.100176811218262
+            },
+            "_screenPosInitialized": true,
+            "_lastLocalPositionSupport": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "_speedXLerp": 4,
+            "_floatCurRollFrameTime": 0,
+            "_loopShake": true,
+            "_shiftSpeed": 5,
+            "_cameraOffset_bossP2": {
+              "y": 2,
+              "z": 0,
+              "x": 0
+            },
+            "_cameraRotate": false,
+            "<isActive>k__BackingField": true,
+            "<DefaultCameraZ>k__BackingField": -11,
+            "_currShiftPriority": "None: 0",
+            "_ctrlAnimEnable": false,
+            "_cameraMode": 0,
+            "_lbRealPos": {
+              "y": -2.556349277496338,
+              "z": 0,
+              "x": 93.23426055908203
+            },
+            "_targetCameraRoll": 0,
+            "_shiftSpeedCannotToSmallOnce": false,
+            "_lastPositionMainCamera": {
+              "y": 2,
+              "z": -11,
+              "x": 101.0842514038086
+            },
+            "_focusRemainTime": 0,
+            "_slowDownCameraAccelerated": 0,
+            "_rtPos": {
+              "y": 8,
+              "z": -11,
+              "x": 111.33443450927734
+            },
+            "_targetCameraOffset": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "IsIgnoreOtherSpeed": false,
+            "flyItemLerpFactor": 0,
+            "_tarFieldView": 45,
+            "_speedYLerp": 2,
+            "banUpdatetAspectOffset": false,
+            "_cameraOffset_tosky": {
+              "y": 30,
+              "z": 0,
+              "x": 1
+            },
+            "_animCtrlAutoEnd": false,
+            "_focusSpeed": 5,
+            "_secondLocalPositionSupport": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "_cameraShift": false,
+            "_lbPos": {
+              "y": -4,
+              "z": -11,
+              "x": 91.33443450927734
+            },
+            "_movingAspectOffsetCoid": 0,
+            "originalFOV": 45,
+            "_currShiftCurveProgress": 0,
+            "_isShakeCamera": true,
+            "_floatRollAllFrameTime": 0,
+            "_secondLastPosition": {
+              "y": 2,
+              "z": 0,
+              "x": 101.0842514038086
+            },
+            "_ratateSpeed": 0,
+            "_shiftStartOffset": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "_defaultFieldView": 45,
+            "_currRotatePriority": "None: 0",
+            "_bBossP2": false,
+            "_currFocusType": "None: 0",
+            "_cameraSupportSpeedRe": 0,
+            "_lastLocalPositionMainCamera": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_screenWidth": 1920,
+            "_cameraOffsetType": "onLine: 0",
+            "_supportOriZ": -11,
+            "_shiftAcc": 0,
+            "cameraWidth": 10,
+            "_shakeOverTime": 0,
+            "_shakeOverRemainTime": 0,
+            "_rotateIgnoreTimeScale": false,
+            "_gameEndSlowDown": false,
+            "_cameraOffset_lineDown": {
+              "y": 1,
+              "z": 0,
+              "x": 8
+            },
+            "_shakeDeltaTime": 0.06667342782020569,
+            "_recordScreenLBRefPos": {
+              "y": -6,
+              "z": -11,
+              "x": -10
+            },
+            "_currShakeIndex": 6,
+            "_recordLastPos": {
+              "y": 2,
+              "z": 0,
+              "x": 6
+            },
+            "_rtRealPos": {
+              "y": 6.556349277496338,
+              "z": 0,
+              "x": 109.43460845947266
+            },
+            "_recordScreenRTRefPos": {
+              "y": 6,
+              "z": -11,
+              "x": 10
+            },
+            "_secondLocalPositionMainCamera": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "<forceSetCameraLocalPosZero>k__BackingField": false,
+            "_lastFieldView": 45,
+            "_shakeTime": 6.416402339935303,
+            "speed": 20,
+            "_shiftIgnoreTimeScale": false,
+            "_fieldViewChangeSpeed": 0,
+            "_cameraOffset_onsky": {
+              "y": 30,
+              "z": 0,
+              "x": 8
+            },
+            "ninjaRelayOutScreenFollow": false,
+            "_recordRealScreenLBRefPos": {
+              "y": -4.556349277496338,
+              "z": 0,
+              "x": -8.100176811218262
+            },
+            "<OnSkySteady>k__BackingField": false,
+            "_reflectCameraPositionY": 0,
+            "_screenHeight": 1080,
+            "_cameraOffset_line": {
+              "y": 2,
+              "z": 0,
+              "x": 8
+            },
+            "_secondLastFieldView": 45,
+            "_cameraSpeed": 12.5091552734375,
+            "_slowDownDis": 5,
+            "_lastPosition": {
+              "y": 2,
+              "z": 0,
+              "x": 101.33443450927734
+            },
+            "_cameraOffset_ground": {
+              "y": 2,
+              "z": 0,
+              "x": 8
+            },
+            "_focusing": false,
+            "cameraHeight": 6
+          }
+        }
+      },
+      "scope": "Native camera calibration from passive run with original damage; paired interval has no injury, not a route."
+    },
+    {
+      "name": "steady_rope_follow",
+      "before": {
+        "privileged": true,
+        "special_task": {
+          "observed": true,
+          "active": false,
+          "fields": {}
+        },
+        "support_id": -792060,
+        "terrain": [
+          {
+            "block_index": 3,
+            "id": "resolved:1:3",
+            "start": {
+              "y": 0,
+              "z": 0,
+              "x": 88
+            },
+            "kind": "line: 0",
+            "speed": 20,
+            "death_offset_y": 0,
+            "hidden": false,
+            "finish": {
+              "y": 0,
+              "z": 0,
+              "x": 248
+            },
+            "stage_index": 1
+          }
+        ],
+        "platforms": {},
+        "board": {
+          "block_index": 3,
+          "finish": {
+            "y": 2,
+            "z": 0,
+            "x": 576
+          },
+          "map_id": 71,
+          "stage_start": 36,
+          "stage_id": 8019,
+          "stage_index": 1
+        },
+        "camera": {
+          "real_right": {
+            "y": 6.556349277496338,
+            "z": 0,
+            "x": 127.73846435546875
+          },
+          "right": {
+            "y": 8,
+            "z": -11,
+            "x": 129.63829040527344
+          },
+          "position": {
+            "y": 2,
+            "z": 0,
+            "x": 119.63829040527344
+          },
+          "direction": 1,
+          "reflection_right": {
+            "y": 6.5,
+            "z": -11,
+            "x": 127.24060821533203
+          },
+          "fields": {
+            "isNeedUpdateAspectOffset": true,
+            "<StopFollowNinja>k__BackingField": false,
+            "_cameraOffset": {
+              "y": 2,
+              "z": 0,
+              "x": 8
+            },
+            "_lastFixedUpdateTime": 443.67999267578125,
+            "_focusAcc": 0,
+            "_shakeRangeScale": 1,
+            "_recordRealScreenRTRefPos": {
+              "y": 4.556349277496338,
+              "z": 0,
+              "x": 8.100176811218262
+            },
+            "_screenPosInitialized": true,
+            "_lastLocalPositionSupport": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "_speedXLerp": 4,
+            "_floatCurRollFrameTime": 0,
+            "_loopShake": true,
+            "_shiftSpeed": 5,
+            "_cameraOffset_bossP2": {
+              "y": 2,
+              "z": 0,
+              "x": 0
+            },
+            "_cameraRotate": false,
+            "<isActive>k__BackingField": true,
+            "<DefaultCameraZ>k__BackingField": -11,
+            "_currShiftPriority": "None: 0",
+            "_ctrlAnimEnable": false,
+            "_cameraMode": 0,
+            "_lbRealPos": {
+              "y": -2.556349277496338,
+              "z": 0,
+              "x": 111.53811645507812
+            },
+            "_targetCameraRoll": 0,
+            "_shiftSpeedCannotToSmallOnce": false,
+            "_lastPositionMainCamera": {
+              "y": 2,
+              "z": -11,
+              "x": 119.24060821533203
+            },
+            "_focusRemainTime": 0,
+            "_slowDownCameraAccelerated": 0,
+            "_rtPos": {
+              "y": 8,
+              "z": -11,
+              "x": 129.63829040527344
+            },
+            "_targetCameraOffset": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "IsIgnoreOtherSpeed": false,
+            "flyItemLerpFactor": 0,
+            "_tarFieldView": 45,
+            "_speedYLerp": 2,
+            "banUpdatetAspectOffset": false,
+            "_cameraOffset_tosky": {
+              "y": 30,
+              "z": 0,
+              "x": 1
+            },
+            "_animCtrlAutoEnd": false,
+            "_focusSpeed": 5,
+            "_secondLocalPositionSupport": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "_cameraShift": false,
+            "_lbPos": {
+              "y": -4,
+              "z": -11,
+              "x": 109.63829040527344
+            },
+            "_movingAspectOffsetCoid": 0,
+            "originalFOV": 45,
+            "_currShiftCurveProgress": 0,
+            "_isShakeCamera": true,
+            "_floatRollAllFrameTime": 0,
+            "_secondLastPosition": {
+              "y": 2,
+              "z": 0,
+              "x": 119.24060821533203
+            },
+            "_ratateSpeed": 0,
+            "_shiftStartOffset": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "_defaultFieldView": 45,
+            "_currRotatePriority": "None: 0",
+            "_bBossP2": false,
+            "_currFocusType": "None: 0",
+            "_cameraSupportSpeedRe": 0,
+            "_lastLocalPositionMainCamera": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_screenWidth": 1920,
+            "_cameraOffsetType": "onLine: 0",
+            "_supportOriZ": -11,
+            "_shiftAcc": 0,
+            "cameraWidth": 10,
+            "_shakeOverTime": 0,
+            "_shakeOverRemainTime": 0,
+            "_rotateIgnoreTimeScale": false,
+            "_gameEndSlowDown": false,
+            "_cameraOffset_lineDown": {
+              "y": 1,
+              "z": 0,
+              "x": 8
+            },
+            "_shakeDeltaTime": 0.09993522614240646,
+            "_recordScreenLBRefPos": {
+              "y": -6,
+              "z": -11,
+              "x": -10
+            },
+            "_currShakeIndex": 0,
+            "_recordLastPos": {
+              "y": 2,
+              "z": 0,
+              "x": 6
+            },
+            "_rtRealPos": {
+              "y": 6.556349277496338,
+              "z": 0,
+              "x": 127.73846435546875
+            },
+            "_recordScreenRTRefPos": {
+              "y": 6,
+              "z": -11,
+              "x": 10
+            },
+            "_secondLocalPositionMainCamera": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "<forceSetCameraLocalPosZero>k__BackingField": false,
+            "_lastFieldView": 45,
+            "_shakeTime": 5.416024208068848,
+            "speed": 20,
+            "_shiftIgnoreTimeScale": false,
+            "_fieldViewChangeSpeed": 0,
+            "_cameraOffset_onsky": {
+              "y": 30,
+              "z": 0,
+              "x": 8
+            },
+            "ninjaRelayOutScreenFollow": false,
+            "_recordRealScreenLBRefPos": {
+              "y": -4.556349277496338,
+              "z": 0,
+              "x": -8.100176811218262
+            },
+            "<OnSkySteady>k__BackingField": false,
+            "_reflectCameraPositionY": 0,
+            "_screenHeight": 1080,
+            "_cameraOffset_line": {
+              "y": 2,
+              "z": 0,
+              "x": 8
+            },
+            "_secondLastFieldView": 45,
+            "_cameraSpeed": 19.884109497070312,
+            "_slowDownDis": 5,
+            "_lastPosition": {
+              "y": 2,
+              "z": 0,
+              "x": 119.63829040527344
+            },
+            "_cameraOffset_ground": {
+              "y": 2,
+              "z": 0,
+              "x": 8
+            },
+            "_focusing": false,
+            "cameraHeight": 6
+          }
+        },
+        "supports": [
+          {
+            "block_index": 3,
+            "id": -792060,
+            "is_ground": false,
+            "info": {
+              "isNeedShowSpeedUp": true,
+              "_canClimb": true,
+              "_groundType": "line: 0",
+              "_cameraOffsetAnchorY": 0,
+              "_isDeadBlockOffsetY": 0,
+              "_initialDeadBlockOffsetY": 0,
+              "_ninjaSpeed": 20,
+              "_infiniteLoop": false,
+              "_hideGround": false,
+              "_repeatTimesMin": 1,
+              "_posZ": 0,
+              "_repeatTimesMax": 1
+            },
+            "stage_index": 1,
+            "is_line": true,
+            "finish": {
+              "y": 0,
+              "z": 0,
+              "x": 248
+            },
+            "start": {
+              "y": 0,
+              "z": 0,
+              "x": 88
+            }
+          }
+        ],
+        "schema": 1,
+        "state": {
+          "time": 443.6952819824219,
+          "health": 4600,
+          "colliders": [
+            {
+              "radius": 0.20000000298023224,
+              "name": "Role",
+              "enabled": true,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "height": 1.7999999523162842,
+              "extents": {
+                "y": 0.4679999351501465,
+                "z": 0.20000000298023224,
+                "x": 0.1999969482421875
+              },
+              "localCenter": {
+                "y": 0,
+                "z": 0,
+                "x": 0.10000000149011612
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 116.16944885253906
+              }
+            },
+            {
+              "type": "SphereCollider",
+              "extents": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 116.11744689941406
+              },
+              "name": "ColliderForItem",
+              "trigger": true,
+              "enabled": false
+            },
+            {
+              "radius": 0.41999998688697815,
+              "name": "ColliderForItem",
+              "enabled": true,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "height": 2.5,
+              "extents": {
+                "y": 0.6499999761581421,
+                "z": 0.41999998688697815,
+                "x": 0.4199981689453125
+              },
+              "localCenter": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 116.11744689941406
+              }
+            },
+            {
+              "radius": 0.6800000071525574,
+              "name": "ColliderAtMount",
+              "enabled": false,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "height": 6.460000038146973,
+              "extents": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "localCenter": {
+                "y": -0.36000001430511475,
+                "z": 0,
+                "x": 0.8299999833106995
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 116.11744689941406
+              }
+            }
+          ],
+          "level": 8,
+          "fixedDeltaTime": 0.019999999552965164,
+          "state": "Game: 8",
+          "offline": true,
+          "mode": 6,
+          "speed": 20,
+          "score": 2602046.903160095,
+          "healthMultiplier": 50,
+          "maxHealth": 5000,
+          "position": {
+            "y": 0.75,
+            "z": 0,
+            "x": 116.11744689941406
+          },
+          "coins": 0,
+          "only": true,
+          "distance": 13420.5498046875,
+          "episodeTime": 4.959996223449707,
+          "combatFamily": 3,
+          "timeScale": 0,
+          "episodeFrame": 248,
+          "seed": 74410,
+          "physics": "runOnLine: 1",
+          "frame": 217249,
+          "chapter": 1,
+          "content": "Running: 1"
+        },
+        "mechanism_items": {},
+        "enemies": [],
+        "role": {
+          "colliders": [
+            {
+              "parent_active": true,
+              "radius": 0.20000000298023224,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "position": {
+                "y": 0.75,
+                "z": 0,
+                "x": 116.11744689941406
+              },
+              "local_center": {
+                "y": 0,
+                "z": 0,
+                "x": 0.10000000149011612
+              },
+              "tag": "Player_Ninja",
+              "name": "Role",
+              "scale": {
+                "y": 0.5199999809265137,
+                "z": 1,
+                "x": 0.5199999809265137
+              },
+              "enabled": true,
+              "rotation_z": 0,
+              "id": -811510,
+              "height": 1.7999999523162842,
+              "active": true,
+              "extents": {
+                "y": 0.4679999351501465,
+                "z": 0.20000000298023224,
+                "x": 0.1999969482421875
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 116.16944885253906
+              }
+            }
+          ],
+          "mounted": false,
+          "slope_state": 0,
+          "gravity": 0,
+          "interaction_colliders": [
+            {
+              "id": -811516,
+              "parent_active": true,
+              "local_center": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "radius": 0.4000000059604645,
+              "name": "ColliderForItem",
+              "active": true,
+              "enabled": false,
+              "extents": {
+                "y": 0.4000000059604645,
+                "z": 0.4000000059604645,
+                "x": 0.4000000059604645
+              },
+              "type": "SphereCollider",
+              "tag": "RoleForItem",
+              "rotation_z": 0,
+              "position": {
+                "y": 0.75,
+                "z": 0,
+                "x": 116.11744689941406
+              },
+              "scale": {
+                "y": 0.5199999809265137,
+                "z": 1,
+                "x": 0.5199999809265137
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 116.11744689941406
+              }
+            },
+            {
+              "parent_active": true,
+              "radius": 0.41999998688697815,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "position": {
+                "y": 0.75,
+                "z": 0,
+                "x": 116.11744689941406
+              },
+              "local_center": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "tag": "RoleForItem",
+              "name": "ColliderForItem",
+              "scale": {
+                "y": 0.5199999809265137,
+                "z": 1,
+                "x": 0.5199999809265137
+              },
+              "enabled": true,
+              "rotation_z": 0,
+              "id": -811520,
+              "height": 2.5,
+              "active": true,
+              "extents": {
+                "y": 0.6499999761581421,
+                "z": 0.41999998688697815,
+                "x": 0.4199981689453125
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 116.11744689941406
+              }
+            }
+          ],
+          "velocity": {
+            "y": 0,
+            "z": 0,
+            "x": 20
+          },
+          "fields": {
+            "fall3Glide": false,
+            "commonAcc": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "sinkRemainHeight": 0,
+            "fireFlyStartSpeed": 0,
+            "_lastFixedUpdateTime": 443.67999267578125,
+            "<PullingOutWeapon>k__BackingField": false,
+            "_dieOnWaterAcc": 2,
+            "_gravity": 0,
+            "<_jumpFromPoint>k__BackingField": {
+              "y": 4.480503082275391,
+              "z": 0,
+              "x": 41.81138229370117
+            },
+            "_toothDashSpeed": 0,
+            "hurtAudio": "None: 0",
+            "_touchMoveCheckStuck": true,
+            "_soulRemaindTime": 0,
+            "minHealthFlag": 0,
+            "_dieBySpiderOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_fireFlyHeight": 0,
+            "m_hitMaterial": "Flesh: 2",
+            "_targetY": 0,
+            "_touchMoveLimitYMin": 0,
+            "_headTwistOff": false,
+            "m_slopState": 0,
+            "dragChangedCollider": false,
+            "<RunStopSlowEnd>k__BackingField": false,
+            "_lockedMaxLifeValue": 0,
+            "_canRebormFrame": 0,
+            "allDisplayVisible": true,
+            "_windDashTarSpeed": 0,
+            "fireLegEndShootRemain": 0,
+            "lastHurtEnemyIndex": 5,
+            "skillGlideMaxTime": 0,
+            "findResurgenceDis": 0,
+            "WaitForSlope": 0,
+            "_dragDisappear": false,
+            "_bCloneAttack": false,
+            "skillGlideRemainTime": 0,
+            "<SkipAnimationInCustomJump>k__BackingField": false,
+            "nextResetJumpAutoJump2": false,
+            "_fastGlide": false,
+            "_stateBeforeSuspend": "none: 0",
+            "__ninjaPhysicsState": "runOnLine: 1",
+            "_stopRunTime": 1.5,
+            "<IsRideItemState>k__BackingField": false,
+            "_canYield": false,
+            "checkGodTimes": 0,
+            "_popCurrSpeed": 0,
+            "_shellDash": false,
+            "deadEscapeEnable": false,
+            "isDuringDisappear": false,
+            "<isActive>k__BackingField": true,
+            "<AttractItemLevelValue>k__BackingField": 0,
+            "_killBySkill": false,
+            "_secondLastPosition": {
+              "y": 0.75,
+              "z": 0,
+              "x": 115.81166076660156
+            },
+            "m_ninjaID": 1,
+            "<IsSuspend>k__BackingField": false,
+            "_tarYRelativeCamera": 0,
+            "<StandAftGetUp>k__BackingField": false,
+            "<RelayInvincibleRemainTime>k__BackingField": 0,
+            "_stuckHorizontal": true,
+            "<BeBlocked>k__BackingField": false,
+            "_fireFlyAcc": -20,
+            "_attackTime": 2,
+            "_caculateAtLevelBlockFlag": false,
+            "first0": true,
+            "_glided": false,
+            "<IsMountState>k__BackingField": false,
+            "<HurtComatose>k__BackingField": false,
+            "damageReduceValue": 0,
+            "_lastUpBottonDown": false,
+            "_buffEfectOffset": {
+              "y": 3,
+              "z": 0,
+              "x": 0.20000000298023224
+            },
+            "<IsAngreState>k__BackingField": false,
+            "_attackBossMode": false,
+            "_isRecycled": false,
+            "_noHurtTime": 0.019999999552965164,
+            "_ninjaHide": false,
+            "_cloneAttackSpeed": 60,
+            "_ninjaTouchMove": false,
+            "skillGlideDecreaseSpeed": 1,
+            "suspendTargetY": 0,
+            "skillGlideIncreaseSpeed": 2,
+            "dashTarOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "resetJumpTimes": false,
+            "_thunderDash": false,
+            "_breakDragCount": 0,
+            "skillGlide": false,
+            "_dieUnderWater": false,
+            "_onBoatState": "Stand: 0",
+            "stateScrollSource": "None: 100",
+            "first3": true,
+            "damageReduceEnable": false,
+            "dieAudio": "Game_Role1_Common_Hurt: 130001",
+            "_beDragToUnderground": false,
+            "_popCanJump": false,
+            "curSkillFireLegEnd": false,
+            "_ninjaTimeStop": false,
+            "first1": true,
+            "m_attackMaterial": "Sharp: 2",
+            "_yRelativeCamera": 0,
+            "_weaponScale": 1,
+            "m_skinID": 1,
+            "_slideSmokeCreateTime": 0,
+            "resetJumpTimesNew": 0,
+            "scrollParam": 1,
+            "stateScrollType": "None: 100",
+            "_onBoatSitTime": 0,
+            "__ninjaPrePhysicsState": "runOnGround: 5",
+            "_offsetToNinja": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_dashIndex": 0,
+            "scrollType": "None: 100",
+            "scrollSource": "ScrollItem: 0",
+            "_isDefense": false,
+            "_popDirection": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "IsSoulState": false,
+            "lastReduceWeaponTime": -1000,
+            "newXiaoheiBeforeState": "none: 0",
+            "fireFlyTarSpeed": 0,
+            "_glideRemaindTime": 0,
+            "newXiaoheiSuspend": 0,
+            "_dashSlowDown": false,
+            "punctuationOffset": {
+              "y": 1.2999999523162842,
+              "z": 0,
+              "x": 1.2000000476837158
+            },
+            "_currWindDashSpeed": 0,
+            "btState": 0,
+            "triggerStart": true,
+            "skillGlideState": "none: 0",
+            "_canBreakDrag": false,
+            "_dragTime": 0,
+            "<ScrollInvincibleRemaindTime>k__BackingField": 0,
+            "_slideRemainTime": 0,
+            "_windBlinkFallRemaindTime": 0,
+            "<GetUpping>k__BackingField": false,
+            "rebornLeftTimes": 0,
+            "<FinishWaitOut>k__BackingField": false,
+            "_forbidAllAnim": false,
+            "_beDragWaitEnd": false,
+            "_hurtAttenuationRemainTime": 0.47999998927116394,
+            "_beDrag": false,
+            "_reviveCount": 0,
+            "_fastGlideLoopAudio": "None: 0",
+            "_fastGlideAudioInstanceID": 0,
+            "recordNinjaDie": false,
+            "<EndLevelWaitOut>k__BackingField": false,
+            "_fastGlideTargetSpeed": 30,
+            "_firstFastGlide": true,
+            "_isQuickRoll": false,
+            "continuePopTimeRemain": 0,
+            "<SealFlagValue>k__BackingField": 0,
+            "accTime": 0,
+            "m_roleID": 1,
+            "_accelerat": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_lastRoleObjPos": {
+              "y": 0.75,
+              "z": 0,
+              "x": 116.21166229248047
+            },
+            "rebornCountDownTime": 0,
+            "_fireFlyTime": 0,
+            "_fireFlyStartGroundY": 0,
+            "_currRoleObjOffset": {
+              "y": 0,
+              "z": 0,
+              "x": -0.09999999403953552
+            },
+            "StartDashForbidOperate": false,
+            "windEffectOffset": {
+              "y": 0.9599999785423279,
+              "z": 0,
+              "x": 1.0299999713897705
+            },
+            "_isClone": false,
+            "_windDashAcc": 20,
+            "_waitToSlide": false,
+            "<FallDown>k__BackingField": false,
+            "_curScrollRoleID": 0,
+            "_windDash": false,
+            "_hpBarOffset": {
+              "y": 1.8300000429153442,
+              "z": 0,
+              "x": 0
+            },
+            "_touchMoveLimitYMax": 0,
+            "landingPos": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_runStopped": false,
+            "_cameraShiftCtrling": false,
+            "_originNinjFootPoint": 0,
+            "_shellDashSpeed": 0,
+            "fireLegEndShootTime": 1.2000000476837158,
+            "_continuePop": false,
+            "_slopeOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_btRecycleFlag": false,
+            "_skillSuspendSpeed": 10,
+            "_lastDownButtonDown": false,
+            "_changeDirection": true,
+            "_isRevive": false,
+            "_inJump4": false,
+            "first2": true,
+            "_getStuck": false,
+            "_moveDirection": {
+              "y": 1,
+              "z": 0,
+              "x": 2
+            },
+            "damageReduceType": 0,
+            "_soulTotalTime": 0,
+            "changeState": false,
+            "_stuckPos": 0,
+            "_skillSuspendPreState": "none: 0",
+            "_touchMoveLimitBanFrame": -1,
+            "<BeBlockedStayX>k__BackingField": 0,
+            "<StopImmediate>k__BackingField": false,
+            "_xDragSpeed": 0,
+            "<WeaponShootPoint>k__BackingField": {
+              "y": 0.75,
+              "z": 0,
+              "x": 116.21166229248047
+            },
+            "showBlood": true,
+            "autoRecoverForbidFlag": 0,
+            "_lastNinjaPhysicsState": "runOnLine: 1",
+            "<PopCameraFollow>k__BackingField": false,
+            "_currHurtAttenuationRatio": 1,
+            "isRevivedBefore": false,
+            "_isInitCoroutine": false,
+            "suspendRange": 1,
+            "befFireLegState": "none: 0",
+            "_touchMoveLerpSpeed": 1,
+            "itemPapercraneFlag": 0,
+            "fireLegSuspendRefCameraY": 0,
+            "_stuckByBlock": true,
+            "fireLegHeight": 0,
+            "nextResetJumpAutoGlide": false,
+            "_velocity": {
+              "y": 0,
+              "z": 0,
+              "x": 20
+            },
+            "_currBlinkVelocity": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_slowDownAcc": -10,
+            "_currBlinkTarPos": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "rectSide": "None: 4",
+            "_lastNinjaControllerType": "onLine: 0",
+            "_moveSpeedBefStopRun": 20,
+            "_ninjaControllerType": "onLine: 0",
+            "<StuckEndRecover>k__BackingField": false,
+            "_popAcceleration": 0,
+            "_hurtCheckTimes": 0.14000001549720764,
+            "_healingState": false,
+            "_fireDashAcceleration": 0,
+            "_hurtOffsetTime": 1.2799999713897705,
+            "_lastPosition": {
+              "y": 0.75,
+              "z": 0,
+              "x": 116.21166229248047
+            },
+            "_slopeSpeedRatio": 1,
+            "<CameraFollowNinja>k__BackingField": false,
+            "fireFlyStartOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_currentAttackTime": 0,
+            "m_uid": 0
+          },
+          "collider_parameters": {
+            "_rollColliderHeight": 0.10000000149011612,
+            "_normalColliderHeight": 1.7999999523162842,
+            "_slideColliderOffset": {
+              "y": -0.30000001192092896,
+              "z": 0,
+              "x": 0.05000000074505806
+            },
+            "_rollColliderOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0.05000000074505806
+            },
+            "_jumpColliderOffset": {
+              "y": 0.30000001192092896,
+              "z": 0,
+              "x": 0.10000000149011612
+            },
+            "_normalColliderRadius": 0.20000000298023224,
+            "_rollColliderRadius": 0.10000000149011612,
+            "_jumpColliderHeight": 1.2000000476837158,
+            "_normalColliderOffset": {
+              "y": 0,
+              "z": 0,
+              "x": 0.10000000149011612
+            }
+          },
+          "data": {
+            "_jumpForce4": 8.5,
+            "_jumpForce2": 12.5,
+            "_normalGravity": -19.799999237060547,
+            "_glideMinSpeed": -2,
+            "_rollDownUpSpeed": 8,
+            "_downGravity1": -9,
+            "_upGravity1": -25,
+            "_upGravity2": -9.800000190734863,
+            "_jumpForce3": 12,
+            "_jumpForce1": 23.5,
+            "_ninjaFootPoint": 0.75,
+            "_climbDistance": 0.800000011920929,
+            "_downGravity2": -9.800000190734863,
+            "_moveSpeed": 20,
+            "_rollAirDownUpSpeed": 28,
+            "_glideAccSpeed": 1,
+            "_glideMaxSpeed": 2.5,
+            "_driveForce": 5,
+            "_glideUpForce": 5,
+            "_downGravity3": -9.800000190734863,
+            "_ninjaHeight": 1,
+            "_downGravity4": -9.800000190734863,
+            "_upGravity4": -9.800000190734863,
+            "_upGravity3": -9.800000190734863
+          },
+          "god": false,
+          "rules": {
+            "slide_offset": {
+              "y": 0,
+              "z": 0,
+              "x": 4
+            },
+            "ground_lengthen": 0.30000001192092896,
+            "slide_seconds": 0.5,
+            "reverse_fast_offset": 5,
+            "reverse_fast_enabled": true
+          }
+        }
+      },
+      "after": {
+        "state": {
+          "time": 444.1952819824219,
+          "health": 4600,
+          "colliders": [
+            {
+              "radius": 0.20000000298023224,
+              "name": "Role",
+              "enabled": true,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "height": 1.7999999523162842,
+              "extents": {
+                "y": 0.4679999351501465,
+                "z": 0.20000000298023224,
+                "x": 0.1999969482421875
+              },
+              "localCenter": {
+                "y": 0,
+                "z": 0,
+                "x": 0.10000000149011612
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 125.87828826904297
+              }
+            },
+            {
+              "type": "SphereCollider",
+              "extents": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 125.82628631591797
+              },
+              "name": "ColliderForItem",
+              "trigger": true,
+              "enabled": false
+            },
+            {
+              "radius": 0.41999998688697815,
+              "name": "ColliderForItem",
+              "enabled": true,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "height": 2.5,
+              "extents": {
+                "y": 0.6499999761581421,
+                "z": 0.41999998688697815,
+                "x": 0.4199981689453125
+              },
+              "localCenter": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 125.82628631591797
+              }
+            },
+            {
+              "radius": 0.6800000071525574,
+              "name": "ColliderAtMount",
+              "enabled": false,
+              "direction": 1,
+              "type": "CapsuleCollider",
+              "height": 6.460000038146973,
+              "extents": {
+                "y": 0,
+                "z": 0,
+                "x": 0
+              },
+              "localCenter": {
+                "y": -0.36000001430511475,
+                "z": 0,
+                "x": 0.8299999833106995
+              },
+              "trigger": true,
+              "center": {
+                "y": 0.75,
+                "z": 0,
+                "x": 125.82628631591797
+              }
+            }
+          ],
+          "level": 8,
+          "fixedDeltaTime": 0.019999999552965164,
+          "state": "Game: 8",
+          "offline": true,
+          "mode": 6,
+          "speed": 20,
+          "score": 2603046.9069747925,
+          "healthMultiplier": 50,
+          "maxHealth": 5000,
+          "position": {
+            "y": 0.75,
+            "z": 0,
+            "x": 126.11748504638672
+          },
+          "coins": 0,
+          "only": true,
+          "distance": 13430.5595703125,
+          "episodeTime": 5.459995746612549,
+          "combatFamily": 3,
+          "timeScale": 0,
+          "episodeFrame": 273,
+          "seed": 74410,
+          "physics": "runOnLine: 1",
+          "frame": 217404,
+          "chapter": 1,
+          "content": "Running: 1"
+        },
+        "camera": {
+          "real_right": {
+            "y": 6.556349277496338,
+            "z": 0,
+            "x": 137.7151641845703
+          },
+          "right": {
+            "y": 8,
+            "z": -11,
+            "x": 139.614990234375
+          },
+          "position": {
+            "y": 2,
+            "z": 0,
+            "x": 129.614990234375
+          },
+          "direction": 1,
+          "reflection_right": {
+            "y": 6.5,
+            "z": -11,
+            "x": 137.21527099609375
+          },
+          "fields": {
+            "isNeedUpdateAspectOffset": true,
+            "<StopFollowNinja>k__BackingField": false,
+            "_cameraOffset": {
+              "y": 2,
+              "z": 0,
+              "x": 8
+            },
+            "_lastFixedUpdateTime": 444.17999267578125,
+            "_focusAcc": 0,
+            "_shakeRangeScale": 1,
+            "_recordRealScreenRTRefPos": {
+              "y": 4.556349277496338,
+              "z": 0,
+              "x": 8.100176811218262
+            },
+            "_screenPosInitialized": true,
+            "_lastLocalPositionSupport": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "_speedXLerp": 4,
+            "_floatCurRollFrameTime": 0,
+            "_loopShake": true,
+            "_shiftSpeed": 5,
+            "_cameraOffset_bossP2": {
+              "y": 2,
+              "z": 0,
+              "x": 0
+            },
+            "_cameraRotate": false,
+            "<isActive>k__BackingField": true,
+            "<DefaultCameraZ>k__BackingField": -11,
+            "_currShiftPriority": "None: 0",
+            "_ctrlAnimEnable": false,
+            "_cameraMode": 0,
+            "_lbRealPos": {
+              "y": -2.556349277496338,
+              "z": 0,
+              "x": 121.51481628417969
+            },
+            "_targetCameraRoll": 0,
+            "_shiftSpeedCannotToSmallOnce": false,
+            "_lastPositionMainCamera": {
+              "y": 2,
+              "z": -11,
+              "x": 129.21527099609375
+            },
+            "_focusRemainTime": 0,
+            "_slowDownCameraAccelerated": 0,
+            "_rtPos": {
+              "y": 8,
+              "z": -11,
+              "x": 139.614990234375
+            },
+            "_targetCameraOffset": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "IsIgnoreOtherSpeed": false,
+            "flyItemLerpFactor": 0,
+            "_tarFieldView": 45,
+            "_speedYLerp": 2,
+            "banUpdatetAspectOffset": false,
+            "_cameraOffset_tosky": {
+              "y": 30,
+              "z": 0,
+              "x": 1
+            },
+            "_animCtrlAutoEnd": false,
+            "_focusSpeed": 5,
+            "_secondLocalPositionSupport": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "_cameraShift": false,
+            "_lbPos": {
+              "y": -4,
+              "z": -11,
+              "x": 119.614990234375
+            },
+            "_movingAspectOffsetCoid": 0,
+            "originalFOV": 45,
+            "_currShiftCurveProgress": 0,
+            "_isShakeCamera": true,
+            "_floatRollAllFrameTime": 0,
+            "_secondLastPosition": {
+              "y": 2,
+              "z": 0,
+              "x": 129.21527099609375
+            },
+            "_ratateSpeed": 0,
+            "_shiftStartOffset": {
+              "y": 0,
+              "z": -11,
+              "x": 0
+            },
+            "_defaultFieldView": 45,
+            "_currRotatePriority": "None: 0",
+            "_bBossP2": false,
+            "_currFocusType": "None: 0",
+            "_cameraSupportSpeedRe": 0,
+            "_lastLocalPositionMainCamera": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "_screenWidth": 1920,
+            "_cameraOffsetType": "onLine: 0",
+            "_supportOriZ": -11,
+            "_shiftAcc": 0,
+            "cameraWidth": 10,
+            "_shakeOverTime": 0,
+            "_shakeOverRemainTime": 0,
+            "_rotateIgnoreTimeScale": false,
+            "_gameEndSlowDown": false,
+            "_cameraOffset_lineDown": {
+              "y": 1,
+              "z": 0,
+              "x": 8
+            },
+            "_shakeDeltaTime": 0.20000000298023224,
+            "_recordScreenLBRefPos": {
+              "y": -6,
+              "z": -11,
+              "x": -10
+            },
+            "_currShakeIndex": 3,
+            "_recordLastPos": {
+              "y": 2,
+              "z": 0,
+              "x": 6
+            },
+            "_rtRealPos": {
+              "y": 6.556349277496338,
+              "z": 0,
+              "x": 137.7151641845703
+            },
+            "_recordScreenRTRefPos": {
+              "y": 6,
+              "z": -11,
+              "x": 10
+            },
+            "_secondLocalPositionMainCamera": {
+              "y": 0,
+              "z": 0,
+              "x": 0
+            },
+            "<forceSetCameraLocalPosZero>k__BackingField": false,
+            "_lastFieldView": 45,
+            "_shakeTime": 4.915620803833008,
+            "speed": 20,
+            "_shiftIgnoreTimeScale": false,
+            "_fieldViewChangeSpeed": 0,
+            "_cameraOffset_onsky": {
+              "y": 30,
+              "z": 0,
+              "x": 8
+            },
+            "ninjaRelayOutScreenFollow": false,
+            "_recordRealScreenLBRefPos": {
+              "y": -4.556349277496338,
+              "z": 0,
+              "x": -8.100176811218262
+            },
+            "<OnSkySteady>k__BackingField": false,
+            "_reflectCameraPositionY": 0,
+            "_screenHeight": 1080,
+            "_cameraOffset_line": {
+              "y": 2,
+              "z": 0,
+              "x": 8
+            },
+            "_secondLastFieldView": 45,
+            "_cameraSpeed": 19.9859619140625,
+            "_slowDownDis": 5,
+            "_lastPosition": {
+              "y": 2,
+              "z": 0,
+              "x": 129.614990234375
+            },
+            "_cameraOffset_ground": {
+              "y": 2,
+              "z": 0,
+              "x": 8
+            },
+            "_focusing": false,
+            "cameraHeight": 6
+          }
+        }
+      },
+      "scope": "Native camera calibration from passive run with original damage; paired interval has no injury, not a route."
+    }
+  ]
+}

@@ -294,7 +294,7 @@ function E.privileged_state()
     local camera=CS.CameraController.Instance
     out.camera={right=vector(camera:GetScreenRightTopPos()),real_right=vector(camera:GetRealScreenRightTopPos()),
         reflection_right=vector(camera:GetScreenRightTopPos_Reflection(0)),
-        position=vector(camera.LastPosition),direction=CS.GameManager.Instance.CurrDirModeNum}
+        position=vector(camera.LastPosition),direction=CS.GameManager.Instance.CurrDirModeNum,fields=values(camera)}
     out.role.fields=values(n);out.role.velocity=vector(n.Velocity);out.role.gravity=n.Gravity
     out.role.slope_state=n.SlopeState
     local staticFlags=CS.System.Reflection.BindingFlags.__CastFrom(56)

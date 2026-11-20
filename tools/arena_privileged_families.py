@@ -200,6 +200,60 @@ def role_reference_bounds(times,motors,query,actual):
     return np.minimum(lower[lo],lower[hi])-.025,np.maximum(upper[lo],upper[hi])+.025
 
 
+def camera_x_bounds(observation,times,player,trajectory_states=None):
+    """Source default camera X damping, including physical update ordering.
+
+    GetReferencePivotPos used by native bullets returns the camera's cached
+    physical position. It is neither the rendered ninja nor a fixed offset
+    moving forever at the current speed. Enclose both actor samples at each
+    source Lerp and both speed samples that can feed its gain.
+    """
+    from arena_privileged_model import phase
+    try:
+        f=observation['camera']['fields'];role=observation['role']['fields']
+        if (f['_cameraMode']!=0 or any(f[k]for k in ('<StopFollowNinja>k__BackingField',
+                '_gameEndSlowDown','_cameraShift','_cameraRotate','_focusing','_ctrlAnimEnable'))or
+                role['_runStopped']or role['<RunStopSlowEnd>k__BackingField']or
+                role['_getStuck']or role['<StuckEndRecover>k__BackingField']or
+                phase(observation['state']['state'])!='game'):
+            raise ValueError('camera_x_unverified_control_branch')
+        tick=player.tick;age=observation['state']['time']-f['_lastFixedUpdateTime']
+        if not -.0002<=age<=tick+.0002:raise ValueError('camera_x_original_fixed_clock')
+        if abs(f['_cameraSupportSpeedRe'])>1e-5:raise ValueError('camera_x_support_relative_speed')
+        if trajectory_states is None:
+            _,trajectory_states,valid=player.trajectory(times)
+            if not valid:raise ValueError('camera_x_unsupported_actor_path')
+        count=int(math.floor((max(0.,age)+times[-1]+1e-8)/tick))
+        query=np.maximum(0.,np.arange(1,count+1)*tick-max(0.,age))
+        low,high=role_reference_bounds(times,trajectory_states,query,observation['state']['position'])
+        lower=[f['_lastPosition']['x']];upper=lower.copy()
+        offset=f['_cameraOffset']['x']
+        offsets={(phase(f['_cameraOffsetType']),offset)}
+        if not all(math.isfinite(v)for v in (lower[0],offset)):raise ValueError('camera_x_nonfinite_native_parameter')
+        vx=np.array([m.vx for m in trajectory_states])
+        for i,t in enumerate(query):
+            a=max(0,int(np.searchsorted(times,t,side='right'))-1);b=min(len(times)-1,int(np.searchsorted(times,t,side='left')))
+            previous=max(0,int(np.searchsorted(times,max(0.,t-tick),side='right'))-1)
+            branches=set()
+            for mode in {trajectory_states[k].mode for k in (previous,a,b)}:
+                # Original UpdateNinjaPhysicsState only handles 1/4 (line)
+                # and 2/3 (line transfers). Ground/jump do not restore a
+                # carrier-modified offset. ChangeCameraOffset also returns
+                # early if the offset *type* has not changed.
+                target='online'if mode in ('runonline','runonlinedown')else 'onlinedown'if mode in ('rolltolineon','rolltolinedown')else None
+                for current,x in offsets:
+                    name='_cameraOffset_line'if target=='online'else '_cameraOffset_lineDown'
+                    branches.add((target,f[name]['x'])if target is not None and target!=current else(current,x))
+            offsets=branches
+            gains=[min(1.,max(0.,(abs(v)+4.)/6.*tick))for v in (vx[a],vx[b])]
+            candidates=[np.float32(np.float32(x)+np.float32(np.float32(target-x)*np.float32(g)))
+                        for x in (lower[-1],upper[-1])for offset in {v for _,v in offsets}
+                        for target in (low[i]+offset,high[i]+offset)for g in gains]
+            lower.append(float(min(candidates)));upper.append(float(max(candidates)))
+        return (np.asarray(lower),np.asarray(upper)),None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
 def rolling_path(enemy,times,observation,player,activation_tick=None):
     """Source-order fall, slope projection, wall stop and native pit entry.
 
@@ -742,6 +796,8 @@ def rotating_path(enemy,times,observation,player):
         # Do not extrapolate the old speed across this pending transition.
         if observation['role']['fields'].get('_runStopped')and speed!=0:
             raise ValueError('rotating_electric_pending_actor_speed_stop')
+        if not observation['role']['fields'].get('_runStopped')and speed==0:
+            raise ValueError('rotating_electric_unverified_zero_or_resuming_actor_speed')
         if not all(math.isfinite(v)for v in (f['_moveSpeed'],f['_rotateSpeed'],speed,enemy['rotation_z'])):
             raise ValueError('rotating_electric_native_parameter_domain')
         angle=np.float32(binding['local_rotation']['z']);initial=float(angle)
