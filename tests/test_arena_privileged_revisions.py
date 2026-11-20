@@ -61,3 +61,13 @@ def test_cold_transport_waits_for_exact_process_and_retains_attach_diagnostics()
     client.result=dict(exit_code=255,text='Permission denied')
     with pytest.raises(RuntimeError,match='Permission denied'):
         attach_transport(client)
+
+
+def test_native_reader_compiles_without_running_any_client_getters():
+    import shutil,subprocess
+    lua=shutil.which('luajit')
+    if not lua:pytest.skip('LuaJIT unavailable')
+    path=Path(__file__).resolve().parents[1]/'tools/arena_privileged_state.lua'
+    result=subprocess.run([lua,'-e',"local f,e=loadstring(io.read('*a'));assert(f,e);io.write('ok')"],
+                          input=path.read_text(),text=True,capture_output=True,check=True,timeout=10)
+    assert result.stdout=='ok'

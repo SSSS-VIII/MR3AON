@@ -30,6 +30,7 @@ FAMILIES = {
     'EnemyArrow': 'native_untracked_ballistic_arrow_and_soil_envelope',
     'EnemyKill': 'stationary_original_shape_before_contact_recycle',
     'EnemyStraightBack': 'native_go_brake_follow_and_return_centered_sphere',
+    'EnemyFruitPinball': 'native_free_pinball_with_rotating_authored_collider_envelope',
 }
 
 
@@ -63,7 +64,12 @@ def forecast(enemy, times, observation, player, trajectory_states=None):
     zero = np.zeros((len(times), 2))
     angles = np.zeros(len(times))
     source = kind+'.FixedUpdateMovement'
-    if kind in ('EnemyPinball','EnemyBlowFish'):
+    if kind in ('EnemyPinball','EnemyBlowFish','EnemyFruitPinball'):
+        if kind=='EnemyFruitPinball':
+            if not enemy.get('local_movement_parent_identity'):
+                return None,'fruit_pinball_local_movement_parent_not_identity'
+            if any(not c.get('rotation_envelope') for c in enemy['colliders'] if c.get('damage_kind')):
+                return None,'fruit_pinball_authored_rotation_envelope_missing'
         from arena_privileged_pinball import forecast as pinball
         return pinball(enemy,times,observation,player)
     if kind=='EnemyStraightBack':

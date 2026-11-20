@@ -75,5 +75,6 @@ def forecast(enemy,times,observation,player):
     age=np.clip(observation['state']['time']-f['_lastFixedUpdateTime'],0.,player.tick)
     indices=np.floor((age+times+1e-8)/player.tick).astype(int)
     scales=np.asarray(scale_history)[indices]
+    source=('EnemyFruitPinball' if enemy['type']=='EnemyFruitPinball' else 'EnemyPinballBase')
     return (positions-xy(enemy['position']),angles,
-            'EnemyPinballBase.ProcessState/Squeeze/GroundRebound',None,scales),None
+            source+'.ProcessState/Squeeze/GroundRebound',None,scales),None

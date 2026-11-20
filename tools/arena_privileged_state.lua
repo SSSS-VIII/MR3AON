@@ -191,6 +191,24 @@ local function grownShape(c,tween)
     if out then out.grown_target=true end
     return out
 end
+local function rotationEnvelope(c,root)
+    -- Fruit render nodes rotate independently. Enclose every such rotation
+    -- using authored collider geometry and the finite local transform chain.
+    local kind=c:GetType().Name;local radius
+    if kind=='SphereCollider'then radius=c.radius
+    elseif kind=='CapsuleCollider'then radius=math.max(c.radius,c.height/2)
+    elseif kind=='BoxCollider'then radius=c.size.magnitude/2
+    else return nil end
+    radius=radius+c.center.magnitude
+    local t=c.transform;local depth=0
+    while t and t~=root and depth<16 do
+        local s=t.localScale
+        radius=radius*math.max(math.abs(s.x),math.abs(s.y),math.abs(s.z))+t.localPosition.magnitude
+        t=t.parent;depth=depth+1
+    end
+    if t~=root then return nil end
+    return {root_radius=radius,depth=depth}
+end
 function E.privileged_state()
     assert(not E.busy and U.Time.timeScale==0,'Read internal state at a paused original boundary')
     local n=CS.NinjaController.Instance.NinjaScript;local p=n.transform.position
@@ -249,6 +267,12 @@ function E.privileged_state()
                 speed=o.CurrentSpeed,attack=o.Attack,scale=vector(o.transform.lossyScale),rotation_z=o.transform.eulerAngles.z,colliders={}}
             row.info_identity=info and info:GetHashCode()or nil
             if row.type=='EnemyWarrior'then row.spine=spineState(field(o,'_spineWarrior'))end
+            if row.type=='EnemyFruitPinball'then
+                local parent=o.transform.parent;local matrix=parent and parent.localToWorldMatrix or U.Matrix4x4.identity
+                local error=0
+                for a=0,3 do for b=0,3 do error=error+math.abs(matrix['m'..a..b]-(a==b and 1 or 0))end end
+                row.local_movement_parent_identity=error<0.00001
+            end
             local at=field(o,'privateAtLevelBlock')
             if at then row.native_support={id=at:GetInstanceID(),start=vector(at.PointStart),finish=vector(at.PointEnd),
                 is_line=at.IsLine,is_ground=at.IsGround}end
@@ -265,7 +289,11 @@ function E.privileged_state()
             end
             local cs=o.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
             for j=0,cs.Length-1 do local c=cs[j];local owner=c:GetComponentInParent(typeof(CS.EnemyBase))
-                if owner and owner:GetInstanceID()==row.id then row.colliders[#row.colliders+1]=shape(c)end
+                if owner and owner:GetInstanceID()==row.id then
+                    local collider=shape(c)
+                    if row.type=='EnemyFruitPinball'then collider.rotation_envelope=rotationEnvelope(c,o.transform)end
+                    row.colliders[#row.colliders+1]=collider
+                end
             end
             local tween=field(o,'_tweener')
             if tween and o:GetType().Name=='EnemyHideBlade'then

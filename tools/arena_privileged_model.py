@@ -636,9 +636,14 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                 child_scale=np.array([c['scale'][a] for a in ('x','y','z')])/root_scale
                 radius=c['radius']*np.max(np.abs(predicted[4]*child_scale),axis=1)
                 extent=np.tile(radius[:,None],(1,2))
+            elif kind=='EnemyFruitPinball':
+                center=xy(enemy['position'])[None,:]+delta
+                radius=c['rotation_envelope']['root_radius']*np.max(np.abs(predicted[4]),axis=1)
+                extent=np.tile(radius[:,None],(1,2));approximate=True
+                source+='; original rotating collider root-sphere envelope'
             quads = None
             padding=0.
-            if kind not in ('EnemyStraightBat','EnemyFlyBamboo','EnemySpider','EnemyMuppetBomb','EnemyEliteSpider'):
+            if kind not in ('EnemyStraightBat','EnemyFlyBamboo','EnemySpider','EnemyMuppetBomb','EnemyEliteSpider','EnemyFruitPinball'):
                 pivot = xy(enemy['position'])
                 rot = np.stack((np.stack((np.cos(angles),-np.sin(angles)),axis=-1),
                                 np.stack((np.sin(angles),np.cos(angles)),axis=-1)),axis=1)
@@ -657,7 +662,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                 elif kind=='EnemyStraightBack' and len(predicted)>5:
                     padding=float(predicted[5]['position_padding']);approximate=True
             result.append(Hazard(c['id'], enemy['id'], kind, center, extent, active, source, approximate,
-                                 'sphere' if c['type']=='SphereCollider' else 'obb' if quads is not None else 'aabb', quads,
+                                 'sphere' if c['type']=='SphereCollider' or kind=='EnemyFruitPinball' else 'obb' if quads is not None else 'aabb', quads,
                                  padding=padding))
     for item in player.contact_avoidance:
         for collider in rows(item['colliders']):

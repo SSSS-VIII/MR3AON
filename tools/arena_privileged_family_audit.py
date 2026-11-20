@@ -51,6 +51,9 @@ def audit(observations, *, offsets=(1,2,5)):
                 extent=np.array([collider['extents'][a] for a in ('x','y')])
                 error=float(np.linalg.norm(position-hazard.centers[-1]))
                 result['position_error_all_m'].append(error)
+                if hazard.kind=='EnemyFruitPinball':
+                    result['root_position_error_m'].append(float(np.linalg.norm(
+                        np.array([enemy['position'][a] for a in ('x','y')])-hazard.centers[-1])))
                 unchanged=after['state']['health']==before['state']['health']
                 feedback=old['fields'].get('_bCollider',False) or enemy['fields'].get('_bCollider',False)
                 if unchanged and not feedback:
