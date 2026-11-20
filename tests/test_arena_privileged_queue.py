@@ -29,6 +29,15 @@ def test_explicit_research_target_can_still_override_coverage_order():
     assert [c['key'] for c in pending_cases(cases,ledger,'new',['first','first'])]==['first','untouched']
 
 
+def test_numeric_early_board_order_avoids_travelling_to_tenth_before_second():
+    keys=('L5-M41-S10-B5109','L5-M41-S2-B5102','L5-M41-S5-B51052')
+    cases={key:dict(key=key,slot=slot,kind='ordinary',level=5,
+                    unimplemented_enemy_classes=[],unbound_enemy_ids=[])
+           for key,slot in zip(keys,(10,2,5))}
+    ledger={key:dict(nominal_complete=False,attempts=[]) for key in keys}
+    assert [c['slot'] for c in pending_cases(cases,ledger,'new')]==[2,5,10]
+
+
 def test_entry_timeout_can_continue_only_after_complete_native_restore(monkeypatch):
     class Gate:
         uncertain_operation=None

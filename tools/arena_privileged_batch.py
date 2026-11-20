@@ -79,7 +79,7 @@ def pending_cases(cases,ledger,revision,requested=()):
     def priority(c):
         missing=len(c['unimplemented_enemy_classes'])+len(c['unbound_enemy_ids'])
         return (bool(ledger[c['key']]['attempts']),missing>0,c['kind']!='ordinary',
-                c['level'] not in (5,6),c['slot']!=1,missing,c['key'])
+                c['level'] not in (5,6),c['slot'],missing,c['key'])
     explicit=list(dict.fromkeys(requested))
     work=[cases[key] for key in explicit]
     work.extend(sorted((c for key,c in cases.items() if key not in explicit),key=priority))
