@@ -138,6 +138,7 @@ class InternalController:
                         clearance=float(distance[scope].min()),
                         first_contact=first, encounter_end=encounter_end,
                         reserve=reserve, end_mode=motors[-1].mode, recovered_at=recovery,
+                        player_x_range=(float(np.min(body[:,0]-body[:,2])),float(np.max(body[:,0]+body[:,2]))),
                         required_safe_until_seconds=local_until)
 
         def finish(action, delay, window, result, reason):
@@ -157,9 +158,21 @@ class InternalController:
         # Missing mechanics are not silently converted into stationary boxes.
         # The runner must stop at this boundary instead of publishing a safe
         # operation whose premises omit a nearby enemy.
+        left,right=baseline['player_x_range'];left-=3.;right+=8.
+        def reaches_actor_corridor(enemy):
+            if left<enemy['position']['x']<right:return True
+            # A connected beam or a bone-followed weapon can be far from its
+            # parent's spawn root. Missing motion must not make its current
+            # authored damage footprint disappear from the safety boundary.
+            for collider in rows(enemy.get('colliders'))+rows(enemy.get('grown_colliders')):
+                if not collider.get('damage_kind'):continue
+                quad=rows(collider.get('quad'))
+                a=min(p['x']for p in quad)if quad else collider['center']['x']-collider['extents']['x']
+                b=max(p['x']for p in quad)if quad else collider['center']['x']+collider['extents']['x']
+                if not math.isfinite(a+b)or a<=right and b>=left:return True
+            return False
         unknown_near = [e for e in rows(observation['enemies'])
-                        if any(m['id'] == e['id'] for m in missing)
-                        and -3 < e['position']['x']-player.initial.x < player.speed*self.horizon+8]
+                        if any(m['id'] == e['id'] for m in missing)and reaches_actor_corridor(e)]
         if player.unsupported or unknown_near:
             return finish('none', 0., None, baseline, 'unsupported_native_mechanism')
         pending = self.scheduled

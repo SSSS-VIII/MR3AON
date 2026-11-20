@@ -103,6 +103,27 @@ def test_unknown_native_enemy_cannot_be_silently_ignored(native):
     assert result.evidence['unsupported_enemies'][0]['type'] == 'UnmodeledNativeTrap'
 
 
+@pytest.mark.parametrize('ahead,near',[(3.,True),(200.,False)])
+def test_unknown_offset_damage_shape_is_checked_separately_from_parent_root(native,ahead,near):
+    enemy=native['enemies'][0];native['enemies']=[enemy]
+    enemy['type']='UnmodeledNativeLink'
+    x=native['state']['position']['x'];enemy['position']['x']=x-60
+    for c in enemy['colliders']:
+        delta=x+ahead-c['center']['x'];c['center']['x']+=delta
+        for p in rows(c.get('quad')):p['x']+=delta
+    proposal=InternalController().decide(native)
+    assert (proposal.reason=='unsupported_native_mechanism')is near
+
+
+def test_unknown_disabled_authored_link_shape_still_requires_a_future_model(native):
+    enemy=native['enemies'][0];native['enemies']=[enemy];enemy['type']='UnmodeledNativeLink'
+    x=native['state']['position']['x'];enemy['position']['x']=x-60
+    enemy['colliders']=[dict(id=-1,damage_kind='enemy_callback',enabled=True,active=False,
+        center=dict(x=x-60,y=0),extents=dict(x=0,y=0),
+        quad=[dict(x=x+a,y=b)for a,b in ((2,0),(4,0),(4,1),(2,1))])]
+    assert InternalController().decide(native).reason=='unsupported_native_mechanism'
+
+
 def test_input_not_mutated_and_empty_lua_arrays_are_explicit(native):
     original = deepcopy(native)
     InternalController().decide(native)
