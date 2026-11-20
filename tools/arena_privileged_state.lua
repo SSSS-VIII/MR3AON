@@ -795,6 +795,22 @@ function E.privileged_state()
                 item.animated_tree=o:GetComponentsInChildren(typeof(U.Animator),true).Length>0 or
                     o:GetComponentsInChildren(typeof(U.Animation),true).Length>0
             end
+            if kind=='ItemSkull'then
+                local body=o:GetComponent(typeof(U.Rigidbody));local callbacks=true
+                for _,name in ipairs({'conditionActionEvent','normalActionEvent','collisionActionEvent',
+                        'collisionExitActionEvent','btAnimatorEvent','conditionParamActionEvent','syncComponent'})do
+                    if field(o,name)~=nil then callbacks=false end
+                end
+                local graphs=field(o,'allGraphOwners')
+                if graphs and graphs.Count>0 then callbacks=false end
+                item.skull_binding={callbacks_clear=callbacks,component_types={},
+                    kinematic=body and body.isKinematic or false,gravity=not body or body.useGravity,
+                    animated=o:GetComponentsInChildren(typeof(U.Animator),true).Length>0 or
+                        o:GetComponentsInChildren(typeof(U.Animation),true).Length>0}
+                local scripts=o:GetComponentsInChildren(typeof(U.MonoBehaviour),true)
+                for j=0,scripts.Length-1 do item.skull_binding.component_types[#item.skull_binding.component_types+1]=
+                    scripts[j]and scripts[j]:GetType().FullName or 'missing_component'end
+            end
             if kind=='ItemSpring'then
                 local normal,pop=field(o,'_normalSpring'),field(o,'_popSpring');local q=o.transform.localRotation
                 item.spring={normal_active=normal and normal.activeSelf or false,pop_active=pop and pop.activeSelf or false,
@@ -864,6 +880,27 @@ function E.privileged_state()
             global_attract=manager and manager:IsItemCanAttracted(enum)or false,
             attraction_manager_present=manager~=nil,
             animated_root=root.gameObject:GetComponent(typeof(U.Animator))~=nil or root.gameObject:GetComponent(typeof(U.Animation))~=nil}
+        if name=='ItemSkull'then
+            local body=root.gameObject:GetComponent(typeof(U.Rigidbody))
+            result.kinematic=body and body.isKinematic or false;result.gravity=not body or body.useGravity
+            result.native_skull_callbacks=true;result.unknown_skull_hooks={}
+            for _,entry in ipairs({{typeof(CS.ItemSkull),'Initialize'},
+                    {typeof(CS.ItemSkull),'ResetItemInfo'},{typeof(CS.ItemSkull),'SetRenderType'},
+                    {typeof(CS.ItemSkull),'OnLoadFissonObj'},{typeof(CS.ItemSkull),'ProcessOnTriggerEnter'},
+                    {typeof(CS.ItemSkull),'ThisProcessOnTriggerEnter'},
+                    {typeof(CS.ItemBase),'FixedUpdateMovement'},{typeof(CS.ItemBase),'PlayFixedAnimation'},
+                    {typeof(CS.ItemBase),'PlayLateAnimation'},{typeof(CS.ItemBase),'ProcessOnTriggerStay'},
+                    {typeof(CS.ItemBase),'ProcessOnTriggerExit'},{typeof(CS.ItemBase),'ShowPickupEffect'},
+                    {typeof(CS.ItemBase),'PlayPickUpAudio'},
+                    {typeof(CS.FissonableModule),'Init'},{typeof(CS.FissonableModule),'FissurePieces'},
+                    {typeof(CS.EnemyFissonablePieces),'Fissure'},{typeof(CS.EnemyFissonablePieces),'LateUpdate'}})do
+                local hook=entry[1]:GetField('__Hotfix0_'..entry[2],staticFlags)
+                if not hook or hook:GetValue(nil)~=nil then
+                    result.native_skull_callbacks=false
+                    result.unknown_skull_hooks[#result.unknown_skull_hooks+1]=entry[1].Name..'.'..entry[2]
+                end
+            end
+        end
         local scripts=root.gameObject:GetComponents(typeof(U.MonoBehaviour))
         for i=0,scripts.Length-1 do if scripts[i]then result.root_scripts[#result.root_scripts+1]=scripts[i]:GetType().Name end end
         scripts=root.gameObject:GetComponentsInChildren(typeof(U.MonoBehaviour),true)
@@ -975,7 +1012,7 @@ function E.privileged_state()
                 out.spawn_templates.spring=springSpawnTemplate()
             end
             local name=tostring(info._itemType):match('^([^:]+):')
-            if (name=='ItemMagnet'or name=='ItemElementBall'or name=='ItemFixed')and not out.spawn_templates.items[name]then
+            if (name=='ItemMagnet'or name=='ItemElementBall'or name=='ItemFixed'or name=='ItemSkull')and not out.spawn_templates.items[name]then
                 out.spawn_templates.items[name]=staticPickupTemplate(name)
             end
             out.pending_items[#out.pending_items+1]=item
@@ -1072,7 +1109,7 @@ function E.privileged_state()
         end end
     end
     for _,item in ipairs(out.mechanism_items)do
-        if (item.type=='ItemMagnet'or item.type=='ItemElementBall'or item.type=='ItemFixed')and not out.spawn_templates.items[item.type]then
+        if (item.type=='ItemMagnet'or item.type=='ItemElementBall'or item.type=='ItemFixed'or item.type=='ItemSkull')and not out.spawn_templates.items[item.type]then
             out.spawn_templates.items[item.type]=staticPickupTemplate(item.type)
         end
     end

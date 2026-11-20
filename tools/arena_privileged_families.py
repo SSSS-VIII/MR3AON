@@ -1405,6 +1405,84 @@ def configure_springs(player):
         player.spring_launches.append(item);player.modelled_pending_items.add(entry['id'])
 
 
+def skull_source_binding(item,template,*,live=False):
+    """Bind the original root and noncolliding fragment renderer closure.
+
+    All 28 skull_1..28 assets contain only FissonableModule, sprites and
+    transforms. Init adds native EnemyFissonablePieces without colliders.
+    This proves root-only pickup geometry, not a harmless pickup: CollectItem
+    dispatches global buff/passive/message events, so contact is still avoided.
+    """
+    from arena_privileged_model import rows
+    import re
+    info=item.get('info',{});custom=item.get('custom',{})
+    match=re.fullmatch(r'skull_(\d+): (\d+)',str(custom.get('_renderType')))
+    if (info.get('_itemType')!='ItemSkull: 14'or custom.get('_render')!=0 or
+            set(custom)!={'_render','_renderType'}or not match or
+            not 1<=int(match[1])<=28 or int(match[2])!=int(match[1])-1 or
+            item.get('custom_type')!='ItemSkullDataStruct'or
+            item.get('custom_projection',{}).get('complete')is not True or
+            info.get('independentAnim')or info.get('createPlayerUID')):return False
+    if (template.get('type')!='ItemSkull'or template.get('missing')or
+            template.get('native_skull_callbacks')is not True or
+            rows(template.get('unknown_skull_hooks'))or
+            set(rows(template.get('root_scripts')))!={'ItemSkull'}or
+            set(rows(template.get('component_types')))!={'ItemSkull'}or
+            template.get('animated_tree',True)or template.get('animated_root',True)or
+            template.get('kinematic')is not True or template.get('gravity')is not False):return False
+    boxes=rows(template.get('colliders'))
+    if (len(boxes)!=1 or boxes[0].get('type')!='BoxCollider'or
+            boxes[0].get('trigger')is not True or boxes[0].get('direct_root')is not True):return False
+    if not live:return item.get('source')in ('native_itemList','resolved_uninstantiated_block')
+    binding=item.get('skull_binding',{});boxes=rows(item.get('colliders'))
+    return (item.get('type')=='ItemSkull'and item['fields'].get('_renderType')==int(match[2])and
+        binding.get('callbacks_clear')is True and binding.get('kinematic')is True and
+        binding.get('gravity')is False and binding.get('animated')is False and
+        'ItemSkull'in set(rows(binding.get('component_types')))and
+        set(rows(binding.get('component_types')))<= {'ItemSkull','FissonableModule','EnemyFissonablePieces'}and
+        len(boxes)==1 and boxes[0].get('type')=='BoxCollider'and boxes[0].get('trigger')is True and
+        not boxes[0].get('damage_kind')and boxes[0].get('tag')!='Enemy')
+
+
+def static_skull(entry,template,observation,*,live=False):
+    """Original 2D reset box; avoid contact without inventing its global effects."""
+    from arena_privileged_model import rows
+    try:
+        if not skull_source_binding(entry,template,live=live):raise ValueError('skull_original_source_binding')
+        role=observation['role'];flag=role['fields']['<AttractItemLevelValue>k__BackingField']
+        spring=role['spring_attraction']
+        if (any(not isinstance(v,(int,float))or not math.isfinite(v)or v<0 or v!=int(v)or int(v)&32
+                for v in (flag,spring))or template.get('be_attract_level')!='Steady: 32'or
+                template.get('attraction_manager_present')is not True or template.get('global_attract')is not False):
+            raise ValueError('skull_unverified_attraction')
+        info=entry['info'];angles=info['_localEulerAngles'];scale=np.array([info['_localScale'][a]for a in ('x','y','z')])
+        position=np.array([entry['block_start'][a]+info['_localPosition'][a]for a in ('x','y','z')])if not live else np.array([entry['position'][a]for a in ('x','y','z')])
+        if (abs(angles['x'])>1e-8 or abs(angles['y'])>1e-8 or
+                not np.isfinite([*scale,*position,angles['z']]).all()or min(scale)<=0):
+            raise ValueError('skull_reset_pose_domain')
+        box=rows(template['colliders'])[0];theta=math.radians(angles['z']);co,si=math.cos(theta),math.sin(theta)
+        rotation=np.array([[co,-si,0.],[si,co,0.],[0.,0.,1.]])
+        center=position+rotation@(np.array([box['center'][a]for a in ('x','y','z')])*scale)
+        extent=abs(rotation)@(np.array([box['size'][a]for a in ('x','y','z')])*scale/2)
+        if not center[2]-extent[2]<=0<=center[2]+extent[2]:raise ValueError('skull_pickup_depth')
+        vector=lambda v:dict(zip(('x','y','z'),map(float,v)))
+        collider=dict(id=str(entry['id'])+':pickup',type='BoxCollider',trigger=True,enabled=True,active=True,
+            center=vector(center),extents=vector(extent))
+        if live:
+            f=entry['fields'];actual=rows(entry['colliders'])[0]
+            if (f.get('beAttracting')is not False or f.get('beAttractLevel')!='Steady: 32'or
+                    not actual['active']or not actual['enabled']):raise ValueError('skull_live_motion_or_consumption')
+            guard=.0002+8*abs(float(np.spacing(np.float32(max(1.,abs(position).max())))))
+            if (any(abs(f['_lastPosition'][a]-position[i])>guard for i,a in enumerate(('x','y','z')))or
+                    any(abs(actual[key][a]-value[i])>guard for key,value in (('center',center),('extents',extent))
+                        for i,a in enumerate(('x','y','z')))):
+                raise ValueError('skull_live_reset_geometry')
+            collider=actual
+        return dict(id=entry['id'],type='ItemSkull',position=vector(position),colliders=[collider],
+            source='Avoid original ItemSkull trigger; CollectItem global buff/passive effects remain unsupported'),None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
 def pending_item_issues(player):
     """Unmodelled original pickup effects cannot be an invisible safe lane."""
     from arena_privileged_model import rows
@@ -1543,8 +1621,8 @@ def configure_pending_pickups(player):
         kind=entry['info']['_itemType'].split(':')[0];template=templates.get(kind,{})
         if kind=='ItemFixed'and passive_fixed_item(entry,template,o):
             player.modelled_pending_items.add(entry['id']);continue
-        if kind not in ('ItemMagnet','ItemElementBall'):continue
-        item,reason=static_pickup(entry,template,o)
+        if kind not in ('ItemMagnet','ItemElementBall','ItemSkull'):continue
+        item,reason=static_skull(entry,template,o)if kind=='ItemSkull'else static_pickup(entry,template,o)
         if item is not None:
             if not(kind=='ItemMagnet'and coin_only_magnet(entry,template)):player.contact_avoidance.append(item)
             player.modelled_pending_items.add(entry['id'])

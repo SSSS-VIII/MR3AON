@@ -1,0 +1,1548 @@
+{
+  "template": {
+    "type": "ItemSkull",
+    "animated_tree": false,
+    "animated_root": false,
+    "component_types": [
+      "ItemSkull"
+    ],
+    "id": 228372,
+    "kinematic": true,
+    "native_skull_callbacks": true,
+    "global_attract": false,
+    "unknown_skull_hooks": {},
+    "be_attract_level": "Steady: 32",
+    "attraction_manager_present": true,
+    "colliders": [
+      {
+        "type": "BoxCollider",
+        "center": {
+          "x": 0,
+          "y": 0.30000001192092896,
+          "z": 0
+        },
+        "trigger": true,
+        "direct_root": true,
+        "size": {
+          "x": 1.600000023841858,
+          "y": 3,
+          "z": 1
+        },
+        "enabled": true
+      }
+    ],
+    "root_scripts": [
+      "ItemSkull"
+    ],
+    "gravity": false,
+    "root_scale": {
+      "x": 1,
+      "y": 1,
+      "z": 1
+    }
+  },
+  "live": [
+    {
+      "custom": {
+        "_render": 0,
+        "_renderType": "skull_1: 0"
+      },
+      "position": {
+        "x": 909.280029296875,
+        "y": -42.989990234375,
+        "z": 0
+      },
+      "colliders": [
+        {
+          "tag": "Untagged",
+          "size": {
+            "x": 1.600000023841858,
+            "y": 3,
+            "z": 1
+          },
+          "quad": [
+            {
+              "x": 908.072021484375,
+              "y": -42.202091217041016,
+              "z": 0
+            },
+            {
+              "x": 908.088134765625,
+              "y": -43.8020133972168,
+              "z": 0
+            },
+            {
+              "x": 911.0879516601562,
+              "y": -43.77185821533203,
+              "z": 0
+            },
+            {
+              "x": 911.0718994140625,
+              "y": -42.171939849853516,
+              "z": 0
+            }
+          ],
+          "trigger": true,
+          "local_center": {
+            "x": 0,
+            "y": 0.30000001192092896,
+            "z": 0
+          },
+          "extents": {
+            "x": 1.507965087890625,
+            "y": 0.8150367736816406,
+            "z": 0.5
+          },
+          "position": {
+            "x": 909.280029296875,
+            "y": -42.989990234375,
+            "z": 0
+          },
+          "type": "BoxCollider",
+          "active": true,
+          "scale": {
+            "x": 1.000000238418579,
+            "y": 1.000000238418579,
+            "z": 1
+          },
+          "depth_tilt": false,
+          "center": {
+            "x": 909.5800170898438,
+            "y": -42.986976623535156,
+            "z": 0
+          },
+          "rotation_z": 270.575927734375,
+          "name": "ItemSkull(Clone)(Clone)002",
+          "id": -181230,
+          "parent_active": true,
+          "enabled": true
+        }
+      ],
+      "fields": {
+        "_recycleDisScreen": 3,
+        "_initialized": true,
+        "beAttractSpeed": 12,
+        "_renderType": 0,
+        "_species": "Default: -1",
+        "_lastPosition": {
+          "x": 909.280029296875,
+          "y": -42.989990234375,
+          "z": 0
+        },
+        "beAttractLevel": "Steady: 32",
+        "<isActive>k__BackingField": true,
+        "m_hitMaterial": "NONE: 0",
+        "_isRecycled": false,
+        "m_attackMaterial": "NONE: 0",
+        "m_pickupAudio": "Game_Item_Skull: 717",
+        "<BeBlocked>k__BackingField": false,
+        "btState": 0,
+        "_caculateAtLevelBlockFlag": false,
+        "<BeBlockedStayX>k__BackingField": 0,
+        "_btRecycleFlag": false,
+        "_stayPositionOffsetX": 8,
+        "beAttracting": false,
+        "_lastFixedUpdateTime": 59.07999801635742,
+        "shootIndex": 0,
+        "_secondLastPosition": {
+          "x": 909.280029296875,
+          "y": -42.989990234375,
+          "z": 0
+        },
+        "_pickupRecycle": false,
+        "isGenByLevelBlock": true,
+        "_showPickupScore": false,
+        "levelNoRecycle": false,
+        "pickupEffectOnRole": false
+      },
+      "id": -181234,
+      "custom_projection": {
+        "complete": true,
+        "omitted": {}
+      },
+      "type": "ItemSkull",
+      "info_identity": -1263862736,
+      "custom_type": "ItemSkullDataStruct",
+      "info": {
+        "_itemType": "ItemSkull: 14",
+        "generateDistance": 15,
+        "independentAnim": false,
+        "_localPosition": {
+          "x": 10.030029296875,
+          "y": 0.209991455078125,
+          "z": 0
+        },
+        "_localEulerAngles": {
+          "x": 0,
+          "y": 0,
+          "z": 270.575927734375
+        },
+        "baseID": 0,
+        "_localScale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "<ObjectNearestPosX>k__BackingField": 908.072021484375,
+        "createPlayerUID": 0,
+        "index": 1
+      },
+      "skull_binding": {
+        "callbacks_clear": true,
+        "animated": false,
+        "kinematic": true,
+        "gravity": false,
+        "component_types": [
+          "ItemSkull",
+          "FissonableModule",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces"
+        ]
+      }
+    },
+    {
+      "custom": {
+        "_render": 0,
+        "_renderType": "skull_24: 23"
+      },
+      "position": {
+        "x": 907.2799072265625,
+        "y": -43.269989013671875,
+        "z": 0
+      },
+      "colliders": [
+        {
+          "tag": "Untagged",
+          "size": {
+            "x": 1.600000023841858,
+            "y": 3,
+            "z": 1
+          },
+          "quad": [
+            {
+              "x": 906.9292602539062,
+              "y": -44.66893768310547,
+              "z": 0
+            },
+            {
+              "x": 908.4364013671875,
+              "y": -44.13170623779297,
+              "z": 0
+            },
+            {
+              "x": 907.4290771484375,
+              "y": -41.30587387084961,
+              "z": 0
+            },
+            {
+              "x": 905.9219360351562,
+              "y": -41.84310531616211,
+              "z": 0
+            }
+          ],
+          "trigger": true,
+          "local_center": {
+            "x": 0,
+            "y": 0.30000001192092896,
+            "z": 0
+          },
+          "extents": {
+            "x": 1.257232666015625,
+            "y": 1.6815319061279297,
+            "z": 0.5
+          },
+          "position": {
+            "x": 907.2799072265625,
+            "y": -43.269989013671875,
+            "z": 0
+          },
+          "type": "BoxCollider",
+          "active": true,
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "depth_tilt": false,
+          "center": {
+            "x": 907.17919921875,
+            "y": -42.98740768432617,
+            "z": 0
+          },
+          "rotation_z": 19.61941146850586,
+          "name": "ItemSkull(Clone)(Clone)001",
+          "id": -178734,
+          "parent_active": true,
+          "enabled": true
+        }
+      ],
+      "fields": {
+        "_recycleDisScreen": 3,
+        "_initialized": true,
+        "beAttractSpeed": 12,
+        "_renderType": 23,
+        "_species": "Default: -1",
+        "_lastPosition": {
+          "x": 907.2799072265625,
+          "y": -43.269989013671875,
+          "z": 0
+        },
+        "beAttractLevel": "Steady: 32",
+        "<isActive>k__BackingField": true,
+        "m_hitMaterial": "NONE: 0",
+        "_isRecycled": false,
+        "m_attackMaterial": "NONE: 0",
+        "m_pickupAudio": "Game_Item_Skull: 717",
+        "<BeBlocked>k__BackingField": false,
+        "btState": 0,
+        "_caculateAtLevelBlockFlag": false,
+        "<BeBlockedStayX>k__BackingField": 0,
+        "_btRecycleFlag": false,
+        "_stayPositionOffsetX": 8,
+        "beAttracting": false,
+        "_lastFixedUpdateTime": 59.07999801635742,
+        "shootIndex": 0,
+        "_secondLastPosition": {
+          "x": 907.2799072265625,
+          "y": -43.269989013671875,
+          "z": 0
+        },
+        "_pickupRecycle": false,
+        "isGenByLevelBlock": true,
+        "_showPickupScore": false,
+        "levelNoRecycle": false,
+        "pickupEffectOnRole": false
+      },
+      "id": -178738,
+      "custom_projection": {
+        "complete": true,
+        "omitted": {}
+      },
+      "type": "ItemSkull",
+      "info_identity": -1742563520,
+      "custom_type": "ItemSkullDataStruct",
+      "info": {
+        "_itemType": "ItemSkull: 14",
+        "generateDistance": 15,
+        "independentAnim": false,
+        "_localPosition": {
+          "x": 8.0299072265625,
+          "y": -0.07000732421875,
+          "z": 0
+        },
+        "_localEulerAngles": {
+          "x": 0,
+          "y": 0,
+          "z": 19.61941146850586
+        },
+        "baseID": 0,
+        "_localScale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "<ObjectNearestPosX>k__BackingField": 905.9219360351562,
+        "createPlayerUID": 0,
+        "index": 0
+      },
+      "skull_binding": {
+        "callbacks_clear": true,
+        "animated": false,
+        "kinematic": true,
+        "gravity": false,
+        "component_types": [
+          "ItemSkull",
+          "FissonableModule",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces",
+          "EnemyFissonablePieces"
+        ]
+      }
+    }
+  ],
+  "pending": [
+    {
+      "custom": {
+        "_render": 0,
+        "_renderType": "skull_4: 3"
+      },
+      "block_start": {
+        "x": 899.889892578125,
+        "y": -39.760009765625,
+        "z": 0
+      },
+      "id": "pending-item:4:0:1478980784",
+      "custom_type": "ItemSkullDataStruct",
+      "stage_index": 4,
+      "custom_projection": {
+        "complete": true,
+        "omitted": {}
+      },
+      "sync_blocked": false,
+      "info_identity": 1478980784,
+      "source": "resolved_uninstantiated_block",
+      "info": {
+        "_itemType": "ItemSkull: 14",
+        "generateDistance": 15,
+        "independentAnim": false,
+        "_localPosition": {
+          "x": 8.0299072265625,
+          "y": -0.07000732421875,
+          "z": 0
+        },
+        "_localEulerAngles": {
+          "x": 0,
+          "y": 0,
+          "z": 19.61941146850586
+        },
+        "baseID": 0,
+        "_localScale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "<ObjectNearestPosX>k__BackingField": 0,
+        "createPlayerUID": 0,
+        "index": 0
+      },
+      "block_index": 0
+    },
+    {
+      "custom": {
+        "_render": 0,
+        "_renderType": "skull_4: 3"
+      },
+      "block_start": {
+        "x": 899.889892578125,
+        "y": -39.760009765625,
+        "z": 0
+      },
+      "id": "pending-item:4:0:1957681568",
+      "custom_type": "ItemSkullDataStruct",
+      "stage_index": 4,
+      "custom_projection": {
+        "complete": true,
+        "omitted": {}
+      },
+      "sync_blocked": false,
+      "info_identity": 1957681568,
+      "source": "resolved_uninstantiated_block",
+      "info": {
+        "_itemType": "ItemSkull: 14",
+        "generateDistance": 15,
+        "independentAnim": false,
+        "_localPosition": {
+          "x": 13.3499755859375,
+          "y": -0.07000732421875,
+          "z": 0
+        },
+        "_localEulerAngles": {
+          "x": 0,
+          "y": 0,
+          "z": 19.61941146850586
+        },
+        "baseID": 0,
+        "_localScale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "<ObjectNearestPosX>k__BackingField": 0,
+        "createPlayerUID": 0,
+        "index": 0
+      },
+      "block_index": 0
+    }
+  ],
+  "assets": [
+    {
+      "bundle": "4f5397f02dac65deb26547c3083ebb7d.ab",
+      "sha256": "466b5511cea38258070850f06301b0e4d68b43096373e67021a8788f874836b8",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_4.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "4f316eb287b357e2e6c248bb52830675.ab",
+      "sha256": "28ae3934e743559ac4da3c26886782f158597be1909fa1e303d592be446ce294",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_23.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "14f87d91106d5adf3cacd68fcf9e09af.ab",
+      "sha256": "ebbcf814de8260f0da8ef224e14ff035d9e3f320be5b408f7d7d7c0dd43bc8b5",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_8.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "6bd3b010d25c205dc5e9d39fe478d3d4.ab",
+      "sha256": "085e81198bacaed539fec692c99df26976e635928116bd3f1a6dea287d1eb10a",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_2.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "7566a0ba3fc122891dcfab92786f2163.ab",
+      "sha256": "662ed3466ca65c23f5fb611ea8f54404d2a3f76b4668d73dda363f09e2ac35c3",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_13.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "77a3db0a20f3d84d08e6311bc1fec084.ab",
+      "sha256": "f37be98f2252955d938c5cb33df135ed479575b2b71e719231b0bb5d372d947e",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_18.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "817facd7f7a80416d3d941c444a790b7.ab",
+      "sha256": "5aa317b138792275d06991877ca0d9a97d185d20b9529e81e0c91355c62a3ffc",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_3.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "81d7916bfd21854afc9448676955425f.ab",
+      "sha256": "7ad6d41d75377eb0a6030be25c554ffb1244e1a4aec4b005c9824fc16a938871",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_25.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "852571f79a951164ab65ec9db5dc5802.ab",
+      "sha256": "2f1569da2077efba80dbb8d8342f8a0f1cb6d4e62140477ddd10b610e4518a81",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_27.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "8f0c7c93338f55bf552671a863dde39a.ab",
+      "sha256": "6cc43746541f47d759f1952ca60b553fb6fa7dffb5592a819c6f98bfa53cefe4",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_17.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "99bfd7d03dd66feaba2f19dc2060c8bb.ab",
+      "sha256": "509e5c6680e8b7152d3706ac2d4e59255309477a5d33d9ee717a483f359c39d9",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_21.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "9c113fcb9fc55b32df39c849c2c594c3.ab",
+      "sha256": "2b431016b1a0b609ba24fe629adc2ad1432a448653ade32039a7b204983a1109",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_6.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "a2fbfede8909721846fbc358dfdfc337.ab",
+      "sha256": "e14b9e44aced1be97d1786fa616904cb668b9f8533ef4589749b54ca353296ca",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_1.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "a33439c651dfe01263bc58874ec20834.ab",
+      "sha256": "6e59329de7b76dec0951d456ec8118d0f30463ae7e794cdeebd836fd19354028",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_7.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "a4815f62e9df7d123180d9bfdc4d8051.ab",
+      "sha256": "2b2e8b3d8671abd05ddaada44a6f032e3088900a0ff90947dd1c53dc7d7faced",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_24.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "ab222d1ea52ad975ea9458a922da4fc2.ab",
+      "sha256": "69462f964f6e520ddb6383b03ca5adedd1172da260b50709f7cae846f91d50b7",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_26.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "ad89e9fce4fff8e1c3e734f346c604aa.ab",
+      "sha256": "becb6a63d80a6958dfc4b9b2c72ce9f1cc4453e48dd294b6d70f5c1a18db9832",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_9.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "b7d7efbe2d0cf89bbb0bf17a6085c3ad.ab",
+      "sha256": "129f7340655d6558c054c7a30ddab45cd7464dde900f3fb1b5edcf94af8b3824",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_12.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "bdd3ee8baec2d520290873fe801f5f06.ab",
+      "sha256": "84f77b613b914dfd601d4c6adc7677cf927f597a7fa92c965d1f94bd6a69cca3",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_11.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "c30bc4aaa075efefd451fc46e0005d89.ab",
+      "sha256": "6257f4f07b050bbe7d42b0d49a85f1147c890ae31ab61100235b33c57520fb5d",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_20.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "d888f85a87c6515a0d311104575df35a.ab",
+      "sha256": "ca00b0d426209392335684517d03ac54b414a48dd5b681ffccbdc923a4e78c97",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_28.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "dba1ad7792d3d65f17d6076258d9bc5c.ab",
+      "sha256": "e6dfa4cd07c376298bd2e4f1459b1beb71f1430514e16fed62075cea9b35e7f6",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_5.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "e24c19512369e18816eec7edfcf972bc.ab",
+      "sha256": "108d75fdb9894d2fcebf3d63c4d7ff76d79b089510d1714d667fd9cb63ad4617",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_10.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "eb29815f6c825f4441f6f1fa8bf89e17.ab",
+      "sha256": "74e4295dbc20c29d2b08360332fbc50b7f6a2ef72a0958c6db0aab96b57710ef",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_15.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "eb89c0cf31e202396e1d91ce12247c5b.ab",
+      "sha256": "28a2e8f2029a4f35fdc5885c2cc81bdce32b63b0e76c32ab105c46a3e99d799e",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_19.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "f5c661e10d7842130e1e8d96313e2e39.ab",
+      "sha256": "47272385ea8535d9fc45bf07225ee88ff8f077966652c3ba45d533215911929a",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_16.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "f7d4381838fb45397c0bcb59e7b99a41.ab",
+      "sha256": "f91b52027eab6df23049329d038672328d03deb53fd4b9517f8c009fc4ac14fc",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_14.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    },
+    {
+      "bundle": "ff562292abe3d129a4487ff2099c17a1.ab",
+      "sha256": "b21630d3ce7afe62ce2b2cb743fcabe0aa4ae4e0bda9222023c12bf9f84fd077",
+      "assets": [
+        "assets/gameresources/combatobj/item/prefab/itemskullmodule/skull_22.prefab"
+      ],
+      "types": [
+        "AssetBundle",
+        "GameObject",
+        "MonoBehaviour",
+        "MonoScript",
+        "SpriteRenderer",
+        "Transform"
+      ],
+      "scripts": [
+        "FissonableModule"
+      ],
+      "errors": []
+    }
+  ],
+  "role": {
+    "rules": {
+      "reverse_fast_enabled": true,
+      "ground_lengthen": 0.30000001192092896,
+      "slide_offset": {
+        "x": 4,
+        "y": 0,
+        "z": 0
+      },
+      "reverse_fast_offset": 5,
+      "slide_seconds": 0.5
+    },
+    "data": {
+      "_ninjaHeight": 1,
+      "_downGravity3": -9.800000190734863,
+      "_upGravity3": -9.800000190734863,
+      "_jumpForce1": 23.5,
+      "_normalGravity": -19.799999237060547,
+      "_ninjaFootPoint": 0.75,
+      "_jumpForce4": 8.5,
+      "_glideAccSpeed": 1,
+      "_jumpForce3": 12,
+      "_glideMinSpeed": -2,
+      "_upGravity1": -25,
+      "_upGravity4": -9.800000190734863,
+      "_jumpForce2": 12.5,
+      "_glideUpForce": 5,
+      "_glideMaxSpeed": 2.5,
+      "_climbDistance": 0.800000011920929,
+      "_rollAirDownUpSpeed": 28,
+      "_driveForce": 5,
+      "_rollDownUpSpeed": 8,
+      "_downGravity4": -9.800000190734863,
+      "_upGravity2": -9.800000190734863,
+      "_moveSpeed": 15,
+      "_downGravity1": -9,
+      "_downGravity2": -9.800000190734863
+    },
+    "slope_state": 0,
+    "velocity": {
+      "x": 14.083564758300781,
+      "y": 0,
+      "z": 0
+    },
+    "ground_reference_y": -43.199981689453125,
+    "collider_parameters": {
+      "_normalColliderHeight": 1.7999999523162842,
+      "_normalColliderRadius": 0.20000000298023224,
+      "_jumpColliderHeight": 1.2000000476837158,
+      "_rollColliderRadius": 0.10000000149011612,
+      "_rollColliderHeight": 0.10000000149011612,
+      "_rollColliderOffset": {
+        "x": 0.05000000074505806,
+        "y": 0,
+        "z": 0
+      },
+      "_slideColliderOffset": {
+        "x": 0.05000000074505806,
+        "y": -0.30000001192092896,
+        "z": 0
+      },
+      "_jumpColliderOffset": {
+        "x": 0.10000000149011612,
+        "y": 0.30000001192092896,
+        "z": 0
+      },
+      "_normalColliderOffset": {
+        "x": 0.10000000149011612,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "spring_attraction": 2,
+    "fields": {
+      "_hurtCheckTimes": 0.14000001549720764,
+      "_currentAttackTime": 0,
+      "_canBreakDrag": false,
+      "autoRecoverForbidFlag": 0,
+      "resetJumpTimes": false,
+      "isDuringDisappear": false,
+      "_lastPosition": {
+        "x": 900.0100708007812,
+        "y": -42.449981689453125,
+        "z": 0
+      },
+      "skillGlideMaxTime": 0,
+      "_slideSmokeCreateTime": 0,
+      "<GetUpping>k__BackingField": false,
+      "fireLegEndShootTime": 1.2000000476837158,
+      "<WeaponShootPoint>k__BackingField": {
+        "x": 900.0100708007812,
+        "y": -42.449981689453125,
+        "z": 0
+      },
+      "_isQuickRoll": false,
+      "_waitToSlide": false,
+      "_currWindDashSpeed": 0,
+      "btState": 0,
+      "<ScrollInvincibleRemaindTime>k__BackingField": 0,
+      "IsSoulState": false,
+      "_headTwistOff": false,
+      "_gravity": 0,
+      "windEffectOffset": {
+        "x": 1.0299999713897705,
+        "y": 0.9599999785423279,
+        "z": 0
+      },
+      "<AttractItemLevelValue>k__BackingField": 0,
+      "_targetY": 0,
+      "<PullingOutWeapon>k__BackingField": false,
+      "deadEscapeEnable": false,
+      "<SkipAnimationInCustomJump>k__BackingField": false,
+      "_dragTime": 0,
+      "WaitForSlope": 0,
+      "_attackBossMode": false,
+      "_changeDirection": true,
+      "_firstFastGlide": true,
+      "fireFlyStartSpeed": 0,
+      "<StandAftGetUp>k__BackingField": false,
+      "_stopRunTime": 1.5,
+      "fireFlyStartOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "isRevivedBefore": false,
+      "m_slopState": 0,
+      "_hurtOffsetTime": 0,
+      "_dashSlowDown": false,
+      "fireLegHeight": 0,
+      "_beDrag": false,
+      "_ninjaControllerType": "onLine: 0",
+      "_skillSuspendSpeed": 10,
+      "damageReduceType": 0,
+      "_windDashAcc": 20,
+      "_stuckPos": 0,
+      "_forbidAllAnim": false,
+      "_hpBarOffset": {
+        "x": 0,
+        "y": 1.8300000429153442,
+        "z": 0
+      },
+      "<_jumpFromPoint>k__BackingField": {
+        "x": 887.263671875,
+        "y": -31.282489776611328,
+        "z": 0
+      },
+      "_isRevive": false,
+      "m_uid": 0,
+      "_dieUnderWater": false,
+      "_shellDashSpeed": 0,
+      "_isClone": false,
+      "dashTarOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "_inJump4": false,
+      "_slideRemainTime": 0,
+      "_curScrollRoleID": 0,
+      "_lastNinjaControllerType": "onLine: 0",
+      "_canRebormFrame": 0,
+      "_dragDisappear": false,
+      "_cloneAttackSpeed": 60,
+      "<EndLevelWaitOut>k__BackingField": false,
+      "m_hitMaterial": "Flesh: 2",
+      "_beDragToUnderground": false,
+      "_fastGlideLoopAudio": "None: 0",
+      "nextResetJumpAutoGlide": false,
+      "showBlood": true,
+      "_currRoleObjOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rebornLeftTimes": 0,
+      "curSkillFireLegEnd": false,
+      "_isRecycled": false,
+      "_stuckByBlock": true,
+      "_currBlinkTarPos": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "_dieBySpiderOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "_fastGlideAudioInstanceID": 0,
+      "first3": true,
+      "_secondLastPosition": {
+        "x": 899.7283935546875,
+        "y": -42.449981689453125,
+        "z": 0
+      },
+      "dieAudio": "Game_Role1_Common_Hurt: 130001",
+      "_lastRoleObjPos": {
+        "x": 900.0100708007812,
+        "y": -42.449981689453125,
+        "z": 0
+      },
+      "_dashIndex": 0,
+      "dragChangedCollider": false,
+      "_bCloneAttack": false,
+      "_ninjaHide": false,
+      "_killBySkill": false,
+      "skillGlideDecreaseSpeed": 1,
+      "<FallDown>k__BackingField": false,
+      "<PopCameraFollow>k__BackingField": false,
+      "suspendTargetY": 0,
+      "suspendRange": 1,
+      "_weaponScale": 1,
+      "_canYield": false,
+      "skillGlideState": "none: 0",
+      "_lastNinjaPhysicsState": "runOnLine: 1",
+      "skillGlideRemainTime": 0,
+      "_onBoatState": "Stand: 0",
+      "nextResetJumpAutoJump2": false,
+      "_tarYRelativeCamera": 0,
+      "_accelerat": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "first1": true,
+      "<IsMountState>k__BackingField": false,
+      "m_skinID": 1,
+      "first0": true,
+      "_velocity": {
+        "x": 14.083564758300781,
+        "y": 0,
+        "z": 0
+      },
+      "_stuckHorizontal": true,
+      "befFireLegState": "none: 0",
+      "_buffEfectOffset": {
+        "x": 0.20000000298023224,
+        "y": 3,
+        "z": 0
+      },
+      "StartDashForbidOperate": false,
+      "<SealFlagValue>k__BackingField": 0,
+      "_moveDirection": {
+        "x": 2,
+        "y": 1,
+        "z": 0
+      },
+      "triggerStart": true,
+      "damageReduceValue": 0,
+      "m_attackMaterial": "Sharp: 2",
+      "continuePopTimeRemain": 0,
+      "damageReduceEnable": false,
+      "_lastDownButtonDown": false,
+      "changeState": false,
+      "_slopeSpeedRatio": 1.1424940824508667,
+      "_btRecycleFlag": false,
+      "_touchMoveLimitYMax": 0,
+      "__ninjaPrePhysicsState": "fall: 15",
+      "_xDragSpeed": 0,
+      "findResurgenceDis": 0,
+      "_healingState": false,
+      "<StopImmediate>k__BackingField": false,
+      "lastHurtEnemyIndex": -1,
+      "scrollParam": 1,
+      "_fireFlyHeight": 0,
+      "<RelayInvincibleRemainTime>k__BackingField": 0,
+      "stateScrollSource": "None: 100",
+      "scrollType": "None: 100",
+      "_breakDragCount": 0,
+      "_isDefense": false,
+      "resetJumpTimesNew": 0,
+      "newXiaoheiSuspend": 0,
+      "scrollSource": "ScrollItem: 0",
+      "checkGodTimes": 0,
+      "_reviveCount": 0,
+      "_beDragWaitEnd": false,
+      "_yRelativeCamera": 0,
+      "_toothDashSpeed": 0,
+      "<isActive>k__BackingField": true,
+      "_popCanJump": false,
+      "_slopeOffset": {
+        "x": 2.2799055576324463,
+        "y": 0,
+        "z": 0
+      },
+      "landingPos": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "<CameraFollowNinja>k__BackingField": false,
+      "<BeBlocked>k__BackingField": false,
+      "_fastGlide": false,
+      "_fireDashAcceleration": 0,
+      "<IsRideItemState>k__BackingField": false,
+      "_fireFlyAcc": -20,
+      "fireFlyTarSpeed": 0,
+      "_moveSpeedBefStopRun": 15,
+      "_glideRemaindTime": 0,
+      "_skillSuspendPreState": "none: 0",
+      "_fireFlyStartGroundY": 0,
+      "accTime": 0,
+      "_slowDownAcc": -10,
+      "allDisplayVisible": true,
+      "_windDashTarSpeed": 0,
+      "<StuckEndRecover>k__BackingField": false,
+      "_cameraShiftCtrling": false,
+      "__ninjaPhysicsState": "runOnLine: 1",
+      "fireLegEndShootRemain": 0,
+      "_currHurtAttenuationRatio": 1,
+      "_shellDash": false,
+      "_continuePop": false,
+      "_isInitCoroutine": false,
+      "rectSide": "None: 4",
+      "_lastUpBottonDown": false,
+      "lastReduceWeaponTime": -1000,
+      "_attackTime": 2,
+      "fall3Glide": false,
+      "_lockedMaxLifeValue": 0,
+      "first2": true,
+      "_stateBeforeSuspend": "none: 0",
+      "skillGlide": false,
+      "_touchMoveLimitBanFrame": -1,
+      "_soulTotalTime": 0,
+      "_touchMoveCheckStuck": true,
+      "sinkRemainHeight": 0,
+      "<RunStopSlowEnd>k__BackingField": false,
+      "_touchMoveLimitYMin": 0,
+      "_touchMoveLerpSpeed": 1,
+      "_lastFixedUpdateTime": 59.07999801635742,
+      "_ninjaTouchMove": false,
+      "minHealthFlag": 0,
+      "<HurtComatose>k__BackingField": false,
+      "_hurtAttenuationRemainTime": 0,
+      "itemPapercraneFlag": 0,
+      "_getStuck": false,
+      "_fireFlyTime": 0,
+      "_originNinjFootPoint": 0,
+      "fireLegSuspendRefCameraY": 0,
+      "punctuationOffset": {
+        "x": 1.2000000476837158,
+        "y": 1.2999999523162842,
+        "z": 0
+      },
+      "_soulRemaindTime": 0,
+      "_dieOnWaterAcc": 2,
+      "_ninjaTimeStop": false,
+      "_caculateAtLevelBlockFlag": false,
+      "_currBlinkVelocity": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "_popCurrSpeed": 0,
+      "m_roleID": 1,
+      "_onBoatSitTime": 0,
+      "_windBlinkFallRemaindTime": 0,
+      "stateScrollType": "None: 100",
+      "_noHurtTime": 9.12001895904541,
+      "_windDash": false,
+      "_offsetToNinja": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "recordNinjaDie": false,
+      "_popDirection": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "_thunderDash": false,
+      "rebornCountDownTime": 0,
+      "<FinishWaitOut>k__BackingField": false,
+      "<BeBlockedStayX>k__BackingField": 0,
+      "newXiaoheiBeforeState": "none: 0",
+      "_fastGlideTargetSpeed": 30,
+      "commonAcc": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "_glided": false,
+      "hurtAudio": "None: 0",
+      "<IsSuspend>k__BackingField": false,
+      "skillGlideIncreaseSpeed": 2,
+      "_runStopped": false,
+      "m_ninjaID": 1,
+      "_popAcceleration": 0,
+      "<IsAngreState>k__BackingField": false
+    },
+    "skills": {
+      "bullets": {},
+      "present": true,
+      "active": {}
+    },
+    "excluded_air_ground": {
+      "present": false,
+      "fields": {}
+    },
+    "god": false,
+    "colliders": [
+      {
+        "tag": "Player_Ninja",
+        "radius": 0.20000000298023224,
+        "trigger": true,
+        "local_center": {
+          "x": 0.10000000149011612,
+          "y": 0,
+          "z": 0
+        },
+        "height": 1.7999999523162842,
+        "extents": {
+          "x": 0.20001220703125,
+          "y": 0.4679985046386719,
+          "z": 0.20000000298023224
+        },
+        "position": {
+          "x": 899.8167114257812,
+          "y": -42.449981689453125,
+          "z": 0
+        },
+        "direction": 1,
+        "active": true,
+        "scale": {
+          "x": 0.5199999809265137,
+          "y": 0.5199999809265137,
+          "z": 1
+        },
+        "type": "CapsuleCollider",
+        "center": {
+          "x": 899.8687133789062,
+          "y": -42.449981689453125,
+          "z": 0
+        },
+        "rotation_z": 0,
+        "name": "Role",
+        "id": -208772,
+        "parent_active": true,
+        "enabled": true
+      }
+    ],
+    "mounted": false,
+    "gravity": 0,
+    "interaction_colliders": [
+      {
+        "type": "SphereCollider",
+        "center": {
+          "x": 899.8167114257812,
+          "y": -42.449981689453125,
+          "z": 0
+        },
+        "extents": {
+          "x": 0.4000000059604645,
+          "y": 0.4000000059604645,
+          "z": 0.4000000059604645
+        },
+        "name": "ColliderForItem",
+        "id": -208778,
+        "local_center": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "active": true,
+        "scale": {
+          "x": 0.5199999809265137,
+          "y": 0.5199999809265137,
+          "z": 1
+        },
+        "radius": 0.4000000059604645,
+        "parent_active": true,
+        "trigger": true,
+        "rotation_z": 0,
+        "position": {
+          "x": 899.8167114257812,
+          "y": -42.449981689453125,
+          "z": 0
+        },
+        "tag": "RoleForItem",
+        "enabled": false
+      },
+      {
+        "tag": "RoleForItem",
+        "radius": 0.41999998688697815,
+        "trigger": true,
+        "local_center": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "height": 2.5,
+        "extents": {
+          "x": 0.41998291015625,
+          "y": 0.6500015258789062,
+          "z": 0.41999998688697815
+        },
+        "position": {
+          "x": 899.8167114257812,
+          "y": -42.449981689453125,
+          "z": 0
+        },
+        "direction": 1,
+        "active": true,
+        "scale": {
+          "x": 0.5199999809265137,
+          "y": 0.5199999809265137,
+          "z": 1
+        },
+        "type": "CapsuleCollider",
+        "center": {
+          "x": 899.8167114257812,
+          "y": -42.449981689453125,
+          "z": 0
+        },
+        "rotation_z": 0,
+        "name": "ColliderForItem",
+        "id": -208782,
+        "parent_active": true,
+        "enabled": true
+      }
+    ]
+  }
+}

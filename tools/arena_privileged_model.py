@@ -230,9 +230,13 @@ class PlayerModel:
             from arena_privileged_families import progression_marker
             if progression_marker(item):
                 continue
-            from arena_privileged_families import static_pickup,passive_fixed_item,coin_only_magnet
+            from arena_privileged_families import static_pickup,passive_fixed_item,coin_only_magnet,static_skull
             template=observation.get('spawn_templates',{}).get('items',{}).get(item['type'],{})
             if item['type']=='ItemFixed'and passive_fixed_item(item,template,observation,live=True):continue
+            if item['type']=='ItemSkull':
+                bound,_=static_skull(item,template,observation,live=True)
+                if bound is not None:
+                    self.contact_avoidance.append(bound);continue
             if item['type']in ('ItemMagnet','ItemElementBall'):
                 bound,_=static_pickup(item,template,observation,live=True)
                 if bound is not None:
