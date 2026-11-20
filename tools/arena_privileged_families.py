@@ -1315,6 +1315,91 @@ def pending_small_sword(entry,times,observation,player,trajectory_states,context
 PENDING_BLADE_NAMES={'EnemyBlade','EnemyBlade2','EnemyBlade3','EnemyBlade4','EnemyBlade6','EnemyBladeGold'}
 
 
+def configure_springs(player):
+    """Admit only native source-bound, horizontal no-jump spring pickups.
+
+    Pending items additionally need a live parent, an unblocked ordered queue
+    and enough creation lead for a physical update before pickup contact.
+    Unknown items remain separately visible to pending_item_issues.
+    """
+    from arena_privileged_model import rows
+    o=player.observation;role=o['role'];template=o.get('spawn_templates',{}).get('spring',{})
+    player.modelled_pending_items=set()
+    profiles=[c for c in rows(role.get('interaction_colliders'))if c['type']=='CapsuleCollider'
+              and c['active']and c['enabled']]
+    if (not player.native_samples or len(profiles)!=1 or profiles[0]['direction']!=1 or
+            role['fields'].get('_thunderDash')or role['fields'].get('itemPapercraneFlag')or
+            rows(o['platforms'])or not template):return
+    c=profiles[0];radius=c['radius']*max(abs(c['scale'][a])for a in ('x','z'))
+    half=max(0.,c['height']*abs(c['scale']['y'])/2-radius)
+    if (any(abs(c['local_center'][a])>1e-8 for a in ('x','y','z'))or
+            not all(math.isfinite(v)and v>=0 for v in (radius,half))or radius<=0):return
+    scripts=set(rows(template.get('root_scripts')))
+    if (template.get('missing')or template.get('type')!='ItemSpring'or template.get('animated_root',True)or
+            'ItemSpring'not in scripts or not scripts<={'ItemSpring','ItemBaseCollider'}):return
+    if not all(math.isfinite(player.data.get(k,float('nan')))for k in ('_downGravity1','_downGravity3')):return
+    player.pickup_profile=(radius,half)
+    admitted=set()
+    for item in player.contact_avoidance:
+        d=item['custom'];boxes=rows(item['colliders']);angles=item.get('info',{}).get('_localEulerAngles',{})
+        spring=item.get('spring',{});p=item['position'];last=item['fields'].get('_lastPosition')
+        if (d.get('_continuePop')is False and d.get('_jumpLimitTime')==0 and d.get('_render')==0 and
+                d.get('_needRotate')is False and d.get('_popSpeed',0)>0 and d.get('_popAcceleration',-1)>=0 and
+                all(math.isfinite(d[k])for k in ('_popSpeed','_popAcceleration'))and
+                all(abs(angles.get(a,float('inf')))<1e-8 for a in ('x','y','z'))and
+                len(boxes)==1 and boxes[0]['type']=='BoxCollider'and boxes[0]['enabled']and boxes[0]['active']and
+                not boxes[0].get('depth_tilt')and len(rows(boxes[0].get('quad')))==4 and
+                spring.get('rotation')==dict(x=0.,y=0.,z=0.,w=1.)and last is not None and
+                all(abs(last[a]-p[a])<.0002 for a in ('x','y','z'))and
+                item.get('info',{}).get('_itemType')=='ItemSpring: 15'and 'normal_active'in spring):
+            # NoRotate OnTriggerEnter consumes a contact without disabling
+            # the trigger. The original normal visual distinguishes it from
+            # an unconsumed spring; do not invent a second pickup on landing.
+            admitted.add(item['id'])
+            if spring['normal_active']:player.spring_launches.append(item)
+    player.contact_avoidance=[i for i in player.contact_avoidance if i['id']not in admitted]
+    queue=rows(o.get('pending_items'));live={i.get('info_identity')for i in rows(o.get('mechanism_items'))}
+    for index,entry in enumerate(queue):
+        if entry.get('info',{}).get('_itemType')!='ItemSpring: 15'or entry['sync_blocked']:continue
+        if entry['info_identity']in live:continue
+        item,reason=pending_spring(entry,template)
+        if reason:continue
+        nearest=entry['info']['<ObjectNearestPosX>k__BackingField'];generation=entry['info']['generateDistance']
+        speed=max(player.speed,abs(player.initial.vx),entry['custom']['_popSpeed'])
+        # The source gate uses distance to camera OR role. Prove sufficient
+        # lead using the role alone; no camera extrapolation is necessary.
+        lead=speed*player.tick+player.interaction_radius+2.
+        if not math.isfinite(generation)or generation<=lead:continue
+        left=nearest-generation;right=nearest+lead
+        blocked=False
+        for previous in queue[:index]:
+            if ((previous['stage_index'],previous['block_index'])!=(entry['stage_index'],entry['block_index'])or
+                    previous['source']!='native_itemList'or previous['sync_blocked']):continue
+            info=previous['info'];n=info.get('<ObjectNearestPosX>k__BackingField');g=info.get('generateDistance')
+            if n is None or g is None or not math.isfinite(n+g)or n-g>left or n+g<right:
+                blocked=True;break
+        if blocked:continue
+        player.spring_launches.append(item);player.modelled_pending_items.add(entry['id'])
+
+
+def pending_item_issues(player):
+    """Unmodelled original pickup effects cannot be an invisible safe lane."""
+    from arena_privileged_model import rows
+    o=player.observation;issues=[]
+    speed=max(player.speed,abs(player.initial.vx),*(i['custom']['_popSpeed']for i in player.spring_launches))
+    upper=player.initial.x+speed*1.8+player.interaction_radius+4.
+    score_types={'ItemCoinSilver: 50','ItemCoinYellow: 53'}
+    for entry in rows(o.get('pending_items')):
+        if entry['sync_blocked']or entry['id']in player.modelled_pending_items:continue
+        info=entry['info'];nearest=info.get('<ObjectNearestPosX>k__BackingField')
+        # Original coin callbacks change score/energy/task counters, with no
+        # direct actor motion. This excludes balls, mounts and CoinCurve.
+        if info['_itemType']in score_types:continue
+        if nearest is not None and math.isfinite(nearest)and nearest>upper:continue
+        issues.append('pending_item:'+info['_itemType'])
+    return issues
+
+
 def pending_spring(entry,template):
     """Original reset pose for a queued horizontal, non-continuing spring.
 
@@ -1326,6 +1411,8 @@ def pending_spring(entry,template):
     try:
         info=entry['info'];custom=entry['custom']
         if entry['sync_blocked']:return None,'spring_spawn_sync_blocked'
+        if entry.get('custom_projection',{}).get('complete')is False:
+            raise ValueError('spring_custom_projection_incomplete')
         if entry['source']!='native_itemList':raise ValueError('spring_uninstantiated_parent')
         if (info['_itemType']!='ItemSpring: 15'or entry['custom_type']!='ItemSpringDataStruct'or
                 info.get('independentAnim')or info.get('createPlayerUID')):

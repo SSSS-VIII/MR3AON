@@ -744,11 +744,12 @@ function E.privileged_state()
             out.enemies[#out.enemies+1]=row
         end
     end
-    local physicalItems={ItemSpring=true,ItemHorn=true,ItemSkull=true,ItemShell=true,ItemShieldBall=true,
-        ItemBossController=true,ItemSpecialTaskStart=true,ItemSpecialTaskEnd=true,ItemEvent=true}
+    -- Coin bodies affect score/energy/task counters; every other ItemBase
+    -- must remain visible to the mechanism model, including skill balls.
+    local scoreItems={ItemCoin=true,ItemCoinYellowFly=true}
     local items=U.Object.FindObjectsOfType(typeof(CS.ItemBase))
     for i=0,items.Length-1 do local o=items[i];local kind=o:GetType().Name
-        if physicalItems[kind] and o.gameObject.activeInHierarchy and o.isActive and
+        if not scoreItems[kind] and o.gameObject.activeInHierarchy and o.isActive and
                 o.transform.position.x>p.x-2 and o.transform.position.x<p.x+80 then
             local info=field(o,'_itemInfo');local custom=info and field(info,'_itemInfoCustom')
             local item={id=o:GetInstanceID(),type=kind,
@@ -987,6 +988,11 @@ function E.privileged_state()
                 end
             end
         end
+    end
+    if not out.spawn_templates.spring then
+        for _,item in ipairs(out.mechanism_items)do if item.type=='ItemSpring'then
+            out.spawn_templates.spring=springSpawnTemplate();break
+        end end
     end
     return out
 end

@@ -14,7 +14,7 @@ import numpy as np
 REST = {'runonline', 'runonlinedown', 'runonground', 'slideonground'}
 AIR = {'jump', 'fall', 'jump2', 'fall2', 'fallfromrun'}
 TRANSFER = {'rolltolineon', 'rolltolinedown', 'rolltoground'}
-POP = {'popfall'}
+POP = {'popup','popfall'}
 
 
 def rows(value):
@@ -120,6 +120,9 @@ class Motor:
     previous_x: float = 0.
     native_air: bool = False
     native_transfer: bool = False
+    spring_ready: bool = False
+    spring_accel: float = 0.
+    spring_event: float = -math.inf
 
 
 class PlayerModel:
@@ -234,6 +237,44 @@ class PlayerModel:
                 continue
             if -1<dx<self.speed*1.8+3:
                 self.unsupported.append('item:'+item['type'])
+
+        self.spring_launches=[]
+        self.pickup_profile=None
+        from arena_privileged_families import configure_springs,pending_item_issues
+        configure_springs(self)
+        self.unsupported.extend(pending_item_issues(self))
+        self.initial.spring_ready=self.popfall_supported
+
+    def spring_distance(self,motor,item):
+        from arena_privileged_geometry import capsule_quad
+        radius,half=self.pickup_profile
+        support=self.surface(motor,0.)
+        theta=math.atan(support.slope)if support and motor.mode in REST else 0.
+        co,si=math.cos(theta),math.sin(theta)
+        rotation=np.array([[co,-si],[si,co]])
+        center=np.array([motor.x+motor.offset_render,motor.y])
+        quad=(np.array([xy(p)for p in item['colliders'][0]['quad']])-center)@rotation
+        return float(capsule_quad(np.array([[0.,0.,radius,half]]),quad[None,:,:],np.array([True]))[0])
+
+    def spring_launch(self,motor,rendered,used,stamp):
+        hits=[]
+        for item in self.spring_launches:
+            if item['id']in used:continue
+            distance=self.spring_distance(rendered,item)
+            guard=.0002+4*abs(float(np.spacing(np.float32(self.observation['state']['time']))))*max(abs(motor.vx),1.)
+            if abs(distance)<=guard:return False
+            if distance<0:hits.append(item)
+        if len(hits)>1:return False
+        if hits:
+            support=self.surface(rendered,0.)
+            if support and rendered.mode in REST and abs(support.slope)>1e-8:return False
+            item=hits[0];p=item['position'];d=item['custom'];used.add(item['id'])
+            motor.x=motor.previous_x=motor.physical_x=p['x'];motor.y=motor.previous_y=motor.physical_y=p['y']
+            motor.mode='popup';motor.vx=d['_popSpeed'];motor.vy=0.;motor.used=0
+            motor.offset_field=motor.offset_render=0.;motor.ground_source=False
+            motor.native_air=motor.native_transfer=False;motor.delay=motor.collider_delay=0.
+            motor.spring_ready=True;motor.spring_accel=d['_popAcceleration'];motor.spring_event=stamp
+        return True
 
     def surface(self, motor, t):
         contact_x=motor.x+motor.offset_render
@@ -416,8 +457,10 @@ class PlayerModel:
         # is consumed at its own time, independent of the requested output grid.
         times=np.asarray(times,dtype=float)
         fixed=np.arange(1,math.ceil((self.clock_age+times[-1])/self.tick)+1)*self.tick-self.clock_age
+        render=np.arange(1,math.ceil(times[-1]*60)+1)/60. if self.spring_launches else np.empty(0)
         knots=np.unique(np.concatenate((times,fixed[(fixed>times[0])&(fixed<times[-1])],
-            np.array([t for t,_ in operations if times[0]<=t<=times[-1]],dtype=float))))
+            np.array([t for t,_ in operations if times[0]<=t<=times[-1]],dtype=float),render)))
+        knots=knots[(knots>=times[0])&(knots<=times[-1])]
         body,states,valid=self._trajectory(knots,operations)
         indices=np.searchsorted(knots,times)
         return body[indices],[states[i]for i in indices],valid
@@ -426,11 +469,16 @@ class PlayerModel:
         motor = replace(self.initial)
         states, bodies, valid = [], [], True
         operation = 0
+        rendered=replace(motor);used_springs=set()
+        if motor.mode in POP:
+            used_springs={item['id']for item in self.spring_launches if self.spring_distance(rendered,item)<=0}
         for index, t in enumerate(times):
             if index:
                 dt = t-times[index-1]
                 old_fixed=int(math.floor((self.clock_age+times[index-1]+1e-8)/self.tick))
                 new_fixed=int(math.floor((self.clock_age+t+1e-8)/self.tick))
+                if self.spring_launches and new_fixed>old_fixed:
+                    valid &= self.spring_launch(motor,rendered,used_springs,float(t))
                 pending_air=(motor.native_air and motor.mode in AIR or motor.native_transfer and motor.mode in TRANSFER) and motor.delay>self.tick+1e-8
                 pending_slide=self.native_samples and motor.mode=='slideonground'and motor.delay>self.tick+1e-8
                 effective_mode=motor.lead_mode if pending_air or pending_slide else motor.mode
@@ -473,6 +521,10 @@ class PlayerModel:
                 active_slope=bool(s and abs(s.slope)>1e-8 and
                     (effective_mode=='runonground'or slide_entered and s.slope<0))
                 if motor.mode in POP:
+                    if motor.mode=='popup':
+                        for _ in range(new_fixed-old_fixed):
+                            v=np.float32(motor.vx);a=np.float32(motor.spring_accel if v<self.data['_moveSpeed']else-motor.spring_accel)
+                            motor.vx=float(np.float32(v+np.float32(np.float32(np.float32(v*a)*v)*np.float32(self.tick))))
                     vx=motor.vx
                 elif active_slope:
                     # ProcessMovementOnGround accelerates the velocity's
@@ -598,13 +650,14 @@ class PlayerModel:
                         motor.mode = 'fallfromrun'; motor.vy = vx*slope
                         motor.ground_source=False
                 elif motor.mode in POP:
-                    valid &= self.popfall_supported
+                    valid &= motor.spring_ready
                     for _ in range(new_fixed-old_fixed):
                         motor.previous_y=motor.physical_y
-                        # UpdateGravity maps PopFall to _downGravity3. Native
-                        # ProcessPop adds gravity before moving, with a -40
-                        # terminal speed and unchanged horizontal velocity.
-                        gravity=np.float32(np.float32(self.data['_downGravity3'])*np.float32(self.tick))
+                        # The first PopUp uses _downGravity1 and its one
+                        # quadratic VX update above. Once descending, the
+                        # original PopFall keeps VX and uses _downGravity3.
+                        was_popup=motor.mode=='popup'
+                        gravity=np.float32(np.float32(self.data['_downGravity1'if was_popup else'_downGravity3'])*np.float32(self.tick))
                         gravity=np.float32(gravity*np.float32(3.5))
                         motor.vy=max(-40.,float(np.float32(np.float32(motor.vy)+gravity)))
                         next_y=float(np.float32(np.float32(motor.physical_y)+np.float32(motor.vy*self.tick)))
@@ -616,11 +669,12 @@ class PlayerModel:
                         if support is None and supports:support=max(supports,key=lambda a:a.height(cx,t))
                         if support and abs(support.slope)>1e-8:
                             valid=False
-                        if support and next_y<=support.height(cx,t)+self.foot:
+                        if support and not was_popup and next_y<=support.height(cx,t)+self.foot:
                             motor.physical_y=support.height(cx,t)+self.foot
                             motor.mode='runonline'if support.rope else'runonground'
                             motor.used=0;motor.support=support.id;motor.vy=0.;motor.ground_source=True
                         else:motor.physical_y=next_y
+                        if was_popup and motor.vy<0:motor.mode='popfall'
                     motor.y=motor.previous_y+(motor.physical_y-motor.previous_y)*alpha
                 elif motor.mode in TRANSFER:
                     if s is None:
@@ -770,6 +824,7 @@ class PlayerModel:
             while operation < len(operations) and operations[operation][0] <= t+1e-8:
                 valid &= self.action(motor, operations[operation][1], t)
                 operation += 1
+            if abs(float(t)*60-round(float(t)*60))<1e-7:rendered=replace(motor)
             states.append(replace(motor))
             if index == 0:
                 b = self.body
