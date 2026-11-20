@@ -5,6 +5,7 @@ requires its actual instance fields; unimplemented variants remain explicit.
 """
 import math
 from functools import lru_cache
+from collections import Counter
 import numpy as np
 
 
@@ -2093,15 +2094,119 @@ def pending_hook_phase(entry,times,observation,player,trajectory_states,context=
     except (KeyError,ValueError,IndexError):return fallback,None
 
 
-PENDING_CURVE_NAMES={'EnemyCurveBat','EnemyCurveCrow','EnemyCurveFireFairy'}
+def ghost_radius(geometry,root_scale=None):
+    """Enclose every original scale-Tween extremum of both hurt spheres.
+
+    Keep the center interval separate from the sphere radius through the
+    actual Transform chain. An older reader without quaternions uses a wider
+    rotation-independent sphere, never an assumed identity rotation.
+    """
+    from arena_privileged_model import rows,phase
+    def vector(v):
+        a=np.array([v[k]for k in ('x','y','z')],float)
+        if not np.isfinite(a).all():raise ValueError('ghost_nonfinite_geometry')
+        return a
+    def physics(v):
+        if v and (v.get('kinematic')is not True or v.get('gravity')is not False):
+            raise ValueError('ghost_dynamic_geometry')
+    try:
+        if not geometry:raise ValueError('ghost_original_geometry_missing')
+        scripts=rows(geometry['component_types'])
+        if (geometry['type']!='EnemyGhostFire'or geometry.get('native_geometry')is not True or
+                rows(geometry.get('unknown_hooks'))or geometry.get('callbacks_clear')is not True or
+                geometry.get('animated_tree',True)or 'EnemyGhostFire'not in scripts or
+                not set(scripts)<={'EnemyGhostFire','EnemyBaseCollider','uTools.uTweenSprite','uTools.uTweenScale'}):
+            raise ValueError('ghost_unverified_hierarchy')
+        physics(geometry.get('root_physics'));nodes=rows(geometry['nodes']);colliders=rows(geometry['colliders'])
+        if Counter(scripts)!=Counter(['EnemyGhostFire']+[v for node in nodes for v in rows(node['scripts'])]):
+            raise ValueError('ghost_unbound_transform_script')
+        for node in nodes:
+            if node.get('transform_type')!='Transform':raise ValueError('ghost_nonstandard_transform')
+            tweens=rows(node['tweens'])
+            if (Counter(v['type']for v in tweens)!=Counter(v for v in rows(node['scripts'])if v in ('uTools.uTweenSprite','uTools.uTweenScale'))or
+                    any(v.get('callbacks_clear')is not True for v in tweens)):
+                raise ValueError('ghost_unbound_or_callback_tween')
+            if rows(node['scripts']).count('uTools.uTweenScale')!=len(rows(node['scales'])):
+                raise ValueError('ghost_unbound_scale_tween')
+        if not colliders:raise ValueError('ghost_original_spheres_missing')
+        radius=0.
+        for c in colliders:
+            if (c['type']!='SphereCollider'or c.get('trigger')is not True or c.get('enabled')is not True or
+                    c.get('owner_bound')is not True or c.get('complete')is not True or c.get('damage_kind')!='enemy_callback'):
+                raise ValueError('ghost_original_sphere_binding')
+            lo=hi=vector(c['center']);r=float(c['radius'])
+            if not math.isfinite(r)or r<=0:raise ValueError('ghost_nonfinite_geometry')
+            chain=rows(c['chain'])
+            if len(chain)!=len(set(chain)):raise ValueError('ghost_transform_cycle')
+            for index in chain:
+                if not isinstance(index,int)or not 1<=index<=len(nodes):raise ValueError('ghost_transform_chain')
+                node=nodes[index-1];physics(node.get('physics'))
+                if not set(rows(node['scripts']))<={'EnemyBaseCollider','uTools.uTweenSprite','uTools.uTweenScale'}:
+                    raise ValueError('ghost_unknown_transform_script')
+                low=high=vector(node['scale'])
+                for tween in rows(node['scales']):
+                    if tween.get('callbacks_clear')is not True or tween.get('curve_truncated'):
+                        raise ValueError('ghost_scale_callback_or_truncated_curve')
+                    f=tween['fields'];method=int(str(f['method']).rsplit(':',1)[1])
+                    if method not in (0,22)or method==22 and phase(f['method'])!='linear':
+                        raise ValueError('ghost_scale_easing_unverified')
+                    bounds=curve_range(rows(tween['curve']))
+                    if method==0:bounds=curve_range(rows(tween['curve']),*bounds)
+                    start=vector(f['from']);difference=vector(f['to'])-start
+                    limits=np.array([start+difference*t for t in bounds])
+                    low=np.minimum(low,limits.min(axis=0));high=np.maximum(high,limits.max(axis=0))
+                products=np.array([lo*low,lo*high,hi*low,hi*high]);lo=products.min(axis=0);hi=products.max(axis=0)
+                r*=float(np.maximum(abs(low),abs(high)).max())
+                q=node.get('rotation')
+                if q is None:
+                    # The old channel exports no local orientation. Every
+                    # rotation of the center box lies inside this sphere.
+                    r+=float(np.linalg.norm(np.maximum(abs(lo),abs(hi))));lo=hi=np.zeros(3)
+                else:
+                    x,y,z,w=(float(q[k])for k in ('x','y','z','w'))
+                    if not np.isfinite([x,y,z,w]).all()or abs(x*x+y*y+z*z+w*w-1)>1e-5:
+                        raise ValueError('ghost_invalid_rotation')
+                    rotation=np.array([[1-2*(y*y+z*z),2*(x*y-z*w),2*(x*z+y*w)],
+                        [2*(x*y+z*w),1-2*(x*x+z*z),2*(y*z-x*w)],
+                        [2*(x*z-y*w),2*(y*z+x*w),1-2*(x*x+y*y)]])
+                    center=rotation@((lo+hi)/2);extent=abs(rotation)@((hi-lo)/2);lo=center-extent;hi=center+extent
+                translation=vector(node['position']);lo=lo+translation;hi=hi+translation
+            radius=max(radius,float(np.linalg.norm(np.maximum(abs(lo),abs(hi))))+r)
+        factor=(float(max(abs(vector(root_scale))))if root_scale is not None else
+                float(np.linalg.norm(np.column_stack([vector(geometry['root_axes'][k])for k in ('x','y','z')]),2)))
+        if factor<=0:raise ValueError('ghost_zero_root_scale')
+        radius*=factor
+        return float(radius*(1+512*float(np.finfo(np.float32).eps))+.0002),None
+    except (KeyError,ValueError,TypeError,IndexError)as error:return None,str(error)
 
 
-def pending_curve(entry,times,observation,player):
+PENDING_CURVE_NAMES={'EnemyCurveBat','EnemyCurveCrow','EnemyCurveFireFairy','EnemyGhostFire'}
+
+
+def cached_ghost_radius(geometry,root_scale=None,context=None):
+    """One immutable observation owns geometry proofs across candidate keys."""
+    if context is None or context.get('ghost_radii')is None:return ghost_radius(geometry,root_scale)
+    memo=context['ghost_radii'];key=(id(geometry),repr(root_scale))
+    if key not in memo:memo[key]=(geometry,ghost_radius(geometry,root_scale))
+    return memo[key][1]
+
+
+def pending_curve(entry,times,observation,player,context=None):
+    # This is the complete birth-time/height envelope, independent of role
+    # actions. Reachability is still checked per candidate by the caller.
+    memo=context.get('pending_curves')if context is not None else None
+    if memo is None:return _pending_curve(entry,times,observation,player)
+    key=(id(observation),id(entry),np.asarray(times).tobytes(),player.tick)
+    if key not in memo:memo[key]=(observation,entry,_pending_curve(entry,times,observation,player))
+    return memo[key][2]
+
+
+def _pending_curve(entry,times,observation,player):
     """Original no-fruit curve root; union every possible future birth tick.
 
     Original optional random height is enclosed before its native draw.
     All authored render spheres are enclosed together, including currently
-    inactive render variants. Sprite-only tweens do not change their geometry.
+    inactive render variants. Ghost scale-Tweens use their full authored extrema.
     Birth/activation may wait arbitrarily: X encloses every elapsed move time
     from zero, Y uses the original reset reference and complete sine range.
     """
@@ -2111,16 +2216,20 @@ def pending_curve(entry,times,observation,player):
         template=observation.get('spawn_templates',{}).get('curves',{}).get(kind,{})
         if not template or template.get('missing'):raise ValueError('pending_curve_original_prefab_missing')
         if (kind not in PENDING_CURVE_NAMES or template.get('source_name')!=kind or
-                template.get('type')!='EnemyCurveBat'or entry.get('custom_type')!='EnemyCurveBatDataStruct'or
+                template.get('type')!=('EnemyGhostFire'if kind=='EnemyGhostFire'else'EnemyCurveBat')or
+                entry.get('custom_type')!=('EnemyGhostFireDataStruct'if kind=='EnemyGhostFire'else'EnemyCurveBatDataStruct')or
                 entry.get('custom_projection',{}).get('complete')is not True or
                 entry['source']not in ('native_enemyList','resolved_uninstantiated_block')or
                 info.get('baseID')!=0 or info.get('createPlayerUID')or observation['camera']['direction']!=1):
             raise ValueError('pending_curve_source_binding')
         keys={'_render','_renderType','_speedX','_angularSpeed','_amplitude','_initalPhaseRadian','_hangOnFruit',
               '_randomRangeY','_minRaduisScale','_maxRaduisScale','_frequency'}
-        if set(custom)!=keys or custom['_hangOnFruit']!=0:
+        if kind=='EnemyGhostFire':
+            keys={'_render','_speedX','_angularSpeed','_amplitude','_initalPhaseRadian','_rangeRandomY',
+                  '_minRaduisScale','_maxRaduisScale','_frequency','_cloakingPeriod','_initalPeriodRatio','_decreasePvpCoin'}
+        if set(custom)!=keys or kind!='EnemyGhostFire'and custom['_hangOnFruit']!=0:
             raise ValueError('pending_curve_random_or_fruit_variant')
-        if (template.get('native_initialization')is not True or rows(template.get('unknown_hooks'))or
+        if kind!='EnemyGhostFire'and (template.get('native_initialization')is not True or rows(template.get('unknown_hooks'))or
                 template.get('kinematic')is not True or template.get('gravity')is not False or
                 template.get('callbacks_clear')is not True or template.get('animated_tree',True)or
                 not set(rows(template.get('component_types')))<= {'EnemyCurveBat','EnemyBaseCollider','uTools.uTweenSprite'}or
@@ -2129,12 +2238,12 @@ def pending_curve(entry,times,observation,player):
         spawn=np.array([entry['block_start'][a]+info['_localPosition'][a]for a in ('x','y','z')])
         scale=np.array([info['_localScale'][a]for a in ('x','y','z')])
         vx,omega,amplitude,initial=(custom[k]for k in ('_speedX','_angularSpeed','_amplitude','_initalPhaseRadian'))
-        random_y=custom['_randomRangeY']
+        random_y=custom['_rangeRandomY'if kind=='EnemyGhostFire'else'_randomRangeY']
         if (not np.isfinite([*spawn,*scale,vx,omega,amplitude,initial,random_y,player.tick]).all()or
                 min(abs(scale))<=0 or player.tick<=0 or random_y<0):raise ValueError('pending_curve_native_parameter_domain')
         spheres=rows(template['colliders']);radius=0.
         if not spheres:raise ValueError('pending_curve_damage_geometry_missing')
-        for c in spheres:
+        for c in ([]if kind=='EnemyGhostFire'else spheres):
             if (c['type']!='SphereCollider'or not c['trigger']or not c['enabled']or not c['under_root']or
                     not c['owner_bound']or c['damage_kind']!='enemy_callback'):
                 raise ValueError('pending_curve_original_sphere_binding')
@@ -2143,6 +2252,10 @@ def pending_curve(entry,times,observation,player):
                 raise ValueError('pending_curve_native_parameter_domain')
             radius=max(radius,float(np.linalg.norm(center))+c['radius'])
         radius*=float(max(abs(scale)))
+        if kind=='EnemyGhostFire':
+            if custom['_render']!=0:raise ValueError('pending_curve_ghost_render_unverified')
+            radius,reason=ghost_radius(template,info['_localScale'])
+            if reason:raise ValueError(reason)
         # Adjacent physical/render updates and float32 accumulation are kept
         # outside the root range, rather than guessing a precise spawn frame.
         elapsed=np.asarray(times)+2*player.tick
@@ -2157,7 +2270,7 @@ def pending_curve(entry,times,observation,player):
         updates=np.ceil(elapsed/player.tick)+2
         magnitude=np.maximum(1.,abs(spawn[0])+abs(movement))
         extents[:,0]+=(updates+2)*np.abs(np.spacing(magnitude.astype(np.float32))).astype(float)
-        return [Hazard(entry['id']+':curve',entry['id'],'EnemyCurveBat',centers,extents,np.ones(len(times),bool),
+        return [Hazard(entry['id']+':curve',entry['id'],('EnemyGhostFire'if kind=='EnemyGhostFire'else'EnemyCurveBat'),centers,extents,np.ones(len(times),bool),
             'Original EnemyCurve.ResetEnemyInfo/UpdateCureMove; all render spheres and possible birth/activation times',
             approximate=True)],None
     except (KeyError,ValueError)as error:return None,str(error)
@@ -2289,7 +2402,7 @@ def pending_enemy_forecasts(observation,times,player,trajectory_states,context=N
             hs,reason=pending_suspend(entry,times,observation,player)
             if hs is not None:result.extend(hs);continue
         elif kind in PENDING_CURVE_NAMES:
-            hs,reason=pending_curve(entry,times,observation,player)
+            hs,reason=pending_curve(entry,times,observation,player,context)
             if hs is not None:result.extend(hs);continue
         elif kind=='EnemySmallSword':
             hs,reason=pending_small_sword(entry,times,observation,player,trajectory_states,context)
@@ -3204,7 +3317,7 @@ def forecast(enemy, times, observation, player, trajectory_states=None,context=N
         angles = np.deg2rad(c['_speedRotate'])*times
         return (zero, angles, 'EnemyStraightFly.StateUpdate + EnemyDart.RotateUpdate'), None
     if kind in ('EnemyCurveBat', 'EnemyGhostFire','EnemyFlyFairy'):
-        if kind=='EnemyCurveBat'and getattr(player,'_observed_motor',None)is not player.initial:
+        if kind in ('EnemyCurveBat','EnemyGhostFire')and getattr(player,'_observed_motor',None)is not player.initial:
             historical,independent=curve_counterfactual(enemy,times,observation,player)
             if historical is not None:
                 active,shapes=historical

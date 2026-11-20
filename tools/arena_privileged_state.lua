@@ -383,6 +383,87 @@ local function shape(c)
     if owner then out.damage_owner=owner:GetInstanceID()end
     return out
 end
+local function ghostGeometry(obj)
+    local root=obj.transform;local body=root:GetComponent(typeof(U.Rigidbody))
+    local out={type=obj:GetType().Name,native_geometry=true,unknown_hooks={},callbacks_clear=true,
+        animated_tree=obj:GetComponentsInChildren(typeof(U.Animator),true).Length>0 or
+            obj:GetComponentsInChildren(typeof(U.Animation),true).Length>0,
+        root_axes={x=vector(root:TransformVector(U.Vector3.right)),y=vector(root:TransformVector(U.Vector3.up)),z=vector(root:TransformVector(U.Vector3.forward))},
+        root_physics=body and {kinematic=body.isKinematic,gravity=body.useGravity}or nil,
+        nodes={},colliders={},component_types={}}
+    for _,name in ipairs({'conditionActionEvent','normalActionEvent','collisionActionEvent',
+            'collisionExitActionEvent','btAnimatorEvent','conditionParamActionEvent','syncComponent'})do
+        if field(obj,name)~=nil then out.callbacks_clear=false end
+    end
+    local graphs=field(obj,'allGraphOwners');if graphs and graphs.Count>0 then out.callbacks_clear=false end
+    local staticFlags=CS.System.Reflection.BindingFlags.__CastFrom(56)
+    for _,entry in ipairs({{typeof(CS.EnemyGhostFire),'ResetEnemyInfo'},
+            {typeof(CS.EnemyGhostFire),'FixedUpdateMovement'},{typeof(CS.EnemyGhostFire),'AlphaUpdate'},
+            {typeof(CS.EnemyGhostFire),'ProcessOnTriggerEnter'},
+            {typeof(CS.EnemyCurve),'SetRenderType'},{typeof(CS.EnemyCurve),'ResetEnemyInfo'},
+            {typeof(CS.EnemyCurve),'FixedUpdateMovement'},{typeof(CS.EnemyCurve),'StateUpdate'},
+            {typeof(CS.EnemyCurve),'UpdateCureMove'},{typeof(CS.EnemyCurve),'PlayFixedAnimation'},
+            {typeof(CS.EnemyBase),'SetRenderType'},{typeof(CS.EnemyBase),'ResetEnemyInfo'},
+            {typeof(CS.EnemyBase),'FixedUpdateMovement'},
+            {typeof(CS.uTools.uTweener),'Sample'},{typeof(CS.uTools.uTweener),'FixedUpdate'},
+            {typeof(CS.uTools.uTweener),'Update'},{typeof(CS.uTools.uTweener),'MyFixedUpdate'},
+            {typeof(CS.uTools.uTweener),'ResetToBeginning'},{typeof(CS.uTools.uTweenSprite),'ValueUpdate'},
+            {typeof(CS.uTools.uTweenValue),'OnUpdate'},{typeof(CS.uTools.uTweenValue),'set_value'},
+            {typeof(CS.uTools.uTweenScale),'OnUpdate'},
+            {typeof(CS.uTools.uTweenScale),'set_value'}})do
+        local hook=entry[1]:GetField('__Hotfix0_'..entry[2],staticFlags)
+        if not hook or hook:GetValue(nil)~=nil then out.native_geometry=false;out.unknown_hooks[#out.unknown_hooks+1]=entry[1].Name..'.'..entry[2]end
+    end
+    local scripts=obj:GetComponentsInChildren(typeof(U.MonoBehaviour),true)
+    for i=0,scripts.Length-1 do out.component_types[#out.component_types+1]=scripts[i]and scripts[i]:GetType().FullName or 'missing_component'end
+    local known={}
+    local function node(t)
+        local id=t:GetInstanceID();if known[id]then return known[id]end
+        local rb=t:GetComponent(typeof(U.Rigidbody))
+        local q=t.localRotation
+        local row={position=vector(t.localPosition),scale=vector(t.localScale),rotation={x=q.x,y=q.y,z=q.z,w=q.w},transform_type=t:GetType().Name,scripts={},scales={},tweens={},
+            physics=rb and {kinematic=rb.isKinematic,gravity=rb.useGravity}or nil}
+        local components=t:GetComponents(typeof(U.MonoBehaviour))
+        for i=0,components.Length-1 do local v=components[i];local kind=v and v:GetType().FullName or 'missing_component'
+            row.scripts[#row.scripts+1]=kind
+            if kind=='uTools.uTweenScale'or kind=='uTools.uTweenSprite'then
+                local tween={type=kind,fields=values(v),curve={},callbacks_clear=true};local curve=field(v,'animationCurve')
+                if curve then local keys=curve.keys;tween.curve_truncated=keys.Length>128
+                    for k=0,math.min(keys.Length-1,127)do local q=keys[k]
+                        tween.curve[#tween.curve+1]={time=q.time,value=q.value,in_tangent=q.inTangent,out_tangent=q.outTangent,weighted_mode=tostring(q.weightedMode)}
+                    end
+                end
+                local finished=field(v,'onFinished')
+                if finished then
+                    local p=field(finished,'m_PersistentCalls');local calls=p and field(p,'m_Calls')
+                    local inv=field(finished,'m_Calls');local a=inv and field(inv,'m_RuntimeCalls');local b=inv and field(inv,'m_PersistentCalls')
+                    if not calls or calls.Count>0 or not a or a.Count>0 or not b or b.Count>0 then tween.callbacks_clear=false end
+                end
+                local receiver=field(v,'eventReceiver');local message=field(v,'callWhenFinished')
+                if receiver~=nil or message~=nil and tostring(message)~=''then tween.callbacks_clear=false end
+                row.tweens[#row.tweens+1]=tween
+                if kind=='uTools.uTweenScale'then row.scales[#row.scales+1]=tween end
+            end
+        end
+        out.nodes[#out.nodes+1]=row;known[id]=#out.nodes;return known[id]
+    end
+    local cs=obj:GetComponentsInChildren(typeof(U.Collider),true)
+    for i=0,cs.Length-1 do local c=cs[i];local info=shape(c)
+        if info.damage_kind then
+            local row={type=c:GetType().Name,enabled=c.enabled,trigger=c.isTrigger,damage_kind=info.damage_kind,
+                owner_bound=info.damage_owner==obj:GetInstanceID(),chain={},complete=false}
+            if row.type=='SphereCollider'then row.center=vector(c.center);row.radius=c.radius end
+            local t=c.transform
+            for depth=1,32 do
+                if t==root then row.complete=true;break end
+                if not t then break end
+                row.chain[#row.chain+1]=node(t);t=t.parent
+            end
+            out.colliders[#out.colliders+1]=row
+        end
+    end
+    return out
+end
 local function brambleTemplate(owner,render,context)
     -- ReplenishBlock clones this inactive original block. Its seven thorns
     -- are serialized collision geometry; GetGround(2) supplies the decoration.
@@ -593,6 +674,7 @@ function E.privileged_state()
                 end
             end
             row.info_identity=info and info:GetHashCode()or nil
+            if row.type=='EnemyGhostFire'then row.ghost_geometry=ghostGeometry(o)end
             if row.type=='EnemyWarrior'then row.spine=spineState(field(o,'_spineWarrior'))end
             if row.type=='EnemyPoleaxeWarrior'then
                 local animation=o.gameObject:GetComponentInChildren(typeof(CS.Spine.Unity.SkeletonAnimation),true)
@@ -1076,6 +1158,16 @@ function E.privileged_state()
         end
         return out
     end
+    local function ghostSpawnTemplate()
+        local all=U.Resources.FindObjectsOfTypeAll(typeof(CS.EnemyGhostFire));local original
+        for i=0,all.Length-1 do local o=all[i]
+            if o.name=='EnemyGhostFire'and not o.gameObject.activeInHierarchy then
+                assert(not original,'Ambiguous original ghost prefab');original=o
+            end
+        end
+        if not original then return {missing=true}end
+        local result=ghostGeometry(original);result.source_name='EnemyGhostFire';return result
+    end
     local function curveSpawnTemplate(name)
         local all=U.Resources.FindObjectsOfTypeAll(typeof(CS.EnemyCurveBat));local original
         for i=0,all.Length-1 do local o=all[i]
@@ -1373,6 +1465,10 @@ function E.privileged_state()
                 custom_type=custom and custom:GetType().Name,
                 block_start=vector(live and live.transform.position or a),stage_index=stageIndex,block_index=blockIndex,
                 source=source,sync_blocked=blocked,vertical_gate=live and field(live,'openGenerateDistanceY')or false}
+            if kind=='EnemyGhostFire: 205'then
+                out.spawn_templates.curves=out.spawn_templates.curves or{}
+                if not out.spawn_templates.curves.EnemyGhostFire then out.spawn_templates.curves.EnemyGhostFire=ghostSpawnTemplate()end
+            end
             if kind=='EnemyBambooThorn: 120'then
                 out.spawn_templates.hooks=out.spawn_templates.hooks or{}
                 if not out.spawn_templates.hooks.EnemyBambooThorn then out.spawn_templates.hooks.EnemyBambooThorn=thornSpawnTemplate()end

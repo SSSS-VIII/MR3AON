@@ -947,6 +947,8 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
         if forecast_cache.get('_observation')is not observation:
             forecast_cache.clear();forecast_cache['_observation']=observation
         family_context['pending_hook_phases']=forecast_cache.setdefault('pending_hook_phases',{})
+        family_context['ghost_radii']=forecast_cache.setdefault('ghost_radii',{})
+        family_context['pending_curves']=forecast_cache.setdefault('pending_curves',{})
         if trajectory_states is not None and any(e['type']in ('EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter')
                                                  for e in rows(observation['enemies'])):
             from arena_privileged_families import camera_x_bounds
@@ -1083,6 +1085,11 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
                     # memoized through this horizontal-only dependency key.
                     tracking=kind=='EnemyAlarmShooter'and any(p.get('_pointToNinja')for p in rows(enemy.get('alarm_shooter',{}).get('bullets')))
                     if not tracking:memo=(enemy['id'],kind,camera_key,role_x_key if kind=='EnemyAlarmShooter'else None)
+                if (forecast_cache is not None and kind in ('EnemyGhostFire','EnemyCurveBat')and mode=='flytoninja'and
+                        getattr(player,'_observed_motor',None)is player.initial):
+                    # A born curve in FlyToNinja no longer reads role/camera
+                    # position. Counterfactual births still use their history.
+                    memo=(enemy['id'],kind,'born_curve',np.asarray(times).tobytes(),player.tick)
                 if memo is not None and memo in forecast_cache:
                     predicted,reason=forecast_cache[memo]
                 else:
@@ -1112,6 +1119,24 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
                 colliders = [c for c in rows(enemy['grown_colliders']) if c.get('damage_kind')]
             elif kind=='EnemyArrow' and mode!='onground' and enemy.get('untrimmed_colliders'):
                 colliders = [c for c in rows(enemy['untrimmed_colliders']) if c.get('damage_kind')]
+        if kind=='EnemyGhostFire':
+            from arena_privileged_families import cached_ghost_radius
+            radius,reason=cached_ghost_radius(enemy.get('ghost_geometry'),context=family_context)
+            if reason:
+                unsupported.append(dict(id=enemy['id'],type=kind,reason=reason));continue
+            damage=[c for c in rows(enemy['colliders'])if c.get('damage_kind')]
+            if not damage:
+                unsupported.append(dict(id=enemy['id'],type=kind,reason='ghost_damage_binding_missing'));continue
+            c=next((c for c in damage if c.get('enabled')and c.get('active')),damage[0])
+            center=xy(enemy['position'])[None,:]+delta;extent=np.full((len(times),2),radius);geometry='sphere'
+            if len(predicted)>5 and predicted[5].get('historical_shapes')is not None:
+                center,extent=predicted[5]['historical_shapes'][c['id']];geometry='aabb'
+            padding=(.0002+32*abs(float(np.spacing(np.float32(max(1.,abs(center).max())))))+
+                2*abs(float(np.spacing(np.float32(observation['state']['time']))))*
+                (abs(custom['_speedX'])+abs(custom['_amplitude']*custom['_angularSpeed'])))
+            result.append(Hazard(c['id'],enemy['id'],kind,center,extent,active,
+                source+'; original scale-Tween extrema and all palette hurt spheres',True,geometry,padding=padding))
+            continue
         for c in colliders:
             if kind not in ('EnemyFlyBamboo','EnemyHideBlade','EnemyBambooWater','EnemyPoleaxeWarrior','EnemyConnectElectricBall','EnemyRotateElectricBall') and not c['active']:
                 continue
