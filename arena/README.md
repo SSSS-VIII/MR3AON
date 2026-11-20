@@ -484,3 +484,11 @@ v211原不操作片段新增98对包含出生前到触发/落地，最大中心�
 通过原SingletonMonoBehaviour backing field读取现有NinjaSkillManager，避免调用可能初始化管理器的Instance；按原activeSkillCount/activeSkillBulletCount读取列表有效前缀、保留类型及标量状态，另读当前移动技能。原v219水球拾取后暂停点实际仍有SkillWaterIcePiton一枚、SkillWaterIcePitonShooter十枚，球体已回收不能当作效果结束。未建模活动技能/残留弹体/移动技能现在明确拒绝；不借它的清障或保护效果声明普通动作规划已通过。安装及同点双读仍一致，前后仅render frame变化；新技能读数独立只读复核亦仅frame变化。原证据及消失父技能后残留弹体的保护保留。
 
 CoinPileStart/End原回调都调用StartNewCoinPail，后者只写NinjaController偏移0xd8/0xdc的两项金币串计数；前者传_needCoinNum，后者传原结束哨兵。严格绑定原类型、render0与完整自定义参数后将它们记为计数触发，不向角色轨迹增添动作；未知字段/投影不全/错类仍拒绝。这不是金币目标或奖励完成证明。657项相关回归通过。
+
+### 断层离地与弹簧物理相位复核（v230–v236）
+
+连续3渲染帧一次的独立原取样暴露了v218初版的相位假设错误：最大中心偏差约0.514米，旧逐帧暂停样本没有充分区分渲染/物理位姿。原Ninja3BaseObject.FixPositionForUpdate/Control保留物理双锚点，地面查询须用固定步前的物理位置；原MoveLogic在0x49d0798先UpdateGravity，之后地面reducer于0x49d93a4改FallFromRun，离地首帧不能直接套新下落重力。原平地离地帧还保留一次offset递减，坡顶分支沿用已校准的惯性/偏移，不能统一多加一次平地递减。
+
+弹簧接触改为固定步前物理角色锚点。v230实际81帧中，当前渲染拾取框尚未相交，而原缓存物理位姿已在框内；原84帧已进入第二个Pop物理帧。旧“只用前一个渲染位姿”的说法由此撤回。已消费弹簧只依原normalSpring状态排除，当前PopFall不能当作其他新弹簧已消费的依据。模型不再为此插入额外60Hz渲染结点。
+
+原连续步进116对（含离地、触发和落地）最大中心误差0.085毫米；旧v211/实际跳跃v219及另一次v229累计270对最大1.521/1.383/0.074毫米。新增固定/渲染相位反例和粗/密采样不变测试，原断层与坡顶原生夹具同时保留。此项仅修模型，原游戏重力、碰撞、输入和clock driver均未改；不是整板跑法或端点合格证书。失败和源码顺序证据保存在spring-physical-phase-diagnosis-v235.json，后续物品建模仍先在私有副本验证。

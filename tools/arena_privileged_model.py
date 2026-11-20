@@ -257,18 +257,18 @@ class PlayerModel:
         quad=(np.array([xy(p)for p in item['colliders'][0]['quad']])-center)@rotation
         return float(capsule_quad(np.array([[0.,0.,radius,half]]),quad[None,:,:],np.array([True]))[0])
 
-    def spring_launch(self,motor,rendered,used,stamp):
+    def spring_launch(self,motor,contact,used,stamp):
         hits=[]
         for item in self.spring_launches:
             if item['id']in used:continue
-            distance=self.spring_distance(rendered,item)
+            distance=self.spring_distance(contact,item)
             guard=.0002+4*abs(float(np.spacing(np.float32(self.observation['state']['time']))))*max(abs(motor.vx),1.)
             if abs(distance)<=guard:return False
             if distance<0:hits.append(item)
         if len(hits)>1:return False
         if hits:
-            support=self.surface(rendered,0.)
-            if support and rendered.mode in REST and abs(support.slope)>1e-8:return False
+            support=self.surface(contact,0.)
+            if support and contact.mode in REST and abs(support.slope)>1e-8:return False
             item=hits[0];p=item['position'];d=item['custom'];used.add(item['id'])
             motor.x=motor.previous_x=motor.physical_x=p['x'];motor.y=motor.previous_y=motor.physical_y=p['y']
             motor.mode='popup';motor.vx=d['_popSpeed'];motor.vy=0.;motor.used=0
@@ -314,7 +314,7 @@ class PlayerModel:
                 abs(s.height(s.left,t)-current.height(current.right,t))<.001),None)
             if following:
                 return following if motor.physical_x+motor.offset_render>=following.left+lengthen else current
-        return self.surface(motor,t)
+        return self.surface(replace(motor,x=motor.physical_x,y=motor.physical_y),t)
 
     def terrain_clearances(self,motors):
         """Keep planned paths out of native wall/automatic-climb transitions.
@@ -458,10 +458,8 @@ class PlayerModel:
         # is consumed at its own time, independent of the requested output grid.
         times=np.asarray(times,dtype=float)
         fixed=np.arange(1,math.ceil((self.clock_age+times[-1])/self.tick)+1)*self.tick-self.clock_age
-        render=np.arange(1,math.ceil(times[-1]*60)+1)/60. if self.spring_launches else np.empty(0)
         knots=np.unique(np.concatenate((times,fixed[(fixed>times[0])&(fixed<times[-1])],
-            np.array([t for t,_ in operations if times[0]<=t<=times[-1]],dtype=float),render)))
-        knots=knots[(knots>=times[0])&(knots<=times[-1])]
+            np.array([t for t,_ in operations if times[0]<=t<=times[-1]],dtype=float))))
         body,states,valid=self._trajectory(knots,operations)
         indices=np.searchsorted(knots,times)
         return body[indices],[states[i]for i in indices],valid
@@ -470,16 +468,15 @@ class PlayerModel:
         motor = replace(self.initial)
         states, bodies, valid = [], [], True
         operation = 0
-        rendered=replace(motor);used_springs=set()
-        if motor.mode in POP:
-            used_springs={item['id']for item in self.spring_launches if self.spring_distance(rendered,item)<=0}
+        used_springs=set()
         for index, t in enumerate(times):
             if index:
                 dt = t-times[index-1]
                 old_fixed=int(math.floor((self.clock_age+times[index-1]+1e-8)/self.tick))
                 new_fixed=int(math.floor((self.clock_age+t+1e-8)/self.tick))
                 if self.spring_launches and new_fixed>old_fixed:
-                    valid &= self.spring_launch(motor,rendered,used_springs,float(t))
+                    contact=replace(motor,x=motor.physical_x,y=motor.physical_y)
+                    valid &= self.spring_launch(motor,contact,used_springs,float(t))
                 pending_air=(motor.native_air and motor.mode in AIR or motor.native_transfer and motor.mode in TRANSFER) and motor.delay>self.tick+1e-8
                 pending_slide=self.native_samples and motor.mode=='slideonground'and motor.delay>self.tick+1e-8
                 effective_mode=motor.lead_mode if pending_air or pending_slide else motor.mode
@@ -504,12 +501,16 @@ class PlayerModel:
                     if not motor.ground_source:self.ground_samples(motor,t)
                 elif s and motor.mode=='runonground' and s.rope and not departing_platform:
                     motor.mode='runonline'
-                natural_departure=False
+                natural_departure=False;departure_mode=''
                 if (self.native_samples and new_fixed>old_fixed and motor.mode in REST and
                         motor.mode!='slideonground' and not pending_air and
                         (departing_platform or s is None or not s.rope and abs(s.slope)<1e-8 and s.id!=motor.support and
                          motor.physical_y>s.height(motor.physical_x+motor.offset_render,t)+self.foot+1e-5)):
-                    natural_departure=s is not None or departing_platform
+                    # MoveLogic caches UpdateGravity before the ground reducer
+                    # changes state. The departure tick retains ground gravity.
+                    natural_departure=True
+                    previous_support=next((a for a in self.surfaces if a.id==motor.support),None)
+                    if previous_support and abs(previous_support.slope)<1e-8:departure_mode=motor.mode
                     motor.mode='fallfromrun';motor.ground_source=False;motor.native_air=True
                     if s:motor.support=s.id
                     effective_mode=motor.mode
@@ -589,7 +590,7 @@ class PlayerModel:
                         slope_offset=min(10.,32*sine)if sine>0 else 16*sine
                         target=(self.rules['slide_offset']['x']+slope_offset)*self.scale['x']
                         gain=self.tick*5 if abs(motor.offset_field)<abs(target)else 0.
-                    elif effective_mode in REST:
+                    elif effective_mode in REST or departure_mode in REST:
                         slope_offset=0.
                         offset_surface=s if active_slope or slide_entered and motor.mode=='runonground'else None
                         if effective_mode=='runonline' and s and s.rope:
@@ -825,7 +826,6 @@ class PlayerModel:
             while operation < len(operations) and operations[operation][0] <= t+1e-8:
                 valid &= self.action(motor, operations[operation][1], t)
                 operation += 1
-            if abs(float(t)*60-round(float(t)*60))<1e-7:rendered=replace(motor)
             states.append(replace(motor))
             if index == 0:
                 b = self.body
