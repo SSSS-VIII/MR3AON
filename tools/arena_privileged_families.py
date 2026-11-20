@@ -29,6 +29,7 @@ FAMILIES = {
     'EnemyFlyFairy': 'native_sine_curve_after_entry_motion',
     'EnemyArrow': 'native_untracked_ballistic_arrow_and_soil_envelope',
     'EnemyKill': 'stationary_original_shape_before_contact_recycle',
+    'EnemyStraightBack': 'native_go_brake_follow_and_return_centered_sphere',
 }
 
 
@@ -55,7 +56,7 @@ def native_steps(enemy, times, observation, update):
     return np.asarray(output), np.asarray(rotations)
 
 
-def forecast(enemy, times, observation, player):
+def forecast(enemy, times, observation, player, trajectory_states=None):
     """Return original root displacement/rotation, or a specific missing rule."""
     from arena_privileged_model import phase, xy
     f, c, kind = enemy['fields'], enemy['custom'], enemy['type']
@@ -65,6 +66,56 @@ def forecast(enemy, times, observation, player):
     if kind in ('EnemyPinball','EnemyBlowFish'):
         from arena_privileged_pinball import forecast as pinball
         return pinball(enemy,times,observation,player)
+    if kind=='EnemyStraightBack':
+        # The original visual child rotates, but the authored hurt collider is
+        # a sphere centered on the root. Other shapes need a separate model.
+        hurt=[c for c in enemy['colliders'] if c.get('damage_kind')]
+        if not hurt or any(c['type']!='SphereCollider' or
+                np.linalg.norm(xy(c['center'])-xy(enemy['position']))>.001 for c in hurt):
+            return None,'return_dart_requires_original_centered_sphere'
+        mode=int(f['_enemyState'].rsplit(':',1)[1]);initial_mode=mode
+        if mode not in range(6):return None,'return_dart_phase:'+str(mode)
+        if mode in (0,1) and (abs(player.initial.vx-player.speed)>.1 or
+                trajectory_states is not None and any(abs(m.vx-player.speed)>.1 for m in trajectory_states)):
+            return None,'return_dart_native_player_speed_transition'
+        vx=np.float32(f['_velocity']);stay=np.float32(f['_stayTime']);elapsed=0.
+        tick=observation['state']['fixedDeltaTime']
+        age=max(0.,observation['state']['time']-f['_lastFixedUpdateTime'])
+        role_x=observation['role']['fields']['_lastPosition']['x']
+        right=observation['camera']['right']['x']
+        def update(pos,dt):
+            nonlocal mode,vx,stay,elapsed
+            elapsed+=dt
+            if mode==0:
+                render=max(0.,(math.ceil((elapsed-age)*60-1e-6)-1)/60)
+                if pos[0]<right+player.speed*render+2:mode=1
+            elif mode==1:
+                pos[0]=np.float32(pos[0]-np.float32(vx*dt))
+                if pos[0]<=role_x+player.speed*elapsed+f['_stayOffSetX']+f['_stopDistance']:mode=2
+            elif mode==2:
+                vx=np.float32(vx-np.float32(f['_accelerate']*dt))
+                pos[0]=np.float32(pos[0]-np.float32(vx*dt))
+                if vx<=0:mode=3
+            elif mode==3:
+                pos[0]=np.float32(pos[0]+np.float32(player.speed*dt))
+                stay=np.float32(stay-np.float32(dt))
+                if stay<=0:mode=4
+            elif mode in (4,5):
+                if mode==4:vx=np.float32(f['_backSpeed'])
+                pos[0]=np.float32(pos[0]+np.float32(np.float32(player.speed+vx)*np.float32(dt)))
+                mode=5
+            return pos,0.
+        positions,angles=native_steps(enemy,times,observation,update)
+        prediction=(positions-xy(enemy['position']),angles,
+                    'EnemyStraightBack.FixedUpdateMovement; original centered SphereCollider')
+        if initial_mode==0:
+            # As with the pendulum, camera activation spans fixed/render
+            # clocks. Keep this uncertainty in planning geometry, separate
+            # from the nominal point prediction and native route validation.
+            radius=math.ceil((tick+1/60)/tick)*tick
+            speed=max(abs(f['_velocity']),abs(player.speed+f['_backSpeed']),abs(player.speed))
+            prediction+= (None,None,dict(position_padding=2*radius*speed))
+        return prediction,None
     if kind=='EnemyArrow':
         mode=int(f['_enemyState'].rsplit(':',1)[1])
         if mode==4:

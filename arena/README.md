@@ -213,3 +213,7 @@ node tools/arena_spine_bone_audit.cjs --runtime "$SPINE_RUNTIME_DIR" \
 ```
 
 活动坡面另采原3201第5块起35个被动状态，已排除相关Hotfix覆盖；原MoveLogic向`slopeOffset`回归，而非回零，ProcessMovementOnGround还追加`slopeOffset.x/20`增益，并按物理速度模长渐进加速。实验源在非接缝下坡100–500ms配对已达约0.00003米中心误差，但坡末支持切换与绳地/动作回归仍失败，**该实验未合入在线模型**，保存为`slope-ground-source-wip-v1.patch`及原始native-slope-v10片段继续研究。当前最新141项相关保护通过。
+
+回旋飞镖`EnemyStraightBack`已新增原Go→BeforeStop→Stop→AfterStop→Back状态推进，采用原实例速度/减速度/停留计时及NinjaSpeed；忽略的仅是旋转的视觉子节点，伤害使用原居中SphereCollider，非此几何明确拒绝。50053原120帧/2201个100–500ms配对最大中心误差0.000146米，其中1731对期间没有受伤；五个活动阶段各有独立500ms原生回归。画外None阶段保留相机时钟规划扩张，但尚无该阶段原生配对；Go阶段若当前或候选角色水平速度变化则明确拒绝常速阈值预测。148项相关保护通过。
+
+独立冻结版50053/seed74215前进7.75秒/143.46米、5键、全程5000血且0回档，随后`no_safe_action_window`停止；不算整板或新增候选。6102取样曾在原选板接近入口时死亡，保留入场失败，不算搜索失败。普通arena已按原入口恢复暂停菜单/键盘，后台407位置队列继续原位推进。

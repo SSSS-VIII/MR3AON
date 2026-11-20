@@ -614,7 +614,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
         else:
             from arena_privileged_families import forecast
             try:
-                predicted, reason = forecast(enemy, times, observation, player)
+                predicted, reason = forecast(enemy, times, observation, player,trajectory_states)
             except KeyError as error:
                 predicted, reason = None, 'native_field_missing:'+str(error)
             if predicted is None:
@@ -654,6 +654,8 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                     else:
                         lever=np.linalg.norm(xy(c['center'])-pivot)+np.linalg.norm(xy(c['extents']))
                     padding=float(lever*predicted[5]['angular_padding']);approximate=True
+                elif kind=='EnemyStraightBack' and len(predicted)>5:
+                    padding=float(predicted[5]['position_padding']);approximate=True
             result.append(Hazard(c['id'], enemy['id'], kind, center, extent, active, source, approximate,
                                  'sphere' if c['type']=='SphereCollider' else 'obb' if quads is not None else 'aabb', quads,
                                  padding=padding))
