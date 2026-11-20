@@ -244,6 +244,16 @@ class PlayerModel:
 
     def ground_step_surface(self,motor,t):
         current=next((s for s in self.surfaces if s.id==motor.support),None)
+        if current and current.platform:
+            # GetGroundYIncludeAir queries the restored physical root before
+            # this fixed update, not the interpolated render point. Keeping
+            # the old platform for one more tick changes a down key into a
+            # ground slide instead of the original airborne return.
+            x=motor.physical_x+motor.offset_render
+            if current.contains(x,t):return current
+            below=[s for s in self.surfaces if not s.platform and s.contains(x,t)]
+            native=next((s for s in below if s.id==self.observation.get('support_id')),None)
+            return native or (below[0]if len(below)==1 else None)
         lengthen=self.rules.get('ground_lengthen')
         if current and lengthen is not None:
             following=next((s for s in self.surfaces if s.id!=current.id and
@@ -411,17 +421,26 @@ class PlayerModel:
                         s=next((s for s in self.surfaces if s.id==motor.support),None)
                 else:
                     s = self.surface(motor, t)
-                if s and motor.mode=='runonline' and not s.rope:
+                departing_platform=(self.native_samples and new_fixed>old_fixed and
+                    any(a.id==motor.support and a.platform for a in self.surfaces)and
+                    (s is None or s.id!=motor.support))
+                if departing_platform and motor.delay>self.tick+1e-8 and motor.lead_mode in REST:
+                    # The old physics update changes the input prerequisite
+                    # before the queued UI key is consumed. Until that queued
+                    # transition has its own native pairing, reject it rather
+                    # than predicting a ground slide after stepping off.
+                    valid=False
+                if s and motor.mode=='runonline' and not s.rope and not departing_platform:
                     motor.mode='runonground'
                     if not motor.ground_source:self.ground_samples(motor,t)
-                elif s and motor.mode=='runonground' and s.rope:
+                elif s and motor.mode=='runonground' and s.rope and not departing_platform:
                     motor.mode='runonline'
                 natural_departure=False
                 if (self.native_samples and new_fixed>old_fixed and motor.mode in REST and
                         motor.mode!='slideonground' and not pending_air and
-                        (s is None or not s.rope and abs(s.slope)<1e-8 and s.id!=motor.support and
+                        (departing_platform or s is None or not s.rope and abs(s.slope)<1e-8 and s.id!=motor.support and
                          motor.physical_y>s.height(motor.physical_x+motor.offset_render,t)+self.foot+1e-5)):
-                    natural_departure=s is not None
+                    natural_departure=s is not None or departing_platform
                     motor.mode='fallfromrun';motor.ground_source=False;motor.native_air=True
                     if s:motor.support=s.id
                     effective_mode=motor.mode

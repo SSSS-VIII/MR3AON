@@ -54,13 +54,14 @@ def test_resampling_does_not_move_the_original_jump_apex_or_landing():
     assert np.linalg.norm(coarse[-1]-dense[-1])<1e-8
 
 
-def test_native_air_ground_landing_from_above_retains_original_actor_motion():
+@pytest.mark.parametrize('fixture',['platform-above','platform-edge'])
+def test_native_air_ground_landing_and_departure_retain_original_actor_motion(fixture):
     # This independent calibration includes real Blade damage. It certifies
     # the actor reducer only, never a route or a safe collision window.
-    case=json.loads((Path(__file__).parent/'fixtures/arena-privileged-platform-above.json').read_text())
+    case=json.loads((Path(__file__).parent/('fixtures/arena-privileged-'+fixture+'.json')).read_text())
     before=case['before'];model=PlayerModel(before)
-    assert before['state']['health']==5000
-    assert any(t['state']['health']<5000 for t in case['targets'])
+    assert before['state']['health']>0
+    assert any(t['state']['health']<before['state']['health']for t in case['targets'])
     assert any(any(p['is_current']for p in t['platforms'])and
                phase(t['state']['physics'])=='runonground'for t in case['targets'])
     for target in case['targets']:
@@ -72,3 +73,48 @@ def test_native_air_ground_landing_from_above_retains_original_actor_motion():
         assert np.hypot(motor.x-actual['x'],motor.y-actual['y'])<case['tolerance_m']
         assert abs(motor.vy-target['velocity']['y'])<.0001
         assert abs(motor.vx-target['velocity']['x'])<.0001
+
+
+def test_native_platform_departure_down_key_is_air_return_instead_of_ground_slide():
+    case=json.loads((Path(__file__).parent/'fixtures/arena-privileged-platform-edge.json').read_text())
+    target=case['targets'][1]
+    assert phase(target['state']['physics'])=='fallfromrun'
+    model=PlayerModel(case['before']);dt=target['state']['time']-case['before']['state']['time']
+    _,states,valid=model.trajectory(np.array([0.,dt]))
+    assert valid and states[-1].mode=='fallfromrun'
+    assert model.action(states[-1],'down',dt)
+    assert states[-1].mode=='rolltoground'
+    assert states[-1].transfer_speed==model.data['_rollAirDownUpSpeed']
+
+
+def test_leaving_a_platform_keeps_the_original_free_fall_above_a_lower_rope():
+    # Source branch contract: OnAirGround changes before the ordinary
+    # ground/line support is used. A rope below must not catch the role in air.
+    case=json.loads((Path(__file__).parent/'fixtures/arena-privileged-platform-edge.json').read_text())
+    before=case['before'];native=before['support_id']
+    under=next(s for s in before['supports']if s['id']==native)
+    under['is_ground']=False;under['is_line']=True
+    for segment in before['terrain']:
+        if segment['start']==under['start']and segment['finish']==under['finish']:
+            segment['kind']='line: 0'
+    model=PlayerModel(before);actual=case['targets'][1]['state']
+    _,states,valid=model.trajectory(np.array([0.,actual['time']-before['state']['time']]))
+    assert valid and states[-1].mode=='fallfromrun'
+    assert abs(states[-1].y-actual['position']['y'])<.001
+    assert states[-1].y>under['start']['y']+model.foot+1
+
+
+@pytest.mark.parametrize('action',['jump','down'])
+def test_unpaired_queued_key_across_platform_departure_is_rejected(action):
+    case=json.loads((Path(__file__).parent/'fixtures/arena-privileged-platform-edge.json').read_text())
+    before=case['before'];target=case['targets'][0]
+    # Reconstruct the supported native platform pose just before departure;
+    # the original role still says runOnGround while physical X is past edge.
+    before['state']=target['state'];before['role']['colliders']=[target['body']]
+    before['role']['velocity']=target['velocity']
+    # This test requires the real native history, not a reconstructed render
+    # velocity. It is retained alongside the platform fixture below.
+    before['role']['fields']=target['role_fields']
+    model=PlayerModel(before)
+    _,_,valid=model.trajectory(np.array([0.,.05]),((0.,action),))
+    assert not valid

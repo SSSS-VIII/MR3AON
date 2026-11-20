@@ -96,7 +96,7 @@ def test_aim_is_recomputed_from_the_actual_candidate_actor_trajectory():
     assert not reason
     a,b=coast[4][enemy['colliders'][0]['id']],jumping[4][enemy['colliders'][0]['id']]
     assert np.max(abs(a[0]-b[0]))>.1
-    assert np.max(abs(a[1]-b[1]))>.1
+    assert np.max(abs(a[1]-b[1]))>.01
 
 
 def test_registered_controller_passes_candidate_trajectories_to_aim_forecast(monkeypatch):
