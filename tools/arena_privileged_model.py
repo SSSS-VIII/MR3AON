@@ -240,9 +240,10 @@ class PlayerModel:
 
         self.spring_launches=[]
         self.pickup_profile=None
-        from arena_privileged_families import configure_springs,pending_item_issues
+        from arena_privileged_families import configure_springs,pending_item_issues,skill_issues
         configure_springs(self)
         self.unsupported.extend(pending_item_issues(self))
+        self.unsupported.extend(skill_issues(role))
         self.initial.spring_ready=self.popfall_supported
 
     def spring_distance(self,motor,item):

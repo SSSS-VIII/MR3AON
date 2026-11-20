@@ -1,0 +1,698 @@
+{
+  "provenance": {
+    "source": "Native original arena after UI jump and WaterBall pickup, seed74519",
+    "scope": "Actual active skill/bullet detection, no skill prediction or route certificate"
+  },
+  "skills": {
+    "present": true,
+    "active": [
+      {
+        "index": 0,
+        "type": "SkillWaterIcePiton",
+        "fields": {
+          "_shakeCameraIndex": -1,
+          "showSkillEffectState": true,
+          "_canReboundBullet": false,
+          "_lastFixedUpdateTime": 910.0299682617188,
+          "isOpenExtraRatio": false,
+          "weaponSkinID": 0,
+          "_rotationRadious": 1,
+          "_offsetX": 0.699999988079071,
+          "SyncID": 0,
+          "_canPopElite": false,
+          "<ExtraParam>k__BackingField": 0,
+          "isOldDamageRatioMode": true,
+          "_skillLevel": 3,
+          "btState": 0,
+          "_lastShooterSpeed": 20,
+          "hitEffectPosition": "Enemy: 1",
+          "isOldDamgeDurationMode": true,
+          "_needCheckMultiCollider": false,
+          "m_hitMaterial": "NONE: 0",
+          "_startCoro": 5,
+          "_lastRemainTime": 8,
+          "CurEnterTriggerDamageV": 1,
+          "flipByMoveDir": false,
+          "_initCoro": 0,
+          "<Duration>k__BackingField": 8,
+          "_launchNumber": 4,
+          "_shakeCameraScale": 1,
+          "_cameraShiftCtrling": false,
+          "_isRecycled": false,
+          "stayEnemyType": 0,
+          "_btRecycleFlag": false,
+          "_shooterSpeed": 25,
+          "_secondLastPosition": {
+            "y": -7.249953269958496,
+            "z": 0,
+            "x": 786.9279174804688
+          },
+          "_startDelay": 2,
+          "endReleaseSkill": true,
+          "<BeBlockedStayX>k__BackingField": 0,
+          "_caculateAtLevelBlockFlag": false,
+          "extraBaseRatio_secretScroll": 1,
+          "_skillElementIndex": 0,
+          "extraBaseRatio": 1,
+          "_bIsSkillEnd": false,
+          "<isActive>k__BackingField": true,
+          "<BeBlocked>k__BackingField": false,
+          "weaponIndex": 0,
+          "CurStayTriggerDamageV": 0,
+          "<CurrPriority>k__BackingField": "ElementBall: 20",
+          "_hideCoro": 0,
+          "timeLossRatio": 1,
+          "_damageType": "Other: -1",
+          "_offsetY": 0.30000001192092896,
+          "canYieldFlag": false,
+          "<SkillSource>k__BackingField": "Scene: 0",
+          "shooterCoroutine": 6,
+          "_shooterStepTime": 0.10000000149011612,
+          "<CtrlWay>k__BackingField": "CtrlByAll: 3",
+          "_beforeStartDelay": 0,
+          "skillDamageTimes": 0,
+          "<Health>k__BackingField": 4,
+          "m_attackMaterial": "Ice: 4",
+          "skillVampirismRatio": 0,
+          "<SyncNinjaUid>k__BackingField": 0,
+          "_endSkillOffsetPos": {
+            "y": 0,
+            "z": 0,
+            "x": 0
+          },
+          "_currentHealth": 4,
+          "index": 2,
+          "preCacheBulletNum": 0,
+          "_lastPosition": {
+            "y": -7.249958038330078,
+            "z": 0,
+            "x": 787.2079467773438
+          },
+          "_rotationSpeed": 3.1415927410125732,
+          "_shakeCameraTime": 0,
+          "_directionX": 1,
+          "_startAtNinjaPos": true,
+          "_attackRatioWeaken": 0
+        }
+      }
+    ],
+    "bullets": [
+      {
+        "index": 0,
+        "type": "SkillWaterIcePitonShooter",
+        "fields": {
+          "_lastFixedUpdateTime": 910.0299682617188,
+          "_btRecycleFlag": false,
+          "IsRecycleBySync": false,
+          "<SkillBulletCacheIndex>k__BackingField": 0,
+          "_bulletEnd": true,
+          "_shooterPos": {
+            "y": -6.471991539001465,
+            "z": 0,
+            "x": 773.4865112304688
+          },
+          "_secondLastPosition": {
+            "y": -6.471991539001465,
+            "z": 0,
+            "x": 810.9279174804688
+          },
+          "_speed": 25,
+          "syncCreateIgnoreDis": false,
+          "_extraEnemyTarget": 0,
+          "_moveDirection": {
+            "y": 0,
+            "z": 0,
+            "x": 1
+          },
+          "btState": 0,
+          "<BeBlockedStayX>k__BackingField": 0,
+          "_caculateAtLevelBlockFlag": false,
+          "_skillElementIndex": 0,
+          "index": 20,
+          "<SyncNinjaUid>k__BackingField": 0,
+          "_colliderDestroy": false,
+          "_isEnd": false,
+          "destroyFlag": "Fragile: 1",
+          "SyncBulletId": 0,
+          "parentIsSkill": false,
+          "_dontMove": false,
+          "<isActive>k__BackingField": true,
+          "bossDamage": 0,
+          "_colliderBossDestroy": false,
+          "_isRecycled": false,
+          "_lastPosition": {
+            "y": -6.471991539001465,
+            "z": 0,
+            "x": 811.7079467773438
+          },
+          "bossBulletDamage": 0,
+          "<BeBlocked>k__BackingField": false,
+          "moveDir": {
+            "y": 0,
+            "z": 0,
+            "x": 0
+          },
+          "enemyDamage": 0,
+          "_tarHitBoneIndex": 0
+        }
+      },
+      {
+        "index": 1,
+        "type": "SkillWaterIcePitonShooter",
+        "fields": {
+          "_lastFixedUpdateTime": 910.0299682617188,
+          "_btRecycleFlag": false,
+          "IsRecycleBySync": false,
+          "<SkillBulletCacheIndex>k__BackingField": 0,
+          "_bulletEnd": true,
+          "_shooterPos": {
+            "y": -6.877450942993164,
+            "z": 0,
+            "x": 774.8866577148438
+          },
+          "_secondLastPosition": {
+            "y": -6.877450942993164,
+            "z": 0,
+            "x": 808.4279174804688
+          },
+          "_speed": 25,
+          "syncCreateIgnoreDis": false,
+          "_extraEnemyTarget": 0,
+          "_moveDirection": {
+            "y": 0,
+            "z": 0,
+            "x": 1
+          },
+          "btState": 0,
+          "<BeBlockedStayX>k__BackingField": 0,
+          "_caculateAtLevelBlockFlag": false,
+          "_skillElementIndex": 0,
+          "index": 21,
+          "<SyncNinjaUid>k__BackingField": 0,
+          "_colliderDestroy": false,
+          "_isEnd": false,
+          "destroyFlag": "Fragile: 1",
+          "SyncBulletId": 0,
+          "parentIsSkill": false,
+          "_dontMove": false,
+          "<isActive>k__BackingField": true,
+          "bossDamage": 0,
+          "_colliderBossDestroy": false,
+          "_isRecycled": false,
+          "_lastPosition": {
+            "y": -6.877450942993164,
+            "z": 0,
+            "x": 809.2079467773438
+          },
+          "bossBulletDamage": 0,
+          "<BeBlocked>k__BackingField": false,
+          "moveDir": {
+            "y": 0,
+            "z": 0,
+            "x": 0
+          },
+          "enemyDamage": 0,
+          "_tarHitBoneIndex": 0
+        }
+      },
+      {
+        "index": 2,
+        "type": "SkillWaterIcePitonShooter",
+        "fields": {
+          "_lastFixedUpdateTime": 910.0299682617188,
+          "_btRecycleFlag": false,
+          "IsRecycleBySync": false,
+          "<SkillBulletCacheIndex>k__BackingField": 0,
+          "_bulletEnd": true,
+          "_shooterPos": {
+            "y": -8.245412826538086,
+            "z": 0,
+            "x": 776.2868041992188
+          },
+          "_secondLastPosition": {
+            "y": -8.245412826538086,
+            "z": 0,
+            "x": 805.9279174804688
+          },
+          "_speed": 25,
+          "syncCreateIgnoreDis": false,
+          "_extraEnemyTarget": 0,
+          "_moveDirection": {
+            "y": 0,
+            "z": 0,
+            "x": 1
+          },
+          "btState": 0,
+          "<BeBlockedStayX>k__BackingField": 0,
+          "_caculateAtLevelBlockFlag": false,
+          "_skillElementIndex": 0,
+          "index": 22,
+          "<SyncNinjaUid>k__BackingField": 0,
+          "_colliderDestroy": false,
+          "_isEnd": false,
+          "destroyFlag": "Fragile: 1",
+          "SyncBulletId": 0,
+          "parentIsSkill": false,
+          "_dontMove": false,
+          "<isActive>k__BackingField": true,
+          "bossDamage": 0,
+          "_colliderBossDestroy": false,
+          "_isRecycled": false,
+          "_lastPosition": {
+            "y": -8.245412826538086,
+            "z": 0,
+            "x": 806.7079467773438
+          },
+          "bossBulletDamage": 0,
+          "<BeBlocked>k__BackingField": false,
+          "moveDir": {
+            "y": 0,
+            "z": 0,
+            "x": 0
+          },
+          "enemyDamage": 1,
+          "_tarHitBoneIndex": 0
+        }
+      },
+      {
+        "index": 3,
+        "type": "SkillWaterIcePitonShooter",
+        "fields": {
+          "_lastFixedUpdateTime": 910.0299682617188,
+          "_btRecycleFlag": false,
+          "IsRecycleBySync": false,
+          "<SkillBulletCacheIndex>k__BackingField": 0,
+          "_bulletEnd": true,
+          "_shooterPos": {
+            "y": -6.999765396118164,
+            "z": 0,
+            "x": 777.6869506835938
+          },
+          "_secondLastPosition": {
+            "y": -6.999765396118164,
+            "z": 0,
+            "x": 803.4279174804688
+          },
+          "_speed": 25,
+          "syncCreateIgnoreDis": false,
+          "_extraEnemyTarget": 0,
+          "_moveDirection": {
+            "y": 0,
+            "z": 0,
+            "x": 1
+          },
+          "btState": 0,
+          "<BeBlockedStayX>k__BackingField": 0,
+          "_caculateAtLevelBlockFlag": false,
+          "_skillElementIndex": 0,
+          "index": 23,
+          "<SyncNinjaUid>k__BackingField": 0,
+          "_colliderDestroy": false,
+          "_isEnd": false,
+          "destroyFlag": "Fragile: 1",
+          "SyncBulletId": 0,
+          "parentIsSkill": false,
+          "_dontMove": false,
+          "<isActive>k__BackingField": true,
+          "bossDamage": 0,
+          "_colliderBossDestroy": false,
+          "_isRecycled": false,
+          "_lastPosition": {
+            "y": -6.999765396118164,
+            "z": 0,
+            "x": 804.2079467773438
+          },
+          "bossBulletDamage": 0,
+          "<BeBlocked>k__BackingField": false,
+          "moveDir": {
+            "y": 0,
+            "z": 0,
+            "x": 0
+          },
+          "enemyDamage": 1,
+          "_tarHitBoneIndex": 0
+        }
+      },
+      {
+        "index": 4,
+        "type": "SkillWaterIcePitonShooter",
+        "fields": {
+          "_lastFixedUpdateTime": 910.0299682617188,
+          "_btRecycleFlag": false,
+          "IsRecycleBySync": false,
+          "<SkillBulletCacheIndex>k__BackingField": 0,
+          "_bulletEnd": false,
+          "_shooterPos": {
+            "y": -6.404763221740723,
+            "z": 0,
+            "x": 779.0870971679688
+          },
+          "_secondLastPosition": {
+            "y": -6.404763221740723,
+            "z": 0,
+            "x": 800.9279174804688
+          },
+          "_speed": 25,
+          "syncCreateIgnoreDis": false,
+          "_extraEnemyTarget": 0,
+          "_moveDirection": {
+            "y": 0,
+            "z": 0,
+            "x": 1
+          },
+          "btState": 0,
+          "<BeBlockedStayX>k__BackingField": 0,
+          "_caculateAtLevelBlockFlag": false,
+          "_skillElementIndex": 0,
+          "index": 24,
+          "<SyncNinjaUid>k__BackingField": 0,
+          "_colliderDestroy": false,
+          "_isEnd": false,
+          "destroyFlag": "Fragile: 1",
+          "SyncBulletId": 0,
+          "parentIsSkill": false,
+          "_dontMove": false,
+          "<isActive>k__BackingField": true,
+          "bossDamage": 0,
+          "_colliderBossDestroy": false,
+          "_isRecycled": false,
+          "_lastPosition": {
+            "y": -6.404763221740723,
+            "z": 0,
+            "x": 801.7079467773438
+          },
+          "bossBulletDamage": 0,
+          "<BeBlocked>k__BackingField": false,
+          "moveDir": {
+            "y": 0,
+            "z": 0,
+            "x": 0
+          },
+          "enemyDamage": 0,
+          "_tarHitBoneIndex": 0
+        }
+      },
+      {
+        "index": 5,
+        "type": "SkillWaterIcePitonShooter",
+        "fields": {
+          "_lastFixedUpdateTime": 910.0299682617188,
+          "_btRecycleFlag": false,
+          "IsRecycleBySync": false,
+          "<SkillBulletCacheIndex>k__BackingField": 0,
+          "_bulletEnd": false,
+          "_shooterPos": {
+            "y": -8.019977569580078,
+            "z": 0,
+            "x": 780.4872436523438
+          },
+          "_secondLastPosition": {
+            "y": -8.019977569580078,
+            "z": 0,
+            "x": 798.4279174804688
+          },
+          "_speed": 25,
+          "syncCreateIgnoreDis": false,
+          "_extraEnemyTarget": 0,
+          "_moveDirection": {
+            "y": 0,
+            "z": 0,
+            "x": 1
+          },
+          "btState": 0,
+          "<BeBlockedStayX>k__BackingField": 0,
+          "_caculateAtLevelBlockFlag": false,
+          "_skillElementIndex": 0,
+          "index": 25,
+          "<SyncNinjaUid>k__BackingField": 0,
+          "_colliderDestroy": false,
+          "_isEnd": false,
+          "destroyFlag": "Fragile: 1",
+          "SyncBulletId": 0,
+          "parentIsSkill": false,
+          "_dontMove": false,
+          "<isActive>k__BackingField": true,
+          "bossDamage": 0,
+          "_colliderBossDestroy": false,
+          "_isRecycled": false,
+          "_lastPosition": {
+            "y": -8.019977569580078,
+            "z": 0,
+            "x": 799.2079467773438
+          },
+          "bossBulletDamage": 0,
+          "<BeBlocked>k__BackingField": false,
+          "moveDir": {
+            "y": 0,
+            "z": 0,
+            "x": 0
+          },
+          "enemyDamage": 0,
+          "_tarHitBoneIndex": 0
+        }
+      },
+      {
+        "index": 6,
+        "type": "SkillWaterIcePitonShooter",
+        "fields": {
+          "_lastFixedUpdateTime": 910.0299682617188,
+          "_btRecycleFlag": false,
+          "IsRecycleBySync": false,
+          "<SkillBulletCacheIndex>k__BackingField": 0,
+          "_bulletEnd": false,
+          "_shooterPos": {
+            "y": -7.617804527282715,
+            "z": 0,
+            "x": 781.8873901367188
+          },
+          "_secondLastPosition": {
+            "y": -7.617804527282715,
+            "z": 0,
+            "x": 795.9279174804688
+          },
+          "_speed": 25,
+          "syncCreateIgnoreDis": false,
+          "_extraEnemyTarget": 0,
+          "_moveDirection": {
+            "y": 0,
+            "z": 0,
+            "x": 1
+          },
+          "btState": 0,
+          "<BeBlockedStayX>k__BackingField": 0,
+          "_caculateAtLevelBlockFlag": false,
+          "_skillElementIndex": 0,
+          "index": 26,
+          "<SyncNinjaUid>k__BackingField": 0,
+          "_colliderDestroy": false,
+          "_isEnd": false,
+          "destroyFlag": "Fragile: 1",
+          "SyncBulletId": 0,
+          "parentIsSkill": false,
+          "_dontMove": false,
+          "<isActive>k__BackingField": true,
+          "bossDamage": 0,
+          "_colliderBossDestroy": false,
+          "_isRecycled": false,
+          "_lastPosition": {
+            "y": -7.617804527282715,
+            "z": 0,
+            "x": 796.7079467773438
+          },
+          "bossBulletDamage": 0,
+          "<BeBlocked>k__BackingField": false,
+          "moveDir": {
+            "y": 0,
+            "z": 0,
+            "x": 0
+          },
+          "enemyDamage": 0,
+          "_tarHitBoneIndex": 0
+        }
+      },
+      {
+        "index": 7,
+        "type": "SkillWaterIcePitonShooter",
+        "fields": {
+          "_lastFixedUpdateTime": 910.0299682617188,
+          "_btRecycleFlag": false,
+          "IsRecycleBySync": false,
+          "<SkillBulletCacheIndex>k__BackingField": 0,
+          "_bulletEnd": false,
+          "_shooterPos": {
+            "y": -6.251787185668945,
+            "z": 0,
+            "x": 783.2875366210938
+          },
+          "_secondLastPosition": {
+            "y": -6.251787185668945,
+            "z": 0,
+            "x": 793.4279174804688
+          },
+          "_speed": 25,
+          "syncCreateIgnoreDis": false,
+          "_extraEnemyTarget": 0,
+          "_moveDirection": {
+            "y": 0,
+            "z": 0,
+            "x": 1
+          },
+          "btState": 0,
+          "<BeBlockedStayX>k__BackingField": 0,
+          "_caculateAtLevelBlockFlag": false,
+          "_skillElementIndex": 0,
+          "index": 27,
+          "<SyncNinjaUid>k__BackingField": 0,
+          "_colliderDestroy": false,
+          "_isEnd": false,
+          "destroyFlag": "Fragile: 1",
+          "SyncBulletId": 0,
+          "parentIsSkill": false,
+          "_dontMove": false,
+          "<isActive>k__BackingField": true,
+          "bossDamage": 0,
+          "_colliderBossDestroy": false,
+          "_isRecycled": false,
+          "_lastPosition": {
+            "y": -6.251787185668945,
+            "z": 0,
+            "x": 794.2079467773438
+          },
+          "bossBulletDamage": 0,
+          "<BeBlocked>k__BackingField": false,
+          "moveDir": {
+            "y": 0,
+            "z": 0,
+            "x": 0
+          },
+          "enemyDamage": 0,
+          "_tarHitBoneIndex": 0
+        }
+      },
+      {
+        "index": 8,
+        "type": "SkillWaterIcePitonShooter",
+        "fields": {
+          "_lastFixedUpdateTime": 910.0299682617188,
+          "_btRecycleFlag": false,
+          "IsRecycleBySync": false,
+          "<SkillBulletCacheIndex>k__BackingField": 0,
+          "_bulletEnd": false,
+          "_shooterPos": {
+            "y": -7.498583793640137,
+            "z": 0,
+            "x": 784.6876831054688
+          },
+          "_secondLastPosition": {
+            "y": -7.498583793640137,
+            "z": 0,
+            "x": 790.9279174804688
+          },
+          "_speed": 25,
+          "syncCreateIgnoreDis": false,
+          "_extraEnemyTarget": 0,
+          "_moveDirection": {
+            "y": 0,
+            "z": 0,
+            "x": 1
+          },
+          "btState": 0,
+          "<BeBlockedStayX>k__BackingField": 0,
+          "_caculateAtLevelBlockFlag": false,
+          "_skillElementIndex": 0,
+          "index": 28,
+          "<SyncNinjaUid>k__BackingField": 0,
+          "_colliderDestroy": false,
+          "_isEnd": false,
+          "destroyFlag": "Fragile: 1",
+          "SyncBulletId": 0,
+          "parentIsSkill": false,
+          "_dontMove": false,
+          "<isActive>k__BackingField": true,
+          "bossDamage": 0,
+          "_colliderBossDestroy": false,
+          "_isRecycled": false,
+          "_lastPosition": {
+            "y": -7.498583793640137,
+            "z": 0,
+            "x": 791.7079467773438
+          },
+          "bossBulletDamage": 0,
+          "<BeBlocked>k__BackingField": false,
+          "moveDir": {
+            "y": 0,
+            "z": 0,
+            "x": 0
+          },
+          "enemyDamage": 0,
+          "_tarHitBoneIndex": 0
+        }
+      },
+      {
+        "index": 9,
+        "type": "SkillWaterIcePitonShooter",
+        "fields": {
+          "_lastFixedUpdateTime": 910.0299682617188,
+          "_btRecycleFlag": false,
+          "IsRecycleBySync": false,
+          "<SkillBulletCacheIndex>k__BackingField": 0,
+          "_bulletEnd": false,
+          "_shooterPos": {
+            "y": -8.09426212310791,
+            "z": 0,
+            "x": 786.0878295898438
+          },
+          "_secondLastPosition": {
+            "y": -8.09426212310791,
+            "z": 0,
+            "x": 788.4279174804688
+          },
+          "_speed": 25,
+          "syncCreateIgnoreDis": false,
+          "_extraEnemyTarget": 0,
+          "_moveDirection": {
+            "y": 0,
+            "z": 0,
+            "x": 1
+          },
+          "btState": 0,
+          "<BeBlockedStayX>k__BackingField": 0,
+          "_caculateAtLevelBlockFlag": false,
+          "_skillElementIndex": 0,
+          "index": 29,
+          "<SyncNinjaUid>k__BackingField": 0,
+          "_colliderDestroy": false,
+          "_isEnd": false,
+          "destroyFlag": "Fragile: 1",
+          "SyncBulletId": 0,
+          "parentIsSkill": false,
+          "_dontMove": false,
+          "<isActive>k__BackingField": true,
+          "bossDamage": 0,
+          "_colliderBossDestroy": false,
+          "_isRecycled": false,
+          "_lastPosition": {
+            "y": -8.09426212310791,
+            "z": 0,
+            "x": 789.2079467773438
+          },
+          "bossBulletDamage": 0,
+          "<BeBlocked>k__BackingField": false,
+          "moveDir": {
+            "y": 0,
+            "z": 0,
+            "x": 0
+          },
+          "enemyDamage": 0,
+          "_tarHitBoneIndex": 0
+        }
+      }
+    ]
+  },
+  "state_differences": {
+    "frame": [
+      1346072,
+      1346087
+    ]
+  }
+}

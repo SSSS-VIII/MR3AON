@@ -1,0 +1,279 @@
+{
+  "source": "/home/linn/MR3A/debug/arena-client/privileged-controller-v2/all-fixed-v3/runs/L4-M33-S6-B4305/1795190947864411626/report.json",
+  "scope": "Source counter-only callback classification, not a scoring goal certificate",
+  "pending": [
+    {
+      "custom": {
+        "_render": 0,
+        "_needCoinNum": 22
+      },
+      "info": {
+        "_localScale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "generateDistance": 15,
+        "index": 22,
+        "_localEulerAngles": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "<ObjectNearestPosX>k__BackingField": 1510.7501220703125,
+        "independentAnim": false,
+        "baseID": 0,
+        "createPlayerUID": 0,
+        "_itemType": "ItemCoinPileStart: 2",
+        "_localPosition": {
+          "x": 3.150146484375,
+          "y": -0.70001220703125,
+          "z": 0
+        }
+      },
+      "custom_projection": {
+        "complete": true,
+        "omitted": {}
+      },
+      "info_identity": 1153717312,
+      "sync_blocked": false,
+      "source": "native_itemList",
+      "block_index": 1,
+      "block_start": {
+        "x": 1508.3499755859375,
+        "y": -25.049972534179688,
+        "z": 0
+      },
+      "id": "pending-item:5:1:1153717312",
+      "stage_index": 5,
+      "custom_type": "ItemCoinPileStartDataStruct"
+    },
+    {
+      "custom": {
+        "_render": 0
+      },
+      "info": {
+        "_localScale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "generateDistance": 15,
+        "index": 23,
+        "_localEulerAngles": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "<ObjectNearestPosX>k__BackingField": 1528.5799560546875,
+        "independentAnim": false,
+        "baseID": 0,
+        "createPlayerUID": 0,
+        "_itemType": "ItemCoinPileEnd: 101",
+        "_localPosition": {
+          "x": 20.97998046875,
+          "y": -0.70001220703125,
+          "z": 0
+        }
+      },
+      "custom_projection": {
+        "complete": true,
+        "omitted": {}
+      },
+      "info_identity": 1632418096,
+      "sync_blocked": false,
+      "source": "native_itemList",
+      "block_index": 1,
+      "block_start": {
+        "x": 1508.3499755859375,
+        "y": -25.049972534179688,
+        "z": 0
+      },
+      "id": "pending-item:5:1:1632418096",
+      "stage_index": 5,
+      "custom_type": "ItemDataStructBase"
+    },
+    {
+      "custom": {
+        "_render": 0
+      },
+      "info": {
+        "_localScale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "generateDistance": 15,
+        "index": 0,
+        "_localEulerAngles": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "<ObjectNearestPosX>k__BackingField": 0,
+        "independentAnim": false,
+        "baseID": 0,
+        "createPlayerUID": 0,
+        "_itemType": "ItemCoinPileEnd: 101",
+        "_localPosition": {
+          "x": 20.989990234375,
+          "y": -0.70001220703125,
+          "z": 0
+        }
+      },
+      "custom_projection": {
+        "complete": true,
+        "omitted": {}
+      },
+      "info_identity": -1766199104,
+      "sync_blocked": false,
+      "source": "resolved_uninstantiated_block",
+      "block_index": 2,
+      "block_start": {
+        "x": 1532.3499755859375,
+        "y": -25.049972534179688,
+        "z": 0
+      },
+      "id": "pending-item:5:2:-1766199104",
+      "stage_index": 5,
+      "custom_type": "ItemDataStructBase"
+    },
+    {
+      "custom": {
+        "_render": 0,
+        "_needCoinNum": 22
+      },
+      "info": {
+        "_localScale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "generateDistance": 15,
+        "index": 0,
+        "_localEulerAngles": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "<ObjectNearestPosX>k__BackingField": 0,
+        "independentAnim": false,
+        "baseID": 0,
+        "createPlayerUID": 0,
+        "_itemType": "ItemCoinPileStart: 2",
+        "_localPosition": {
+          "x": 3.16015625,
+          "y": -0.70001220703125,
+          "z": 0
+        }
+      },
+      "custom_projection": {
+        "complete": true,
+        "omitted": {}
+      },
+      "info_identity": -1287498320,
+      "sync_blocked": false,
+      "source": "resolved_uninstantiated_block",
+      "block_index": 2,
+      "block_start": {
+        "x": 1532.3499755859375,
+        "y": -25.049972534179688,
+        "z": 0
+      },
+      "id": "pending-item:5:2:-1287498320",
+      "stage_index": 5,
+      "custom_type": "ItemCoinPileStartDataStruct"
+    },
+    {
+      "custom": {
+        "_render": 0,
+        "_needCoinNum": 22
+      },
+      "info": {
+        "_localScale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "generateDistance": 15,
+        "index": 0,
+        "_localEulerAngles": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "<ObjectNearestPosX>k__BackingField": 0,
+        "independentAnim": false,
+        "baseID": 0,
+        "createPlayerUID": 0,
+        "_itemType": "ItemCoinPileStart: 2",
+        "_localPosition": {
+          "x": 3.150146484375,
+          "y": -0.70001220703125,
+          "z": 0
+        }
+      },
+      "custom_projection": {
+        "complete": true,
+        "omitted": {}
+      },
+      "info_identity": -1872917184,
+      "sync_blocked": false,
+      "source": "resolved_uninstantiated_block",
+      "block_index": 3,
+      "block_start": {
+        "x": 1556.3499755859375,
+        "y": -25.049972534179688,
+        "z": 0
+      },
+      "id": "pending-item:5:3:-1872917184",
+      "stage_index": 5,
+      "custom_type": "ItemCoinPileStartDataStruct"
+    },
+    {
+      "custom": {
+        "_render": 0
+      },
+      "info": {
+        "_localScale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "generateDistance": 15,
+        "index": 0,
+        "_localEulerAngles": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "<ObjectNearestPosX>k__BackingField": 0,
+        "independentAnim": false,
+        "baseID": 0,
+        "createPlayerUID": 0,
+        "_itemType": "ItemCoinPileEnd: 101",
+        "_localPosition": {
+          "x": 20.97998046875,
+          "y": -0.70001220703125,
+          "z": 0
+        }
+      },
+      "custom_projection": {
+        "complete": true,
+        "omitted": {}
+      },
+      "info_identity": -1394216400,
+      "sync_blocked": false,
+      "source": "resolved_uninstantiated_block",
+      "block_index": 3,
+      "block_start": {
+        "x": 1556.3499755859375,
+        "y": -25.049972534179688,
+        "z": 0
+      },
+      "id": "pending-item:5:3:-1394216400",
+      "stage_index": 5,
+      "custom_type": "ItemDataStructBase"
+    }
+  ]
+}

@@ -72,6 +72,8 @@ def progression_marker(item):
     EndSpecialTask can subsequently spawn its normal reward chest/score.
     This classification does not certify the task goal or grant its reward.
     """
+    pile=coin_pile_marker(item)
+    if pile and item['fields'].get('_pickupRecycle')is True:return pile
     expected={'ItemSpecialTaskStart':('ItemSpecialTaskStart: 43','special_task_start'),
               'ItemSpecialTaskEnd':('ItemSpecialTaskEnd: 44','special_task_end')}
     spec=expected.get(item['type'])
@@ -82,6 +84,26 @@ def progression_marker(item):
     if (item['type']=='ItemEvent'and item.get('info',{}).get('_itemType')=='ItemEvent: 100'and
             item.get('custom',{}).get('_render')==0 and item['fields'].get('_pickupRecycle')is True):
         return resurgence_marker(item)
+    return None
+
+
+def coin_pile_marker(item):
+    """Original start/end callbacks only reset the two coin-pile counters.
+
+    Both call NinjaController.StartNewCoinPail, which writes d8/dc. This
+    distinguishes counter triggers from ItemHorn/ElementBall interactions.
+    No claim about completing the scoring goal follows from this label.
+    """
+    kind=item.get('info',{}).get('_itemType');custom=item.get('custom',{})
+    if custom.get('_render')!=0 or item.get('custom_projection',{}).get('complete')is False:return None
+    if kind=='ItemCoinPileStart: 2'and set(custom)=={'_render','_needCoinNum'}:
+        count=custom['_needCoinNum']
+        if isinstance(count,(int,float))and math.isfinite(count)and count==int(count):
+            if 'type'in item and item['type']!='ItemCoinPileStart':return None
+            return 'coin_pile_start'
+    if kind=='ItemCoinPileEnd: 101'and set(custom)=={'_render'}:
+        if 'type'in item and item['type']!='ItemCoinPileEnd':return None
+        return 'coin_pile_end'
     return None
 
 
@@ -1394,10 +1416,22 @@ def pending_item_issues(player):
         info=entry['info'];nearest=info.get('<ObjectNearestPosX>k__BackingField')
         # Original coin callbacks change score/energy/task counters, with no
         # direct actor motion. This excludes balls, mounts and CoinCurve.
-        if info['_itemType']in score_types:continue
+        if info['_itemType']in score_types or coin_pile_marker(entry):continue
         if nearest is not None and math.isfinite(nearest)and nearest>upper:continue
         issues.append('pending_item:'+info['_itemType'])
     return issues
+
+
+def skill_issues(role):
+    """A consumed ball's original skill/bullets outlive its item collider."""
+    if 'skills'not in role:return []  # Older calibration channel did not read it.
+    data=role['skills'];issues=[]
+    if not data['present']:return ['native_skill_manager_missing']
+    for key in ('active','bullets'):
+        prefix='active_skill:'if key=='active'else'active_skill_bullet:'
+        for row in data[key]or[]:issues.append(prefix+row['type'])
+    if data.get('move_skill')is not None:issues.append('active_move_skill:'+data['move_skill'])
+    return sorted(set(issues))
 
 
 def pending_spring(entry,template):

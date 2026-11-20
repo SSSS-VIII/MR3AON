@@ -67,6 +67,35 @@ local function valueProjection(obj)
     end end
     return data,{complete=#omitted==0,omitted=omitted}
 end
+local function existingSingleton(wanted)
+    -- Read the backing field only. Instance getters may create a manager.
+    local tp=wanted;local staticFlags=CS.System.Reflection.BindingFlags.__CastFrom(56)
+    while tp do local fs=tp:GetFields(staticFlags)
+        for i=0,fs.Length-1 do local f=fs[i]
+            if f.IsStatic and f.Name=='uniqueInstance'and f.FieldType:IsAssignableFrom(wanted)then
+                return f:GetValue(nil)
+            end
+        end
+        tp=tp.BaseType
+    end
+end
+local function originalSkills()
+    local manager=existingSingleton(typeof(CS.NinjaSkillManager))
+    local out={present=manager~=nil,active={},bullets={}}
+    if not manager then return out end
+    local function entries(list,count)
+        local result={};assert(list and count>=0 and count<=list.Count,'Original skill list count mismatch')
+        for i=0,count-1 do local obj=list[i];assert(obj,'Nil original active skill')
+            result[#result+1]={index=i,type=obj:GetType().FullName,fields=values(obj)}
+        end
+        return result
+    end
+    out.active=entries(field(manager,'activeSkillList'),field(manager,'activeSkillCount'))
+    out.bullets=entries(field(manager,'activeSkillBulletList'),field(manager,'activeSkillBulletCount'))
+    local move=field(manager,'<CurrMoveSkill>k__BackingField')
+    if move then out.move_skill=move:GetType().FullName end
+    return out
+end
 local function logicCoroutines()
     -- The client's original Lua_HotfixManager replaces Brambles.ToNextAction
     -- with coroutine.myStart/myWait, not DelayCallFunctionController. Read
@@ -398,6 +427,7 @@ function E.privileged_state()
     if slideOffset then out.role.rules.slide_offset=vector(slideOffset)end
     out.role.data=values(field(n,'_ninjaData'));out.role.collider_parameters=values(field(n,'_ninjiaCollider'))
     out.role.colliders={};out.role.interaction_colliders={};out.role.god=n:IsGodMode();out.role.mounted=n.IsMountState
+    out.role.skills=originalSkills()
     local cols=n.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
     for i=0,cols.Length-1 do local c=cols[i]
         if c.enabled and c.gameObject.activeInHierarchy and c.name=='Role'then
