@@ -112,5 +112,5 @@ def test_selection_watchdog_and_host_wait_share_the_software_guest_budget(monkey
     gate=Gate()
     if budget!=600:gate.selection_wall_seconds=budget
     result=native.initialize(gate,dict(selection=dict(map=42),map=42,stage=50012,slot=1),lambda r:None)
-    assert calls[0]['code'].endswith(','+str(budget)+')')
+    assert 'return MR3A.native_select({["map"]=42},55200,'+str(budget)+')' in calls[0]['code']
     assert calls[0]['timeout']==timeout and result['continued_steps']==0

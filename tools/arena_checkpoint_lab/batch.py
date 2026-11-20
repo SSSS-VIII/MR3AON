@@ -12,6 +12,7 @@ from arena_fixed_catalog import load_inventory
 from collector import References, install_observer
 from route import export
 import search
+from render import selection_command
 from arena_timing_certificate import valid as valid_timing_certificate
 
 
@@ -46,10 +47,14 @@ def initialize(gate, case, progress, seed=55200):
     root = gate.snapshot()['result']['id']
     try:
         budget=getattr(gate,'selection_wall_seconds',600)
-        native_call(gate, 'return MR3A.native_select(' + lua(case['selection']) + ',' + str(seed) + ','+str(budget)+')',
+        native_call(gate, selection_command('return MR3A.native_select(' + lua(case['selection']) + ',' + str(seed) + ','+str(budget)+')'),
                     progress,timeout=max(900,budget+120))
         travel = gate.call('exec', code='return MR3A.travel')
-        progress(dict(phase='native_selection_completed',native_travel=travel))
+        rendering=gate.call('exec',code='local r=MR3A.checkpointSelectionRender;return r and '
+            '{requests=r.requests,observations=r.observations,error=r.error,done=r.done,effective=r.effective}')
+        progress(dict(phase='native_selection_completed',native_travel=travel,selection_render=rendering))
+        if rendering and rendering.get('error'):
+            raise RuntimeError(rendering['error'])
         # The original wait_ready can expire while software rendering finishes
         # the same scene. Finish that initialization, not a search rollback.
         for attempt in range(85):

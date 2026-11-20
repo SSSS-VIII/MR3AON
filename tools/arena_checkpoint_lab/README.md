@@ -110,3 +110,6 @@ PYTHONPATH=agent:tools .venv/bin/python tools/arena_fixed_search_batch.py --queu
 该独立worker由arena-search的InstanceSession所有者启动，不能向已有持租约的worker另发命令。默认worker和滚动rebase模式保持原行为。RAM使用立即unlink的只读映射，页缓存可回收，**不是磁盘持久存档**；所有者/worker退出仍丢点。保留模式不每窗rebase，失败时回到最近原地面/绳子根改起跳，最多24区间前视、4个none前缀的真节点缓存；所有正式路线仍由原客户端逐段无伤检查，有限预算失败不会变成通过。废弃参考图从发布清单撤出、另存证据。没有修改游戏物理/陷阱，也没有用从头重放撤销。
 
 原客户端已通过50012整板和早根→异支→旧终点有限字段往返；53012真实跨窗回退已触发，但整板尚未通过。测试VM毫秒结果不能代替原游戏的慢尾：原场景曾有1.68/9.04秒远距离恢复，后续跨窗约.96/.98秒。完整证据和最新实验服务见docs/records/archived/2026-11-17-arena-fast-checkpoint.md，不能把这份入口说明当作全部生命周期或全部固定板验收。
+
+
+选板阶段也使用同一小尺寸请求：`render.selection_command`给原选板安装本地协程，reset重设1920×1080后请求320×180。Gate仍等待原busy结束，宿主不替换在途命令；原宽高比/逐帧渲染保护和安全入场检查保留。GPU集成冒烟通过不代表软件VM提速已验收；原native状态/载具/步长均未改。

@@ -8,6 +8,42 @@ INFO = ('return {width=CS.UnityEngine.Screen.width,height=CS.UnityEngine.Screen.
         'interval=CS.UnityEngine.Rendering.OnDemandRendering.renderFrameInterval}')
 
 
+def selection_command(command):
+    """Keep the isolated guest small while original reset/travel is busy.
+
+    The gate cannot take another command until native selection finishes.
+    Observe its original coroutine locally instead of overwriting an in-flight
+    gate request. Reset can reapply 1920x1080 after the initial 320x180 request.
+    This coroutine requests the same aspect, never additional game steps.
+    """
+    return r'''local result=(function()
+''' + command + r'''
+end)()
+local E,U=MR3A,CS.UnityEngine
+local travel=E.travel
+local report={requests=0,observations=0,original_travel=travel}
+E.checkpointSelectionRender=report
+local runner=U.GameObject.Find('MR3A_LocalControl'):GetComponent(typeof(U.EventSystems.EventTrigger))
+runner:StartCoroutine(require('common/util').cs_generator(function()
+    while E.travel==travel and not travel.done do
+        local w,h=U.Screen.width,U.Screen.height
+        report.observations=report.observations+1
+        report.effective={width=w,height=h,interval=U.Rendering.OnDemandRendering.renderFrameInterval}
+        if report.effective.interval~=1 or w*180~=h*320 or w<=0 then
+            report.error='Native selection requires every rendered frame and original 16:9 aspect'
+            return
+        end
+        if w~=320 or h~=180 then
+            U.Screen.SetResolution(320,180,true)
+            report.requests=report.requests+1
+        end
+        coroutine.step()
+    end
+    report.done=true
+end))
+return result'''
+
+
 def prepare(gate):
     before = gate.call('exec', code=INFO)
     if before['interval'] != 1 or before['width'] * 180 != before['height'] * 320:
