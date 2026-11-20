@@ -788,6 +788,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
     camera = observation.get('camera', {})
     camera_x = camera.get('position', {}).get('x')
     real_right = camera.get('real_right', {}).get('x')
+    family_context={}
     for enemy in rows(observation['enemies']):
         f, custom, kind = enemy['fields'], enemy['custom'], enemy['type']
         if f.get('_dead') or f.get('_isRecycled'):
@@ -898,7 +899,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
         else:
             from arena_privileged_families import forecast
             try:
-                predicted, reason = forecast(enemy, times, observation, player,trajectory_states)
+                predicted, reason = forecast(enemy, times, observation, player,trajectory_states,context=family_context)
             except KeyError as error:
                 predicted, reason = None, 'native_field_missing:'+str(error)
             if predicted is None:
@@ -953,10 +954,10 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
             if kind=='EnemyPiranha':padding=predicted[5]['position_padding']
             if kind in ('EnemySuspendSpecial','EnemyRotateElectricBall'):
                 padding=predicted[5]['position_padding'];approximate=True
-            if kind in ('EnemyPoleaxeWarrior','EnemyRockTiger','EnemyConnectElectricBall'):
+            if kind in ('EnemyPoleaxeWarrior','EnemyRockTiger','EnemyConnectElectricBall','EnemyBullutFireRobot','EnemyBullutLaser'):
                 center,extent=predicted[4][c['id']]
                 approximate=True
-            if kind not in ('EnemyStraightBat','EnemyFlyBamboo','EnemySpider','EnemyMuppetBomb','EnemyEliteSpider','EnemyFruitPinball','EnemyPoleaxeWarrior','EnemyPiranha','EnemyRockTiger','EnemyConnectElectricBall'):
+            if kind not in ('EnemyStraightBat','EnemyFlyBamboo','EnemySpider','EnemyMuppetBomb','EnemyEliteSpider','EnemyFruitPinball','EnemyPoleaxeWarrior','EnemyPiranha','EnemyRockTiger','EnemyConnectElectricBall','EnemyBullutFireRobot','EnemyBullutLaser'):
                 pivot = xy(enemy['position'])
                 rot = np.stack((np.stack((np.cos(angles),-np.sin(angles)),axis=-1),
                                 np.stack((np.sin(angles),np.cos(angles)),axis=-1)),axis=1)

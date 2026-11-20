@@ -406,6 +406,67 @@ function E.privileged_state()
                 end
             end
             local cs=o.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
+            if row.type=='EnemyBullutFireRobot'or row.type=='EnemyBullutLaser'or row.type=='EnemyAlarmShooter'then
+                local m=o.transform.parent and o.transform.parent.localToWorldMatrix or U.Matrix4x4.identity
+                local error=0
+                for a=0,2 do for b=0,2 do error=error+math.abs(m['m'..a..b]-(a==b and 1 or 0))end end
+                row.bullet_geometry={parent_axes_identity=error<0.00001,chains={}}
+                for j=0,cs.Length-1 do local c=cs[j];local chain={};local t=c.transform
+                    for depth=1,32 do
+                        if not t then break end
+                        local components=t:GetComponents(typeof(U.Component));local scripts={}
+                        for k=0,components.Length-1 do
+                            scripts[#scripts+1]=components[k]and components[k]:GetType().FullName or 'missing_component'
+                        end
+                        local body=t:GetComponent(typeof(U.Rigidbody))
+                        chain[#chain+1]={name=t.name,scripts=scripts,rigidbody=body and
+                            {kinematic=body.isKinematic,gravity=body.useGravity,velocity=vector(body.velocity)}or nil}
+                        if t==o.transform then break end;t=t.parent
+                    end
+                    row.bullet_geometry.chains[#row.bullet_geometry.chains+1]={id=c:GetInstanceID(),complete=t==o.transform,nodes=chain,
+                        includes_native_components=true}
+                end
+            end
+            if row.type=='EnemyAlarmShooter'then
+                local bullets=field(o,'_bulletList');row.alarm_shooter={bullets={},truncated=bullets and bullets.Count>64 or false}
+                if bullets then for j=0,math.min(bullets.Count-1,63)do
+                    row.alarm_shooter.bullets[#row.alarm_shooter.bullets+1]=values(bullets[j])
+                end end
+            end
+            if row.type=='EnemyBullutLaser'then
+                row.laser_growth={scales={},positions={}}
+                local components=o.gameObject:GetComponentsInChildren(typeof(U.MonoBehaviour),true)
+                for j=0,components.Length-1 do local tween=components[j]
+                    local kind=tween and tween:GetType().FullName
+                    if kind=='uTools.uTweenScale'or kind=='uTools.uTweenPosition'then
+                        local scale={id=tween:GetInstanceID(),root=tween.transform:GetInstanceID(),fields=values(tween),
+                            curve={},from_colliders={},to_colliders={}}
+                        local curve=field(tween,'animationCurve')
+                        if curve then local keys=curve.keys;scale.curve_truncated=keys.Length>128
+                            for k=0,math.min(keys.Length-1,127)do local v=keys[k]
+                                scale.curve[#scale.curve+1]={time=v.time,value=v.value,in_tangent=v.inTangent,
+                                    out_tangent=v.outTangent,weighted_mode=tostring(v.weightedMode)}
+                            end
+                        end
+                        local first,last=field(tween,'from'),field(tween,'to')
+                        if first and last then for k=0,cs.Length-1 do local c=cs[k]
+                            local a,b
+                            if kind=='uTools.uTweenScale'then
+                                a=posedShape(c,tween.transform,first,tween.transform.localPosition)
+                                b=posedShape(c,tween.transform,last,tween.transform.localPosition)
+                            else
+                                a=posedShape(c,tween.transform,tween.transform.localScale,first)
+                                b=posedShape(c,tween.transform,tween.transform.localScale,last)
+                            end
+                            if a and b and a.damage_owner==row.id then
+                                scale.from_colliders[#scale.from_colliders+1]=a;scale.to_colliders[#scale.to_colliders+1]=b
+                            end
+                        end end
+                        local target=kind=='uTools.uTweenScale'and row.laser_growth.scales or row.laser_growth.positions
+                        target[#target+1]=scale
+                    end
+                end
+            end
             if row.type=='EnemySuspendSpecial'then
                 local fs=o:GetType():GetFields(flags)
                 row.suspend_controller={}

@@ -41,6 +41,8 @@ FAMILIES = {
     'EnemySuspendSpecial': 'native_enabled_connected_ball_hover',
     'EnemyConnectElectricBall': 'native_pulsed_link_between_moving_endpoints',
     'EnemyRotateElectricBall': 'native_rigid_rotating_electric_assembly',
+    'EnemyBullutFireRobot': 'native_accelerating_camera_relative_fire_bullet',
+    'EnemyBullutLaser': 'native_camera_relative_bullet_with_authored_growth_envelope',
 }
 
 
@@ -251,6 +253,126 @@ def camera_x_bounds(observation,times,player,trajectory_states=None):
                         for target in (low[i]+offset,high[i]+offset)for g in gains]
             lower.append(float(min(candidates)));upper.append(float(max(candidates)))
         return (np.asarray(lower),np.asarray(upper)),None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
+def laser_growth_bounds(enemy,collider):
+    """Joint scale/translation envelope, including both curve overshoots."""
+    from arena_privileged_model import rows,xy
+    bindings=[]
+    for tween in rows(enemy['laser_growth']['scales']):
+        first=next((c for c in rows(tween['from_colliders'])if c['id']==collider['id']),None)
+        last=next((c for c in rows(tween['to_colliders'])if c['id']==collider['id']),None)
+        if first is None and last is None:continue
+        if (first is None or last is None or not first.get('quad')or not last.get('quad')or
+                first.get('depth_tilt')or last.get('depth_tilt')or tween.get('curve_truncated')):
+            raise ValueError('laser_growth_original_posed_box')
+        method=int(str(tween['fields']['method']).rsplit(':',1)[1])
+        if method not in (0,22):raise ValueError('laser_growth_unverified_easing')
+        limits=curve_range(tween['curve'])
+        if method==0:limits=curve_range(tween['curve'],*limits)
+        a=np.array([xy(p)for p in first['quad']]);b=np.array([xy(p)for p in last['quad']])
+        points=np.concatenate([a+(b-a)*factor for factor in limits])
+        bindings.append((tween['root'],points))
+    if not bindings or len({root for root,_ in bindings})!=1:
+        raise ValueError('laser_growth_missing_or_nested_scale_binding')
+    points=np.concatenate([np.array([xy(p)for p in collider['quad']]),*[p for _,p in bindings]])
+    translations=[]
+    for tween in rows(enemy['laser_growth']['positions']):
+        first=next((c for c in rows(tween['from_colliders'])if c['id']==collider['id']),None)
+        last=next((c for c in rows(tween['to_colliders'])if c['id']==collider['id']),None)
+        if first is None and last is None:continue
+        if (not first or not last or tween['root']!=bindings[0][0]or tween.get('curve_truncated')or
+                tween['fields'].get('isRect')is not False or
+                first.get('depth_tilt')or last.get('depth_tilt')):
+            raise ValueError('laser_growth_unverified_translation_binding')
+        method=int(str(tween['fields']['method']).rsplit(':',1)[1])
+        if method not in (0,22):raise ValueError('laser_growth_unverified_translation_easing')
+        limits=curve_range(tween['curve'])
+        if method==0:limits=curve_range(tween['curve'],*limits)
+        a=xy(first['center'])-xy(collider['center']);b=xy(last['center'])-xy(collider['center'])
+        translations.extend(a+(b-a)*factor for factor in limits)
+    if not translations:raise ValueError('laser_growth_original_translation_missing')
+    points=np.concatenate([points+delta for delta in [np.zeros(2),*translations]])
+    lo,hi=points.min(axis=0),points.max(axis=0)
+    return (lo+hi)/2,(hi-lo)/2
+
+
+def camera_relative_bullet(enemy,times,observation,player,trajectory_states=None,reference=None):
+    """Original accelerated BulletMoveLogic with the real camera reference.
+
+    Local X moves relative to GetReferencePivotPos; Y integrates directly in
+    world space. The FireRobot subclass only recycles below a native ground
+    surface and creates a visual effect. Keeping its flying geometry alive
+    past that removal is conservative, not a prediction of a second attack.
+    """
+    from arena_privileged_model import rows,xy
+    try:
+        f=enemy['fields'];binding=enemy['bullet_geometry'];kind=enemy['type']
+        if kind not in ('EnemyBullutFireRobot','EnemyBullutLaser'):
+            raise ValueError('camera_bullet_unverified_concrete_class')
+        if not binding['parent_axes_identity']or f['_bullutType']!=0:
+            raise ValueError('fire_bullet_unverified_parent_or_bullet_type')
+        hurt=[c for c in rows(enemy['colliders'])if c.get('damage_kind')]
+        if (len(hurt)!=1 or hurt[0]['type']!='BoxCollider'or not hurt[0].get('quad')or
+                hurt[0].get('depth_tilt')or not hurt[0]['active']or not hurt[0]['enabled']or
+                hurt[0].get('damage_kind')!='enemy_callback'or hurt[0].get('damage_owner')!=enemy['id']):
+            raise ValueError('fire_bullet_original_damage_box')
+        c=hurt[0];chain=next((r for r in rows(binding['chains'])if r['id']==c['id']),{})
+        whitelist={'UnityEngine.Transform','UnityEngine.BoxCollider','UnityEngine.MeshFilter',
+                   'UnityEngine.MeshRenderer','UnityEngine.ParticleSystem','UnityEngine.ParticleSystemRenderer',
+                   'UnityEngine.Rigidbody',kind,'EnemyBaseCollider'}
+        if kind=='EnemyBullutLaser':
+            # These original components affect alpha or the authored scale
+            # bounded below. Any additional transform animation is rejected.
+            whitelist|={'uTools.uTweenAlpha','uTools.uTweenScale','uTools.uTweenPosition','uTweenController'}
+        if (not chain.get('complete')or not chain.get('includes_native_components')or
+                any(name not in whitelist for node in rows(chain['nodes'])for name in rows(node['scripts']))):
+            raise ValueError('fire_bullet_unverified_damage_transform_chain')
+        for node in rows(chain['nodes']):
+            if 'UnityEngine.Rigidbody'in rows(node['scripts'])and not node.get('rigidbody',{}).get('kinematic'):
+                raise ValueError('fire_bullet_unverified_dynamic_rigidbody')
+        numbers=[f['_bullutSpeed'],f['_speedAcc']]+[f[k][a]for k in ('_moveDir','_localPos','_pivotPos','_lastPosition','_secondLastPosition')for a in ('x','y','z')]
+        if not all(math.isfinite(v)for v in numbers)or any(abs(f[k]['z'])>1e-6 for k in ('_moveDir','_localPos','_pivotPos')):
+            raise ValueError('fire_bullet_nonplanar_or_nonfinite_parameters')
+        tick=player.tick;age=observation['state']['time']-f['_lastFixedUpdateTime']
+        cf=observation['camera']['fields']
+        if not -.0002<=age<=tick+.0002 or abs(f['_lastFixedUpdateTime']-cf['_lastFixedUpdateTime'])>.0002:
+            raise ValueError('fire_bullet_original_reference_clock')
+        numeric=8*max(abs(float(np.spacing(np.float32(v))))for v in numbers)+.0001
+        if abs(f['_lastPosition']['x']-np.float32(f['_pivotPos']['x']+f['_localPos']['x']))>numeric:
+            raise ValueError('fire_bullet_original_local_reference')
+        cam,reason=reference if reference is not None else camera_x_bounds(observation,times,player,trajectory_states)
+        if cam is None:return None,reason
+        camera_low,camera_high=cam
+        pivot=f['_pivotPos']['x'];known=[cf[k]['x']for k in ('_lastPosition','_secondLastPosition')]
+        if not min(known)-numeric<=pivot<=max(known)+numeric:
+            raise ValueError('fire_bullet_unknown_reference_override')
+        age=np.clip(age,0.,tick);steps=np.floor((age+np.asarray(times)+1e-8)/tick).astype(int)
+        speed=np.float32(f['_bullutSpeed']);acc=np.float32(f['_speedAcc']);direction=xy(f['_moveDir']).astype(np.float32)
+        local_x=np.float32(f['_localPos']['x']);y=np.float32(f['_lastPosition']['y'])
+        low=[xy(f['_lastPosition'])];high=[low[0].copy()]
+        for k in range(1,int(steps[-1])+1):
+            speed=np.float32(speed+np.float32(acc*np.float32(tick)))
+            local_x=np.float32(local_x+np.float32(direction[0]*np.float32(np.float32(tick)*speed)))
+            y=np.float32(y+np.float32(np.float32(direction[1]*np.float32(tick))*speed))
+            low.append(np.array([np.float32(min(camera_low[k-1],camera_low[k])+local_x),y]))
+            high.append(np.array([np.float32(max(camera_high[k-1],camera_high[k])+local_x),y]))
+        previous=xy(f['_secondLastPosition']);physical=xy(f['_lastPosition'])
+        correction=xy(enemy['position'])-(previous+(physical-previous)*(age/tick))
+        prev_low=np.asarray([previous,*low[:-1]]);prev_high=np.asarray([previous,*high[:-1]])
+        alpha=np.clip((age+np.asarray(times)-steps*tick)/tick,0.,1.)[:,None]
+        lo=prev_low[steps]*(1-alpha)+np.asarray(low)[steps]*alpha+correction
+        hi=prev_high[steps]*(1-alpha)+np.asarray(high)[steps]*alpha+correction
+        center,extent=laser_growth_bounds(enemy,c)if kind=='EnemyBullutLaser'else(xy(c['center']),xy(c['extents']))
+        offset=center-xy(enemy['position'])
+        numeric+=2*abs(float(np.spacing(np.float32(observation['state']['time']))))*(abs(float(speed))+abs(player.speed))
+        geometry={c['id']:((lo+hi)/2+offset,(hi-lo)/2+extent+numeric)}
+        zero=np.zeros((len(times),2))
+        return (zero,np.zeros(len(times)),
+                'EnemyBullut.BulletMoveLogic; native accelerated camera-relative X/world Y'+
+                    ('; original laser scale-curve envelope'if kind=='EnemyBullutLaser'else'; conservative FireRobot ground-recycle lifetime'),
+                np.ones(len(times),bool),geometry),None
     except (KeyError,ValueError)as error:return None,str(error)
 
 
@@ -1126,7 +1248,7 @@ def rock_tiger(enemy,times,observation,player,trajectory_states=None):
         return None,str(error)
 
 
-def forecast(enemy, times, observation, player, trajectory_states=None):
+def forecast(enemy, times, observation, player, trajectory_states=None,context=None):
     """Return original root displacement/rotation, or a specific missing rule."""
     from arena_privileged_model import phase, xy
     f, c, kind = enemy['fields'], enemy['custom'], enemy['type']
@@ -1139,6 +1261,11 @@ def forecast(enemy, times, observation, player, trajectory_states=None):
         return connected_electric(enemy,times,observation,player)
     if kind=='EnemyRotateElectricBall':
         return rotating_electric(enemy,times,observation,player)
+    if kind in ('EnemyBullutFireRobot','EnemyBullutLaser'):
+        if context is not None and 'camera_x'not in context:
+            context['camera_x']=camera_x_bounds(observation,times,player,trajectory_states)
+        return camera_relative_bullet(enemy,times,observation,player,trajectory_states,
+                                      context.get('camera_x')if context is not None else None)
     if kind=='EnemyRockTiger':
         return rock_tiger(enemy,times,observation,player,trajectory_states)
     if kind=='EnemyPiranha':
