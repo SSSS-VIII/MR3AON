@@ -5,6 +5,7 @@ import math
 import time
 import numpy as np
 from arena_privileged_model import PlayerModel, hazard_forecasts, clearance, rows
+from arena_privileged_families import collectible_kind,progression_marker
 
 
 @dataclass(frozen=True)
@@ -60,6 +61,12 @@ class InternalController:
             return stamp+delay-(self.last_inputs[action]+previous_late) >= .1-clock_epsilon
         evidence = dict(native_types=sorted({e['type'] for e in rows(observation['enemies'])}),
                         models=sorted({h.source for h in hazards}), unsupported_role=player.unsupported,
+                        collectibles=[dict(id=e['id'],kind=collectible_kind(e),position=e['position'])
+                                      for e in rows(observation['enemies'])if collectible_kind(e)
+                                      and not e['fields'].get('_dead') and not e['fields'].get('_isRecycled')],
+                        progression_markers=[dict(id=e['id'],kind=progression_marker(e),position=e['position'])
+                                             for e in rows(observation.get('mechanism_items'))if progression_marker(e)],
+                        special_task=observation.get('special_task'),
                         unsupported_enemies=missing, horizon_seconds=self.horizon,
                         timing_offsets_ms=[-self.timing_radius*1000, self.timing_radius*1000],
                         requested_timing_offsets_ms=[-self.requested_timing_radius*1000,self.requested_timing_radius*1000],

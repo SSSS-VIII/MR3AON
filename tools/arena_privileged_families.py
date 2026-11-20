@@ -33,7 +33,39 @@ FAMILIES = {
     'EnemyFruitPinball': 'native_free_pinball_with_rotating_authored_collider_envelope',
     'EnemyBambooWater': 'native_authored_rise_tween_envelope',
     'EnemyPoleaxeWarrior': 'native_distance_triggered_spine_weapon',
+    'EnemyFruitMuppet': 'native_collectible_banana_role_callback',
 }
+
+
+def collectible_kind(enemy):
+    """One source-verified fruit callback, never a global zero-attack rule.
+
+    EnemyFruitBase.ProcessOnTriggerEnter marks this banana dead, asks the
+    ninja to PlayAttackAnim, then schedules its original collection effects.
+    The fixed-board config and live instances both have zero attack. Other
+    identities or altered damage require their own semantics.
+    """
+    if (enemy['type']=='EnemyFruitMuppet' and enemy.get('attack')==0
+            and enemy.get('info',{}).get('_enemyType')=='EnemyFruitBanana: 280'
+            and enemy['fields'].get('_species')=='Fruit: 160031'):
+        return 'banana'
+    return None
+
+
+def progression_marker(item):
+    """Original task UI/counter triggers, with no immediate role movement.
+
+    EndSpecialTask can subsequently spawn its normal reward chest/score.
+    This classification does not certify the task goal or grant its reward.
+    """
+    expected={'ItemSpecialTaskStart':('ItemSpecialTaskStart: 43','special_task_start'),
+              'ItemSpecialTaskEnd':('ItemSpecialTaskEnd: 44','special_task_end')}
+    spec=expected.get(item['type'])
+    if (spec and item.get('info',{}).get('_itemType')==spec[0]
+            and item.get('custom',{}).get('_render')==0
+            and item['fields'].get('_pickupRecycle') is True):
+        return spec[1]
+    return None
 
 
 def curve_range(keys,lower=0.,upper=1.):

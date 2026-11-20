@@ -207,6 +207,9 @@ class PlayerModel:
             self.unsupported.append('reverse_running_direction')
         for item in rows(observation.get('mechanism_items')):
             dx=item['position']['x']-self.initial.x
+            from arena_privileged_families import progression_marker
+            if progression_marker(item):
+                continue
             native_static_spring=(item['type']=='ItemSpring' and
                 item['fields'].get('_needRotate') is False and
                 item['fields'].get('isTrigger') is False and
@@ -739,6 +742,12 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
     for enemy in rows(observation['enemies']):
         f, custom, kind = enemy['fields'], enemy['custom'], enemy['type']
         if f.get('_dead') or f.get('_isRecycled'):
+            continue
+        if kind=='EnemyFruitMuppet':
+            from arena_privileged_families import collectible_kind
+            if not collectible_kind(enemy):
+                unsupported.append(dict(id=enemy['id'],type=kind,
+                    reason='unverified_fruit_identity_or_damage'))
             continue
         if kind not in ('EnemyBlade','EnemySpiderWeb','EnemyKill','EnemyHideBlade','EnemyBambooWater') and any(
                 c.get('depth_tilt') for c in rows(enemy['colliders'])):

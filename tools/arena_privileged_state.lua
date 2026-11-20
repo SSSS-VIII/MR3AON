@@ -3,6 +3,23 @@
 local E,U=MR3A,CS.UnityEngine
 local flags=CS.System.Reflection.BindingFlags.__CastFrom(52)
 local cache={}
+local taskInstanceField
+do
+    -- Read the already existing singleton backing field. Calling Instance
+    -- could create a manager when observing an uninitialized scene.
+    local wanted=typeof(CS.GameTaskManager);local tp=wanted
+    local staticFlags=CS.System.Reflection.BindingFlags.__CastFrom(56)
+    while tp and not taskInstanceField do
+        local fs=tp:GetFields(staticFlags)
+        for i=0,fs.Length-1 do
+            if fs[i].IsStatic and (fs[i].FieldType.FullName==wanted.FullName or
+                    fs[i].Name=='uniqueInstance' and fs[i].FieldType:IsAssignableFrom(wanted)) then
+                taskInstanceField=fs[i];break
+            end
+        end
+        tp=tp.BaseType
+    end
+end
 local function vector(v)return {x=v.x,y=v.y,z=v.z}end
 local function fields(obj)
     local tp=obj:GetType();local key=tp.FullName
@@ -246,6 +263,10 @@ function E.privileged_state()
     assert(not E.busy and U.Time.timeScale==0,'Read internal state at a paused original boundary')
     local n=CS.NinjaController.Instance.NinjaScript;local p=n.transform.position
     local out={schema=1,privileged=true,state=E.state(),role={},enemies={},supports={},platforms={},mechanism_items={}}
+    local tasks=taskInstanceField and taskInstanceField:GetValue(nil)
+    local task=tasks and field(tasks,'<CurrSpecialTask>k__BackingField')
+    out.special_task={observed=tasks~=nil,active=task~=nil,fields=values(task),
+        identity=task and task:GetHashCode()or nil}
     local camera=CS.CameraController.Instance
     out.camera={right=vector(camera:GetScreenRightTopPos()),real_right=vector(camera:GetRealScreenRightTopPos()),
         reflection_right=vector(camera:GetScreenRightTopPos_Reflection(0)),
