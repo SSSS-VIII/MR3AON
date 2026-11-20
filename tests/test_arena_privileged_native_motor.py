@@ -11,6 +11,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
 from arena_privileged_model import PlayerModel,phase
 
 CASES=json.loads((Path(__file__).parent/'fixtures/arena-privileged-native-motor-v2.json').read_text())
+CASES.append(json.loads((Path(__file__).parent/'fixtures/arena-privileged-rope-up-settle.json').read_text()))
 
 
 @pytest.mark.parametrize('case',CASES,ids=lambda c:c['name'])

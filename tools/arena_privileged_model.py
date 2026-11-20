@@ -183,7 +183,8 @@ class PlayerModel:
         if current_platform is not None:
             self.initial.support = current_platform['id']
         if mode in TRANSFER:
-            self.initial.transfer_speed = abs(role['velocity']['y'])
+            self.initial.transfer_speed = (role['velocity']['y'] if mode=='rolltolineon'
+                                           else abs(role['velocity']['y']))
         self.unsupported = []
         if mode not in REST | AIR | TRANSFER:
             self.unsupported.append('role:'+mode)
@@ -306,7 +307,8 @@ class PlayerModel:
             if motor.mode in ('runonlinedown', 'rolltolinedown') and s and s.rope:
                 motor.mode = 'rolltolineon'; motor.delay = entry_delay
                 fast = motor.y > s.height(motor.x+motor.offset_render,t)+self.foot
-                motor.transfer_speed = self.data['_rollAirDownUpSpeed' if fast else '_rollDownUpSpeed']
+                motor.transfer_speed = (-self.data['_rollAirDownUpSpeed'] if fast
+                                        else self.data['_rollDownUpSpeed'])
             elif motor.mode in AIR and motor.used < 2 or motor.mode in ('runonline', 'runonground', 'slideonground'):
                 motor.native_air=self.native_samples and (motor.mode in REST or motor.native_air)
                 motor.used = motor.used+1 if motor.mode in AIR else 1
@@ -554,15 +556,21 @@ class PlayerModel:
                             else:
                                 top=motor.mode=='rolltolineon'
                                 target=s.height(motor.previous_x+motor.offset_render,t)+(self.foot if top or not s.rope else -self.foot)
-                                speed=motor.transfer_speed or abs(motor.vy) or self.data['_rollDownUpSpeed']
-                                arrived=(motor.previous_y>=target if top else motor.previous_y<=target)
+                                speed=motor.transfer_speed or (motor.vy if top else abs(motor.vy)) or self.data['_rollDownUpSpeed']
+                                next_y=float(np.float32(np.float32(motor.physical_y)+np.float32((speed if top else -speed)*self.tick)))
+                                # ProcessMovementOnLine's up-flip checks the
+                                # integrated position (strictly past target),
+                                # including its fast downward return. The
+                                # down-flip has a different settling branch.
+                                arrived=((next_y>target if speed>0 else next_y<target) if top
+                                         else motor.previous_y<=target)
                                 if arrived:
                                     motor.physical_y=s.height(motor.physical_x+motor.offset_render,t)+(self.foot if top or not s.rope else -self.foot)
                                     motor.mode=('runonline' if top else 'runonlinedown') if s.rope else 'runonground'
                                     motor.used=0;motor.support=s.id;motor.vy=0.;motor.ground_source=True;motor.native_transfer=False
                                 else:
                                     motor.vy=speed if top else -speed
-                                    motor.physical_y=float(np.float32(np.float32(motor.physical_y)+np.float32(motor.vy*self.tick)))
+                                    motor.physical_y=next_y
                         motor.y=motor.previous_y+(motor.physical_y-motor.previous_y)*alpha
                     elif motor.delay > 0:
                         if motor.lead_mode in AIR:
@@ -577,7 +585,7 @@ class PlayerModel:
                     else:
                         top = motor.mode == 'rolltolineon'
                         target = s.height(motor.x+motor.offset_render,t)+(self.foot if top or not s.rope else -self.foot)
-                        speed = motor.transfer_speed or abs(motor.vy) or self.data['_rollDownUpSpeed']
+                        speed = abs(motor.transfer_speed) or abs(motor.vy) or self.data['_rollDownUpSpeed']
                         delta = target-motor.y
                         motor.vy = math.copysign(speed, delta)
                         motor.y += math.copysign(min(abs(delta), speed*dt), delta)
