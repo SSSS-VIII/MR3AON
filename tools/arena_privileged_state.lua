@@ -1127,6 +1127,73 @@ function E.privileged_state()
         end
         return result
     end
+    local function thornSpawnTemplate()
+        local all=U.Resources.FindObjectsOfTypeAll(typeof(CS.EnemyBambooThorn));local original
+        for i=0,all.Length-1 do local o=all[i]
+            if o.name=='EnemyBambooThorn'and not o.gameObject.activeInHierarchy then
+                assert(not original,'Ambiguous original bamboo-thorn prefab');original=o
+            end
+        end
+        if not original then return {missing=true}end
+        local root=original.transform;local part=field(original,'_colliderPart')
+        local main=field(original,'_mainPart');local bottom=field(original,'_bottomPart')
+        if not part or not main or not bottom then return {missing=true}end
+        local body=original:GetComponent(typeof(U.Rigidbody))
+        local result={id=original:GetInstanceID(),type=original:GetType().Name,source_name='EnemyBambooThorn',
+            kinematic=not body or body.isKinematic,gravity=body and body.useGravity or false,callbacks_clear=true,
+            gravity_acc=4.5,reverse_run_flip=field(original,'reverseRunFlip'),native_spawn=true,
+            part_position=vector(part.localPosition),part_rotation=vector(part.localEulerAngles),part_count=main.childCount,
+            chain={},chain_complete=false,native_initialization=true,unknown_hooks={},component_types={},colliders={},
+            animated_tree=original:GetComponentsInChildren(typeof(U.Animator),true).Length>0 or
+                original:GetComponentsInChildren(typeof(U.Animation),true).Length>0}
+        local t=part
+        for depth=1,32 do
+            if t==root then result.chain_complete=true;break end
+            if not t then break end
+            result.chain[#result.chain+1]={position=vector(t.localPosition),rotation=vector(t.localEulerAngles),
+                scale=vector(t.localScale),part=t==part,main=t==main,bottom=t==bottom}
+            t=t.parent
+        end
+        for _,name in ipairs({'conditionActionEvent','normalActionEvent','collisionActionEvent',
+                'collisionExitActionEvent','btAnimatorEvent','conditionParamActionEvent','syncComponent'})do
+            if field(original,name)~=nil then result.callbacks_clear=false end
+        end
+        local graphs=field(original,'allGraphOwners')
+        if graphs and graphs.Count>0 then result.callbacks_clear=false end
+        local scripts=original:GetComponentsInChildren(typeof(U.MonoBehaviour),true)
+        for i=0,scripts.Length-1 do result.component_types[#result.component_types+1]=
+            scripts[i]and scripts[i]:GetType().FullName or 'missing_component'end
+        for _,entry in ipairs({{typeof(CS.EnemyBambooThorn),'Initialize'},
+                {typeof(CS.EnemyBambooThorn),'ResetEnemyInfo'},{typeof(CS.EnemyBambooThorn),'SetHookRadius'},
+                {typeof(CS.EnemyBambooThorn),'FixedUpdateMovement'},{typeof(CS.EnemyBambooThorn),'ProcessState'},
+                {typeof(CS.EnemyBambooThorn),'MyUpdate'},{typeof(CS.EnemyFissonable),'ResetEnemyInfo'},
+                {typeof(CS.EnemyBase),'ResetEnemyInfo'},{typeof(CS.EnemyBase),'FixedUpdateMovement'}})do
+            local hook=entry[1]:GetField('__Hotfix0_'..entry[2],staticFlags)
+            if not hook or hook:GetValue(nil)~=nil then
+                result.native_initialization=false;result.unknown_hooks[#result.unknown_hooks+1]=entry[1].Name..'.'..entry[2]
+            end
+        end
+        for _,name in ipairs({'CheckEnemy','CheckAddEnemyEntity','CreateEnemy'})do
+            local hook=typeof(CS.LevelBlockCollider):GetField('__Hotfix0_'..name,staticFlags)
+            if not hook or hook:GetValue(nil)~=nil then result.native_spawn=false end
+        end
+        local cs=original:GetComponentsInChildren(typeof(U.Collider),true)
+        for i=0,cs.Length-1 do local c=cs[i];local info=shape(c)
+            if info.damage_kind then
+                local row={type=c:GetType().Name,enabled=c.enabled,trigger=c.isTrigger,damage_kind=info.damage_kind,
+                    owner_bound=info.damage_owner==original:GetInstanceID(),under_part=c.transform:IsChildOf(part),
+                    under_visual=c.transform:IsChildOf(main)or c.transform:IsChildOf(bottom),vertices={}}
+                if row.type=='BoxCollider'then
+                    for _,x in ipairs({-1,1})do for _,y in ipairs({-1,1})do for _,z in ipairs({-1,1})do
+                        local p=c.transform:TransformPoint(c.center+U.Vector3(x*c.size.x/2,y*c.size.y/2,z*c.size.z/2))
+                        row.vertices[#row.vertices+1]=vector(part:InverseTransformPoint(p))
+                    end end end
+                end
+                result.colliders[#result.colliders+1]=row
+            end
+        end
+        return result
+    end
     local function hookSpawnTemplate(name)
         local all=U.Resources.FindObjectsOfTypeAll(typeof(CS.EnemyHook));local original
         for i=0,all.Length-1 do local o=all[i]
@@ -1257,6 +1324,10 @@ function E.privileged_state()
                 custom_type=custom and custom:GetType().Name,
                 block_start=vector(live and live.transform.position or a),stage_index=stageIndex,block_index=blockIndex,
                 source=source,sync_blocked=blocked,vertical_gate=live and field(live,'openGenerateDistanceY')or false}
+            if kind=='EnemyBambooThorn: 120'then
+                out.spawn_templates.hooks=out.spawn_templates.hooks or{}
+                if not out.spawn_templates.hooks.EnemyBambooThorn then out.spawn_templates.hooks.EnemyBambooThorn=thornSpawnTemplate()end
+            end
             if kind=='EnemyGoldHook: 289'or kind:match('^EnemyHook: ')then
                 out.spawn_templates.hooks=out.spawn_templates.hooks or{}
                 local name=kind:match('^(.-): ')

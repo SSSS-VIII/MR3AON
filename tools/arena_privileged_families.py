@@ -1888,6 +1888,69 @@ def hook_pending_history(entry,times,observation,player):
         source=h.source+'; propagated from the actual pre-key world')for h in hs]
 
 
+def pending_thorn_vertices(entry,template):
+    """Original quantized bamboo length and complete collider parent TRS."""
+    from arena_privileged_model import rows
+    info=entry['info'];custom=entry['custom'];f=np.float32
+    if (template.get('type')!='EnemyBambooThorn'or template.get('source_name')!='EnemyBambooThorn'or
+            entry['source']not in ('native_enemyList','resolved_uninstantiated_block')or
+            entry.get('custom_type')!='EnemyHookDataStruct'or entry.get('custom_projection',{}).get('complete')is not True or
+            set(custom)!={'_render','_radius','_maxLineSpeed','_isGravityOpposite'}or custom['_render']!=0 or
+            info.get('createPlayerUID')or info.get('baseID')!=0):raise ValueError('pending_thorn_source_binding')
+    if (template.get('native_initialization')is not True or template.get('native_spawn')is not True or rows(template.get('unknown_hooks'))or
+            template.get('animated_tree',True)or template.get('chain_complete')is not True or
+            template.get('kinematic')is not True or template.get('gravity')is not False or template.get('callbacks_clear')is not True or
+            not isinstance(template.get('reverse_run_flip'),bool)or not set(rows(template.get('component_types')))<=
+            {'EnemyBambooThorn','EnemyBaseCollider','EnemyFissonablePieces'}or 'EnemyBambooThorn'not in rows(template.get('component_types'))):
+        raise ValueError('pending_thorn_unverified_hierarchy')
+    radius=custom['_radius'];speed=custom['_maxLineSpeed'];count=template['part_count']
+    scale=np.array([info['_localScale'][a]for a in('x','y','z')]);angles=info['_localEulerAngles']
+    if (not np.isfinite([*scale,radius,speed,*angles.values()]).all()or radius<=0 or speed<0 or
+            min(abs(scale))<=0 or any(abs(angles[a])>1e-5 for a in('x','y'))or
+            not isinstance(count,int)or not 2<=count<=128):raise ValueError('pending_thorn_native_parameter_domain')
+    if template['reverse_run_flip']:scale[0]=abs(scale[0])
+    wanted=f(f(max(f(radius),f(1.64)))+f(-1.64));length=f(0.)
+    for i in range(1,count):
+        if wanted>length:length=f(length+f(1.5 if i%2==0 else 1.35))
+    boxes=rows(template['colliders']);chain=rows(template['chain']);vertices=[]
+    if not boxes or not chain or sum(bool(n['part'])for n in chain)!=1 or not chain[0]['part']:
+        raise ValueError('pending_thorn_original_geometry_missing')
+    for box in boxes:
+        if (box['type']!='BoxCollider'or not box['enabled']or not box['trigger']or not box['owner_bound']or
+                box['damage_kind']!='enemy_callback'or not box['under_part']or len(rows(box['vertices']))!=8):
+            raise ValueError('pending_thorn_original_part_box_binding')
+        points=np.array([[v[a]for a in('x','y','z')]for v in rows(box['vertices'])])
+        for node in chain:
+            position=np.array([node['position'][a]for a in('x','y','z')]);size=np.array([node['scale'][a]for a in('x','y','z')]);r=node['rotation']
+            if not np.isfinite([*position,*size,*r.values()]).all()or abs(r['x'])+abs(r['y'])>1e-8:
+                raise ValueError('pending_thorn_spatial_or_invalid_parent')
+            if node['part']:size=np.array([1.,float(f(length+f(5.))),1.])
+            if node['main']:position=np.array([0.,float(-length),0.])
+            if node['bottom']:position=np.array([0.,float(f(f(-1.5)-length)),0.])
+            a=math.radians(r['z']);co,si=math.cos(a),math.sin(a)
+            rotation=np.array([[co,-si,0.],[si,co,0.],[0.,0.,1.]])
+            points=(points*size)@rotation.T+position
+        vertices.extend(points*scale)
+    return np.array(vertices)
+
+
+def pending_thorn(entry,times,observation):
+    from arena_privileged_model import Hazard
+    try:
+        if observation['camera']['direction']!=1:raise ValueError('pending_thorn_run_direction')
+        template=observation.get('spawn_templates',{}).get('hooks',{}).get('EnemyBambooThorn',{})
+        if not template or template.get('missing'):raise ValueError('pending_thorn_original_prefab_missing')
+        vertices=pending_thorn_vertices(entry,template)
+        spawn=np.array([entry['block_start'][a]+entry['info']['_localPosition'][a]for a in('x','y')])
+        if not np.isfinite(spawn).all():raise ValueError('pending_thorn_native_parameter_domain')
+        radius=float(np.linalg.norm(vertices,axis=1).max());numeric=.0002+16*abs(float(np.spacing(np.float32(max(1.,abs(spawn).max(),radius)))))
+        return [Hazard(entry['id']+':turn',entry['id'],'EnemyBambooThorn',np.tile(spawn,(len(times),1)),
+            np.full((len(times),2),radius+numeric),np.ones(len(times),bool),
+            'Original EnemyBambooThorn.SetHookRadius quantized parents and collider; complete pre-birth swing',
+            approximate=True,geometry='sphere')],None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
 def pending_hook_phase(entry,times,observation,player,trajectory_states,context=None):
     """Union original birth/activation ticks and the native pendulum steps.
 
@@ -1898,7 +1961,8 @@ def pending_hook_phase(entry,times,observation,player,trajectory_states,context=
     the separately valid complete-turn bound instead of a guessed phase.
     """
     from arena_privileged_model import Hazard,rows,phase
-    fallback,reason=pending_hook(entry,times,observation)
+    is_thorn=entry['info']['_enemyType'].split(':')[0]=='EnemyBambooThorn'
+    fallback,reason=(pending_thorn if is_thorn else pending_hook)(entry,times,observation)
     if reason:return fallback,reason
     try:
         if getattr(player,'_observed_motor',None)is not player.initial:
@@ -1958,14 +2022,21 @@ def pending_hook_phase(entry,times,observation,player,trajectory_states,context=
         energy=f(f(speed*speed)/f(g+g));height=f(radius-f(radius*f(math.cos(float(theta0)))))
         omega0=f(-f(math.sqrt(max(0.,float(f(f(g+g)*f(energy-min(height,energy)))))))/radius)
         if not math.isfinite(omega0):return fallback,None
-        length=float(f(f(max(radius,f(1.76)))+f(-1.76)))
-        scale=np.array([info['_localScale'][a]for a in ('x','y','z')]);head=np.array([template['head_scale'][a]for a in ('x','y','z')])
-        if template['reverse_run_flip']:scale[0]=abs(scale[0])
-        vertices=[]
-        for box in rows(template['colliders']):
-            v=np.array([[p[a]for a in ('x','y','z')]for p in rows(box['vertices'])])*head
-            v[:,1]-=length;vertices.extend((v*scale)[:,:2])
-        vertices=np.array(vertices);lower=np.full((count+1,2),np.inf);upper=np.full_like(lower,-np.inf)
+        tilt_guard=0.
+        if is_thorn:
+            vertices=pending_thorn_vertices(entry,template)
+            tilt_guard=float(np.linalg.norm(vertices,axis=1).max())*math.radians(sum(abs(info['_localEulerAngles'][a])for a in('x','y')))
+            vertices=vertices[:,:2]
+        else:
+            length=float(f(f(max(radius,f(1.76)))+f(-1.76)))
+            scale=np.array([info['_localScale'][a]for a in ('x','y','z')]);head=np.array([template['head_scale'][a]for a in ('x','y','z')])
+            if template['reverse_run_flip']:scale[0]=abs(scale[0])
+            vertices=[]
+            for box in rows(template['colliders']):
+                v=np.array([[p[a]for a in ('x','y','z')]for p in rows(box['vertices'])])*head
+                v[:,1]-=length;vertices.extend((v*scale)[:,:2])
+            vertices=np.array(vertices)
+        lower=np.full((count+1,2),np.inf);upper=np.full_like(lower,-np.inf)
         active=np.zeros(count+1,bool);max_delta=0.;branches=0;dt=f(tick)
         for born in range(first,last+1):
             a=max(born,activate_first);b=min(count,max(born,activate_last))
@@ -1991,8 +2062,8 @@ def pending_hook_phase(entry,times,observation,player,trajectory_states,context=
         lo=np.minimum(lower[steps],lower[previous]);hi=np.maximum(upper[steps],upper[previous])
         lo=np.where(enabled[:,None],lo,spawn[:2]);hi=np.where(enabled[:,None],hi,spawn[:2])
         numeric=.0002+16*abs(float(np.spacing(np.float32(max(1.,abs(spawn).max())))))
-        padding=fallback[0].extents[0,0]*max_delta+numeric
-        result=[Hazard(entry['id']+':phase',entry['id'],'EnemyHook',(lo+hi)/2,(hi-lo)/2+padding,enabled,
+        padding=fallback[0].extents[0,0]*max_delta+numeric+tilt_guard
+        result=[Hazard(entry['id']+':phase',entry['id'],'EnemyBambooThorn'if is_thorn else'EnemyHook',(lo+hi)/2,(hi-lo)/2+padding,enabled,
             'Original EnemyHook reset and fixed-step swing; bounded role-distance birth and camera-cache activation ticks',
             approximate=True)]
         memo[key]=result
@@ -2185,8 +2256,8 @@ def pending_enemy_forecasts(observation,times,player,trajectory_states,context=N
         # A source queue starts checking at this horizontal threshold.
         # One original tick reserves either order of LevelManager/Ninja.
         reachable=float(high[:,0].max())+abs(player.speed)*player.tick>=spawn[0]-info['generateDistance']
-        if not reachable and kind not in PENDING_BLADE_NAMES|{'EnemyHook','EnemyGoldHook'}:continue
-        if kind in ('EnemyHook','EnemyGoldHook'):
+        if not reachable and kind not in PENDING_BLADE_NAMES|{'EnemyHook','EnemyGoldHook','EnemyBambooThorn'}:continue
+        if kind in ('EnemyHook','EnemyGoldHook','EnemyBambooThorn'):
             hs,reason=pending_hook_phase(entry,times,observation,player,trajectory_states,context)
             if hs is not None:result.extend(hs);continue
         elif kind=='EnemySuspendBalloon':
