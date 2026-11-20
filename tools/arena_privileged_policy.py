@@ -50,7 +50,7 @@ class InternalController:
                       (e['custom'].get('_pointToNinja') or e['custom'].get('_followNinjaY')) and
                       e['fields'].get('_currState','').split(':')[0].lower() in ('none','enterscreen')
                       for e in rows(observation['enemies'])) or any(
-                      e['type'] in ('EnemyStraightBack','EnemySmallSword','EnemyBullutFireRobot','EnemyBullutLaser') or
+                      e['type'] in ('EnemyStraightBack','EnemySmallSword','EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter') or
                       e['type']=='EnemySpider' and e['fields'].get('_enemyState')=='none: 9' or
                       e['type']=='EnemyRollingBase' and e['fields'].get('_enemyState','').rsplit(':',1)[-1].strip()=='0' or
                       e['type']=='EnemyRockTiger' and e['fields'].get('currState','').rsplit(':',1)[-1].strip() in ('1','2') or

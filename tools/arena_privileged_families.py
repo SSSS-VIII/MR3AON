@@ -4,6 +4,7 @@ Registration is a modelling claim, never an acceptance result. Every reducer
 requires its actual instance fields; unimplemented variants remain explicit.
 """
 import math
+from functools import lru_cache
 import numpy as np
 
 
@@ -43,6 +44,7 @@ FAMILIES = {
     'EnemyRotateElectricBall': 'native_rigid_rotating_electric_assembly',
     'EnemyBullutFireRobot': 'native_accelerating_camera_relative_fire_bullet',
     'EnemyBullutLaser': 'native_camera_relative_bullet_with_authored_growth_envelope',
+    'EnemyAlarmShooter': 'native_camera_relative_body_and_complete_pending_laser_queue',
 }
 
 
@@ -373,6 +375,188 @@ def camera_relative_bullet(enemy,times,observation,player,trajectory_states=None
                 'EnemyBullut.BulletMoveLogic; native accelerated camera-relative X/world Y'+
                     ('; original laser scale-curve envelope'if kind=='EnemyBullutLaser'else'; conservative FireRobot ground-recycle lifetime'),
                 np.ones(len(times),bool),geometry),None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
+def alarm_shooter_path(enemy,times,observation,player,trajectory_states=None,reference=None):
+    """Source MoveIn/Attack/Leave clocks and the complete pending shot list."""
+    from arena_privileged_model import phase,rows,xy
+    try:
+        f=enemy['fields'];binding=enemy['alarm_shooter'];bullets=rows(binding['bullets'])
+        if binding.get('truncated')or f['_bulletIndex']not in range(len(bullets)+1):
+            raise ValueError('alarm_shooter_complete_pending_bullets')
+        mode=phase(f['_state']);direction=f['_moveDirNum'];tick=player.tick
+        if mode not in ('movein','attack','leave')or direction not in (-1,1):
+            raise ValueError('alarm_shooter_native_phase_or_direction')
+        if not enemy['bullet_geometry']['parent_axes_identity']or abs(enemy['rotation_z'])>1e-5:
+            raise ValueError('alarm_shooter_original_planar_parent')
+        names=('_delayTime','_shootMoveSpeed','_shootMoveOutSpeed','_shootLeaveSpeed','_shootInteralTime',
+               '_shootTimer','_beforeShootTime','_afterShootTime')
+        if not all(math.isfinite(f[k])for k in names)or not all(math.isfinite(f[k][a])for k in
+                ('_localPos','_targetPos','_lastPosition','_secondLastPosition')for a in ('x','y','z')):
+            raise ValueError('alarm_shooter_native_parameter_domain')
+        age=observation['state']['time']-f['_lastFixedUpdateTime'];cf=observation['camera']['fields']
+        if not -.0002<=age<=tick+.0002 or abs(f['_lastFixedUpdateTime']-cf['_lastFixedUpdateTime'])>.0002:
+            raise ValueError('alarm_shooter_original_reference_clock')
+        cam,reason=reference if reference is not None else camera_x_bounds(observation,times,player,trajectory_states)
+        if cam is None:return None,reason
+        camera_low,camera_high=cam
+        age=np.clip(age,0.,tick);steps=np.floor((age+np.asarray(times)+1e-8)/tick).astype(int)
+        local=np.float32(f['_localPos']['x']);target=np.float32(f['_targetPos']['x'])
+        delay=np.float32(f['_delayTime']);before=np.float32(f['_beforeShootTime']);after=np.float32(f['_afterShootTime'])
+        timer=np.float32(f['_shootTimer']);index=f['_bulletIndex'];shots=[]
+        low=[xy(f['_lastPosition'])];high=[low[0].copy()];modes=[mode]
+        for k in range(1,int(steps[-1])+1):
+            dt=np.float32(tick);pose_local=None
+            if mode=='movein':
+                if delay>0:delay=np.float32(delay-dt)
+                else:
+                    local=np.float32(local-np.float32(np.float32(f['_shootMoveSpeed']*direction)*dt))
+                    if direction>0 and local<=target or direction<0 and local>=target:
+                        # Source snaps this tick's Transform to target X but
+                        # keeps the overshot _localPos for the Attack ticks.
+                        pose_local=target;mode='attack';timer=np.float32(0.);index=0
+            elif mode=='attack':
+                if before>0:before=np.float32(before-dt)
+                elif index<len(bullets):
+                    timer=np.float32(timer+dt)
+                    if timer>=f['_shootInteralTime']:
+                        # ShootBullet does not reset _shootTimer. Subsequent
+                        # entries therefore fire on consecutive source ticks.
+                        shots.append(dict(tick=k,index=index,parameter=bullets[index],local_x=float(local),
+                            y=float(f['_lastPosition']['y']),seconds=max(0.,k*tick-age)))
+                        index+=1
+                else:mode='leave'
+            elif after>0:after=np.float32(after-dt)
+            elif f['_shootLeaveSpeed']>0:
+                local=np.float32(local-np.float32(np.float32(f['_shootLeaveSpeed']*direction)*dt))
+            else:local=np.float32(local+np.float32(np.float32(f['_shootMoveOutSpeed']*direction)*dt))
+            if pose_local is None:pose_local=local
+            low.append(np.array([np.float32(min(camera_low[k-1],camera_low[k])+pose_local),f['_lastPosition']['y']]))
+            high.append(np.array([np.float32(max(camera_high[k-1],camera_high[k])+pose_local),f['_lastPosition']['y']]))
+            modes.append(mode)
+        previous=xy(f['_secondLastPosition']);physical=xy(f['_lastPosition'])
+        correction=xy(enemy['position'])-(previous+(physical-previous)*(age/tick))
+        alpha=np.clip((age+np.asarray(times)-steps*tick)/tick,0.,1.)[:,None]
+        lo=np.asarray([previous,*low[:-1]])[steps]*(1-alpha)+np.asarray(low)[steps]*alpha+correction
+        hi=np.asarray([previous,*high[:-1]])[steps]*(1-alpha)+np.asarray(high)[steps]*alpha+correction
+        numeric=8*float(np.max(np.abs(np.spacing(np.asarray([lo,hi],dtype=np.float32)))))+.0001
+        return dict(low=lo,high=hi,shots=shots,camera=cam,steps=steps,age=age,padding=numeric,modes=modes),None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
+def planar_arc_cloud(points,lower,upper):
+    """Exact coordinate extrema of each time-indexed planar point cloud."""
+    x,y=points[...,0],points[...,1];radius=np.hypot(x,y);theta=np.arctan2(y,x)
+    a=np.stack((x*math.cos(lower)-y*math.sin(lower),x*math.sin(lower)+y*math.cos(lower)),axis=-1)
+    b=np.stack((x*math.cos(upper)-y*math.sin(upper),x*math.sin(upper)+y*math.cos(upper)),axis=-1)
+    lo=np.minimum(a,b);hi=np.maximum(a,b)
+    for angle,axis,sign in ((0.,0,1),(math.pi/2,1,1),(math.pi,0,-1),(3*math.pi/2,1,-1)):
+        inside=np.ceil((lower+theta-angle)/(2*math.pi))<=np.floor((upper+theta-angle)/(2*math.pi))
+        target=hi if sign>0 else lo
+        target[...,axis]=np.where(inside,sign*radius,target[...,axis])
+    return lo.min(axis=1),hi.max(axis=1)
+
+
+@lru_cache(maxsize=1)
+def alarm_laser_template():
+    """Original 9c9c015e... prefab, in bullet-root coordinates.
+
+    Box -1350697636545865310, scale 4219237319812200197 and position
+    -4147049911155230957. Parent/box rotations are identity. Scale and
+    translation share a Transform; use the full independent curve envelope.
+    These are numeric collision parameters, not rendered reference boxes.
+    """
+    keys=[dict(time=0.,value=0.,in_tangent=0.,out_tangent=1.,weighted_mode='None: 0'),
+          dict(time=.7003629803657532,value=1.1066869497299194,
+               in_tangent=.008690797723829746,out_tangent=.008690797723829746,weighted_mode='None: 0'),
+          dict(time=1.,value=1.,in_tangent=-.659838080406189,out_tangent=-.659838080406189,weighted_mode='None: 0')]
+    s0,s1=np.array(curve_range(keys))*1.5
+    center=np.array([.004333376884460449,-.014296114444732666])
+    size=np.array([1.1370692253112793,.19292882084846497])
+    corners=center+np.array([[-1,-1],[1,-1],[1,1],[-1,1]])*size/2
+    points=np.concatenate([corners*np.array([scale,1.])+np.array([translation,0.])
+                           for scale in (s0,s1)for translation in (0.,.5)])
+    points.setflags(write=False)
+    return points
+
+
+def alarm_shooter(enemy,times,observation,player,trajectory_states=None,reference=None):
+    """Original moving body and all future bullets, before they exist."""
+    from arena_privileged_model import rows,xy,Hazard
+    try:
+        path,reason=alarm_shooter_path(enemy,times,observation,player,trajectory_states,reference)
+        if path is None:return None,reason
+        hurt=[c for c in rows(enemy['colliders'])if c.get('damage_kind')]
+        if (len(hurt)!=1 or hurt[0]['type']!='SphereCollider'or hurt[0]['name']!='Device'or
+                hurt[0].get('damage_kind')!='enemy_callback'or hurt[0].get('damage_owner')!=enemy['id']or
+                not hurt[0]['active']or not hurt[0]['enabled']):
+            raise ValueError('alarm_shooter_original_device_sphere')
+        c=hurt[0];chain=next((v for v in rows(enemy['bullet_geometry']['chains'])if v['id']==c['id']),{})
+        whitelist={'UnityEngine.Transform','UnityEngine.SpriteRenderer','UnityEngine.SphereCollider',
+                   'EnemyBaseCollider','EnemyAlarmShooter'}
+        if (not chain.get('complete')or not chain.get('includes_native_components')or
+                any(name not in whitelist for node in rows(chain['nodes'])for name in rows(node['scripts']))):
+            raise ValueError('alarm_shooter_unverified_damage_transform_chain')
+        if trajectory_states is None:
+            _,trajectory_states,valid=player.trajectory(times)
+            if not valid:raise ValueError('alarm_shooter_unsupported_actor_path')
+        tick=player.tick;steps=path['steps'];camera_low,camera_high=path['camera'];generated=[]
+        for shot in path['shots']:
+            parameter=shot['parameter'];born=shot['tick'];query=np.array([shot['seconds']])
+            if (not all(math.isfinite(parameter[k])for k in ('_bullutSpeed','_bullutSpeedAcc','_bullutTargetY','_scale'))or
+                    parameter['_pointToNinja']not in (True,False)):
+                raise ValueError('alarm_shooter_native_bullet_parameter_domain')
+            spawn_low=min(camera_low[born-1],camera_low[born])+shot['local_x']
+            spawn_high=max(camera_high[born-1],camera_high[born])+shot['local_x']
+            if parameter['_pointToNinja']:
+                actual=observation['role']['fields']['_lastRoleObjPos']
+                a,b=role_reference_rectangles(times,trajectory_states,query,actual)
+                lower=a[0]-np.array([spawn_high,shot['y']]);upper=b[0]-np.array([spawn_low,shot['y']])
+            else:
+                a,b=role_reference_bounds(times,trajectory_states,query,observation['state']['position'])
+                lower=np.array([a[0]-spawn_high,parameter['_bullutTargetY']])
+                upper=np.array([b[0]-spawn_low,parameter['_bullutTargetY']])
+            if np.all(lower<=0)and np.all(upper>=0):angle_lo,angle_hi=-math.pi,math.pi
+            else:
+                corners=np.array([[x,y]for x in (lower[0],upper[0])for y in (lower[1],upper[1])])
+                angles=np.arctan2(corners[:,1],corners[:,0]);middle=math.atan2(sum(lower[1:]+upper[1:]),lower[0]+upper[0])
+                angles=middle+(angles-middle+math.pi)%(2*math.pi)-math.pi
+                angle_lo,angle_hi=float(min(angles)),float(max(angles))
+            count=int(steps[-1])-born+2;speed=np.float32(parameter['_bullutSpeed']);acc=np.float32(parameter['_bullutSpeedAcc'])
+            distances=[0.];distance=np.float32(0.)
+            for _ in range(max(0,count)):
+                speed=np.float32(speed+np.float32(acc*np.float32(tick)))
+                distance=np.float32(distance+np.float32(np.float32(tick)*speed));distances.append(float(distance))
+            flight=np.maximum(0,steps-born)
+            samples=np.array(distances)[np.clip(flight[:,None]+np.array([-1,0,1]),0,len(distances)-1)]
+            low_distance=samples.min(axis=1);high_distance=samples.max(axis=1)
+            scale=parameter['_scale']
+            if np.float32(np.float32(3.)*np.float32(np.float32(scale)*np.float32(scale)))<np.float32(9.999999439624929e-11):scale=1.
+            # UpdateRotation's default forward is LEFT; negative initial speed
+            # adds another half turn. Acceleration does not re-aim the shot.
+            orientation=1. if parameter['_bullutSpeed']<0 else -1.
+            template=alarm_laser_template()*scale*orientation
+            points=np.tile(template[None,:,:],(len(times),2,1))
+            points[:,:len(template),0]+=low_distance[:,None]
+            points[:,len(template):,0]+=high_distance[:,None]
+            lo,hi=planar_arc_cloud(points,angle_lo,angle_hi)
+            n=np.minimum(steps,len(camera_low)-1);previous=np.maximum(0,n-1)
+            lo+=np.column_stack((np.minimum(camera_low[n],camera_low[previous])+shot['local_x'],np.full(len(times),shot['y'])))
+            hi+=np.column_stack((np.maximum(camera_high[n],camera_high[previous])+shot['local_x'],np.full(len(times),shot['y'])))
+            pad=path['padding']*2+.0001+max(1,count)*np.finfo(np.float32).eps*max(1.,max(abs(v)for v in distances))*4
+            active=np.asarray(times)>=max(0.,shot['seconds']-tick)
+            generated.append(Hazard('spawn:'+str(enemy['id'])+':'+str(shot['index']),enemy['id'],'EnemyBullutLaser',
+                (lo+hi)/2,(hi-lo)/2+pad,active,
+                'EnemyAlarmShooter.ShootBullet/EnemyBullut.ResetEnemyInfo; pending native shot and original 9c9c015e prefab envelope',
+                True,'aabb'))
+        offset=xy(c['center'])-xy(enemy['position'])
+        geometry={c['id']:((path['low']+path['high'])/2+offset,
+                           (path['high']-path['low'])/2+xy(c['extents'])+path['padding'])}
+        zero=np.zeros((len(times),2))
+        return (zero,np.zeros(len(times)),
+                'EnemyAlarmShooter.FixedUpdateMovement; original camera-relative MoveIn/Attack/Leave and complete future shot queue',
+                np.ones(len(times),bool),geometry,dict(generated_hazards=generated,shots=path['shots'])),None
     except (KeyError,ValueError)as error:return None,str(error)
 
 
@@ -1261,9 +1445,12 @@ def forecast(enemy, times, observation, player, trajectory_states=None,context=N
         return connected_electric(enemy,times,observation,player)
     if kind=='EnemyRotateElectricBall':
         return rotating_electric(enemy,times,observation,player)
-    if kind in ('EnemyBullutFireRobot','EnemyBullutLaser'):
+    if kind in ('EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter'):
         if context is not None and 'camera_x'not in context:
             context['camera_x']=camera_x_bounds(observation,times,player,trajectory_states)
+        if kind=='EnemyAlarmShooter':
+            return alarm_shooter(enemy,times,observation,player,trajectory_states,
+                                 context.get('camera_x')if context is not None else None)
         return camera_relative_bullet(enemy,times,observation,player,trajectory_states,
                                       context.get('camera_x')if context is not None else None)
     if kind=='EnemyRockTiger':
