@@ -2000,6 +2000,100 @@ def pending_hook_phase(entry,times,observation,player,trajectory_states,context=
     except (KeyError,ValueError,IndexError):return fallback,None
 
 
+PENDING_CURVE_NAMES={'EnemyCurveBat','EnemyCurveCrow','EnemyCurveFireFairy'}
+
+
+def pending_curve(entry,times,observation,player):
+    """Original no-fruit curve root; union every possible future birth tick.
+
+    All authored render spheres are enclosed together, including currently
+    inactive render variants. Sprite-only tweens do not change their geometry.
+    Birth/activation may wait arbitrarily: X encloses every elapsed move time
+    from zero, Y uses the original reset reference and complete sine range.
+    """
+    from arena_privileged_model import Hazard,rows
+    try:
+        info=entry['info'];custom=entry['custom'];kind=info['_enemyType'].split(':')[0]
+        template=observation.get('spawn_templates',{}).get('curves',{}).get(kind,{})
+        if not template or template.get('missing'):raise ValueError('pending_curve_original_prefab_missing')
+        if (kind not in PENDING_CURVE_NAMES or template.get('source_name')!=kind or
+                template.get('type')!='EnemyCurveBat'or entry.get('custom_type')!='EnemyCurveBatDataStruct'or
+                entry.get('custom_projection',{}).get('complete')is not True or
+                entry['source']not in ('native_enemyList','resolved_uninstantiated_block')or
+                info.get('baseID')!=0 or info.get('createPlayerUID')or observation['camera']['direction']!=1):
+            raise ValueError('pending_curve_source_binding')
+        keys={'_render','_renderType','_speedX','_angularSpeed','_amplitude','_initalPhaseRadian','_hangOnFruit',
+              '_randomRangeY','_minRaduisScale','_maxRaduisScale','_frequency'}
+        if set(custom)!=keys or custom['_hangOnFruit']!=0 or custom['_randomRangeY']!=0:
+            raise ValueError('pending_curve_random_or_fruit_variant')
+        if (template.get('native_initialization')is not True or rows(template.get('unknown_hooks'))or
+                template.get('kinematic')is not True or template.get('gravity')is not False or
+                template.get('callbacks_clear')is not True or template.get('animated_tree',True)or
+                not set(rows(template.get('component_types')))<= {'EnemyCurveBat','EnemyBaseCollider','uTools.uTweenSprite'}or
+                'EnemyCurveBat'not in rows(template.get('component_types'))):
+            raise ValueError('pending_curve_unverified_hierarchy')
+        spawn=np.array([entry['block_start'][a]+info['_localPosition'][a]for a in ('x','y','z')])
+        scale=np.array([info['_localScale'][a]for a in ('x','y','z')])
+        vx,omega,amplitude,initial=(custom[k]for k in ('_speedX','_angularSpeed','_amplitude','_initalPhaseRadian'))
+        if (not np.isfinite([*spawn,*scale,vx,omega,amplitude,initial,player.tick]).all()or
+                min(abs(scale))<=0 or player.tick<=0):raise ValueError('pending_curve_native_parameter_domain')
+        spheres=rows(template['colliders']);radius=0.
+        if not spheres:raise ValueError('pending_curve_damage_geometry_missing')
+        for c in spheres:
+            if (c['type']!='SphereCollider'or not c['trigger']or not c['enabled']or not c['under_root']or
+                    not c['owner_bound']or c['damage_kind']!='enemy_callback'):
+                raise ValueError('pending_curve_original_sphere_binding')
+            center=np.array([c['center'][a]for a in ('x','y','z')])
+            if not np.isfinite([*center,c['radius']]).all()or c['radius']<=0:
+                raise ValueError('pending_curve_native_parameter_domain')
+            radius=max(radius,float(np.linalg.norm(center))+c['radius'])
+        radius*=float(max(abs(scale)))
+        # Adjacent physical/render updates and float32 accumulation are kept
+        # outside the root range, rather than guessing a precise spawn frame.
+        elapsed=np.asarray(times)+2*player.tick
+        movement=vx*elapsed
+        centers=np.tile(spawn[:2],(len(times),1));centers[:,0]+=movement/2
+        extents=np.zeros((len(times),2));extents[:,0]=abs(movement)/2
+        if omega!=0:
+            centers[:,1]-=amplitude*math.sin(initial);extents[:,1]=abs(amplitude)
+        numeric=.0002+32*abs(float(np.spacing(np.float32(max(1.,abs(spawn).max(),abs(movement).max(),abs(amplitude),radius)))))
+        extents+=radius+numeric
+        updates=np.ceil(elapsed/player.tick)+2
+        magnitude=np.maximum(1.,abs(spawn[0])+abs(movement))
+        extents[:,0]+=(updates+2)*np.abs(np.spacing(magnitude.astype(np.float32))).astype(float)
+        return [Hazard(entry['id']+':curve',entry['id'],'EnemyCurveBat',centers,extents,np.ones(len(times),bool),
+            'Original EnemyCurve.ResetEnemyInfo/UpdateCureMove; all render spheres and possible birth/activation times',
+            approximate=True)],None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
+def curve_counterfactual(enemy,times,observation,player):
+    """An earlier hypothetical key must not borrow a later nominal birth clock."""
+    from arena_privileged_model import rows,phase
+    history=hook_reference_history(times,observation,player)
+    if history is None:return None,False
+    prior=history['model'];origin=prior.observation
+    live=[e for e in rows(origin['enemies'])if e['id']==enemy['id']and e['type']==enemy['type']and
+        e.get('info_identity')is not None and e['info_identity']==enemy.get('info_identity')and
+        e['fields'].get('m_index')==enemy['fields'].get('m_index')and e['custom']==enemy['custom']and
+        not e['fields'].get('_dead')and not e['fields'].get('_isRecycled')]
+    if len(live)==1 and phase(live[0]['fields']['_currState'])=='flytoninja'and phase(enemy['fields']['_currState'])=='flytoninja':
+        return None,True
+    pending=[e for e in rows(origin.get('pending_enemies'))if e['info_identity']==enemy['info_identity']and
+        {k:v for k,v in e['info'].items()if k!='_level'}=={k:v for k,v in enemy['info'].items()if k!='_level'}and e['custom']==enemy['custom']]
+    if len(pending)!=1:return None,False
+    hs,reason=pending_curve(pending[0],history['times'],origin,prior)
+    if reason:return None,False
+    indices=history['indices'];lo=np.full((len(times),2),np.inf);hi=-lo.copy();active=np.zeros(len(times),bool)
+    for h in hs:
+        lo=np.minimum(lo,np.where(h.active[indices,None],h.centers[indices]-h.extents[indices],np.inf))
+        hi=np.maximum(hi,np.where(h.active[indices,None],h.centers[indices]+h.extents[indices],-np.inf))
+        active|=h.active[indices]
+    pivot=np.array([enemy['position'][a]for a in('x','y')]);lo=np.where(active[:,None],lo,pivot);hi=np.where(active[:,None],hi,pivot)
+    shapes={c['id']:((lo+hi)/2,(hi-lo)/2)for c in rows(enemy['colliders'])if c.get('damage_kind')}
+    return (active,shapes),False
+
+
 def pending_enemy_forecasts(observation,times,player,trajectory_states,context=None):
     """Never treat an unmodelled imminent native spawn as an empty lane."""
     from arena_privileged_model import rows,xy
@@ -2019,6 +2113,9 @@ def pending_enemy_forecasts(observation,times,player,trajectory_states,context=N
         if not reachable and kind not in PENDING_BLADE_NAMES|{'EnemyHook','EnemyGoldHook'}:continue
         if kind in ('EnemyHook','EnemyGoldHook'):
             hs,reason=pending_hook_phase(entry,times,observation,player,trajectory_states,context)
+            if hs is not None:result.extend(hs);continue
+        elif kind in PENDING_CURVE_NAMES:
+            hs,reason=pending_curve(entry,times,observation,player)
             if hs is not None:result.extend(hs);continue
         elif kind=='EnemySmallSword':
             hs,reason=pending_small_sword(entry,times,observation,player,trajectory_states,context)
@@ -2933,6 +3030,13 @@ def forecast(enemy, times, observation, player, trajectory_states=None,context=N
         angles = np.deg2rad(c['_speedRotate'])*times
         return (zero, angles, 'EnemyStraightFly.StateUpdate + EnemyDart.RotateUpdate'), None
     if kind in ('EnemyCurveBat', 'EnemyGhostFire','EnemyFlyFairy'):
+        if kind=='EnemyCurveBat'and getattr(player,'_observed_motor',None)is not player.initial:
+            historical,independent=curve_counterfactual(enemy,times,observation,player)
+            if historical is not None:
+                active,shapes=historical
+                return (zero,angles,'EnemyCurve birth propagated from actual pre-key world',active,None,
+                    dict(historical_shapes=shapes,angular_padding=0.)),None
+            if not independent:return None,'curve_past_birth_activation_history_unbound'
         if kind=='EnemyFlyFairy' and f['_needMove']:
             return None,'fairy_accelerated_entry_motion'
         mode = phase(f['_currState'])

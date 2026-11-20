@@ -1027,6 +1027,58 @@ function E.privileged_state()
         end
         return out
     end
+    local function curveSpawnTemplate(name)
+        local all=U.Resources.FindObjectsOfTypeAll(typeof(CS.EnemyCurveBat));local original
+        for i=0,all.Length-1 do local o=all[i]
+            if o.name==name and not o.gameObject.activeInHierarchy then
+                assert(not original,'Ambiguous original curve prefab');original=o
+            end
+        end
+        if not original then return {missing=true}end
+        local root=original.transform;local body=original:GetComponent(typeof(U.Rigidbody))
+        local result={id=original:GetInstanceID(),type=original:GetType().Name,source_name=name,
+            kinematic=not body or body.isKinematic,gravity=body and body.useGravity or false,
+            callbacks_clear=true,native_initialization=true,unknown_hooks={},component_types={},colliders={},
+            animated_tree=original:GetComponentsInChildren(typeof(U.Animator),true).Length>0 or
+                original:GetComponentsInChildren(typeof(U.Animation),true).Length>0}
+        for _,name in ipairs({'conditionActionEvent','normalActionEvent','collisionActionEvent',
+                'collisionExitActionEvent','btAnimatorEvent','conditionParamActionEvent','syncComponent'})do
+            if field(original,name)~=nil then result.callbacks_clear=false end
+        end
+        local graphs=field(original,'allGraphOwners')
+        if graphs and graphs.Count>0 then result.callbacks_clear=false end
+        local scripts=original:GetComponentsInChildren(typeof(U.MonoBehaviour),true)
+        for i=0,scripts.Length-1 do result.component_types[#result.component_types+1]=
+            scripts[i]and scripts[i]:GetType().FullName or 'missing_component'end
+        for _,entry in ipairs({{typeof(CS.EnemyCurveBat),'ResetEnemyInfo'},
+                {typeof(CS.EnemyCurveBat),'ProcessOnTriggerEnter'},
+                {typeof(CS.EnemyCurve),'SetRenderType'},{typeof(CS.EnemyCurve),'PlayFixedAnimation'},
+                {typeof(CS.EnemyCurve),'ResetEnemyInfo'},{typeof(CS.EnemyCurve),'FixedUpdateMovement'},
+                {typeof(CS.EnemyCurve),'StateUpdate'},{typeof(CS.EnemyCurve),'UpdateCureMove'},
+                {typeof(CS.EnemyBase),'SetRenderType'},{typeof(CS.EnemyBase),'ResetEnemyInfo'},
+                {typeof(CS.EnemyBase),'FixedUpdateMovement'},{typeof(CS.EnemyBase),'PlayFixedAnimation'},
+                {typeof(CS.EnemyBase),'ProcessOnTriggerEnter'}})do
+            local hook=entry[1]:GetField('__Hotfix0_'..entry[2],staticFlags)
+            if not hook or hook:GetValue(nil)~=nil then
+                result.native_initialization=false;result.unknown_hooks[#result.unknown_hooks+1]=entry[1].Name..'.'..entry[2]
+            end
+        end
+        local cs=original:GetComponentsInChildren(typeof(U.Collider),true)
+        for i=0,cs.Length-1 do local c=cs[i];local info=shape(c)
+            local row={type=c:GetType().Name,enabled=c.enabled,trigger=c.isTrigger,
+                damage_kind=info.damage_kind,owner_bound=info.damage_owner==original:GetInstanceID()}
+            if row.type=='SphereCollider'then
+                row.center=vector(root:InverseTransformPoint(c.transform:TransformPoint(c.center)))
+                local stretch=1;local t=c.transform
+                while t and t~=root do
+                    local v=t.localScale;stretch=stretch*math.max(math.abs(v.x),math.abs(v.y),math.abs(v.z));t=t.parent
+                end
+                row.radius=c.radius*stretch;row.under_root=t==root
+            end
+            result.colliders[#result.colliders+1]=row
+        end
+        return result
+    end
     local function hookSpawnTemplate(name)
         local all=U.Resources.FindObjectsOfTypeAll(typeof(CS.EnemyHook));local original
         for i=0,all.Length-1 do local o=all[i]
@@ -1161,6 +1213,11 @@ function E.privileged_state()
                 out.spawn_templates.hooks=out.spawn_templates.hooks or{}
                 local name=kind:match('^(.-): ')
                 if not out.spawn_templates.hooks[name]then out.spawn_templates.hooks[name]=hookSpawnTemplate(name)end
+            end
+            if kind=='EnemyCurveBat: 204'or kind=='EnemyCurveCrow: 224'or kind=='EnemyCurveFireFairy: 229'then
+                out.spawn_templates.curves=out.spawn_templates.curves or{}
+                local name=kind:match('^(.-): ')
+                if not out.spawn_templates.curves[name]then out.spawn_templates.curves[name]=curveSpawnTemplate(name)end
             end
             if kind=='EnemySmallSword: 250'and not out.spawn_templates.small_sword then
                 out.spawn_templates.small_sword=swordSpawnTemplate()
