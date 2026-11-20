@@ -12,6 +12,8 @@ from arena_privileged_model import PlayerModel,phase
 
 CASES=json.loads((Path(__file__).parent/'fixtures/arena-privileged-native-motor-v2.json').read_text())
 CASES.append(json.loads((Path(__file__).parent/'fixtures/arena-privileged-rope-up-settle.json').read_text()))
+CASES.append(json.loads((Path(__file__).parent/'fixtures/arena-privileged-platform-under.json').read_text()))
+CASES.append(json.loads((Path(__file__).parent/'fixtures/arena-privileged-ground-lookup.json').read_text()))
 
 
 @pytest.mark.parametrize('case',CASES,ids=lambda c:c['name'])
@@ -50,3 +52,23 @@ def test_resampling_does_not_move_the_original_jump_apex_or_landing():
     dense,ds,dv=model.trajectory(np.linspace(0.,dt,241),((0.,'jump'),))
     assert cv and dv and cs[-1].mode==ds[-1].mode=='runonground'
     assert np.linalg.norm(coarse[-1]-dense[-1])<1e-8
+
+
+def test_native_air_ground_landing_from_above_retains_original_actor_motion():
+    # This independent calibration includes real Blade damage. It certifies
+    # the actor reducer only, never a route or a safe collision window.
+    case=json.loads((Path(__file__).parent/'fixtures/arena-privileged-platform-above.json').read_text())
+    before=case['before'];model=PlayerModel(before)
+    assert before['state']['health']==5000
+    assert any(t['state']['health']<5000 for t in case['targets'])
+    assert any(any(p['is_current']for p in t['platforms'])and
+               phase(t['state']['physics'])=='runonground'for t in case['targets'])
+    for target in case['targets']:
+        assert not target['god']and not target['mounted']
+        elapsed=target['state']['time']-before['state']['time']
+        _,states,valid=model.trajectory(np.array([0.,elapsed]))
+        actual=target['state']['position'];motor=states[-1]
+        assert valid and motor.mode==phase(target['state']['physics'])
+        assert np.hypot(motor.x-actual['x'],motor.y-actual['y'])<case['tolerance_m']
+        assert abs(motor.vy-target['velocity']['y'])<.0001
+        assert abs(motor.vx-target['velocity']['x'])<.0001

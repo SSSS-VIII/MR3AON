@@ -59,6 +59,7 @@ class Surface:
     rope: bool
     vx: float = 0.
     vy: float = 0.
+    platform: bool = False
 
     def height(self, x, t=0.):
         return self.y + self.vy*t + (x-self.left-self.vx*t)*self.slope
@@ -88,7 +89,7 @@ def surfaces(observation):
     for row in rows(observation['platforms']):
         d = row['info']
         result.append(Surface(row['id'], d['_leftX'], d['_rightX'], d['_topY'], 0., False,
-                              d.get('_speedX', 0.), d.get('_speedY', 0.)))
+                              d.get('_speedX', 0.), d.get('_speedY', 0.),platform=True))
     return result
 
 
@@ -608,6 +609,7 @@ class PlayerModel:
                                 motor.lead_vy=float(np.float32(np.float32(motor.lead_vy)+np.float32(g*self.tick)))
                                 motor.physical_y=float(np.float32(np.float32(motor.physical_y)+np.float32(motor.lead_vy*self.tick)))
                             else:
+                                was_descending=motor.vy<=0
                                 number=2 if motor.used==2 else 1
                                 g=self.data[f'_upGravity{number}' if motor.vy>0 else f'_downGravity{number}']*3.5
                                 if motor.mode=='fallfromrun':g=0. if natural_departure else self.data['_downGravity1']*3.5
@@ -616,8 +618,20 @@ class PlayerModel:
                                 if motor.vy<=0:
                                     motor.mode='fall2' if motor.used==2 else 'fall' if motor.used else 'fallfromrun'
                                     cx=motor.physical_x+motor.offset_render
-                                    contacts=[a for a in self.surfaces if a.contains(cx,t) and
-                                        motor.previous_y<=a.height(motor.previous_x+motor.offset_render,t)+self.foot]
+                                    # The ground lookup at function entry uses the
+                                    # pre-step point. A new floor reached by the
+                                    # integrated X cannot land the role one tick
+                                    # before the original ground reference.
+                                    contacts=[a for a in self.surfaces if a.contains(motor.previous_x+motor.offset_render,t) and
+                                        # LevelManager.GetGroundY excludes an
+                                        # AirGround whose top is above the
+                                        # actor's pre-step root Y. Ordinary
+                                        # terrain uses a different lookup.
+                                        (not a.platform or motor.previous_y>=a.height(motor.previous_x+motor.offset_render,t)) and
+                                        motor.previous_y<=a.height(motor.previous_x+motor.offset_render,t)+self.foot] if was_descending else []
+                                    # The jump reducer only changes to fall on
+                                    # its first descending tick; the original
+                                    # fall reducer lands on the following tick.
                                     if contacts:
                                         a=max(contacts,key=lambda a:a.height(cx,t))
                                         if not a.rope:
