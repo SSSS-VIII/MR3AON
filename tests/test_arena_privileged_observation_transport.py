@@ -9,7 +9,7 @@ import pytest
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools/arena_checkpoint_lab'))
-from privileged_search import observe
+from privileged_search import observe,compare_observation_transport
 
 
 def lua_value(v):
@@ -85,6 +85,8 @@ def test_native_numbers_and_all_dense_records_survive_complete_or_packed_reads(t
             assert gate.observation_transport['mode']=='packed_pages'
             assert gate.calls<copies//2
         assert gate.call('exec',code='return MR3A.privilegedCached==nil and MR3A.privilegedSize==nil')
+        comparison=compare_observation_transport(gate,result)
+        assert comparison['equal']and comparison['packed']['calls']<comparison['reference']['calls']
     finally:gate.close()
 
 

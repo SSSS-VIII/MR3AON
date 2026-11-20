@@ -21,16 +21,24 @@ from timing_margin import verify
 
 OBSERVATION_PREPARE="""
 MR3A.privilegedCached=MR3A.privileged_state()
+local key_sizes={}
+local function text_size(value)
+    local s=tostring(value)
+    if s:find('[%c"/\\\\]')then return 2+6*#s end
+    return 2+#s
+end
 local function bound(v,seen,depth)
     local kind=type(v)
     if kind=='number'then return 32 end
     if kind=='boolean'then return 5 end
     if kind=='nil'then return 4 end
-    if kind~='table'then return #json.stringify(tostring(v))end
+    if kind~='table'then return text_size(v)end
     assert(depth<64 and not seen[v],'Cyclic or overly deep observation')
     seen[v]=true;local bytes=2
     for k,value in pairs(v)do
-        bytes=bytes+#json.stringify(tostring(k))+2+bound(value,seen,depth+1)
+        local size=key_sizes[k]
+        if not size then size=text_size(k);key_sizes[k]=size end
+        bytes=bytes+size+2+bound(value,seen,depth+1)
     end
     seen[v]=nil;return bytes
 end
@@ -85,6 +93,34 @@ def observe(gate):
     return observation
 
 
+def compare_observation_transport(gate,observation):
+    """One same-barrier read through the former paging path, without ticks."""
+    packed=deepcopy(gate.observation_transport);started=time.perf_counter();calls=1
+    sizes=dict(enemies=2,mechanism_items=1,supports=8,platforms=8,terrain=16)
+    keys='{'+','.join(f'{name}=true'for name in sizes)+'}'
+    result=gate.call('exec',code='MR3A.privilegedCached=MR3A.privileged_state();local c=MR3A.privilegedCached;'
+        f'local paged={keys};local h,n={{}},{{}};for k,v in pairs(c)do '
+        'if paged[k]then n[k]=#v else h[k]=v end end;return {head=h,counts=n}')
+    reference=result['head']
+    for name,size in sizes.items():
+        reference[name]=[]
+        for offset in range(0,result['counts'].get(name,0),size):
+            page=gate.call('exec',code=f'local out={{}};local e=MR3A.privilegedCached.{name};'
+                f'for i={offset+1},math.min({offset+size},#e)do out[#out+1]=e[i]end;return out')
+            calls+=1;reference[name].extend(page or [])
+    gate.call('exec',code='MR3A.privilegedCached=nil;return true');calls+=1
+    if reference!=observation or gate.view['state']!=observation['state']:
+        raise RuntimeError('Packed observation differs from original paused paging path')
+    reference_timing=dict(calls=calls,seconds=time.perf_counter()-started)
+    warm=observe(gate)
+    if warm!=observation:raise RuntimeError('Warm packed observation differs at original paused barrier')
+    return dict(equal=True,source='same_original_paused_barrier',packed=packed,
+                reference=reference_timing,warm_packed=deepcopy(gate.observation_transport))
+
+
+_transport_checked=False
+
+
 def healthy(observation, health):
     return (observation['state']['health']==health and observation['state']['timeScale']==0
             and not observation['role']['god'] and not observation['role']['mounted'])
@@ -129,12 +165,17 @@ def duration_allowance(observation,requested):
 
 def run(gate, output, *, max_decisions=4000,max_backtracks=80,wall_seconds=1800,
         progress=None,certify=True):
+    global _transport_checked
     output=Path(output);output.mkdir(parents=True,exist_ok=False)
     progress=progress or (lambda value:None)
     controller=InternalController(collect_alternatives=True)
     observation=observe(gate)
     if not healthy(observation,5000):
         raise ValueError('Expert search requires a healthy unmounted original entry')
+    calibration=None
+    if not _transport_checked and hasattr(gate,'observation_transport'):
+        calibration=compare_observation_transport(gate,observation);_transport_checked=True
+        progress(dict(phase='observation_transport_comparison',**calibration))
     allowance=duration_allowance(observation,wall_seconds)
     wall_seconds=allowance['effective_wall_seconds']
     board=gate.call('exec',code=BOARD)
@@ -150,6 +191,7 @@ def run(gate, output, *, max_decisions=4000,max_backtracks=80,wall_seconds=1800,
         uses_restart_replay=False,uses_vision=False,native_decision=True,
         status='running',nominal_complete=False,timing_robust=False,complete=False,
         decisions=0,backtracks=0,route=route)
+    if calibration is not None:report['observation_transport_comparison']=calibration
 
     def save():
         report.update(route=route,wall_seconds=time.monotonic()-started,
