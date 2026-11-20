@@ -414,6 +414,11 @@ local function ghostGeometry(obj)
         local hook=entry[1]:GetField('__Hotfix0_'..entry[2],staticFlags)
         if not hook or hook:GetValue(nil)~=nil then out.native_geometry=false;out.unknown_hooks[#out.unknown_hooks+1]=entry[1].Name..'.'..entry[2]end
     end
+    out.native_spawn=true
+    for _,name in ipairs({'CheckEnemy','CheckAddEnemyEntity','CreateEnemy'})do
+        local hook=typeof(CS.LevelBlockCollider):GetField('__Hotfix0_'..name,staticFlags)
+        if not hook or hook:GetValue(nil)~=nil then out.native_spawn=false end
+    end
     local scripts=obj:GetComponentsInChildren(typeof(U.MonoBehaviour),true)
     for i=0,scripts.Length-1 do out.component_types[#out.component_types+1]=scripts[i]and scripts[i]:GetType().FullName or 'missing_component'end
     local known={}
@@ -1279,6 +1284,11 @@ function E.privileged_state()
             if not hook or hook:GetValue(nil)~=nil then
                 result.native_initialization=false;result.unknown_hooks[#result.unknown_hooks+1]=entry[1].Name..'.'..entry[2]
             end
+        end
+        result.native_spawn=true
+        for _,name in ipairs({'CheckEnemy','CheckAddEnemyEntity','CreateEnemy'})do
+            local hook=typeof(CS.LevelBlockCollider):GetField('__Hotfix0_'..name,staticFlags)
+            if not hook or hook:GetValue(nil)~=nil then result.native_spawn=false end
         end
         local cs=original:GetComponentsInChildren(typeof(U.Collider),true)
         for i=0,cs.Length-1 do local c=cs[i];local info=shape(c)

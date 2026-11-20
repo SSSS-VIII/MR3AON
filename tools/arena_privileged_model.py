@@ -949,6 +949,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
         family_context['pending_hook_phases']=forecast_cache.setdefault('pending_hook_phases',{})
         family_context['ghost_radii']=forecast_cache.setdefault('ghost_radii',{})
         family_context['pending_curves']=forecast_cache.setdefault('pending_curves',{})
+        family_context['pending_curve_phases']=forecast_cache.setdefault('pending_curve_phases',{})
         if trajectory_states is not None and any(e['type']in ('EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter')
                                                  for e in rows(observation['enemies'])):
             from arena_privileged_families import camera_x_bounds

@@ -2288,6 +2288,121 @@ def pending_curve(entry,times,observation,player,context=None):
     return memo[key][2]
 
 
+def curve_pending_history(entry,times,observation,player):
+    from dataclasses import replace
+    from arena_privileged_model import rows
+    history=hook_reference_history(times,observation,player)
+    if history is None:return None
+    prior=history['model'];origin=prior.observation
+    matches=[e for e in rows(origin.get('pending_enemies'))if e['info_identity']==entry['info_identity']and
+        {k:v for k,v in e['info'].items()if k!='_level'}=={k:v for k,v in entry['info'].items()if k!='_level'}and
+        e['custom']==entry['custom']and e['block_start']==entry['block_start']]
+    if len(matches)!=1:return None
+    hs,reason=pending_curve_phase(matches[0],history['times'],origin,prior,history['motors'],{})
+    if reason:return None
+    ix=history['indices']
+    return [replace(h,centers=h.centers[ix],extents=h.extents[ix],active=h.active[ix],
+        source=h.source+'; propagated from the actual pre-key world')for h in hs]
+
+
+def pending_curve_phase(entry,times,observation,player,trajectory_states,context=None):
+    """Bound original birth and cached-camera activation before sine motion.
+
+    The full possible-lifetime enclosure stays the fallback. A narrow clock
+    requires the original live-parent queue, unmodified spawn path, ordinary
+    camera, and a bounded interval of native update-order uncertainty.
+    """
+    from arena_privileged_model import Hazard,rows
+    fallback,reason=pending_curve(entry,times,observation,player,context)
+    if reason:return fallback,reason
+    try:
+        c=entry['custom']
+        if c['_speedX']==0 and (c['_angularSpeed']==0 or c['_amplitude']==0):
+            # Birth/camera timing cannot change this root's position. Keep
+            # the independently valid static/height/geometry enclosure.
+            return fallback,None
+        if getattr(player,'_observed_motor',None)is not player.initial:
+            historical=curve_pending_history(entry,times,observation,player)
+            return (historical,None)if historical is not None else(fallback,None)
+        info=entry['info'];c=entry['custom'];kind=info['_enemyType'].split(':')[0]
+        template=observation['spawn_templates']['curves'][kind]
+        if (entry['source']!='native_enemyList'or entry['vertical_gate']or template.get('native_spawn')is not True or
+                not math.isfinite(info['generateDistance'])or info['generateDistance']<0 or not player.native_samples or
+                player.initial.mode in ('popup','popfall')or any(m.mode in ('popup','popfall')for m in trajectory_states)):
+            return fallback,None
+        tick=player.tick
+        if abs(float(np.spacing(np.float32(observation['state']['time']))))>tick/8:return fallback,None
+        age=observation['state']['time']-observation['role']['fields']['_lastFixedUpdateTime']
+        if not -.0002<=age<=tick+.0002:return fallback,None
+        age=float(np.clip(age,0.,tick));count=int(math.floor((age+times[-1]+1e-8)/tick))+2
+        query=np.maximum(0.,np.arange(count+1)*tick-age)
+        low,high=role_reference_rectangles(times,trajectory_states,query,observation['role']['fields']['_lastRoleObjPos'])
+        f=np.float32;spawn=np.array([f(f(entry['block_start'][a])+f(info['_localPosition'][a]))for a in ('x','y','z')])
+        threshold=spawn[0]-info['generateDistance'];possible=np.flatnonzero(high[:,0]>=threshold)
+        if not len(possible):return [],None
+        certain=np.flatnonzero(low[:,0]>=threshold)
+        born_first=max(0,int(possible[0])-1);born_last=min(count,int(certain[0])+1 if len(certain)else count)
+        if born_last-born_first>8:return fallback,None
+        reference=context.get('camera_x')if context is not None else None
+        if reference is None:
+            reference=camera_x_bounds(observation,times,player,trajectory_states)
+            if context is not None:context['camera_x']=reference
+        camera,missing=reference
+        if missing or np.any(np.diff(camera[0])<-.00001):return fallback,None
+        camera_age=observation['state']['time']-observation['camera']['fields']['_lastFixedUpdateTime']
+        camera_times=np.maximum(0.,np.arange(len(camera[0]))*tick-camera_age)
+        lower=[];upper=[]
+        for t in query:
+            a=max(0,int(np.searchsorted(camera_times,max(0.,t-tick-1/60),side='right'))-1)
+            b=min(len(camera_times)-1,int(np.searchsorted(camera_times,t+tick,side='left')))
+            lower.append(min(camera[0][a:b+1]));upper.append(max(camera[1][a:b+1]))
+        possible=np.flatnonzero(np.asarray(upper)+12>spawn[0]);certain=np.flatnonzero(np.asarray(lower)+12>spawn[0])
+        first=int(possible[0])if len(possible)else count+1
+        last=int(certain[0])if len(certain)else count+1
+        if last-first>8:return fallback,None
+        activation_first=max(born_first,first);activation_last=max(born_last,last)
+        memo=context.setdefault('pending_curve_phases',{})if context is not None else{}
+        key=(id(entry),np.asarray(times).tobytes(),tick,age,born_first,born_last,activation_first,activation_last)
+        if key in memo:return memo[key],None
+        radius=0.
+        if kind=='EnemyGhostFire':
+            radius,why=cached_ghost_radius(template,info['_localScale'],context)
+            if why:return fallback,None
+        else:
+            for box in rows(template['colliders']):
+                radius=max(radius,float(np.linalg.norm([box['center'][a]for a in ('x','y','z')]))+box['radius'])
+            radius*=max(abs(info['_localScale'][a])for a in ('x','y','z'))
+        vx=f(c['_speedX']);omega=f(c['_angularSpeed']);amplitude=f(c['_amplitude']);radian=f(c['_initalPhaseRadian'])
+        reference_y=f(spawn[1]-f(amplitude*f(math.sin(float(radian)))))
+        positions=[spawn[:2].astype(float)];x=spawn[0];dt=f(tick)
+        for n in range(count+1):
+            radian=f(radian+f(omega*dt));x=f(x+f(vx*dt));y=f(reference_y+f(amplitude*math.sin(float(radian))))
+            positions.append(np.array([x,y],float))
+        positions=np.array(positions)
+        activations=np.arange(activation_first,activation_last+1)
+        steps=np.arange(count+1)[:,None]
+        k=np.maximum(0,steps-activations[None,:]);points=positions[k]
+        lo=points.min(axis=1);hi=points.max(axis=1)
+        random_y=c['_rangeRandomY'if kind=='EnemyGhostFire'else'_randomRangeY'];lo[:,1]-=random_y;hi[:,1]+=random_y
+        indices=np.floor((age+np.asarray(times)+1e-8)/tick).astype(int)
+        # Original render interpolation consumes adjacent physical samples.
+        # Include one update on either side, not a real-valued fitted sine.
+        adjacent=np.stack((np.maximum(0,indices-1),indices,np.minimum(count,indices+1)),axis=1)
+        lower=lo[adjacent].min(axis=1);upper=hi[adjacent].max(axis=1)
+        enabled=indices+1>=born_first
+        lower=np.where(enabled[:,None],lower,spawn[:2]);upper=np.where(enabled[:,None],upper,spawn[:2])
+        numeric=.0002+32*abs(float(np.spacing(np.float32(max(1.,abs(spawn).max(),abs(amplitude),radius)))))
+        numeric+=(count+2)*abs(float(np.spacing(np.float32(max(1.,abs(positions).max())))))
+        numeric+=(abs(float(vx))+abs(float(amplitude*omega)))*tick
+        result=[Hazard(entry['id']+':phase',entry['id'],'EnemyGhostFire'if kind=='EnemyGhostFire'else'EnemyCurveBat',
+            (lower+upper)/2,(upper-lower)/2+radius+numeric,enabled,
+            'Original EnemyCurve reset and physical sine steps; bounded role-distance birth and cached-camera activation ticks',
+            approximate=True)]
+        memo[key]=result
+        return result,None
+    except (KeyError,ValueError,IndexError):return fallback,None
+
+
 def _pending_curve(entry,times,observation,player):
     """Original no-fruit curve root; union every possible future birth tick.
 
@@ -2302,6 +2417,7 @@ def _pending_curve(entry,times,observation,player):
         info=entry['info'];custom=entry['custom'];kind=info['_enemyType'].split(':')[0]
         template=observation.get('spawn_templates',{}).get('curves',{}).get(kind,{})
         if not template or template.get('missing'):raise ValueError('pending_curve_original_prefab_missing')
+        if template.get('native_spawn')is False:raise ValueError('pending_curve_unverified_spawn_path')
         if (kind not in PENDING_CURVE_NAMES or template.get('source_name')!=kind or
                 template.get('type')!=('EnemyGhostFire'if kind=='EnemyGhostFire'else'EnemyCurveBat')or
                 entry.get('custom_type')!=('EnemyGhostFireDataStruct'if kind=='EnemyGhostFire'else'EnemyCurveBatDataStruct')or
@@ -2375,6 +2491,7 @@ def pending_motion_history(enemy,times,observation,player,predict,states,state_f
         not e['fields'].get('_dead')and not e['fields'].get('_isRecycled')]
     if len(live)==1 and phase(live[0]['fields'][state_field])in states and phase(enemy['fields'][state_field])in states:
         return None,True
+    if live:return None,False  # Existing waiting object is not another queued birth of the same info.
     pending=[e for e in rows(origin.get('pending_enemies'))if e['info_identity']==enemy['info_identity']and
         {k:v for k,v in e['info'].items()if k!='_level'}=={k:v for k,v in enemy['info'].items()if k!='_level'}and e['custom']==enemy['custom']]
     if len(pending)!=1:return None,False
@@ -2391,7 +2508,11 @@ def pending_motion_history(enemy,times,observation,player,predict,states,state_f
 
 
 def curve_counterfactual(enemy,times,observation,player):
-    return pending_motion_history(enemy,times,observation,player,pending_curve,{'flytoninja'},'_currState')
+    history=hook_reference_history(times,observation,player)
+    if history is None:return None,False
+    def predict(entry,query,origin,prior):
+        return pending_curve_phase(entry,query,origin,prior,history['motors'],{})
+    return pending_motion_history(enemy,times,observation,player,predict,{'flytoninja'},'_currState')
 
 
 def pending_suspend(entry,times,observation,player):
@@ -2489,7 +2610,7 @@ def pending_enemy_forecasts(observation,times,player,trajectory_states,context=N
             hs,reason=pending_suspend(entry,times,observation,player)
             if hs is not None:result.extend(hs);continue
         elif kind in PENDING_CURVE_NAMES:
-            hs,reason=pending_curve(entry,times,observation,player,context)
+            hs,reason=pending_curve_phase(entry,times,observation,player,trajectory_states,context)
             if hs is not None:result.extend(hs);continue
         elif kind=='EnemySmallSword':
             hs,reason=pending_small_sword(entry,times,observation,player,trajectory_states,context)
