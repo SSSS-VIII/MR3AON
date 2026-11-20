@@ -29,6 +29,48 @@ def test_explicit_research_target_can_still_override_coverage_order():
     assert [c['key'] for c in pending_cases(cases,ledger,'new',['first','first'])]==['first','untouched']
 
 
+def test_fresh_certificate_precedes_coverage_and_does_not_repeat_a_finished_check():
+    cases,ledger=inventory()
+    assert [c['key']for c in pending_cases(cases,ledger,'new',certify_cases=['passed'])]==['passed','untouched','first']
+    ledger['passed']['attempts'].append(dict(revision='new',finished_at=3,certification_requested=False))
+    assert pending_cases(cases,ledger,'new',certify_cases=['passed'])[0]['key']=='passed'
+    ledger['passed']['attempts'].append(dict(revision='new',finished_at=4,certification_requested=True))
+    assert [c['key']for c in pending_cases(cases,ledger,'new',certify_cases=['passed'])]==['untouched','first']
+    ledger['passed']['timing_robust']=True
+    assert [c['key']for c in pending_cases(cases,ledger,'next',certify_cases=['passed'])]==['untouched','first']
+
+
+def test_unsuccessful_fresh_search_keeps_prior_candidate_and_certification_separate():
+    item=dict(nominal_complete=True,timing_robust=False,nominal_candidate='old')
+    attempt=dict(output='new');result=dict(status='wall_budget',nominal_complete=False,timing_robust=False,
+        wall_seconds=300.,game_seconds=4.,backtracks=20)
+    batch.record_result(item,attempt,result)
+    assert item['nominal_complete'] and item['nominal_candidate']=='old' and not item['timing_robust']
+    assert not attempt['nominal_complete']
+    result.update(status='native_endpoints_passed',nominal_complete=True,timing_robust=True)
+    batch.record_result(item,attempt,result)
+    assert item['nominal_candidate']==item['timing_candidate']=='new' and item['timing_robust']
+
+
+def test_startup_diagnostics_are_bounded_and_cannot_use_root_rpc_after_game_gate():
+    from types import SimpleNamespace
+    class VM:
+        arena_game_gate=True
+        def __init__(self):
+            self.commands=[]
+            self.session=SimpleNamespace(spec=SimpleNamespace(name='arena-search'))
+        def command(self,command,timeout):
+            self.commands.append(command)
+            return dict(exit_code=0,text='1234\n'if command.startswith('pidof')else 'queued')
+    vm=VM()
+    assert batch.bootstrap_diagnostics(vm)==dict(available=False,reason='game_gate_already_armed')
+    assert not vm.commands
+    vm.arena_game_gate=False
+    result=batch.bootstrap_diagnostics(vm)
+    assert result['pid']=='1234' and result['files']['native-agent-status.txt']=='queued'
+    assert len(vm.commands)==6 and all('head -c 4096'in c for c in vm.commands[1:])
+
+
 def test_numeric_early_board_order_avoids_travelling_to_tenth_before_second():
     keys=('L5-M41-S10-B5109','L5-M41-S2-B5102','L5-M41-S5-B51052')
     cases={key:dict(key=key,slot=slot,kind='ordinary',level=5,

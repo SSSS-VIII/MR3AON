@@ -15,6 +15,21 @@ HERE = Path(__file__).resolve().parent
 PRIVATE = f'/data/data/{PACKAGE}'
 
 
+def bootstrap_diagnostics(vm):
+    """Bounded read-only startup evidence; never revive the pre-gate RPC."""
+    if getattr(vm,'arena_game_gate',False):
+        return dict(available=False,reason='game_gate_already_armed')
+    client=CheckpointClient(vm);result=dict(available=True,files={})
+    try:
+        result['pid']=client.shell(f'pidof {PACKAGE} || true',timeout=15).strip()
+        for name in ('boot-state.txt','boot-launch.txt','boot-loaded.txt','native-agent-status.txt','ready.json'):
+            result['files'][name]=client.shell(
+                f'if test -s {CONTROL}/{name}; then head -c 4096 {CONTROL}/{name}; fi',timeout=15)
+    except Exception as error:
+        result['error']=repr(error)
+    return result
+
+
 def provision(vm):
     """One initial installation; the caller must stop and switch to COW next."""
     if vm.request('status')['result']['checkpoint_enabled']:

@@ -251,3 +251,7 @@ node tools/arena_spine_bone_audit.cjs --runtime "$SPINE_RUNTIME_DIR" \
 原43/44的ItemSpecialTaskStart/End分别调用ShowSpecialTask/EndSpecialTask，属于任务计数/UI结算事件，没有即时角色位移；成功时原函数延后生成宝箱或分数。仅允许原身份、render 0及pickupRecycle=true的已核实标记，其他类型/变体仍拒绝。读原任务单例的uniqueInstance及CurrSpecialTask后备字段，避免Instance getter创建管理器；原任务目标/当前值单列于观测和Proposal，不把无伤移动等同于完成任务。原End边界3秒连续无键前进保持5000血，新增reader前后除渲染frame外原状态一致；成功后的所有奖励效果与任务目标仍须各自验收。
 
 `banana-forward-v42-L3-M22-S2-B30023`新入口/同一冻结源码的普通GPU试验已以8键、0回档、39.983秒/644.171米原生离开30023进入30042，所有采样5000血且无god/mount；不是从VM原生队列导出的端点证书。任务入口0/125，最后活动任务观测56/125，随后原任务管理器清空；此路线不计任务目标通过，也未执行逐键原引擎容差、新种子或视觉部署验收。此前v39在35.55秒/573.25米仍无伤，仅因未识别任务结束标记停下，与新测试分开保留。语义/事件相关保护225项，连同下述调度和预算保护共229项通过。
+
+内部调度新增`--certify-case L5-M42-S1-B50012`：在同一VM先从原入口新搜索并作端点验证，再按`--defer-certification`继续其余覆盖，不再为复验和全量各付一次冷启动。一次worker只优先处理该请求一次；同版本已完成的验证不原地循环，失败的新复验也不抹掉旧冻结名义候选，两种证据字段分开。stop请求在冷启动前即可生效。`native-quality-v3`曾在客户端manifest初始化超时，search_started=false，不能算策略失败或认证；冷启动失败现在额外保留原进程PID及有界boot-state/launch/loaded/agent/ready文件，GameGate接管后禁止调用该诊断Root RPC。
+
+搜索预算另记录requested/effective：按原观测的剩余板长/当前速度给较长板提供必要前进额度（20×游戏时长，自动增加上限1800秒；更高显式请求保留），避免40秒长板即使无伤前进也一律在300秒墙钟耗尽。800米等长板保护与旧短板预算分别测试；不是路线安全性或成功率估计。v8现用同一all-fixed-v3账本及`all-fixed-v13.log`运行，先复验50012再继续45个已尝试位置以外的全量覆盖；原名义候选仍8、原引擎容差合格仍0，GPU30023另列。229项相关保护通过。

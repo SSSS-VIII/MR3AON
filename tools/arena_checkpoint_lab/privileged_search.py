@@ -7,6 +7,7 @@ there is no restart/replay undo or enumeration of all keys every 50ms.
 from copy import deepcopy
 from dataclasses import asdict
 import json
+import math
 from pathlib import Path
 import time
 
@@ -67,6 +68,22 @@ def restore_branch(gate, branch):
     return deepcopy(branch['controller']),deepcopy(branch['observation']),result['ms']
 
 
+def duration_allowance(observation,requested):
+    """Allow the required forward traversal before spending on alternatives.
+
+    Measured original VM exits cost about 15–18 wall seconds/game second.
+    A long board cannot be judged by the same 300s budget as an 11s board.
+    This is a bounded allowance, not an estimate of route safety or success.
+    """
+    finish=observation.get('board',{}).get('finish',{}).get('x')
+    speed=abs(observation['role']['data']['_moveSpeed'])
+    remaining=0. if finish is None else max(0.,finish-observation['state']['position']['x'])
+    duration=remaining/speed if speed>0 and math.isfinite(remaining) else 0.
+    effective=max(requested,min(1800.,20*duration))
+    return dict(requested_wall_seconds=requested,effective_wall_seconds=effective,
+                remaining_authored_m=remaining,nominal_game_seconds=duration)
+
+
 def run(gate, output, *, max_decisions=4000,max_backtracks=80,wall_seconds=1800,
         progress=None,certify=True):
     output=Path(output);output.mkdir(parents=True,exist_ok=False)
@@ -75,10 +92,13 @@ def run(gate, output, *, max_decisions=4000,max_backtracks=80,wall_seconds=1800,
     observation=observe(gate)
     if not healthy(observation,5000):
         raise ValueError('Expert search requires a healthy unmounted original entry')
+    allowance=duration_allowance(observation,wall_seconds)
+    wall_seconds=allowance['effective_wall_seconds']
     board=gate.call('exec',code=BOARD)
     initial=gate.snapshot()['result']['id'];initial_observation=deepcopy(observation)
     owned={initial};branches=[];route=[];restores=[];started=time.monotonic()
     report=dict(schema=1,algorithm='native_internal_action_windows_with_VM_dead_end_backtracking_v3',
+        budget=allowance,
         timing=dict(requested_offsets_ms=[-controller.requested_timing_radius*1000,controller.requested_timing_radius*1000],
                     planning_offsets_ms=[-controller.timing_radius*1000,controller.timing_radius*1000],
                     quantum_ms=controller.timing_quantum*1000,retains_absolute_safety_deadline=True,

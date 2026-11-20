@@ -16,7 +16,7 @@ from arena_privileged_catalog import build
 from arena_privileged_runner import json_safe
 from runtime import InstanceSession
 from runtime.checkpoint_sandbox import ArenaCheckpointSandbox
-from boot_client import start
+from boot_client import start,bootstrap_diagnostics
 from batch import initialize
 from render import prepare
 from privileged_search import run
@@ -75,26 +75,46 @@ def atomic(path,value):
     temporary.replace(path)
 
 
-def pending_cases(cases,ledger,revision,requested=()):
+def pending_cases(cases,ledger,revision,requested=(),certify_cases=()):
     """Cover untouched contexts before revisiting a failed source revision."""
     def priority(c):
         missing=len(c['unimplemented_enemy_classes'])+len(c['unbound_enemy_ids'])
         return (bool(ledger[c['key']]['attempts']),missing>0,c['kind']!='ordinary',
                 c['level'] not in (5,6),c['slot'],missing,c['key'])
-    explicit=list(dict.fromkeys(requested))
+    explicit=list(dict.fromkeys([*certify_cases,*requested]))
     work=[cases[key] for key in explicit]
     work.extend(sorted((c for key,c in cases.items() if key not in explicit),key=priority))
     # Native nominal exits retain their frozen evidence for later certification;
     # model updates must not regenerate them or starve the rest of the catalog.
-    return [c for c in work if not ledger[c['key']]['nominal_complete']
-            and not any(a.get('revision')==revision and a.get('finished_at')
-                        for a in ledger[c['key']]['attempts'])]
+    def needed(c):
+        item=ledger[c['key']]
+        if c['key']in certify_cases:
+            return not item.get('timing_robust') and not any(
+                a.get('revision')==revision and a.get('finished_at') and a.get('certification_requested')
+                for a in item['attempts'])
+        return not item['nominal_complete'] and not any(
+            a.get('revision')==revision and a.get('finished_at') for a in item['attempts'])
+    return [c for c in work if needed(c)]
+
+
+def record_result(item,attempt,result):
+    """A failed fresh certificate never erases an earlier frozen candidate."""
+    attempt.update(status=result['status'],nominal_complete=result['nominal_complete'],
+        timing_robust=result['timing_robust'],wall_seconds=result['wall_seconds'],
+        game_seconds=result['game_seconds'],backtracks=result['backtracks'])
+    item.update(status=result['status'],
+        nominal_complete=bool(item.get('nominal_complete') or result['nominal_complete']),
+        timing_robust=bool(item.get('timing_robust') or result['timing_robust']))
+    if result['nominal_complete']:item['nominal_candidate']=attempt['output']
+    if result['timing_robust']:item['timing_candidate']=attempt['output']
 
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--queue',type=Path,required=True)
     parser.add_argument('--case',action='append',default=[])
+    parser.add_argument('--certify-case',action='append',default=[],
+                        help='Search and endpoint-check a fresh context once, then continue coverage in this same VM')
     parser.add_argument('--max-cases',type=int)
     parser.add_argument('--wall-seconds',type=float,default=1800)
     parser.add_argument('--defer-certification',action='store_true',
@@ -127,13 +147,18 @@ def main():
         state['counts']['attempted']=sum(bool(c['attempts']) for c in state['cases'].values())
         atomic(path,state)
 
-    unknown=set(args.case)-manifest['cases'].keys()
+    unknown=set(args.case+args.certify_case)-manifest['cases'].keys()
     if unknown:
         parser.error('Unknown canonical contexts: '+', '.join(sorted(unknown)))
+    quality_pending=set(args.certify_case)
     def pending():
-        return pending_cases(manifest['cases'],state['cases'],revision,args.case)
+        return pending_cases(manifest['cases'],state['cases'],revision,args.case,
+                             [key for key in args.certify_case if key in quality_pending])
     work=pending()
     save()
+    if (args.queue/'stop.json').exists():
+        state['stopped_reason']='stop_requested_before_boot';save()
+        print('Stop requested before guest boot.',flush=True);return
     if not work:
         print('This source revision has no unattempted contexts.',flush=True);return
     os.environ['MR3A_CHECKPOINT_FILE_RAM']='1'
@@ -154,6 +179,7 @@ def main():
         except BaseException as error:
             boot_error=dict(error=repr(error),phase='cold_initialization',search_started=False)
             if not getattr(vm,'arena_game_gate',False):
+                boot_error['bootstrap']=bootstrap_diagnostics(vm)
                 try:
                     from client import CheckpointClient
                     boot_error['native']=CheckpointClient(vm).execute('return {state=MR3A.state(),reset=MR3A.resetJob}')
@@ -191,7 +217,9 @@ def main():
                 case=work[0]
                 key=case['key'];item=state['cases'][key]
                 folder=args.queue/'runs'/key/str(time.time_ns())
-                attempt=dict(revision=revision,started_at=time.time(),output=str(folder),status='initializing')
+                certify=key in quality_pending or not args.defer_certification
+                attempt=dict(revision=revision,started_at=time.time(),output=str(folder),status='initializing',
+                             certification_requested=certify)
                 item['attempts'].append(attempt);item['status']='initializing';state['active']=key;save()
                 print(json.dumps(dict(case=key,number=number+1,total=len(work),phase='initializing')),flush=True)
                 def progress(value):
@@ -202,12 +230,8 @@ def main():
                     attempt['entry']=entry;prepare(gate);install(gate,source_dir)
                     item['status']='searching';attempt['status']='searching';save()
                     result=expert(gate,folder,wall_seconds=args.wall_seconds,progress=progress,
-                               certify=not args.defer_certification)
-                    attempt.update(status=result['status'],nominal_complete=result['nominal_complete'],
-                        timing_robust=result['timing_robust'],wall_seconds=result['wall_seconds'],
-                        game_seconds=result['game_seconds'],backtracks=result['backtracks'])
-                    item.update(status=result['status'],nominal_complete=result['nominal_complete'],
-                        timing_robust=result['timing_robust'])
+                               certify=certify)
+                    record_result(item,attempt,result)
                     if result.get('missing'):
                         item['missing']=result['missing']['evidence']
                 except KeyboardInterrupt:
@@ -218,6 +242,7 @@ def main():
                     if isinstance(error,TimeoutError) or gate.waiting or getattr(vm,'uncertain_operation',None):
                         raise
                 finally:
+                    quality_pending.discard(key)
                     attempt['finished_at']=time.time();save()
                 # A new baseline between independent cases bounds history.
                 # It is never used as undo inside a case.

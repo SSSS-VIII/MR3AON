@@ -143,3 +143,16 @@ def test_native_injury_backtracks_to_model_alternative_and_keeps_rejected_eviden
     assert rows[0]['job']['after']['health']==4900
     assert rows[1]['observation']['state']['health']==5000
     assert not gate.points
+
+
+def test_long_board_forward_allowance_is_separate_from_short_board_search_budget():
+    from privileged_search import duration_allowance
+    short=observation();short['board']=dict(finish=dict(x=short['state']['position']['x']+200))
+    assert duration_allowance(short,300)['effective_wall_seconds']==300
+    long=deepcopy(short);long['board']['finish']['x']+=600
+    allowance=duration_allowance(long,300)
+    assert 300<allowance['effective_wall_seconds']<=1800
+    assert allowance['requested_wall_seconds']==300
+    assert duration_allowance(long,7200)['effective_wall_seconds']==7200
+    del long['board']['finish']
+    assert duration_allowance(long,300)['effective_wall_seconds']==300
