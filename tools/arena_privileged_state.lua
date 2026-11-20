@@ -349,6 +349,15 @@ function E.privileged_state()
                 end
             end
             local cs=o.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
+            if row.type=='EnemySmallSword'then
+                local breath=field(o,'breathTween')
+                row.sword={breath_present=breath~=nil,breath_affects_damage=false}
+                if breath then for j=0,cs.Length-1 do local c=cs[j]
+                    if shape(c).damage_kind and c.transform:IsChildOf(breath.transform)then
+                        row.sword.breath_affects_damage=true
+                    end
+                end end
+            end
             for j=0,cs.Length-1 do local c=cs[j];local owner=c:GetComponentInParent(typeof(CS.EnemyBase))
                 if owner and owner:GetInstanceID()==row.id then
                     local collider=shape(c)

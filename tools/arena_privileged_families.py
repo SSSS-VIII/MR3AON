@@ -34,6 +34,7 @@ FAMILIES = {
     'EnemyBambooWater': 'native_authored_rise_tween_envelope',
     'EnemyPoleaxeWarrior': 'native_distance_triggered_spine_weapon',
     'EnemyFruitMuppet': 'native_collectible_banana_role_callback',
+    'EnemySmallSword': 'native_wait_charge_and_flight_on_constant_ground_reference',
 }
 
 
@@ -176,6 +177,79 @@ def native_steps(enemy, times, observation, update):
     return np.asarray(output), np.asarray(rotations)
 
 
+def small_sword(enemy,times,observation,player,trajectory_states):
+    """ProcessState's player-relative pivot and separate back-charge phase.
+
+    GetNinjaLastPos supplies the physical root X, GetGroundY the ground Y;
+    neither is the airborne ninja's rendered position. Only a constant native
+    reference is currently proved. Slopes, platforms and hidden appearance
+    callbacks remain explicit boundaries, not guessed linear motion.
+    """
+    from arena_privileged_model import phase,rows,xy
+    f=enemy['fields'];mode=phase(f['_enemyState'])
+    if mode not in ('wait','shoot'):
+        return None,'small_sword_phase:'+mode
+    binding=enemy.get('sword',{})
+    if not binding.get('breath_present') or binding.get('breath_affects_damage') is not False:
+        return None,'small_sword_unverified_breath_transform'
+    hurt=[c for c in rows(enemy['colliders'])if c.get('damage_kind')]
+    if len(hurt)!=1 or any(c['type']!='BoxCollider' or c.get('spine_follow')
+            or c.get('damage_owner')!=enemy['id'] or not c['active'] or not c['enabled'] for c in hurt):
+        return None,'small_sword_original_box_binding'
+    role=observation['role']['fields'];tick=observation['state']['fixedDeltaTime']
+    if not player.native_samples or abs(f['_lastFixedUpdateTime']-role['_lastFixedUpdateTime'])>.0002:
+        return None,'small_sword_reference_clock'
+    vx=player.initial.vx
+    if abs(vx-player.speed)>.001 or trajectory_states is not None and any(abs(m.vx-vx)>.001 for m in trajectory_states):
+        return None,'small_sword_player_speed_transition'
+    pivot=xy(f['_pivotPos']).astype(np.float32)
+    if abs(pivot[0]-role['_lastPosition']['x'])>.001:
+        return None,'small_sword_reference_position'
+    horizon=max(times,default=0.)
+    left=role['_lastPosition']['x']-1;right=left+abs(vx)*(horizon+tick)+3
+    reference=[s for s in player.surfaces if s.right>=left and s.left<=right]
+    if (not reference or observation.get('platforms') or any(abs(s.slope)>1e-8
+            or s.vx or s.vy or abs(s.y-pivot[1])>.0001 for s in reference)):
+        return None,'small_sword_nonconstant_ground_reference'
+    cursor=left
+    for s in sorted(reference,key=lambda s:s.left):
+        if s.left>cursor+.001:
+            return None,'small_sword_ground_reference_gap'
+        cursor=max(cursor,s.right)
+    if cursor<right:
+        return None,'small_sword_ground_reference_missing'
+    local=xy(f['_localPos']).astype(np.float32)
+    velocity=xy(f['_velocity']).astype(np.float32)
+    if abs(f['_velocity']['z'])>1e-8 or abs(f['_localPos']['z'])>1e-8 or abs(f['_pivotPos']['z'])>1e-8:
+        return None,'small_sword_spatial_reference'
+    magnitude=float(np.linalg.norm(velocity))
+    unit=velocity/np.float32(magnitude) if magnitude>1e-5 else np.zeros(2,np.float32)
+    waiting=np.float32(f['_flyTime']);charge=np.float32(f['_chargeTime'])
+    follow=f['_stayRefNinja']
+    def update(pos,dt):
+        nonlocal mode,local,pivot,waiting,charge
+        dt=np.float32(dt)
+        pivot[0]=np.float32(pivot[0]+np.float32(vx*dt))
+        if mode=='wait':
+            waiting=np.float32(waiting-dt)
+            if not follow:local=np.asarray(pos-pivot,dtype=np.float32)
+            if waiting<=0:
+                mode='shoot';charge=np.float32(.5)
+        elif charge>0:
+            charge=np.float32(charge-dt)
+            # Original charge retreats at one unit/s along velocity's unit
+            # direction, not at the eventual projectile speed.
+            local=np.asarray(local-unit*dt,dtype=np.float32)
+        else:
+            local=np.asarray(local+velocity*dt,dtype=np.float32)
+        return np.asarray(pivot+local,dtype=np.float32),0.
+    positions,angles=native_steps(enemy,times,observation,update)
+    rounding=8*max(abs(float(np.spacing(np.float32(enemy['position'][a]))))for a in ('x','y'))
+    return (positions-xy(enemy['position']),angles,
+            'EnemySmallSword.ProcessState/ShootOut; native physical pivot, wait, unit-speed charge and relative flight',
+            None,None,dict(position_padding=rounding)),None
+
+
 def forecast(enemy, times, observation, player, trajectory_states=None):
     """Return original root displacement/rotation, or a specific missing rule."""
     from arena_privileged_model import phase, xy
@@ -183,6 +257,8 @@ def forecast(enemy, times, observation, player, trajectory_states=None):
     zero = np.zeros((len(times), 2))
     angles = np.zeros(len(times))
     source = kind+'.FixedUpdateMovement'
+    if kind=='EnemySmallSword':
+        return small_sword(enemy,times,observation,player,trajectory_states)
     if kind=='EnemyPoleaxeWarrior':
         from arena_privileged_poleaxe import forecast as poleaxe
         return poleaxe(enemy,times,observation,player,trajectory_states)

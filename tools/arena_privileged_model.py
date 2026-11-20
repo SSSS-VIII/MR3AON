@@ -900,7 +900,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                     else:
                         lever=np.linalg.norm(xy(c['center'])-pivot)+np.linalg.norm(xy(c['extents']))
                     padding=float(lever*predicted[5]['angular_padding']);approximate=True
-                elif kind=='EnemyStraightBack' and len(predicted)>5:
+                elif kind in ('EnemyStraightBack','EnemySmallSword') and len(predicted)>5:
                     padding=float(predicted[5]['position_padding']);approximate=True
             result.append(Hazard(c['id'], enemy['id'], kind, center, extent, active, source, approximate,
                                  'sphere' if c['type']=='SphereCollider' or kind=='EnemyFruitPinball' else 'obb' if quads is not None else 'aabb', quads,
