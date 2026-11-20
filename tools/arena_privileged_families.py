@@ -35,6 +35,7 @@ FAMILIES = {
     'EnemyPoleaxeWarrior': 'native_distance_triggered_spine_weapon',
     'EnemyFruitMuppet': 'native_collectible_banana_role_callback',
     'EnemySmallSword': 'native_wait_charge_and_flight_on_constant_ground_reference',
+    'EnemyPiranha': 'native_water_wait_jump_swim_with_root_rotation_envelope',
 }
 
 
@@ -250,6 +251,152 @@ def small_sword(enemy,times,observation,player,trajectory_states):
             None,None,dict(position_padding=rounding)),None
 
 
+def piranha_steps(enemy,times,observation,activation_tick=None):
+    """Original float32 fixed steps; scale/enabled do not render-interpolate."""
+    f=enemy['fields'];mode=int(f['_enemyState'].rsplit(':',1)[1]);initial=mode
+    vx,vy,g=(np.float32(f[k])for k in ('_velocityJumpX','_velocityJumpY','_gravity'))
+    stay=np.float32(f['_stayTime'])
+    # Original names: _swimTimer is the configured interval; _swimTime is
+    # its current countdown. Reversing them incorrectly starts another jump.
+    swim=np.float32(f['_swimTime']);scale=np.float32(enemy['scale']['x'])
+    enabled=next(c['enabled']for c in enemy['colliders']if c.get('damage_kind'));samples=[(enabled,float(scale),mode)];step=0
+    def update(pos,dt):
+        nonlocal mode,vx,vy,g,stay,swim,scale,enabled,step
+        dt=np.float32(dt);step+=1
+        if mode==0:
+            pos[0]=np.float32(pos[0]-np.float32(np.float32(f['_velocityInWater'])*dt))
+            if step==activation_tick:
+                # The native zero-wait branch skips state 1 altogether.
+                mode=1 if stay>0 else 2
+        elif mode==1:
+            stay=np.float32(stay-dt)
+            if stay<=0:mode=2
+            else:pos[0]=np.float32(pos[0]+np.float32(observation['state']['speed']*dt))
+        elif mode==2:
+            pos[1]=np.float32(pos[1]+np.float32(.3));mode=3
+            if f['_validYBottom']<=f['_startPosY']<=f['_validYTop']:enabled=True
+        elif mode==3:
+            pos[0]=np.float32(pos[0]-np.float32(vx*dt))
+            pos[1]=np.float32(pos[1]+np.float32(vy*dt))
+            oldvy=vy;vy=np.float32(vy-np.float32(np.float32(g*dt)*np.float32(3.5)))
+            if oldvy>0:
+                if f['_changeScale']:
+                    height=np.float32(np.float32(pos[1]-np.float32(f['_waterPlanePosY']))-np.float32(f['_startPosY']))
+                    factor=min(np.float32(1),np.float32(height/np.float32(f['_height'])))
+                    difference=np.float32(np.float32(f['_endScale'])-np.float32(f['_startScale']))
+                    scale=np.float32(np.float32(f['_startScale'])+np.float32(factor*np.float32(difference*np.float32(.5))))
+                if vy<=0:
+                    vx=np.float32(f['_velocityFallX']);vy=-np.float32(f['_velocityFallY']);g=np.float32(f['_gravityFall'])
+            else:
+                if f['_changeScale']:
+                    denominator=np.float32(np.float32(np.float32(f['_height'])+np.float32(f['_startPosY']))-np.float32(f['_endPosY']))
+                    height=np.float32(np.float32(pos[1]-np.float32(f['_waterPlanePosY']))-np.float32(f['_endPosY']))
+                    factor=min(np.float32(1),np.float32(height/denominator))
+                    difference=np.float32(np.float32(f['_endScale'])-np.float32(f['_startScale']))
+                    scale=np.float32(np.float32(f['_endScale'])+np.float32(factor*np.float32(difference*np.float32(-.5))))
+                if pos[1]<=f['_waterPlanePosY']+f['_endPosY']:
+                    enabled=False;swim=np.float32(f['_swimTimer'])
+                    pos[1]=np.float32(pos[1]-np.float32(.3));mode=4
+        elif mode==4:
+            swim=np.float32(swim-dt);pos[0]=np.float32(pos[0]-np.float32(vx*dt))
+            if swim<=0:vy=np.float32(enemy['custom']['_speedJumpY']);mode=2
+        samples.append((enabled,float(scale),mode))
+        return pos,0.
+    positions,_=native_steps(enemy,times,observation,update)
+    age=np.clip(observation['state']['time']-f['_lastFixedUpdateTime'],0,observation['state']['fixedDeltaTime'])
+    steps=np.floor((age+times+1e-8)/observation['state']['fixedDeltaTime']).astype(int)
+    return positions,np.asarray(samples)[steps],initial
+
+
+def piranha(enemy,times,observation,player,trajectory_states=None):
+    """Original water/jump cycles with complete root-rotation hurt envelope."""
+    from arena_privileged_model import rows,xy
+    f=enemy['fields'];mode=int(f['_enemyState'].rsplit(':',1)[1]);tick=player.tick
+    if mode not in range(5):return None,'piranha_phase:'+str(mode)
+    if observation.get('camera',{}).get('direction')!=1:return None,'piranha_original_run_direction'
+    if enemy['custom'].get('_render')!=0 or not enemy.get('local_movement_parent_identity'):
+        return None,'piranha_render_or_parent_space'
+    numeric=('_velocityJumpX','_velocityJumpY','_velocityInWater','_velocityFallX','_velocityFallY','_gravity','_gravityFall',
+             '_stayTime','_swimTime','_swimTimer','_startScale','_endScale','_height','_waterPlanePosY','_startPosY','_endPosY')
+    if not all(math.isfinite(f[k])for k in numeric):return None,'piranha_nonfinite_native_parameters'
+    hurt=[c for c in rows(enemy['colliders'])if c.get('damage_kind')]
+    if (len(hurt)!=1 or hurt[0]['type']!='BoxCollider' or hurt[0].get('damage_kind')!='enemy_tag' or hurt[0].get('tag')!='Enemy'
+            or hurt[0].get('damage_owner') not in (None,enemy['id']) or not hurt[0]['active']
+            or hurt[0].get('rotation_envelope',{}).get('depth')!=0):
+        return None,'piranha_original_root_box'
+    if (max(abs(enemy['scale'][a]-enemy['scale']['x'])for a in ('x','y','z'))>1e-6
+            or enemy['scale']['x']<0 or f['_startScale']<0 or f['_endScale']<0
+            or f['_changeScale'] and (f['_height']<=0 or f['_height']+f['_startPosY']-f['_endPosY']<=0)):
+        return None,'piranha_native_scale_domain'
+    age=observation['state']['time']-f['_lastFixedUpdateTime']
+    if not -.0002<=age<=tick+.0002:return None,'piranha_original_fixed_clock'
+    age=np.clip(age,0,tick)
+    count=int(math.floor((age+times[-1]+1e-8)/tick))
+    activation=[None]
+    if mode in (0,1):
+        # Unknown item contacts are stopped by the controller's global domain
+        # check. The family forecast remains conditional on no such contact,
+        # so passive calibration can still compare known actor kinematics.
+        if any(not name.startswith('item:') for name in player.unsupported):
+            return None,'piranha_player_reference_unsupported'
+        if trajectory_states is None:
+            _,trajectory_states,valid=player.trajectory(times)
+            if not valid:return None,'piranha_player_reference_unsupported'
+        if any(abs(m.vx-observation['state']['speed'])>.001 for m in trajectory_states):
+            return None,'piranha_player_speed_transition'
+    if mode==0:
+        role=observation['role']['fields']
+        actual=role.get('_lastRoleObjPos')
+        if actual is None or abs(actual['x']-player.initial.physical_x-player.initial.offset_render)>.025:
+            return None,'piranha_original_role_reference'
+        query=np.maximum(0.,np.arange(1,count+1)*tick-age)
+        xs=np.array([m.physical_x+m.offset_render for m in trajectory_states])
+        old=np.array([m.previous_x+m.offset_render for m in trajectory_states])
+        lower=np.interp(query,times,np.minimum(xs,old))-.025
+        upper=np.interp(query,times,np.maximum(xs,old))+.025
+        # A carrier/ground transition can leave a residual RoleObj offset.
+        # Enclose both holding that original offset and its predicted settling;
+        # do not treat an immediately settled parent as an exact native fact.
+        residual=actual['x']-player.initial.physical_x
+        physical=np.array([m.physical_x for m in trajectory_states])
+        previous=np.array([m.previous_x for m in trajectory_states])
+        lower=np.minimum(lower,np.interp(query,times,np.minimum(physical,previous))+min(0.,residual)-.025)
+        upper=np.maximum(upper,np.interp(query,times,np.maximum(physical,previous))+max(0.,residual)+.025)
+        # Enumerate every feasible *activation tick*, not key combinations.
+        # Both native callback orders and the sampled actor reference are
+        # enclosed, including intermediate ticks around the jump apex.
+        px=np.float32(f['_lastPosition']['x']);possible=certain=None
+        for k in range(1,count+1):
+            px=np.float32(px-np.float32(f['_velocityInWater']*tick))
+            if possible is None and px<upper[k-1]+f['_activeBeginDistance']:possible=k
+            if px<lower[k-1]+f['_activeBeginDistance']:certain=k;break
+        if possible is not None:
+            if (certain or count)-possible>8:return None,'piranha_activation_uncertainty'
+            activation=list(range(possible,(certain or count)+1))
+            if certain is None:activation.append(None)
+    branches=[piranha_steps(enemy,times,observation,a)for a in activation]
+    positions=np.array([r[0]for r in branches]);states=np.array([r[1]for r in branches])
+    # CurrGroundY changes when a fish crosses a terrain seam. Accept only a
+    # proved constant original ground over every possible future root X.
+    margin=1+2*tick*max(abs(f['_velocityJumpX']),abs(f['_velocityFallX']),observation['state']['speed'])
+    left=float(positions[:,:,0].min()-margin);right=float(positions[:,:,0].max()+margin)
+    support=enemy.get('native_support',{})
+    a,b=support.get('start',{}),support.get('finish',{})
+    contained=(support.get('is_ground') or support.get('is_line')) and a.get('x',math.inf)<=left and b.get('x',-math.inf)>=right
+    if not contained or abs(a['y']-f['_waterPlanePosY'])>1e-5 or abs(b['y']-a['y'])>1e-8:
+        return None,'piranha_ground_reference_crossing'
+    centers=(positions.min(axis=0)+positions.max(axis=0))/2
+    spread=np.linalg.norm(positions-centers,axis=2).max(axis=0)
+    scale=states[:,:,1].max(axis=0)
+    if not np.isfinite(scale).all() or np.any(scale<0):return None,'piranha_predicted_scale_domain'
+    active=states[:,:,0].any(axis=0)
+    radius=hurt[0]['rotation_envelope']['root_radius']*scale+spread
+    rounding=max(.00001,8*max(abs(float(np.spacing(np.float32(enemy['position'][a]))))for a in ('x','y')))
+    return (centers-xy(enemy['position']),np.zeros(len(times)),
+            'EnemyPiranha.FixedUpdateMovement/ChangeFishState; native activation/wait/jump/swim, collider state and full root-rotation envelope',
+            active,radius,dict(position_padding=rounding,activation_ticks=activation)),None
+
+
 def forecast(enemy, times, observation, player, trajectory_states=None):
     """Return original root displacement/rotation, or a specific missing rule."""
     from arena_privileged_model import phase, xy
@@ -257,6 +404,8 @@ def forecast(enemy, times, observation, player, trajectory_states=None):
     zero = np.zeros((len(times), 2))
     angles = np.zeros(len(times))
     source = kind+'.FixedUpdateMovement'
+    if kind=='EnemyPiranha':
+        return piranha(enemy,times,observation,player,trajectory_states)
     if kind=='EnemySmallSword':
         return small_sword(enemy,times,observation,player,trajectory_states)
     if kind=='EnemyPoleaxeWarrior':

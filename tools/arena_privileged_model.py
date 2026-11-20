@@ -757,7 +757,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                 unsupported.append(dict(id=enemy['id'],type=kind,
                     reason='unverified_fruit_identity_or_damage'))
             continue
-        if kind not in ('EnemyBlade','EnemySpiderWeb','EnemyKill','EnemyHideBlade','EnemyBambooWater') and any(
+        if kind not in ('EnemyBlade','EnemySpiderWeb','EnemyKill','EnemyHideBlade','EnemyBambooWater','EnemyPiranha') and any(
                 c.get('depth_tilt') for c in rows(enemy['colliders'])):
             unsupported.append(dict(id=enemy['id'],type=kind,reason='spatial_rotation_requires_3D_forecast'))
             continue
@@ -852,7 +852,9 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
             delta, angles, source = predicted[:3]
             if len(predicted)>3 and predicted[3] is not None:
                 active = predicted[3]
-            if kind=='EnemyPoleaxeWarrior':
+            if kind=='EnemyPiranha':
+                colliders=[c for c in rows(enemy['colliders'])if c.get('damage_kind')];approximate=True
+            elif kind=='EnemyPoleaxeWarrior':
                 from arena_privileged_poleaxe import damage_bindings
                 # Its concrete body callback attacks the warrior, unlike the
                 # EnemyBase body damage callback. Keep the axe hazardous even
@@ -875,6 +877,9 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                 child_scale=np.array([c['scale'][a] for a in ('x','y','z')])/root_scale
                 radius=c['radius']*np.max(np.abs(predicted[4]*child_scale),axis=1)
                 extent=np.tile(radius[:,None],(1,2))
+            elif kind=='EnemyPiranha':
+                center=xy(enemy['position'])[None,:]+delta
+                extent=np.tile(predicted[4][:,None],(1,2))
             elif kind=='EnemyFruitPinball':
                 center=xy(enemy['position'])[None,:]+delta
                 radius=c['rotation_envelope']['root_radius']*np.max(np.abs(predicted[4]),axis=1)
@@ -882,9 +887,10 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                 source+='; original rotating collider root-sphere envelope'
             quads = None
             padding=0.
+            if kind=='EnemyPiranha':padding=predicted[5]['position_padding']
             if kind=='EnemyPoleaxeWarrior':
                 center,extent=predicted[4][c['id']]
-            if kind not in ('EnemyStraightBat','EnemyFlyBamboo','EnemySpider','EnemyMuppetBomb','EnemyEliteSpider','EnemyFruitPinball','EnemyPoleaxeWarrior'):
+            if kind not in ('EnemyStraightBat','EnemyFlyBamboo','EnemySpider','EnemyMuppetBomb','EnemyEliteSpider','EnemyFruitPinball','EnemyPoleaxeWarrior','EnemyPiranha'):
                 pivot = xy(enemy['position'])
                 rot = np.stack((np.stack((np.cos(angles),-np.sin(angles)),axis=-1),
                                 np.stack((np.sin(angles),np.cos(angles)),axis=-1)),axis=1)
@@ -903,7 +909,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                 elif kind in ('EnemyStraightBack','EnemySmallSword') and len(predicted)>5:
                     padding=float(predicted[5]['position_padding']);approximate=True
             result.append(Hazard(c['id'], enemy['id'], kind, center, extent, active, source, approximate,
-                                 'sphere' if c['type']=='SphereCollider' or kind=='EnemyFruitPinball' else 'obb' if quads is not None else 'aabb', quads,
+                                 'sphere' if c['type']=='SphereCollider' or kind in ('EnemyFruitPinball','EnemyPiranha') else 'obb' if quads is not None else 'aabb', quads,
                                  padding=padding))
     for item in player.contact_avoidance:
         for collider in rows(item['colliders']):

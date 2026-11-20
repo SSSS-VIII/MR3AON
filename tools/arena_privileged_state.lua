@@ -328,7 +328,7 @@ function E.privileged_state()
                 local animation=o.gameObject:GetComponentInChildren(typeof(CS.Spine.Unity.SkeletonAnimation),true)
                 row.spine=spineState(animation)
             end
-            if row.type=='EnemyFruitPinball'then
+            if row.type=='EnemyFruitPinball' or row.type=='EnemyPiranha'then
                 local parent=o.transform.parent;local matrix=parent and parent.localToWorldMatrix or U.Matrix4x4.identity
                 local error=0
                 for a=0,3 do for b=0,3 do error=error+math.abs(matrix['m'..a..b]-(a==b and 1 or 0))end end
@@ -361,7 +361,9 @@ function E.privileged_state()
             for j=0,cs.Length-1 do local c=cs[j];local owner=c:GetComponentInParent(typeof(CS.EnemyBase))
                 if owner and owner:GetInstanceID()==row.id then
                     local collider=shape(c)
-                    if row.type=='EnemyFruitPinball'then collider.rotation_envelope=rotationEnvelope(c,o.transform)end
+                    if row.type=='EnemyFruitPinball' or row.type=='EnemyPiranha'then
+                        collider.rotation_envelope=rotationEnvelope(c,o.transform)
+                    end
                     row.colliders[#row.colliders+1]=collider
                 end
             end
