@@ -1496,6 +1496,8 @@ def pending_item_issues(player):
         # Original coin callbacks change score/energy/task counters, with no
         # direct actor motion. This excludes balls, mounts and CoinCurve.
         if info['_itemType']in score_types or coin_pile_marker(entry):continue
+        if info['_itemType']=='ItemCoinRed: 52'and ordinary_red_coin(entry,
+                o.get('spawn_templates',{}).get('items',{}).get('ItemCoinRed',{}),o):continue
         if nearest is not None and math.isfinite(nearest)and nearest>upper:continue
         issues.append('pending_item:'+info['_itemType'])
     return issues
@@ -1626,6 +1628,39 @@ def configure_pending_pickups(player):
         if item is not None:
             if not(kind=='ItemMagnet'and coin_only_magnet(entry,template)):player.contact_avoidance.append(item)
             player.modelled_pending_items.add(entry['id'])
+
+
+def collect_effect_issues(role):
+    """Unknown global pickup procs must not hide behind score-only items."""
+    if 'collect_effects'not in role:return []  # Frozen legacy calibration inputs.
+    d=role['collect_effects']
+    if (any(d.get(k)is not True for k in ('present','native_dispatch','buff_manager_present',
+            'passive_manager_present','message_manager_present'))or
+            any(d.get(k)!=0 for k in ('buff_count','buff_targets','buff_definitions','waiting_assist_buffs',
+                'waiting_collision_buffs','passive_count','collect_listener_count'))or
+            d.get('collect_event_name')!='CfgTriggerType_11'):
+        return ['unmodelled_global_pickup_effects']
+    return []
+
+
+def ordinary_red_coin(entry,template,observation):
+    """Same original ItemCoin callback as Silver/Yellow, with different counters.
+
+    Red's Cfg energy=1, score=50, coin=3 change no role motion. Still require
+    an empty native global condition-11 closure, rather than guessing that
+    arbitrary equipped buffs/passives/listeners are harmless.
+    """
+    from arena_privileged_model import rows
+    return (entry['info']['_itemType']=='ItemCoinRed: 52'and
+        entry.get('custom_type')=='ItemDataStructBase'and entry.get('custom')==dict(_render=0)and
+        entry.get('custom_projection',{}).get('complete')is True and
+        not entry['info'].get('independentAnim')and not entry['info'].get('createPlayerUID')and
+        entry.get('source')in ('native_itemList','resolved_uninstantiated_block')and
+        template.get('type')=='ItemCoin'and template.get('source_name')=='ItemCoinRed'and
+        set(rows(template.get('root_scripts')))=={'ItemCoin'}and
+        set(rows(template.get('component_types')))<= {'ItemCoin','ItemCoinAnimController'}and
+        not rows(template.get('colliders'))and template.get('animated_tree')is False and
+        'collect_effects'in observation['role']and not collect_effect_issues(observation['role']))
 
 
 def skill_issues(role):

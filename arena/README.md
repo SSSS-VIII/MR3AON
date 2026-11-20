@@ -526,3 +526,12 @@ ItemFixed仅在原类型/参数、整棵对象无Collider/Animator/Animation、�
 原v250的skull_1/24实际旋转270.576/19.619度，重置框与源几何一致；1.5秒自然取样中拾取框禁用后回收，持续5000血，仅用于校准不作全局安全证明。新reader同点双读一致、状态只有render frame改变。真实下一父块skull_4的未初始化nearestX=0反例已保留，实际位置在角色前88/93米，现产生明确远处拾取障碍而不是停止。721项相关保护通过后按依赖先行换入生产，不改变原动作或触发器。
 
 v255使用与v245相同12041/seed74545独立新入口，182次决策、6键/零回档，8.75游戏秒/128.575米保持5000血，随后无安全操作窗；源码冻结一致，墙钟152.698秒。解除了旧7.15秒的未知道具拒绝，但尚未过整板，更不是原生端点或视觉接管证书。
+
+
+### 红币与原全局拾取事件闭包（v256–v262）
+
+全队列v12已尝试上下文中56处曾被pending ItemCoinRed:52挡住。红/银/黄三种原预制件实际同为ItemCoin+ItemCoinAnimController，红币Cfg energy1/score50/coin3只改变计数。原PerformPickupActions除黄币53的额外得分分支外共用收集、能量、TaskGoal及条件11分派；源绑定红币原模板（无Collider/动画、无额外脚本）、完整ItemDataStructBase/render0及真实待生成队列后，补齐此前与已支持活体ItemCoin不一致的pending处理，未泛化到CoinCurve/CoinFish。
+
+同时新增只读collect_effects通道：沿原GameEventManager.instance和其实际Buff/Passive引用读取，不调用会创建单例的getter；GameMessageManager.instance及triggerTypeStr/_messageDelegate只读查条件11，原缓存未命中使用源码字面量CfgTriggerType_11，不填充缓存。Buff数量/目标/定义/等待加入列表、被动有效列表、条件11监听和9个原生分派槽全部校验；任一非空或未知都明确停止，不将装备被动等忽略成无害计分。原Lua数据表可以已缓存：原TriggerTarBuffCondition在目标列表空时返回，原Passive TriggerCondition在有效列表空时返回，不会进入Lua；不能把表已初始化误当活动效果。
+
+原6004入口的28个红币待生成项及实际模板均通过；0.5秒11次原取样持续5000血、空事件闭包保持一致。这段并未证明这些红币已经拾取，更不算整板路线。安装后原同点一次Lua请求内双读完全相同，跨请求状态只有render frame变化。746项相关回归通过后依赖先行启用，后续独立6008实机前进另记。

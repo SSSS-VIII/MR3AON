@@ -79,6 +79,57 @@ local function existingSingleton(wanted)
         tp=tp.BaseType
     end
 end
+local function originalCollectEffects()
+    -- Follow the existing dispatcher references; never create a singleton.
+    local backing=typeof(CS.GameEventManager):GetField('instance',CS.System.Reflection.BindingFlags.__CastFrom(56))
+    local manager=backing and backing:GetValue(nil)
+    local out={present=manager~=nil,native_dispatch=true,unknown_hooks={}}
+    if not manager then return out end
+    local buffs=field(manager,'gameBuffManager');local passives=field(manager,'ninjaPassiveSkillManager')
+    out.buff_manager_present=buffs~=nil;out.passive_manager_present=passives~=nil
+    if buffs then
+        out.buff_count=field(buffs,'buffCount')
+        for key,name in pairs({buff_targets='buffTargetList',buff_definitions='buffDataDic',
+                waiting_assist_buffs='waitAddAssistSkillBuffList',waiting_collision_buffs='waitSyncPlayerCollisionBuffDatas'})do
+            local list=field(buffs,name);out[key]=list and list.Count or -1
+        end
+        out.buff_lua_present=field(buffs,'buffTable')~=nil
+    end
+    if passives then
+        local list=field(passives,'passiveSkillList');out.passive_count=list and list.Count or -1
+        out.passive_lua_present=false
+        for _,name in ipairs({'_passiveSkillLuaTable','_passiveSkillConditionTable','_passiveSkillReduceTable'})do
+            if field(passives,name)~=nil then out.passive_lua_present=true end
+        end
+    end
+    local staticFlags=CS.System.Reflection.BindingFlags.__CastFrom(56)
+    local mt=typeof(CS.GameMessageManager);local backing=mt:GetField('instance',staticFlags)
+    local messages=backing and backing:GetValue(nil);out.message_manager_present=messages~=nil
+    if messages then
+        local mapping=field(messages,'triggerTypeStr');local subscribers=field(messages,'_messageDelegate')
+        -- Original CallTriggerMessageDelegate uses this literal prefix when
+        -- the int->string cache has no entry. Reading it must not fill it.
+        local key='CfgTriggerType_11'
+        if mapping and mapping:ContainsKey(11)then key=mapping[11]end
+        out.collect_event_name=key;out.collect_listener_count=-1
+        if mapping and subscribers and key=='CfgTriggerType_11'then
+            out.collect_listener_count=subscribers:ContainsKey(key)and subscribers[key].Count or 0
+        end
+    end
+    for _,entry in ipairs({{typeof(CS.ItemCoin),'PerformPickupActions',0},
+            {typeof(CS.ItemBase),'CollectItem',0},{typeof(CS.GameEventManager),'TriggerCondition',0},
+            {typeof(CS.GameEventManager),'DispatchGlobalTriggerEvent',0},
+            {typeof(CS.GameBuffManager),'TriggerTarBuffCondition',0},
+            {typeof(CS.NinjaPassiveSkillManager),'TriggerCondition',0},
+            {typeof(CS.NinjaPassiveSkillManager),'TriggerCondition',1},
+            {mt,'CallTriggerMessageDelegate',0},{mt,'CallMessageDelegate',0}})do
+        local name='__Hotfix'..entry[3]..'_'..entry[2];local hook=entry[1]:GetField(name,staticFlags)
+        if not hook or hook:GetValue(nil)~=nil then
+            out.native_dispatch=false;out.unknown_hooks[#out.unknown_hooks+1]=entry[1].Name..'.'..name
+        end
+    end
+    return out
+end
 local function originalSkills()
     local manager=existingSingleton(typeof(CS.NinjaSkillManager))
     local out={present=manager~=nil,active={},bullets={}}
@@ -409,6 +460,7 @@ function E.privileged_state()
         reflection_right=vector(camera:GetScreenRightTopPos_Reflection(0)),
         position=vector(camera.LastPosition),direction=CS.GameManager.Instance.CurrDirModeNum,fields=values(camera)}
     out.role.fields=values(n);out.role.velocity=vector(n.Velocity);out.role.gravity=n.Gravity
+    out.role.collect_effects=originalCollectEffects()
     out.role.ground_reference_y=CS.NinjaController.Instance:GetGroundY()
     local excludedAir=n.FallFromAirGround
     out.role.excluded_air_ground={present=excludedAir~=nil,fields=values(excludedAir)}
@@ -863,7 +915,8 @@ function E.privileged_state()
         return result
     end
     local function staticPickupTemplate(name)
-        local all=U.Resources.FindObjectsOfTypeAll(typeof(CS[name]));local original
+        local coin=name=='ItemCoinRed'
+        local all=U.Resources.FindObjectsOfTypeAll(typeof(coin and CS.ItemCoin or CS[name]));local original
         for i=0,all.Length-1 do local obj=all[i]
             if obj.name==name and not obj.gameObject.activeInHierarchy then
                 assert(not original,'Ambiguous original pickup prefab');original=obj
@@ -873,7 +926,7 @@ function E.privileged_state()
         local root=original.transform;local manager=existingSingleton(typeof(CS.ItemManager))
         local enumType=typeof(CS.GameItemInfo):GetField('_itemType',flags).FieldType
         local enum=CS.System.Enum.Parse(enumType,name)
-        local result={id=original:GetInstanceID(),type=original:GetType().Name,
+        local result={id=original:GetInstanceID(),type=original:GetType().Name,source_name=original.name,
             root_scale=vector(root.localScale),root_scripts={},colliders={},component_types={},
             be_attract_level=tostring(field(original,'beAttractLevel')),follow_ground=field(original,'followGround'),
             attract_item_level=field(original,'attractItemLevel'),
@@ -1012,7 +1065,7 @@ function E.privileged_state()
                 out.spawn_templates.spring=springSpawnTemplate()
             end
             local name=tostring(info._itemType):match('^([^:]+):')
-            if (name=='ItemMagnet'or name=='ItemElementBall'or name=='ItemFixed'or name=='ItemSkull')and not out.spawn_templates.items[name]then
+            if (name=='ItemMagnet'or name=='ItemElementBall'or name=='ItemFixed'or name=='ItemSkull'or name=='ItemCoinRed')and not out.spawn_templates.items[name]then
                 out.spawn_templates.items[name]=staticPickupTemplate(name)
             end
             out.pending_items[#out.pending_items+1]=item
