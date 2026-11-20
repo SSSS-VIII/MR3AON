@@ -26,6 +26,7 @@ from arena_privileged_revisions import freeze,activate,digest_sources,MODEL_MODU
 SOURCES=('arena_privileged_batch.py','arena_privileged_catalog.py','arena_privileged_families.py',
     'arena_privileged_revisions.py',
     'arena_privileged_geometry.py','arena_privileged_pinball.py',
+    'arena_spine_geometry.py','arena_privileged_poleaxe.py','arena_privileged_poleaxe_poses.json',
     'arena_privileged_model.py','arena_privileged_policy.py','arena_privileged_runner.py',
     'arena_privileged_state.lua','arena_checkpoint_lab/privileged_search.py',
     'arena_checkpoint_lab/gate.py','arena_checkpoint_lab/clock_step.lua',

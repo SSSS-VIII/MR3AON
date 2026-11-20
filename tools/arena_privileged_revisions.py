@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 import sys
 
-MODEL_MODULES=('arena_privileged_geometry','arena_privileged_families',
+MODEL_MODULES=('arena_privileged_geometry','arena_spine_geometry','arena_privileged_poleaxe','arena_privileged_families',
     'arena_privileged_pinball','arena_privileged_model','arena_privileged_policy',
     'arena_privileged_runner','arena_privileged_catalog','privileged_search')
 

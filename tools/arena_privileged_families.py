@@ -32,6 +32,7 @@ FAMILIES = {
     'EnemyStraightBack': 'native_go_brake_follow_and_return_centered_sphere',
     'EnemyFruitPinball': 'native_free_pinball_with_rotating_authored_collider_envelope',
     'EnemyBambooWater': 'native_authored_rise_tween_envelope',
+    'EnemyPoleaxeWarrior': 'native_distance_triggered_spine_weapon',
 }
 
 
@@ -150,6 +151,9 @@ def forecast(enemy, times, observation, player, trajectory_states=None):
     zero = np.zeros((len(times), 2))
     angles = np.zeros(len(times))
     source = kind+'.FixedUpdateMovement'
+    if kind=='EnemyPoleaxeWarrior':
+        from arena_privileged_poleaxe import forecast as poleaxe
+        return poleaxe(enemy,times,observation,player,trajectory_states)
     if kind=='EnemyBambooWater':
         mode=phase(f['_enemyState'])
         if mode not in ('none','movetoninja'):

@@ -85,6 +85,7 @@ def evaluate(client, output, *, seconds=30., coast=False):
     source_files = ['arena_privileged_state.lua', 'arena_privileged_model.py',
                     'arena_privileged_families.py',
                     'arena_privileged_geometry.py','arena_privileged_pinball.py',
+                    'arena_spine_geometry.py','arena_privileged_poleaxe.py','arena_privileged_poleaxe_poses.json',
                     'arena_privileged_policy.py', 'arena_privileged_runner.py',
                     'arena_checkpoint_lab/clock_step.lua']
     frozen = output/'sources'; frozen.mkdir()

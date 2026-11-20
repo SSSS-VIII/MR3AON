@@ -835,14 +835,16 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
             delta, angles, source = predicted[:3]
             if len(predicted)>3 and predicted[3] is not None:
                 active = predicted[3]
-            if kind=='EnemyBambooWater':
+            if kind=='EnemyPoleaxeWarrior':
+                colliders=[c for c in rows(enemy['colliders'])if c.get('damage_kind')];approximate=True
+            elif kind=='EnemyBambooWater':
                 colliders=predicted[4];approximate=True
             elif kind=='EnemyHideBlade':
                 colliders = [c for c in rows(enemy['grown_colliders']) if c.get('damage_kind')]
             elif kind=='EnemyArrow' and mode!='onground' and enemy.get('untrimmed_colliders'):
                 colliders = [c for c in rows(enemy['untrimmed_colliders']) if c.get('damage_kind')]
         for c in colliders:
-            if kind not in ('EnemyFlyBamboo','EnemyHideBlade','EnemyBambooWater') and not c['active']:
+            if kind not in ('EnemyFlyBamboo','EnemyHideBlade','EnemyBambooWater','EnemyPoleaxeWarrior') and not c['active']:
                 continue
             center = xy(c['center'])[None, :]+delta
             extent = np.tile(xy(c['extents']), (len(times), 1))*growth[:, None]
@@ -858,7 +860,9 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                 source+='; original rotating collider root-sphere envelope'
             quads = None
             padding=0.
-            if kind not in ('EnemyStraightBat','EnemyFlyBamboo','EnemySpider','EnemyMuppetBomb','EnemyEliteSpider','EnemyFruitPinball'):
+            if kind=='EnemyPoleaxeWarrior':
+                center,extent=predicted[4][c['id']]
+            if kind not in ('EnemyStraightBat','EnemyFlyBamboo','EnemySpider','EnemyMuppetBomb','EnemyEliteSpider','EnemyFruitPinball','EnemyPoleaxeWarrior'):
                 pivot = xy(enemy['position'])
                 rot = np.stack((np.stack((np.cos(angles),-np.sin(angles)),axis=-1),
                                 np.stack((np.sin(angles),np.cos(angles)),axis=-1)),axis=1)

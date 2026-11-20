@@ -42,7 +42,9 @@ class InternalController:
         player = PlayerModel(observation)
         times = np.linspace(0., self.horizon, round(self.horizon*120)+1)
         hazards, missing = hazard_forecasts(observation, times, player)
-        coupled = any(e['type'] == 'EnemyStraightBat' and
+        coupled = any(e['type']=='EnemyPoleaxeWarrior' and e['fields'].get('_enemyState')=='Idle: 0'
+                      and not e['fields'].get('_dead') and not e['fields'].get('_isRecycled')
+                      for e in rows(observation['enemies'])) or any(e['type'] == 'EnemyStraightBat' and
                       (e['custom'].get('_pointToNinja') or e['custom'].get('_followNinjaY')) and
                       e['fields'].get('_currState','').split(':')[0].lower() in ('none','enterscreen')
                       for e in rows(observation['enemies']))

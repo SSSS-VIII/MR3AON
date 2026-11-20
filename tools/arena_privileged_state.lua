@@ -68,6 +68,20 @@ local function actionData(obj,depth,budget)
     for _,f in ipairs(fields(obj))do out.fields[f.Name]=actionData(f:GetValue(obj),depth-1,budget)end
     return out
 end
+local function callbacks(obj)
+    local out={}
+    for _,name in ipairs({'Start','Interrupt','End','Dispose','Complete','Event'})do
+        local d=field(obj,name)
+        if d then local inv=d:GetInvocationList();out[name]={}
+            for i=0,math.min(inv.Length-1,15)do local method=inv[i].Method
+                out[name][#out[name]+1]={method=method.Name,declaring_type=method.DeclaringType.FullName,
+                    target_type=inv[i].Target and inv[i].Target:GetType().FullName or nil}
+            end
+            if inv.Length>16 then out.truncated=true end
+        end
+    end
+    return out
+end
 local function spineState(animation)
     -- Read backing fields only. Skeleton/AnimationState property getters may
     -- initialize a disabled component; observing must never do that.
@@ -77,6 +91,7 @@ local function spineState(animation)
     if not skeleton then return out end
     out.fields=values(skeleton)
     out.state_fields=values(state)
+    out.state_callbacks=callbacks(state)
     local skin=field(skeleton,'skin');out.skin=skin and field(skin,'name')or nil
     local t=animation.transform
     out.origin=vector(t:TransformPoint(U.Vector3.zero))
@@ -84,12 +99,13 @@ local function spineState(animation)
     out.axis_y=vector(t:TransformVector(U.Vector3.up))
     local asset=field(animation,'skeletonDataAsset');local text=asset and field(asset,'skeletonJSON')
     out.asset_name=text and text.name or nil
+    out.asset_fields=values(asset)
     local tracks=state and field(state,'tracks');local items=tracks and field(tracks,'Items')
     local count=tracks and field(tracks,'Count')or 0
     local function entryData(entry,depth)
         if not entry then return nil end
-        local r=values(entry);local anim=field(entry,'animation')
-        r.animation=anim and field(anim,'name')or nil
+        local r=values(entry);r.callbacks=callbacks(entry);local anim=field(entry,'animation')
+        r.animation=anim and field(anim,'name')or nil;r.has_next=field(entry,'next')~=nil
         if depth>0 then r.mixing_from=entryData(field(entry,'mixingFrom'),depth-1)end
         return r
     end
@@ -113,7 +129,24 @@ local function shape(c)
         position=vector(c.transform.position),scale=vector(c.transform.lossyScale),
         rotation_z=c.transform.eulerAngles.z}
     local follower=c.gameObject:GetComponent(typeof(CS.Spine.Unity.SkeletonUtilityBone))
-    if follower then out.spine_follow={bone_name=field(follower,'boneName'),fields=values(follower)}end
+    if follower then
+        out.spine_follow={bone_name=field(follower,'boneName'),fields=values(follower),full_scale_chain=false,chain={}}
+        local t=c.transform
+        for depth=1,32 do
+            if t.gameObject:GetComponent(typeof(CS.Spine.Unity.SkeletonAnimation))then out.spine_follow.full_scale_chain=true;break end
+            local f=t.gameObject:GetComponent(typeof(CS.Spine.Unity.SkeletonUtilityBone))
+            if f then
+                local v=values(f);out.spine_follow.chain[#out.spine_follow.chain+1]={bone_name=field(f,'boneName'),fields=v}
+                if tostring(v.mode)~='Follow: 0' or not v.position or not v.rotation or not v.scale or
+                    v.overrideAlpha~=1 or v.incompatibleTransformMode then break end
+            else
+                local v=t.localPosition;local q=t.localRotation;local scale=t.localScale
+                if v.magnitude>0.00001 or math.abs(q.x)+math.abs(q.y)+math.abs(q.z)+math.abs(q.w-1)>0.00001 or
+                    (scale-U.Vector3.one).magnitude>0.00001 then break end
+            end
+            t=t.parent;if not t then break end
+        end
+    end
     local b=c.bounds;out.center=vector(b.center);out.extents=vector(b.extents)
     if tp=='BoxCollider'then
         out.local_center=vector(c.center);out.size=vector(c.size);out.quad={}
@@ -270,6 +303,10 @@ function E.privileged_state()
                 speed=o.CurrentSpeed,attack=o.Attack,scale=vector(o.transform.lossyScale),rotation_z=o.transform.eulerAngles.z,colliders={}}
             row.info_identity=info and info:GetHashCode()or nil
             if row.type=='EnemyWarrior'then row.spine=spineState(field(o,'_spineWarrior'))end
+            if row.type=='EnemyPoleaxeWarrior'then
+                local animation=o.gameObject:GetComponentInChildren(typeof(CS.Spine.Unity.SkeletonAnimation),true)
+                row.spine=spineState(animation)
+            end
             if row.type=='EnemyFruitPinball'then
                 local parent=o.transform.parent;local matrix=parent and parent.localToWorldMatrix or U.Matrix4x4.identity
                 local error=0
