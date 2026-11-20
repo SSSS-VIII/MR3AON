@@ -221,11 +221,24 @@ class PlayerModel:
                     self.unsupported.append('terrain:'+row['kind'])
         if observation.get('camera',{}).get('direction',1) != 1:
             self.unsupported.append('reverse_running_direction')
+        launch_speeds=[i['custom'].get('_popSpeed',0.)for i in rows(observation.get('mechanism_items'))
+                       if i['type']=='ItemSpring']+[i['custom'].get('_popSpeed',0.)for i in rows(observation.get('pending_items'))
+                       if i['info']['_itemType']=='ItemSpring: 15']
+        reach_speed=max(self.speed,abs(self.initial.vx),*(v for v in launch_speeds if math.isfinite(v)))
         for item in rows(observation.get('mechanism_items')):
             dx=item['position']['x']-self.initial.x
             from arena_privileged_families import progression_marker
             if progression_marker(item):
                 continue
+            from arena_privileged_families import static_pickup,passive_fixed_item,coin_only_magnet
+            template=observation.get('spawn_templates',{}).get('items',{}).get(item['type'],{})
+            if item['type']=='ItemFixed'and passive_fixed_item(item,template,observation,live=True):continue
+            if item['type']in ('ItemMagnet','ItemElementBall'):
+                bound,_=static_pickup(item,template,observation,live=True)
+                if bound is not None:
+                    if not(item['type']=='ItemMagnet'and coin_only_magnet(item,template)):
+                        self.contact_avoidance.append(bound)
+                    continue
             native_static_spring=(item['type']=='ItemSpring' and
                 item['fields'].get('_needRotate') is False and
                 item['fields'].get('isTrigger') is False and
@@ -235,13 +248,15 @@ class PlayerModel:
             if native_static_spring:
                 self.contact_avoidance.append(item)
                 continue
-            if -1<dx<self.speed*1.8+3:
+            if -self.interaction_radius-2<dx<reach_speed*1.8+self.interaction_radius+4:
                 self.unsupported.append('item:'+item['type'])
 
         self.spring_launches=[]
         self.pickup_profile=None
         from arena_privileged_families import configure_springs,pending_item_issues,skill_issues
         configure_springs(self)
+        from arena_privileged_families import configure_pending_pickups
+        configure_pending_pickups(self)
         self.unsupported.extend(pending_item_issues(self))
         self.unsupported.extend(skill_issues(role))
         self.initial.spring_ready=self.popfall_supported
@@ -506,8 +521,10 @@ class PlayerModel:
                         motor.mode!='slideonground' and not pending_air and
                         (departing_platform or s is None or not s.rope and abs(s.slope)<1e-8 and s.id!=motor.support and
                          motor.physical_y>s.height(motor.physical_x+motor.offset_render,t)+self.foot+1e-5)):
-                    # MoveLogic caches UpdateGravity before the ground reducer
-                    # changes state. The departure tick retains ground gravity.
+                    # MoveLogic cached UpdateGravity before this ground
+                    # reducer changes state. Its first FallFromRun still
+                    # uses the old zero ground gravity, even across a gap
+                    # where surface() cannot bind the lower terrain yet.
                     natural_departure=True
                     previous_support=next((a for a in self.surfaces if a.id==motor.support),None)
                     if previous_support and abs(previous_support.slope)<1e-8:departure_mode=motor.mode
@@ -1162,8 +1179,9 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
             extent=np.tile(xy(collider['extents']),(len(times),1))
             quads=np.tile(np.array([xy(p)for p in collider['quad']]),(len(times),1,1)) if collider.get('quad') else None
             result.append(Hazard(collider['id'],item['id'],item['type'],center,extent,
-                np.ones(len(times),bool),'Avoid native ItemSpring pickup; PopBySpring remains unsupported',
-                approximate=True,geometry='obb' if quads is not None else 'aabb',quads=quads,interaction=True))
+                np.ones(len(times),bool),item.get('source','Avoid native ItemSpring pickup; PopBySpring remains unsupported'),
+                approximate=True,geometry='obb'if quads is not None else'sphere'if collider['type']=='SphereCollider'else'aabb',
+                quads=quads,interaction=True))
     return result, unsupported
 
 

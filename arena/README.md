@@ -492,3 +492,13 @@ CoinPileStart/End原回调都调用StartNewCoinPail，后者只写NinjaControlle
 弹簧接触改为固定步前物理角色锚点。v230实际81帧中，当前渲染拾取框尚未相交，而原缓存物理位姿已在框内；原84帧已进入第二个Pop物理帧。旧“只用前一个渲染位姿”的说法由此撤回。已消费弹簧只依原normalSpring状态排除，当前PopFall不能当作其他新弹簧已消费的依据。模型不再为此插入额外60Hz渲染结点。
 
 原连续步进116对（含离地、触发和落地）最大中心误差0.085毫米；旧v211/实际跳跃v219及另一次v229累计270对最大1.521/1.383/0.074毫米。新增固定/渲染相位反例和粗/密采样不变测试，原断层与坡顶原生夹具同时保留。此项仅修模型，原游戏重力、碰撞、输入和clock driver均未改；不是整板跑法或端点合格证书。失败和源码顺序证据保存在spring-physical-phase-diagnosis-v235.json，后续物品建模仍先在私有副本验证。
+
+### 静止水球避让、原普通吸铁石与无碰撞外观（v225–v232）
+
+物品模型补充原停用ItemElementBall/ItemMagnet/ItemFixed模板的根脚本、完整子脚本、动画、触发框、原吸取层和ItemManager纯查询的覆盖集合；不激活/实例化模板。静止WaterBall:2要求原ItemCurve速度/振幅/角速度全零、非followGround、无独立动画/旋转、完整自定义参数、直接根SphereCollider及实际None/Fly状态/原几何一致。未来未出生球提前启用保守拾取障碍，不猜出生时间。原CanBeAttracted为(itemFlag & roleFlag)>0或ItemManager覆盖；同时读取原SpringGravitation，拒绝当前/未来弹簧可能吸取Steady32或存在覆盖集合的分支。其他元素球/移动变体继续明确拒绝。
+
+原普通吸铁石严格绑定模板/实例attractItemLevel=1、durationTime正有限、单一ItemMagnet脚本及完整原参数。ProcessOnTriggerEnter只增这一金币吸取引用计数并延时移除；UpdateAttractItemLevelValue只重建按位并值与特效，既不移动角色也不授予保护。Steady32机关不受该低位影响，故这类普通磁铁可在原游戏自然拾取，未知吸取层仍按拾取障碍。原实际flag序列0/2/3/1、SpringGravitation=2保留；未模拟金币任务完成或效果到期的得分结果。水球依旧避让，若实际已触发则活动技能通道继续拒绝。
+
+ItemFixed仅在原类型/参数、整棵对象无Collider/Animator/Animation、脚本仅ItemFixed且不能吸取时记为无交互外观；其Reset的原虚表槽70已核为SetRenderType，不是额外机关动作。新增Collider/脚本/动画/变体会重新拒绝，不按整个ItemFixed类全局忽略。
+
+独立v230取样46次物品新生框完全一致，活动None/Fly阶段的24水球/22磁铁/23外观全部源绑定通过；角色116配对最大0.085毫米（相位修复见上）。安装和原同点双读仅frame变化，初版错误留在相位诊断。681项相关保护通过后才从私有副本依赖先行换入生产队列；全407范围/原端点/新入口/视觉验收仍未完成。

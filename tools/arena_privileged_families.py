@@ -1363,6 +1363,7 @@ def configure_springs(player):
     player.pickup_profile=(radius,half)
     admitted=set()
     for item in player.contact_avoidance:
+        if item['type']!='ItemSpring':continue
         d=item['custom'];boxes=rows(item['colliders']);angles=item.get('info',{}).get('_localEulerAngles',{})
         spring=item.get('spring',{});p=item['position'];last=item['fields'].get('_lastPosition')
         if (d.get('_continuePop')is False and d.get('_jumpLimitTime')==0 and d.get('_render')==0 and
@@ -1420,6 +1421,133 @@ def pending_item_issues(player):
         if nearest is not None and math.isfinite(nearest)and nearest>upper:continue
         issues.append('pending_item:'+info['_itemType'])
     return issues
+
+
+def static_pickup(entry,template,observation,*,live=False):
+    """Bound original stationary ItemCurve pickups and avoid their effects.
+
+    The original attraction test is (itemFlag & ninjaFlag)>0 OR the
+    ItemManager override set. A future Spring only adds its lower coin flag,
+    so Steady:32 with no override remains stationary along supported paths.
+    Future bodies are enabled early; no guessed creation time is needed.
+    """
+    from arena_privileged_model import rows,xy
+    try:
+        info=entry['info'];d=entry['custom'];kind=info['_itemType'].split(':')[0]
+        names={'ItemElementBall':('ItemElementBall: 5','ItemElementBallDataStruct'),
+               'ItemMagnet':('ItemMagnet: 9','ItemMagnetDataStruct')}
+        expected=names[kind]
+        if not live and entry.get('source')not in ('native_itemList','resolved_uninstantiated_block'):
+            raise ValueError('static_pickup_original_spawn_source')
+        flag=observation['role']['fields']['<AttractItemLevelValue>k__BackingField']
+        if not isinstance(flag,(int,float))or flag!=int(flag)or flag<0 or int(flag)&32:
+            raise ValueError('static_pickup_role_attraction')
+        spring_flag=observation['role'].get('spring_attraction')
+        if spring_flag is None or spring_flag!=int(spring_flag)or spring_flag<0 or int(spring_flag)&32:
+            raise ValueError('static_pickup_spring_attraction')
+        if (info['_itemType']!=expected[0]or entry.get('custom_type')!=expected[1]or
+                entry.get('custom_projection',{}).get('complete')is not True or
+                info.get('independentAnim')or info.get('createPlayerUID')):
+            raise ValueError('static_pickup_original_info_binding')
+        if (template.get('missing')or template.get('type')!=kind or template.get('animated_root',True)or
+                set(rows(template.get('root_scripts')))!={kind}or
+                template.get('animated_tree',True)or not set(rows(template.get('component_types')))<=({kind,'ParticleScaler'}if kind=='ItemElementBall'else{kind})or
+                template.get('root_scale')!=dict(x=1,y=1,z=1)or
+                template.get('be_attract_level')!='Steady: 32'or template.get('follow_ground')is not False or
+                template.get('attraction_manager_present')is not True or template.get('global_attract')is not False):
+            raise ValueError('static_pickup_original_prefab_or_attraction')
+        if (d.get('_render')!=0 or any(d.get(k)!=0 for k in ('_speedX','_amplitude','_angularSpeed'))or
+                any(abs(info['_localEulerAngles'][a])>1e-8 for a in ('x','y','z'))):
+            raise ValueError('static_pickup_motion_variant')
+        if kind=='ItemElementBall'and d.get('_renderType')!='WaterBall: 2':
+            raise ValueError('static_pickup_render_variant')
+        p=np.array([entry['position'][a]if live else entry['block_start'][a]+info['_localPosition'][a]for a in ('x','y','z')])
+        scale=np.array([info['_localScale'][a]for a in ('x','y','z')])
+        if not np.isfinite(p).all()or not np.isfinite(scale).all()or np.min(scale)<=0:
+            raise ValueError('static_pickup_reset_pose')
+        boxes=rows(template['colliders'])
+        if len(boxes)!=1 or not boxes[0]['direct_root']or not boxes[0]['enabled']or not boxes[0]['trigger']:
+            raise ValueError('static_pickup_original_trigger_binding')
+        box=boxes[0];center=p+np.array([box['center'][a]for a in ('x','y','z')])*scale
+        if box['type']=='BoxCollider'and kind=='ItemMagnet':
+            extent=np.array([box['size'][a]for a in ('x','y','z')])*scale/2
+        elif box['type']=='SphereCollider'and kind=='ItemElementBall':extent=np.full(3,box['radius']*max(scale))
+        else:raise ValueError('static_pickup_original_trigger_kind')
+        if not np.isfinite(extent).all()or np.min(extent)<=0:raise ValueError('static_pickup_shape_domain')
+        def vector(value):return dict(zip(('x','y','z'),map(float,value)))
+        collider=dict(id=str(entry['id'])+':avoid-pickup',type=box['type'],enabled=True,active=True,trigger=True,
+                      center=vector(center),extents=vector(extent))
+        if live:
+            f=entry['fields'];actual=rows(entry['colliders']);last=f['_lastPosition']
+            if (entry['type']!=kind or f.get('beAttracting')is not False or f.get('followGround')is not False or
+                    f.get('beAttractLevel')!='Steady: 32'or f.get('_currState')not in ('None: 0','Fly: 1')or
+                    any(f.get(k)!=0 for k in ('_speedX','_amplitude','_angularSpeed'))or
+                    len(actual)!=1 or actual[0]['type']!=box['type']or not actual[0]['active']or not actual[0]['enabled']):
+                raise ValueError('static_pickup_live_motion_or_trigger')
+            guard=.0002+8*abs(float(np.spacing(np.float32(max(1.,abs(p).max())))))
+            if (any(abs(last[a]-p[i])>guard for i,a in enumerate(('x','y','z')))or
+                    abs(f['_referenceY']-p[1])>guard or
+                    any(abs(actual[0][key][a]-value[i])>guard for key,value in (('center',center),('extents',extent))
+                        for i,a in enumerate(('x','y','z')))):
+                raise ValueError('static_pickup_live_reset_geometry')
+            collider=actual[0]
+        return dict(id=entry['id'],type=kind,position=vector(p),info_identity=entry['info_identity'],
+            colliders=[collider],source='Avoid original static '+kind+' pickup; its effect remains unsupported'),None
+    except (KeyError,ValueError)as error:return None,str(error)
+
+
+def coin_only_magnet(entry,template):
+    """Source callback only increments flag1 and schedules its removal.
+
+    Called after static_pickup established original class/geometry/attraction
+    binding. Steady:32 mechanisms remain unaffected by this lower coin flag.
+    """
+    from arena_privileged_model import rows
+    d=entry['custom']
+    if (template.get('attract_item_level')!=1 or
+            set(rows(template.get('component_types')))!={'ItemMagnet'}or template.get('animated_tree',True)or
+            set(d)!={'_render','_speedX','_amplitude','_angularSpeed','durationTime'}):return False
+    duration=d['durationTime']
+    if not isinstance(duration,(int,float))or not math.isfinite(duration)or duration<=0:return False
+    if 'fields'in entry:
+        return entry['fields'].get('attractItemLevel')==1 and entry['fields'].get('_pickupRecycle')is True
+    return True
+
+
+def passive_fixed_item(entry,template,observation,*,live=False):
+    """ItemFixed.ResetItemInfo only selects render; no collider/animation/script callback."""
+    from arena_privileged_model import rows
+    if (entry.get('info',{}).get('_itemType')!='ItemFixed: 26'or
+            entry.get('custom_type')!='ItemFixedDataInfo'or
+            entry.get('custom')!=dict(_render=0,actionLook=0)or
+            entry.get('custom_projection',{}).get('complete')is not True):return False
+    flag=observation['role']['fields'].get('<AttractItemLevelValue>k__BackingField')
+    if flag is None or not math.isfinite(flag)or flag!=int(flag)or flag<0 or int(flag)&32:return False
+    if (template.get('missing')or template.get('type')!='ItemFixed'or
+            set(rows(template.get('component_types')))!={'ItemFixed'}or
+            template.get('animated_tree',True)or rows(template.get('colliders'))or
+            template.get('be_attract_level')!='Steady: 32'or
+            template.get('attraction_manager_present')is not True or template.get('global_attract')is not False):return False
+    if live:
+        return (entry.get('type')=='ItemFixed'and not rows(entry.get('colliders'))and
+            set(rows(entry.get('component_types')))=={'ItemFixed'}and entry.get('animated_tree')is False and
+            entry['fields'].get('beAttracting')is False and entry['fields'].get('beAttractLevel')=='Steady: 32')
+    return entry.get('source')in ('native_itemList','resolved_uninstantiated_block')
+
+
+def configure_pending_pickups(player):
+    from arena_privileged_model import rows
+    o=player.observation;templates=o.get('spawn_templates',{}).get('items',{})
+    for entry in rows(o.get('pending_items')):
+        if entry['sync_blocked']:continue
+        kind=entry['info']['_itemType'].split(':')[0];template=templates.get(kind,{})
+        if kind=='ItemFixed'and passive_fixed_item(entry,template,o):
+            player.modelled_pending_items.add(entry['id']);continue
+        if kind not in ('ItemMagnet','ItemElementBall'):continue
+        item,reason=static_pickup(entry,template,o)
+        if item is not None:
+            if not(kind=='ItemMagnet'and coin_only_magnet(entry,template)):player.contact_avoidance.append(item)
+            player.modelled_pending_items.add(entry['id'])
 
 
 def skill_issues(role):

@@ -428,6 +428,8 @@ function E.privileged_state()
     out.role.data=values(field(n,'_ninjaData'));out.role.collider_parameters=values(field(n,'_ninjiaCollider'))
     out.role.colliders={};out.role.interaction_colliders={};out.role.god=n:IsGodMode();out.role.mounted=n.IsMountState
     out.role.skills=originalSkills()
+    local springAttraction=field(CS.NinjaController.Instance,'<SpringGravitation>k__BackingField')
+    out.role.spring_attraction=type(springAttraction)=='number'and springAttraction or springAttraction:GetHashCode()
     local cols=n.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
     for i=0,cols.Length-1 do local c=cols[i]
         if c.enabled and c.gameObject.activeInHierarchy and c.name=='Role'then
@@ -785,6 +787,14 @@ function E.privileged_state()
             local item={id=o:GetInstanceID(),type=kind,
                 position=vector(o.transform.position),fields=values(o),info=values(info),custom=values(custom)}
             item.info_identity=info and info:GetHashCode()or nil
+            item.custom_type=custom and custom:GetType().Name
+            item.custom,item.custom_projection=valueProjection(custom)
+            if kind=='ItemFixed'then
+                item.component_types={};local scripts=o:GetComponentsInChildren(typeof(U.MonoBehaviour),true)
+                for j=0,scripts.Length-1 do if scripts[j]then item.component_types[#item.component_types+1]=scripts[j]:GetType().FullName end end
+                item.animated_tree=o:GetComponentsInChildren(typeof(U.Animator),true).Length>0 or
+                    o:GetComponentsInChildren(typeof(U.Animation),true).Length>0
+            end
             if kind=='ItemSpring'then
                 local normal,pop=field(o,'_normalSpring'),field(o,'_popSpring');local q=o.transform.localRotation
                 item.spring={normal_active=normal and normal.activeSelf or false,pop_active=pop and pop.activeSelf or false,
@@ -809,7 +819,7 @@ function E.privileged_state()
     -- Read the actual resolved block list as well as spawned colliders. Unity
     -- instantiates terrain incrementally; missing a not-yet-created collider
     -- must not turn a known continuation into an imaginary pit.
-    out.terrain={};out.pending_enemies={};out.pending_items={};out.spawn_templates={}
+    out.terrain={};out.pending_enemies={};out.pending_items={};out.spawn_templates={items={}}
     local function springSpawnTemplate()
         local all=U.Resources.FindObjectsOfTypeAll(typeof(CS.ItemSpring));local original
         for i=0,all.Length-1 do local o=all[i]
@@ -832,6 +842,39 @@ function E.privileged_state()
                     row.vertices[#row.vertices+1]=vector(root:InverseTransformPoint(p))
                 end end end
             end
+            result.colliders[#result.colliders+1]=row
+        end
+        return result
+    end
+    local function staticPickupTemplate(name)
+        local all=U.Resources.FindObjectsOfTypeAll(typeof(CS[name]));local original
+        for i=0,all.Length-1 do local obj=all[i]
+            if obj.name==name and not obj.gameObject.activeInHierarchy then
+                assert(not original,'Ambiguous original pickup prefab');original=obj
+            end
+        end
+        if not original then return {missing=true}end
+        local root=original.transform;local manager=existingSingleton(typeof(CS.ItemManager))
+        local enumType=typeof(CS.GameItemInfo):GetField('_itemType',flags).FieldType
+        local enum=CS.System.Enum.Parse(enumType,name)
+        local result={id=original:GetInstanceID(),type=original:GetType().Name,
+            root_scale=vector(root.localScale),root_scripts={},colliders={},component_types={},
+            be_attract_level=tostring(field(original,'beAttractLevel')),follow_ground=field(original,'followGround'),
+            attract_item_level=field(original,'attractItemLevel'),
+            global_attract=manager and manager:IsItemCanAttracted(enum)or false,
+            attraction_manager_present=manager~=nil,
+            animated_root=root.gameObject:GetComponent(typeof(U.Animator))~=nil or root.gameObject:GetComponent(typeof(U.Animation))~=nil}
+        local scripts=root.gameObject:GetComponents(typeof(U.MonoBehaviour))
+        for i=0,scripts.Length-1 do if scripts[i]then result.root_scripts[#result.root_scripts+1]=scripts[i]:GetType().Name end end
+        scripts=root.gameObject:GetComponentsInChildren(typeof(U.MonoBehaviour),true)
+        for i=0,scripts.Length-1 do if scripts[i]then result.component_types[#result.component_types+1]=scripts[i]:GetType().FullName end end
+        result.animated_tree=root.gameObject:GetComponentsInChildren(typeof(U.Animator),true).Length>0 or
+            root.gameObject:GetComponentsInChildren(typeof(U.Animation),true).Length>0
+        local cs=root.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
+        for i=0,cs.Length-1 do local c=cs[i]
+            local row={type=c:GetType().Name,enabled=c.enabled,trigger=c.isTrigger,direct_root=c.transform==root}
+            if row.type=='BoxCollider'then row.center=vector(c.center);row.size=vector(c.size)
+            elseif row.type=='SphereCollider'then row.center=vector(c.center);row.radius=c.radius end
             result.colliders[#result.colliders+1]=row
         end
         return result
@@ -931,6 +974,10 @@ function E.privileged_state()
             if tostring(info._itemType)=='ItemSpring: 15'and not out.spawn_templates.spring then
                 out.spawn_templates.spring=springSpawnTemplate()
             end
+            local name=tostring(info._itemType):match('^([^:]+):')
+            if (name=='ItemMagnet'or name=='ItemElementBall'or name=='ItemFixed')and not out.spawn_templates.items[name]then
+                out.spawn_templates.items[name]=staticPickupTemplate(name)
+            end
             out.pending_items[#out.pending_items+1]=item
         end
         local function add(info,source)
@@ -1023,6 +1070,11 @@ function E.privileged_state()
         for _,item in ipairs(out.mechanism_items)do if item.type=='ItemSpring'then
             out.spawn_templates.spring=springSpawnTemplate();break
         end end
+    end
+    for _,item in ipairs(out.mechanism_items)do
+        if (item.type=='ItemMagnet'or item.type=='ItemElementBall'or item.type=='ItemFixed')and not out.spawn_templates.items[item.type]then
+            out.spawn_templates.items[item.type]=staticPickupTemplate(item.type)
+        end
     end
     return out
 end
