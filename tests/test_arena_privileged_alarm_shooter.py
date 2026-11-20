@@ -96,3 +96,32 @@ def test_future_targeted_shot_uses_candidate_actor_path_at_birth():
     assert not reason and not other
     assert len(a[5]['generated_hazards'])==len(b[5]['generated_hazards'])==2
     assert abs(a[5]['generated_hazards'][0].centers[-1,1]-b[5]['generated_hazards'][0].centers[-1,1])>.1
+
+
+def test_horizontal_forecast_memo_matches_uncached_world_across_candidate_actions():
+    o=DATA['future']['before'];model=PlayerModel(o);times=np.linspace(0.,1.,121);memo={}
+    for operations in [(),((.1,'jump'),),((.1,'down'),),((.1,'jump'),(.4,'down'))]:
+        _,states,_=model.trajectory(times,operations)
+        actual,missing=hazard_forecasts(o,times,model,states,forecast_cache=memo)
+        expected,unmapped=hazard_forecasts(o,times,model,states)
+        assert missing==unmapped
+        assert [h.id for h in actual]==[h.id for h in expected]
+        for a,b in zip(actual,expected):
+            np.testing.assert_array_equal(a.centers,b.centers)
+            np.testing.assert_array_equal(a.extents,b.extents)
+            np.testing.assert_array_equal(a.active,b.active)
+
+
+def test_tracking_birth_is_not_reused_from_a_different_vertical_candidate():
+    o=deepcopy(DATA['cases'][1]['before']);e=o['enemies'][0]
+    e['fields'].update(_state='Attack: 2',_bulletIndex=0,_shootTimer=0,_beforeShootTime=.3)
+    for p in e['alarm_shooter']['bullets']:p['_pointToNinja']=True
+    model=PlayerModel(o);times=np.linspace(0.,.8,97);memo={};forecasts=[]
+    for operations in [(),((0.,'jump'),)]:
+        _,states,_=model.trajectory(times,operations)
+        actual,missing=hazard_forecasts(o,times,model,states,forecast_cache=memo)
+        expected,unmapped=hazard_forecasts(o,times,model,states)
+        assert not missing and not unmapped
+        for a,b in zip(actual,expected):np.testing.assert_array_equal(a.centers,b.centers)
+        forecasts.append(next(h for h in actual if isinstance(h.id,str)))
+    assert abs(forecasts[0].centers[-1,1]-forecasts[1].centers[-1,1])>.1

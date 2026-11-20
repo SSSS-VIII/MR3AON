@@ -55,6 +55,8 @@ def select_alternative(controller, option, stamp):
         checked_offsets_ms=[-getattr(controller,'timing_radius',.05)*1000,getattr(controller,'timing_radius',.05)*1000],search_choice=True)
     if 'checked_until_seconds' in option:
         controller.scheduled['checked_until']=stamp+option['checked_until_seconds']
+    if option.get('witness'):
+        controller.scheduled['witness']=deepcopy(option['witness'])
     if 'negative_signature' in option:
         controller.scheduled['negative_signature']=deepcopy(option['negative_signature'])
         controller.scheduled['negative_checked_at']=stamp

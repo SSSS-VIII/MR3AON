@@ -18,6 +18,16 @@ class Proposal:
     evidence: dict
 
 
+def witness_operations(model,times,first,witness,offset=0.):
+    """Anchor the next input to world X, independently of the first's jitter."""
+    _,states,_=model.trajectory(times,(first,))
+    positions=np.array([m.x for m in states]);target=witness['world_x']
+    if target<=positions[0]or target>positions[-1]or np.any(np.diff(positions)<-1e-5):return None
+    second=float(np.interp(target,positions,times))+offset
+    if second<=first[0]or second<0:return None
+    return (first,(second,witness['action']))
+
+
 class InternalController:
     def __init__(self, *, horizon=1.8, timing_radius=.04, collect_alternatives=False):
         if horizon < 1. or not 0. <= timing_radius <= .05:
@@ -43,7 +53,8 @@ class InternalController:
         started = time.perf_counter()
         player = PlayerModel(observation)
         times = np.linspace(0., self.horizon, round(self.horizon*120)+1)
-        hazards, missing = hazard_forecasts(observation, times, player)
+        forecast_cache={}
+        hazards, missing = hazard_forecasts(observation, times, player,forecast_cache=forecast_cache)
         coupled = any(e['type']=='EnemyPoleaxeWarrior' and e['fields'].get('_enemyState')=='Idle: 0'
                       and not e['fields'].get('_dead') and not e['fields'].get('_isRecycled')
                       for e in rows(observation['enemies'])) or any(e['type'] == 'EnemyStraightBat' and
@@ -85,11 +96,16 @@ class InternalController:
         def evaluate(operations, checked_until=None, rollout=None, forecast_player=None):
             model = forecast_player or player
             body, motors, valid = rollout if rollout is not None else model.trajectory(times, operations)
-            if operations:
-                valid &= input_ready(operations[0][1],operations[0][0])
+            previous=dict(self.last_inputs)
+            for delay,action in operations:
+                # Only prior delivered inputs carry their endpoint reserve.
+                # The planned operations here already have concrete jitter.
+                reserve=self.timing_radius if self.collect_alternatives and previous[action]==self.last_inputs[action]else 0.
+                valid &= stamp+delay-(previous[action]+reserve)>=.1-clock_epsilon
+                previous[action]=stamp+delay
             evidence['evaluated'] += 1
             if coupled or forecast_player is not None:
-                actual_hazards,unmapped=hazard_forecasts(observation,times,model,motors)
+                actual_hazards,unmapped=hazard_forecasts(observation,times,model,motors,forecast_cache=forecast_cache)
                 new_missing=[m for m in unmapped if (m['id'],m['type'],m['reason'])not in original_missing]
                 # A rejected candidate-specific forecast is not an empty
                 # safe lane. Keep the guard for speed/target changes instead
@@ -141,6 +157,50 @@ class InternalController:
                         player_x_range=(float(np.min(body[:,0]-body[:,2])),float(np.max(body[:,0]+body[:,2]))),
                         required_safe_until_seconds=local_until)
 
+        def combine_checks(checks,nominal=0):
+            result=dict(checks[nominal])
+            result.update(safe=all(r['safe']for r in checks),
+                full_horizon_safe=all(r.get('full_horizon_safe',False)for r in checks),
+                clearance=min(r.get('clearance',-math.inf)for r in checks),
+                first_contact=min(r.get('first_contact',0.)for r in checks))
+            return result
+
+        def planned_check(delay,action,witness=None,checked_until=None):
+            if witness is None:return evaluate(((max(0.,delay),action),),checked_until)
+            checks=[]
+            for offset in (0.,-self.timing_radius,self.timing_radius):
+                operations=witness_operations(player,times,(max(0.,delay),action),witness,offset)
+                if operations is None:
+                    checks.append(dict(safe=False,full_horizon_safe=False,clearance=-math.inf,first_contact=0.))
+                else:checks.append(evaluate(operations,checked_until))
+            return combine_checks(checks)
+
+        continuation_cache={}
+        def continuation_exists(delay,action):
+            """Reject a locally safe reset with no modeled two-key future.
+
+            This is a viability filter, not a timing certificate. Any route
+            still needs its original per-key endpoint/native-prefix checks.
+            """
+            key=(delay,action)
+            if key in continuation_cache:return continuation_cache[key]
+            result=evaluate(((delay,action),),self.horizon)
+            if result['full_horizon_safe']:
+                continuation_cache[key]=True;return True
+            _,states,_=player.trajectory(times,((delay,action),))
+            end=min(self.horizon-.1,result['first_contact']-self.timing_radius)
+            start=math.ceil((delay+.1)/.05-1e-8)*.05
+            for when in np.arange(start,end+1e-8,.05):
+                ix=min(len(times)-1,int(np.searchsorted(times,when)))
+                for followup in ('jump','down'):
+                    if not player.action(copy(states[ix]),followup,float(when)):continue
+                    checked=evaluate(((delay,action),(float(when),followup)),self.horizon)
+                    if checked['full_horizon_safe']:
+                        continuation_cache[key]=True;return True
+            continuation_cache[key]=False
+            evidence.setdefault('locally_safe_dead_ends',[]).append(dict(action=action,delay=delay))
+            return False
+
         def finish(action, delay, window, result, reason):
             evidence['compute_ms'] = (time.perf_counter()-started)*1000
             evidence['selected'] = result
@@ -191,6 +251,10 @@ class InternalController:
             self.scheduled['_negative_model']=player
             self.scheduled['_negative_origin']=stamp
             self.scheduled['_negative_operation']=(max(0.,self.scheduled['due']-stamp-self.timing_radius),self.scheduled['action'])
+            if self.scheduled.get('witness'):
+                self.scheduled['_negative_operations']=[witness_operations(player,times,
+                    self.scheduled['_negative_operation'],self.scheduled['witness'],offset)
+                    for offset in (0.,-self.timing_radius,self.timing_radius)]
         def retained_negative():
             origin=pending.get('_negative_origin')
             if origin is None:
@@ -204,11 +268,15 @@ class InternalController:
                 return dict(safe=False,reason='unchanged_prefix_disagrees_with_native_state')
             query=elapsed+times
             mesh=np.unique(np.r_[np.linspace(0.,query[-1],math.ceil(query[-1]*120)+1),query])
-            bodies,motors,valid=prior.trajectory(mesh,(pending['_negative_operation'],))
-            indices=np.searchsorted(mesh,query)
-            motors=[motors[i]for i in indices]
-            projected=copy(player);projected.initial=motors[0]
-            result=evaluate((),pending_deadline(),(bodies[indices],motors,valid),projected)
+            plans=pending.get('_negative_operations',[(pending['_negative_operation'],)])
+            if not plans or any(p is None for p in plans):return dict(safe=False,reason='earlier_witness_anchor_missing')
+            results=[]
+            for operations in plans:
+                bodies,motors,valid=prior.trajectory(mesh,operations)
+                indices=np.searchsorted(mesh,query);motors=[motors[i]for i in indices]
+                projected=copy(player);projected.initial=motors[0]
+                results.append(evaluate((),pending_deadline(),(bodies[indices],motors,valid),projected))
+            result=combine_checks(results)
             evidence['retained_early_endpoint']=dict(origin_stamp=origin,seconds_since_origin=elapsed,
                 visibility_changed=proof_changed(),result=result)
             return result
@@ -219,7 +287,7 @@ class InternalController:
             pending = None
         if pending and stamp < pending['due']-clock_epsilon:
             delay = pending['due']-stamp
-            checks = [evaluate(((max(0.,delay+d),pending['action']),),pending_deadline())
+            checks = [planned_check(max(0.,delay+d),pending['action'],pending.get('witness'),pending_deadline())
                       for d in (-self.timing_radius, 0., self.timing_radius)]
             negative_future=delay>=self.timing_radius-clock_epsilon
             if not negative_future:checks[0]=retained_negative()
@@ -233,10 +301,11 @@ class InternalController:
                 return finish('none', 0., None, baseline, 'selected_internal_window_invalidated')
             pending=None
         if pending and pending['due']-clock_epsilon <= stamp <= pending['due']+self.timing_radius:
-            nominal = evaluate(((0.,pending['action']),),pending_deadline())
-            late = evaluate(((self.timing_radius,pending['action']),),pending_deadline())
+            nominal = planned_check(0.,pending['action'],pending.get('witness'),pending_deadline())
+            late = planned_check(self.timing_radius,pending['action'],pending.get('witness'),pending_deadline())
             early=retained_negative()
-            if nominal['safe'] and late['safe'] and early['safe']:
+            viable=(pending.get('witness')or nominal['full_horizon_safe']or continuation_exists(0.,pending['action']))
+            if nominal['safe'] and late['safe'] and early['safe'] and viable:
                 # Re-evaluate the retained earlier trajectory against the
                 # newly observed world. Do not replace an already-past key
                 # with a new key at the current decision boundary.
@@ -290,6 +359,7 @@ class InternalController:
                              for offset in (-self.timing_radius, self.timing_radius)]
                 if not all(r['safe'] for r in endpoints):
                     continue
+                if not nominal['full_horizon_safe']and not continuation_exists(center,action):continue
                 margin = min(r['clearance'] for r in [nominal]+endpoints)
                 options.append(dict(action=action, delay=center, window=(lo, hi),
                                     result=nominal, margin=margin, endpoints=endpoints,
@@ -306,10 +376,58 @@ class InternalController:
                         ends = [evaluate(((candidate+d,action),))
                                 for d in (-self.timing_radius,self.timing_radius)]
                         if middle['safe'] and all(r['safe'] for r in ends):
+                            if not middle['full_horizon_safe']and not continuation_exists(candidate,action):continue
                             options.append(dict(action=action,delay=candidate,window=(lo,hi),result=middle,
                                 checked_until_seconds=self.horizon if all(r['full_horizon_safe']for r in [middle]+ends) else min(r['required_safe_until_seconds']for r in [middle]+ends),
                                 margin=min(r['clearance'] for r in [middle]+ends),endpoints=ends,
                                 survival=min(r['first_contact'] for r in [middle]+ends)))
+        if not options and not baseline['safe']:
+            # A single flip cannot express rope-below -> rope-above -> jump.
+            # Search short legal maneuvers in the internal model only, keeping
+            # the next key as a world-X witness. It is re-evaluated while
+            # approaching the first key, then replanned from the native state.
+            latest_first=min(self.horizon-.4,baseline['first_contact']-.1-self.timing_radius)
+            evidence['joint_witness_candidates']=0
+            for first_delay in np.arange(.1,max(.1,latest_first)+1e-8,.2)if latest_first>=.1 else ():
+                _,prefix,valid=player.trajectory(np.array([0.,float(first_delay)]))
+                if not valid:continue
+                for first_action in ('jump','down'):
+                    if not input_ready(first_action,float(first_delay)-self.timing_radius):continue
+                    if not player.action(copy(prefix[-1]),first_action,float(first_delay)):continue
+                    _,first_states,_=player.trajectory(times,((float(first_delay),first_action),))
+                    for second_action in ('jump','down'):
+                        start=first_delay+(.1+2*self.timing_radius if first_action==second_action else .1)
+                        start=math.ceil(start/.05-1e-8)*.05
+                        samples=[]
+                        for second_delay in np.arange(start,self.horizon-.3+1e-8,.05):
+                            ix=min(len(times)-1,int(np.searchsorted(times,second_delay)))
+                            if not player.action(copy(first_states[ix]),second_action,float(second_delay)):
+                                samples.append((float(second_delay),dict(safe=False)));continue
+                            result=evaluate(((float(first_delay),first_action),(float(second_delay),second_action)),self.horizon)
+                            evidence['joint_witness_candidates']+=1
+                            samples.append((float(second_delay),result))
+                        groups=[];group=[]
+                        for delay,result in samples:
+                            if result['safe']:group.append((delay,result))
+                            elif group:groups.append(group);group=[]
+                        if group:groups.append(group)
+                        for group in groups:
+                            lo,hi=group[0][0],group[-1][0]
+                            if hi-lo<2*self.timing_radius-clock_epsilon:continue
+                            second_delay=(lo+hi)/2
+                            target=float(np.interp(second_delay,times,[m.x for m in first_states]))
+                            witness=dict(action=second_action,world_x=target)
+                            nominal=planned_check(float(first_delay),first_action,witness,self.horizon)
+                            ends=[planned_check(float(first_delay)+offset,first_action,witness,self.horizon)
+                                  for offset in (-self.timing_radius,self.timing_radius)]
+                            if not nominal['safe']or not all(r['safe']for r in ends):continue
+                            options.append(dict(action=first_action,delay=float(first_delay),
+                                window=(float(first_delay)-self.timing_radius,float(first_delay)+self.timing_radius),
+                                result=nominal,margin=min(r['clearance']for r in [nominal]+ends),
+                                endpoints=ends,checked_until_seconds=self.horizon,
+                                survival=min(r['first_contact']for r in [nominal]+ends),witness=witness))
+                    if options:break
+                if options:break
         if not options:
             self.scheduled = None
             reason = 'no_safe_action_window' if not baseline['safe'] else 'coast_preserves_safety'
@@ -325,7 +443,8 @@ class InternalController:
         if self.collect_alternatives:
             evidence['alternatives'] = [dict(action=o['action'],delay=o['delay'],window=o['window'],
                 margin=o['margin'],first_contact=o['result']['first_contact'],checked_until_seconds=o['checked_until_seconds'],
-                negative_signature=[list(v)for v in sorted(signature(),key=repr)]) for o in options]
+                negative_signature=[list(v)for v in sorted(signature(),key=repr)],
+                **(dict(witness=o['witness'])if o.get('witness')else{})) for o in options]
         earlier_recovery = (best['result']['recovered_at'] is not None and baseline['recovered_at'] is not None
                             and best['result']['recovered_at'] < baseline['recovered_at']-.1)
         if baseline['safe'] and best['result']['reserve'] >= baseline['reserve'] and not earlier_recovery:
@@ -348,6 +467,7 @@ class InternalController:
                                   window=absolute,origin_stamp=stamp,
                                   checked_until=stamp+best['checked_until_seconds'],
                                   checked_offsets_ms=[-self.timing_radius*1000,self.timing_radius*1000])
+            if best.get('witness'):self.scheduled['witness']=dict(best['witness'])
             remember_negative()
         delay = best['delay']
         if delay <= clock_epsilon:

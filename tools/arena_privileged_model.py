@@ -781,7 +781,7 @@ def spider_positions(enemy, times, *, stamp, tick, activation_tick=None):
     return np.asarray(ys)
 
 
-def hazard_forecasts(observation, times, player, trajectory_states=None):
+def hazard_forecasts(observation, times, player, trajectory_states=None,*,forecast_cache=None):
     """Per-instance original phase clocks, never guessed visual phase ages."""
     result, unsupported = [], []
     speed = observation['role']['data']['_moveSpeed']
@@ -793,6 +793,21 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
                                         for e in rows(observation['enemies'])):
         _,coast,valid=player.trajectory(times)
         if valid:trajectory_states=coast
+    camera_key=role_x_key=None
+    if forecast_cache is not None:
+        # One immutable paused observation owns this memo. A new observation
+        # (including a restored VM branch) cannot inherit the old world.
+        if forecast_cache.get('_observation')is not observation:
+            forecast_cache.clear();forecast_cache['_observation']=observation
+        if trajectory_states is not None and any(e['type']in ('EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter')
+                                                 for e in rows(observation['enemies'])):
+            from arena_privileged_families import camera_x_bounds
+            family_context['camera_x']=camera_x_bounds(observation,times,player,trajectory_states)
+            camera_bounds,reason=family_context['camera_x']
+            if camera_bounds is not None:
+                camera_key=(np.asarray(times).tobytes(),player.tick,player.speed,
+                            camera_bounds[0].tobytes(),camera_bounds[1].tobytes())
+                role_x_key=np.asarray([(m.physical_x,m.previous_x,m.offset_render)for m in trajectory_states]).tobytes()
     for enemy in rows(observation['enemies']):
         f, custom, kind = enemy['fields'], enemy['custom'], enemy['type']
         if f.get('_dead') or f.get('_isRecycled'):
@@ -903,7 +918,19 @@ def hazard_forecasts(observation, times, player, trajectory_states=None):
         else:
             from arena_privileged_families import forecast
             try:
-                predicted, reason = forecast(enemy, times, observation, player,trajectory_states,context=family_context)
+                memo=None
+                if camera_key is not None and kind in ('EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter'):
+                    # Existing bullets depend on camera X only. Pending
+                    # non-tracking shots also sample actor X at birth. A
+                    # tracking shot must retain Y and is deliberately not
+                    # memoized through this horizontal-only dependency key.
+                    tracking=kind=='EnemyAlarmShooter'and any(p.get('_pointToNinja')for p in rows(enemy.get('alarm_shooter',{}).get('bullets')))
+                    if not tracking:memo=(enemy['id'],kind,camera_key,role_x_key if kind=='EnemyAlarmShooter'else None)
+                if memo is not None and memo in forecast_cache:
+                    predicted,reason=forecast_cache[memo]
+                else:
+                    predicted, reason = forecast(enemy, times, observation, player,trajectory_states,context=family_context)
+                    if memo is not None:forecast_cache[memo]=(predicted,reason)
             except KeyError as error:
                 predicted, reason = None, 'native_field_missing:'+str(error)
             if predicted is None:

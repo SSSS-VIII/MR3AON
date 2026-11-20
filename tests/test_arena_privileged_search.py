@@ -69,7 +69,7 @@ def test_search_alternatives_are_native_model_safe_windows_not_key_enumeration()
 
 def test_search_selected_window_has_fixed_absolute_due_time():
     obs=observation();controller=InternalController(collect_alternatives=True)
-    first=controller.decide(obs);option=first.evidence['alternatives'][-1]
+    first=controller.decide(obs);option=max(first.evidence['alternatives'],key=lambda c:c['delay'])
     select_alternative(controller,option,obs['state']['time'])
     due=controller.scheduled['due']
     later=deepcopy(obs);later['state']['time']+=.01

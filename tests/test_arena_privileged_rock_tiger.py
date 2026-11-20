@@ -102,9 +102,9 @@ def test_aim_is_recomputed_from_the_actual_candidate_actor_trajectory():
 def test_registered_controller_passes_candidate_trajectories_to_aim_forecast(monkeypatch):
     import arena_privileged_policy as policy
     original=policy.hazard_forecasts;supplied=[]
-    def traced(observation,times,player,trajectory_states=None):
+    def traced(observation,times,player,trajectory_states=None,**kwargs):
         supplied.append(trajectory_states is not None)
-        return original(observation,times,player,trajectory_states)
+        return original(observation,times,player,trajectory_states,**kwargs)
     monkeypatch.setattr(policy,'hazard_forecasts',traced)
     before=deepcopy(FIXTURE['cases'][0]['before'])
     policy.InternalController().decide(before)

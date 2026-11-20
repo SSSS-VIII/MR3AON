@@ -227,10 +227,10 @@ def test_candidate_specific_missing_forecast_is_not_an_empty_safe_lane(native,mo
     import arena_privileged_policy as policy
     enemy=next(e for e in native['enemies']if e['fields']['_currState'].startswith('enterScreen:'))
     enemy['custom']['_pointToNinja']=True
-    def reject_candidate(observation,times,player,states=None):
+    def reject_candidate(observation,times,player,states=None,**kwargs):
         if states is not None:
             return [],[dict(id=enemy['id'],type=enemy['type'],reason='candidate_motion_not_supported')]
-        return hazard_forecasts(observation,times,player)
+        return hazard_forecasts(observation,times,player,**kwargs)
     monkeypatch.setattr(policy,'hazard_forecasts',reject_candidate)
     proposal=InternalController().decide(native)
     assert proposal.reason=='no_safe_action_window'
