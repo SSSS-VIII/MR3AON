@@ -14,11 +14,11 @@ from arena_privileged_families import FAMILIES
 
 CATALOG = ROOT/'debug/arena-client/yolo/entity-catalog-final'
 
-# Current Cfg no longer contains this legacy type. Original pooled instances
-# identify both info._enemyType=238 and concrete EnemyRotateElectricBall;
-# v103 also verifies the generated rigid assembly. No enum-name inference for
-# the still unresolved 226/257, and no fabricated prefab/resource binding.
-NATIVE_BINDINGS={238:'EnemyRotateElectricBall'}
+# Original runtime instances bind legacy IDs missing from the extracted Cfg
+# prefab index. v103 verifies 238 and its generated assembly; v364 captures
+# active 226/257 instances with their actual info enum, concrete class and
+# custom struct. These bindings do not certify initialization or a route.
+NATIVE_BINDINGS={226:'EnemyDart',238:'EnemyRotateElectricBall',257:'EnemyKill'}
 
 
 def dependencies(inventory, entities, prefabs):
