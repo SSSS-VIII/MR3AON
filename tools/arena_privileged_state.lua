@@ -1031,6 +1031,7 @@ function E.privileged_state()
         local body=original:GetComponent(typeof(U.Rigidbody))
         local result={id=original:GetInstanceID(),type=original:GetType().Name,source_name=name,
             kinematic=not body or body.isKinematic,gravity=body and body.useGravity or false,callbacks_clear=true,
+            gravity_acc=field(original,'_gravityAcc'),reverse_run_flip=field(original,'reverseRunFlip'),native_spawn=true,
             head_scale=vector(head.localScale),head_rotation=vector(head.localEulerAngles),parent_identity=true,
             native_initialization=true,unknown_hooks={},component_types={},colliders={},
             animated_tree=original:GetComponentsInChildren(typeof(U.Animator),true).Length>0 or
@@ -1060,6 +1061,10 @@ function E.privileged_state()
             if not hook or hook:GetValue(nil)~=nil then
                 result.native_initialization=false;result.unknown_hooks[#result.unknown_hooks+1]=entry[1].Name..'.'..entry[2]
             end
+        end
+        for _,name in ipairs({'CheckEnemy','CheckAddEnemyEntity','CreateEnemy'})do
+            local hook=typeof(CS.LevelBlockCollider):GetField('__Hotfix0_'..name,staticFlags)
+            if not hook or hook:GetValue(nil)~=nil then result.native_spawn=false end
         end
         local cs=original:GetComponentsInChildren(typeof(U.Collider),true)
         for i=0,cs.Length-1 do local c=cs[i];local info=shape(c)

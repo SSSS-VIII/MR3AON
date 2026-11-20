@@ -265,6 +265,9 @@ class PlayerModel:
         self.unsupported.extend(skill_issues(role))
         self.unsupported.extend(collect_effect_issues(role))
         self.initial.spring_ready=self.popfall_supported
+        # A copied motor is a counterfactual physical prefix. Native enemy
+        # birth/camera history still belongs to this observed motor identity.
+        self._observed_motor=self.initial
 
     def spring_distance(self,motor,item):
         from arena_privileged_geometry import capsule_quad
@@ -943,6 +946,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
         # (including a restored VM branch) cannot inherit the old world.
         if forecast_cache.get('_observation')is not observation:
             forecast_cache.clear();forecast_cache['_observation']=observation
+        family_context['pending_hook_phases']=forecast_cache.setdefault('pending_hook_phases',{})
         if trajectory_states is not None and any(e['type']in ('EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter')
                                                  for e in rows(observation['enemies'])):
             from arena_privileged_families import camera_x_bounds
@@ -1160,7 +1164,15 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
                         lever=np.linalg.norm(np.array([xy(p)for p in c['quad']])-pivot,axis=1).max()
                     else:
                         lever=np.linalg.norm(xy(c['center'])-pivot)+np.linalg.norm(xy(c['extents']))
-                    padding=float(lever*predicted[5]['angular_padding']);approximate=True
+                    if predicted[5].get('historical_shapes')is not None:
+                        center,extent=predicted[5]['historical_shapes'][c['id']]
+                        quads=None;padding=0.
+                    elif predicted[5].get('full_turn'):
+                        numeric=.0002+16*abs(float(np.spacing(np.float32(max(1.,abs(pivot).max(),lever)))))
+                        center=np.tile(pivot,(len(times),1));extent=np.full((len(times),2),lever+numeric)
+                        quads=None;padding=0.
+                    else:padding=float(lever*predicted[5]['angular_padding'])
+                    approximate=True
                 elif kind in ('EnemyStraightBack','EnemySmallSword') and len(predicted)>5:
                     padding=float(predicted[5]['position_padding']);approximate=True
             if kind=='EnemySmallSword'and predicted[4]is not None:

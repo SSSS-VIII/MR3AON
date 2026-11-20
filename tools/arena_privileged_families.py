@@ -1791,20 +1791,20 @@ def pending_hook(entry,times,observation):
                 set(custom)!={'_render','_radius','_maxLineSpeed','_isGravityOpposite'}or custom['_render']!=0 or
                 info.get('createPlayerUID')or info.get('baseID')!=0):
             raise ValueError('pending_hook_source_binding')
-        if (template.get('native_initialization')is not True or rows(template.get('unknown_hooks'))or
+        if (template.get('native_initialization')is not True or template.get('native_spawn')is not True or rows(template.get('unknown_hooks'))or
                 template.get('animated_tree',True)or template.get('parent_identity')is not True or
                 template.get('kinematic')is not True or template.get('gravity')is not False or
                 template.get('callbacks_clear')is not True or
                 not set(rows(template.get('component_types')))<= {'EnemyHook','EnemyBaseCollider','EnemyAttackModule','EnemyFissonablePieces'}or
                 'EnemyHook'not in rows(template.get('component_types'))or
-                any(abs(template['head_rotation'][a])>1e-8 for a in ('x','y','z'))):
+                any(not math.isfinite(template['head_rotation'][a])or abs(template['head_rotation'][a])>1e-8 for a in ('x','y','z'))):
             raise ValueError('pending_hook_unverified_hierarchy')
         angles=info['_localEulerAngles'];scale=np.array([info['_localScale'][a]for a in ('x','y','z')])
         head_scale=np.array([template['head_scale'][a]for a in ('x','y','z')])
         spawn=np.array([entry['block_start'][a]+info['_localPosition'][a]for a in ('x','y','z')])
         radius=custom['_radius'];speed=custom['_maxLineSpeed']
         if (observation['camera']['direction']!=1 or any(abs(angles[a])>1e-8 for a in ('x','y'))or
-                not np.isfinite([*scale,*head_scale,*spawn,radius,speed]).all()or min(abs(scale))<=0 or
+                not np.isfinite([*scale,*head_scale,*spawn,radius,speed,angles['z']]).all()or min(abs(scale))<=0 or
                 min(abs(head_scale))<=0 or abs(spawn[2])>1e-8 or radius<=0 or speed<0):
             raise ValueError('pending_hook_native_parameter_domain')
         length=float(np.float32(np.float32(max(np.float32(radius),np.float32(1.76)))+np.float32(-1.76)))
@@ -1816,6 +1816,7 @@ def pending_hook(entry,times,observation):
                     not box['under_head']or box['under_pole']or len(rows(box['vertices']))!=8):
                 raise ValueError('pending_hook_original_head_box_binding')
             vertices=np.array([[v[a]for a in ('x','y','z')]for v in rows(box['vertices'])])*head_scale
+            if not np.isfinite(vertices).all():raise ValueError('pending_hook_native_parameter_domain')
             vertices[:,1]-=length
             vertices*=scale
             # Root's rigid Z rotation preserves each scaled vertex radius.
@@ -1827,6 +1828,168 @@ def pending_hook(entry,times,observation):
             'Original EnemyHook.SetHookRadius head reset; complete pre-birth swing envelope',
             approximate=True,geometry='sphere')],None
     except (KeyError,ValueError)as error:return None,str(error)
+
+
+def hook_reference_history(times,observation,player):
+    """Actual native origin before a jittered key, plus its full actor path."""
+    history=getattr(player,'_reference_history',None)
+    if history is None:return None
+    prior=history['model'];origin=prior.observation;indices=history['indices'];mesh=history['times']
+    if (getattr(prior,'_observed_motor',None)is not prior.initial or prior.tick!=player.tick or
+            abs(origin['state']['time']+history['offset']-observation['state']['time'])>1e-6 or
+            len(indices)!=len(times)or np.max(abs(np.asarray(mesh)[indices]-history['offset']-times))>1e-6):return None
+    return history
+
+
+def hook_rotation_precedes_counterfactual_key(enemy,times,observation,player):
+    """Once already rotating, Hook has no later role/camera-dependent phase."""
+    from arena_privileged_model import rows,phase
+    history=hook_reference_history(times,observation,player)
+    if history is None:return False
+    for prior in rows(history['model'].observation['enemies']):
+        if (prior['id']==enemy['id']and prior['type']==enemy['type']and
+                prior.get('info_identity')is not None and prior['info_identity']==enemy.get('info_identity')and
+                prior['fields'].get('m_index')==enemy['fields'].get('m_index')and
+                prior['custom']==enemy['custom']and prior['scale']==enemy['scale']and
+                not prior['fields'].get('_dead')and not prior['fields'].get('_isRecycled')and
+                phase(prior['fields']['_enemyState'])=='rotation'and
+                phase(enemy['fields']['_enemyState'])=='rotation'and
+                prior['position']==enemy['position']and prior['fields']['_gravityAcc']==enemy['fields']['_gravityAcc']):
+            return True
+    return False
+
+
+def hook_pending_history(entry,times,observation,player):
+    """Propagate birth/activation from the actual pre-key world, never rewind it."""
+    from dataclasses import replace
+    from arena_privileged_model import rows
+    history=hook_reference_history(times,observation,player)
+    if history is None:return None
+    prior=history['model'];origin=prior.observation
+    matches=[e for e in rows(origin.get('pending_enemies'))if e['info_identity']==entry['info_identity']and
+        e['info']['_enemyType']==entry['info']['_enemyType']and e['custom']==entry['custom']]
+    if len(matches)!=1:return None
+    old=matches[0]
+    for field in ('_localPosition','_localScale','_localEulerAngles'):
+        if old['info'][field]!=entry['info'][field]:return None
+    if 'block_start'in entry and entry['block_start']!=old['block_start']:return None
+    hs,reason=pending_hook_phase(old,history['times'],origin,prior,history['motors'],{})
+    if reason:return None
+    indices=history['indices']
+    return [replace(h,centers=h.centers[indices],extents=h.extents[indices],active=h.active[indices],
+        source=h.source+'; propagated from the actual pre-key world')for h in hs]
+
+
+def pending_hook_phase(entry,times,observation,player,trajectory_states,context=None):
+    """Union original birth/activation ticks and the native pendulum steps.
+
+    The actual enemyList CheckEnemy call passes extra distance zero (the
+    separate preload queue only requests resources). Root creation tests the
+    role-object X; Hook then waits for the cached camera right edge plus 2.
+    Unproved parents, vertical gates, cameras or wide timing intervals retain
+    the separately valid complete-turn bound instead of a guessed phase.
+    """
+    from arena_privileged_model import Hazard,rows,phase
+    fallback,reason=pending_hook(entry,times,observation)
+    if reason:return fallback,reason
+    try:
+        if getattr(player,'_observed_motor',None)is not player.initial:
+            historical=hook_pending_history(entry,times,observation,player)
+            return (historical,None)if historical is not None else(fallback,None)
+        info=entry['info'];custom=entry['custom'];kind=info['_enemyType'].split(':')[0]
+        template=observation['spawn_templates']['hooks'][kind]
+        if (entry['source']!='native_enemyList'or entry['vertical_gate']or
+                template.get('native_spawn')is not True or custom['_isGravityOpposite']is not False or
+                not math.isfinite(info['generateDistance'])or info['generateDistance']<0 or
+                not isinstance(template.get('reverse_run_flip'),bool)or not player.native_samples or
+                getattr(player,'_observed_motor',None)is not player.initial or
+                player.initial.mode in ('popup','popfall')or
+                any(m.mode in ('popup','popfall')for m in trajectory_states)):
+            return fallback,None
+        tick=player.tick;age=observation['state']['time']-observation['role']['fields']['_lastFixedUpdateTime']
+        if not -.0002<=age<=tick+.0002:return fallback,None
+        age=float(np.clip(age,0.,tick));count=int(math.floor((age+times[-1]+1e-8)/tick))
+        query=np.maximum(0.,np.arange(count+1)*tick-age)
+        low,high=role_reference_rectangles(times,trajectory_states,query,observation['role']['fields']['_lastRoleObjPos'])
+        spawn=np.array([entry['block_start'][a]+info['_localPosition'][a]for a in ('x','y','z')])
+        threshold=spawn[0]-info['generateDistance']
+        possible=np.flatnonzero(high[:,0]>=threshold)
+        if not len(possible):return [],None
+        certain=np.flatnonzero(low[:,0]>=threshold)
+        first=max(0,int(possible[0])-1);last=min(count,int(certain[0])+1 if len(certain)else count)
+        if last-first>8:return fallback,None
+        if context is not None and 'camera_x'in context:reference=context['camera_x']
+        else:
+            reference=camera_x_bounds(observation,times,player,trajectory_states)
+            if context is not None:context['camera_x']=reference
+        camera,missing=reference
+        if missing:return fallback,None
+        camera_age=observation['state']['time']-observation['camera']['fields']['_lastFixedUpdateTime']
+        camera_times=np.maximum(0.,np.arange(len(camera[0]))*tick-camera_age)
+        right_offset=observation['camera']['right']['x']-observation['camera']['position']['x']
+        if not math.isfinite(right_offset):return fallback,None
+        camera_lo=[];camera_hi=[]
+        for t in query:
+            # Cached render interpolation consumes adjacent physical samples,
+            # including the preceding render frame's still-cached right edge.
+            a=max(0,int(np.searchsorted(camera_times,max(0.,t-tick-1/60),side='right'))-1)
+            b=min(len(camera_times)-1,int(np.searchsorted(camera_times,t+tick,side='left')))
+            camera_lo.append(min(camera[0][a:b+1])+right_offset)
+            camera_hi.append(max(camera[1][a:b+1])+right_offset)
+        possible=np.flatnonzero(np.asarray(camera_hi)+2>spawn[0])
+        certain=np.flatnonzero(np.asarray(camera_lo)+2>spawn[0])
+        activate_first=int(possible[0])if len(possible)else count+1
+        activate_last=int(certain[0])if len(certain)else count+1
+        if activate_last-activate_first>8:return fallback,None
+        memo=context.setdefault('pending_hook_phases',{})if context is not None else{}
+        key=(id(entry),entry['id'],np.asarray(times).tobytes(),tick,age,first,last,activate_first,activate_last)
+        if key in memo:return memo[key],None
+        f=np.float32;g=f(template['gravity_acc']);radius=f(custom['_radius']);speed=f(custom['_maxLineSpeed'])
+        if not math.isfinite(g)or g<=0:return fallback,None
+        theta0=f(f(f(info['_localEulerAngles']['z'])*f(math.pi))/f(180.))
+        energy=f(f(speed*speed)/f(g+g));height=f(radius-f(radius*f(math.cos(float(theta0)))))
+        omega0=f(-f(math.sqrt(max(0.,float(f(f(g+g)*f(energy-min(height,energy)))))))/radius)
+        if not math.isfinite(omega0):return fallback,None
+        length=float(f(f(max(radius,f(1.76)))+f(-1.76)))
+        scale=np.array([info['_localScale'][a]for a in ('x','y','z')]);head=np.array([template['head_scale'][a]for a in ('x','y','z')])
+        if template['reverse_run_flip']:scale[0]=abs(scale[0])
+        vertices=[]
+        for box in rows(template['colliders']):
+            v=np.array([[p[a]for a in ('x','y','z')]for p in rows(box['vertices'])])*head
+            v[:,1]-=length;vertices.extend((v*scale)[:,:2])
+        vertices=np.array(vertices);lower=np.full((count+1,2),np.inf);upper=np.full_like(lower,-np.inf)
+        active=np.zeros(count+1,bool);max_delta=0.;branches=0;dt=f(tick)
+        for born in range(first,last+1):
+            a=max(born,activate_first);b=min(count,max(born,activate_last))
+            activations=list(range(a,b+1))
+            if activate_last>count or not activations:activations.append(count+1)
+            for activation in activations:
+                theta=theta0;omega=omega0;previous=theta;branches+=1
+                for n in range(born,count+1):
+                    previous=theta
+                    if n>activation:
+                        omega=f(omega-f(f(g*dt)*f(math.sin(float(theta)))))
+                        theta=f(theta+f(omega*dt))
+                    max_delta=max(max_delta,abs(float(theta-previous)))
+                    for angle in (previous,theta):
+                        co,si=math.cos(float(angle)),math.sin(float(angle));rotation=np.array([[co,-si],[si,co]])
+                        points=vertices@rotation.T+spawn[:2]
+                        lower[n]=np.minimum(lower[n],points.min(axis=0));upper[n]=np.maximum(upper[n],points.max(axis=0))
+                    active[n]=True
+        steps=np.floor((age+np.asarray(times)+1e-8)/tick).astype(int)
+        # Include the adjacent pose and the complete interpolation arc. Using
+        # only sampled endpoint AABBs can miss a rotating box corner in between.
+        previous=np.maximum(0,steps-1);enabled=active[steps]|active[previous]
+        lo=np.minimum(lower[steps],lower[previous]);hi=np.maximum(upper[steps],upper[previous])
+        lo=np.where(enabled[:,None],lo,spawn[:2]);hi=np.where(enabled[:,None],hi,spawn[:2])
+        numeric=.0002+16*abs(float(np.spacing(np.float32(max(1.,abs(spawn).max())))))
+        padding=fallback[0].extents[0,0]*max_delta+numeric
+        result=[Hazard(entry['id']+':phase',entry['id'],'EnemyHook',(lo+hi)/2,(hi-lo)/2+padding,enabled,
+            'Original EnemyHook reset and fixed-step swing; bounded role-distance birth and camera-cache activation ticks',
+            approximate=True)]
+        memo[key]=result
+        return result,None
+    except (KeyError,ValueError,IndexError):return fallback,None
 
 
 def pending_enemy_forecasts(observation,times,player,trajectory_states,context=None):
@@ -1847,7 +2010,7 @@ def pending_enemy_forecasts(observation,times,player,trajectory_states,context=N
         reachable=float(high[:,0].max())+abs(player.speed)*player.tick>=spawn[0]-info['generateDistance']
         if not reachable and kind not in PENDING_BLADE_NAMES|{'EnemyHook','EnemyGoldHook'}:continue
         if kind in ('EnemyHook','EnemyGoldHook'):
-            hs,reason=pending_hook(entry,times,observation)
+            hs,reason=pending_hook_phase(entry,times,observation,player,trajectory_states,context)
             if hs is not None:result.extend(hs);continue
         elif kind=='EnemySmallSword':
             hs,reason=pending_small_sword(entry,times,observation,player,trajectory_states,context)
@@ -2796,6 +2959,23 @@ def forecast(enemy, times, observation, player, trajectory_states=None,context=N
         angles = np.deg2rad(f['_speedRotate']*observation['state']['speed']*.125)*np.maximum(0.,times-enter)
         return (zero, angles, 'EnemyMace.ProcessState'), None
     if kind in ('EnemyHook','EnemyBambooThorn'):
+        observed=getattr(player,'_observed_motor',None)
+        if observed is not None and observed is not player.initial and not hook_rotation_precedes_counterfactual_key(enemy,times,observation,player):
+            historical=hook_pending_history(enemy,times,observation,player)
+            if historical is not None:
+                active=np.zeros(len(times),bool);lo=np.full((len(times),2),np.inf);hi=np.full_like(lo,-np.inf)
+                for h in historical:
+                    lo=np.minimum(lo,np.where(h.active[:,None],h.centers-h.extents,np.inf))
+                    hi=np.maximum(hi,np.where(h.active[:,None],h.centers+h.extents,-np.inf))
+                    active|=h.active
+                pivot=xy(enemy['position']);lo=np.where(active[:,None],lo,pivot);hi=np.where(active[:,None],hi,pivot)
+                shapes={c['id']:((lo+hi)/2,(hi-lo)/2)for c in enemy['colliders']if c.get('damage_kind')}
+                return (zero,angles,kind+'.ProcessState; birth propagated from actual pre-key world',active,
+                    None,dict(historical_shapes=shapes,angular_padding=0.)),None
+            # A prior jittered key could have changed birth/camera activation.
+            # With no pre-key lineage, the nominal live angle is not its phase.
+            return (zero,angles,kind+'.ProcessState; counterfactual complete-turn enclosure',
+                    None,None,dict(full_turn=True,angular_padding=0.)),None
         mode = phase(f['_enemyState'])
         waiting_entry=mode=='none'
         if waiting_entry and (player.initial.mode in ('popup','popfall')or trajectory_states is not None and

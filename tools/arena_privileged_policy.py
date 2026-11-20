@@ -367,8 +367,10 @@ class InternalController:
             results=[]
             for operations in plans:
                 bodies,motors,valid=prior.trajectory(mesh,operations)
-                indices=np.searchsorted(mesh,query);motors=[motors[i]for i in indices]
+                indices=np.searchsorted(mesh,query);all_motors=motors;motors=[motors[i]for i in indices]
                 projected=copy(player);projected.initial=motors[0]
+                projected._reference_history=dict(model=prior,times=mesh,motors=all_motors,
+                    indices=indices,offset=elapsed)
                 results.append(evaluate((),pending_deadline(),(bodies[indices],motors,valid),projected))
             result=combine_checks(results)
             evidence['retained_early_endpoint']=dict(origin_stamp=origin,seconds_since_origin=elapsed,
