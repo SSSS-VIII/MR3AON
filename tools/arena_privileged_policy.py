@@ -21,7 +21,11 @@ class InternalController:
         if horizon < 1. or not 0. <= timing_radius <= .05:
             raise ValueError('Use a full action horizon and a <=100ms total timing window')
         self.horizon = horizon
-        self.timing_radius = timing_radius
+        self.requested_timing_radius = timing_radius
+        self.timing_quantum = 1/60
+        # The original endpoint transport rounds 40ms outward to three
+        # rendered frames (50ms). Plan the interval it will actually test.
+        self.timing_radius = math.ceil(timing_radius/self.timing_quantum-1e-8)*self.timing_quantum
         self.last_input = -math.inf
         self.last_inputs = dict(jump=-math.inf,down=-math.inf)
         self.scheduled = None
@@ -49,15 +53,19 @@ class InternalController:
         # extra 50ms decision interval at the nominal 100ms boundary.
         clock_epsilon = max(.00002,2*abs(float(np.spacing(np.float32(stamp)))))
         def input_ready(action,delay):
-            return stamp+delay-self.last_inputs[action] >= .1-clock_epsilon
+            previous_late = self.timing_radius if self.collect_alternatives else 0.
+            return stamp+delay-(self.last_inputs[action]+previous_late) >= .1-clock_epsilon
         evidence = dict(native_types=sorted({e['type'] for e in rows(observation['enemies'])}),
                         models=sorted({h.source for h in hazards}), unsupported_role=player.unsupported,
                         unsupported_enemies=missing, horizon_seconds=self.horizon,
                         timing_offsets_ms=[-self.timing_radius*1000, self.timing_radius*1000],
+                        requested_timing_offsets_ms=[-self.requested_timing_radius*1000,self.requested_timing_radius*1000],
+                        timing_quantum_ms=self.timing_quantum*1000,
+                        previous_input_reserve_ms=self.timing_radius*1000 if self.collect_alternatives else 0.,
                         native_rollouts=0, restores=0, evaluated=0)
         required_until = self.horizon
 
-        def evaluate(operations):
+        def evaluate(operations, checked_until=None):
             body, motors, valid = player.trajectory(times, operations)
             if operations:
                 valid &= input_ready(operations[0][1],operations[0][0])
@@ -82,7 +90,7 @@ class InternalController:
                     last_index += 1
                 encounter_end = float(times[last_index])
             reserve = motors[-1].used + (1. if motors[-1].mode not in ('runonline', 'runonlinedown', 'runonground') else 0.)
-            local_until = required_until
+            local_until = required_until if checked_until is None else checked_until
             recovery = None
             if player.initial.used:
                 resting = [i for i,m in enumerate(motors) if times[i] > (operations[0][0] if operations else 0.)
@@ -93,7 +101,7 @@ class InternalController:
                     # greedy objective. Require room for another delivered
                     # input, rather than freezing the recovered pose until a
                     # later obstacle that can be handled after the reset.
-                    if operations and operations[0][1] == 'down':
+                    if checked_until is None and operations and operations[0][1] == 'down':
                         local_until = min(local_until, recovery+.1)
             scope = times <= local_until+1e-8
             return dict(safe=valid and first > local_until, full_horizon_safe=valid and not len(collision),
@@ -125,29 +133,53 @@ class InternalController:
         if player.unsupported or unknown_near:
             return finish('none', 0., None, baseline, 'unsupported_native_mechanism')
         pending = self.scheduled
-        if pending and pending.get('search_choice') and stamp < pending['due']-1/60-.001:
-            delay = pending['due']-stamp
-            checks = [evaluate(((max(0., delay+d), pending['action']),))
-                      for d in (-self.timing_radius, 0., self.timing_radius)]
-            if all(r['safe'] for r in checks):
-                return finish('none', delay, tuple(v-stamp for v in pending['window']),
-                              checks[1], 'approach_selected_internal_window')
+        def pending_deadline():
+            return max(0.,pending['checked_until']-stamp) if 'checked_until' in pending else None
+        def signature():
+            return {(e['id'],c['id'],e.get('info_identity'),e['fields'].get('m_index'))
+                    for e in rows(observation['enemies'])if not e['fields'].get('_dead') and not e['fields'].get('_isRecycled')
+                    for c in rows(e['colliders'])if c.get('damage_kind')}
+        def proof_changed():
+            prior=pending.get('negative_signature')
+            return prior is not None and not signature().issubset({tuple(v)for v in prior})
+        def remember_negative():
+            self.scheduled['negative_signature']=[list(v)for v in sorted(signature(),key=repr)]
+            self.scheduled['negative_checked_at']=stamp
+        if pending and stamp > pending['due']+self.timing_radius+clock_epsilon:
             self.scheduled = None
-            return finish('none', 0., None, baseline, 'selected_internal_window_invalidated')
-        if pending and pending['due']-1/60-.001 <= stamp <= pending['due']+self.timing_radius:
-            nominal = evaluate(((0.,pending['action']),))
-            late = evaluate(((self.timing_radius,pending['action']),))
-            if nominal['safe'] and late['safe']:
-                # The negative endpoint was evaluated at the original
-                # proposal boundary. Time passing along the unchanged prefix
-                # does not invalidate it or demand a second future-only 80ms
-                # window. Newly read state still checks actual delivery and
-                # the late endpoint, without restoring any game state.
+            if pending.get('search_choice'):
+                return finish('none',0.,None,baseline,'selected_internal_window_invalidated')
+            pending = None
+        if pending and stamp < pending['due']-clock_epsilon:
+            delay = pending['due']-stamp
+            checks = [evaluate(((max(0.,delay+d),pending['action']),),pending_deadline())
+                      for d in (-self.timing_radius, 0., self.timing_radius)]
+            negative_future=delay>=self.timing_radius-clock_epsilon
+            if all(r['safe'] for r in checks) and (negative_future or not proof_changed()):
+                if negative_future:remember_negative()
+                return finish('none', delay, tuple(v-stamp for v in pending['window']),
+                              checks[1], 'approach_selected_internal_window' if pending.get('search_choice') else 'approach_center_of_native_safe_window')
+            self.scheduled = None
+            evidence['pending_rejection']=dict(checks=checks,checked_until=pending.get('checked_until'),visibility_changed=proof_changed())
+            if pending.get('search_choice'):
+                return finish('none', 0., None, baseline, 'selected_internal_window_invalidated')
+            pending=None
+        if pending and pending['due']-clock_epsilon <= stamp <= pending['due']+self.timing_radius:
+            nominal = evaluate(((0.,pending['action']),),pending_deadline())
+            late = evaluate(((self.timing_radius,pending['action']),),pending_deadline())
+            if nominal['safe'] and late['safe'] and not proof_changed():
+                # Retain the earlier endpoint's proof and absolute deadline.
+                # A new enemy/collider lifetime after that endpoint passed
+                # invalidates the proof instead of silently clamping it to now.
                 evidence['window_origin'] = dict(pending)
                 evidence['delivery_check'] = dict(nominal=nominal,late=late)
                 window = tuple(v-stamp for v in pending['window'])
                 return finish(pending['action'],0.,window,nominal,'execute_center_of_native_safe_window')
             self.scheduled = None
+            evidence['pending_rejection']=dict(nominal=nominal,late=late,
+                checked_until=pending.get('checked_until'),visibility_changed=proof_changed())
+            if pending.get('search_choice'):
+                return finish('none',0.,None,baseline,'selected_internal_window_invalidated')
         if baseline['safe'] and player.initial.used < 2:
             self.scheduled = None
             return finish('none', 0., None, baseline, 'native_corridor_clear')
@@ -192,6 +224,7 @@ class InternalController:
                 margin = min(r['clearance'] for r in [nominal]+endpoints)
                 options.append(dict(action=action, delay=center, window=(lo, hi),
                                     result=nominal, margin=margin, endpoints=endpoints,
+                                    checked_until_seconds=self.horizon if all(r['full_horizon_safe']for r in [nominal]+endpoints) else min(r['required_safe_until_seconds']for r in [nominal]+endpoints),
                                     survival=min(r['first_contact'] for r in [nominal]+endpoints)))
                 if self.collect_alternatives:
                     # Search branches are physically safe windows from this
@@ -205,6 +238,7 @@ class InternalController:
                                 for d in (-self.timing_radius,self.timing_radius)]
                         if middle['safe'] and all(r['safe'] for r in ends):
                             options.append(dict(action=action,delay=candidate,window=(lo,hi),result=middle,
+                                checked_until_seconds=self.horizon if all(r['full_horizon_safe']for r in [middle]+ends) else min(r['required_safe_until_seconds']for r in [middle]+ends),
                                 margin=min(r['clearance'] for r in [middle]+ends),endpoints=ends,
                                 survival=min(r['first_contact'] for r in [middle]+ends)))
         if not options:
@@ -221,7 +255,8 @@ class InternalController:
         best = options[0]
         if self.collect_alternatives:
             evidence['alternatives'] = [dict(action=o['action'],delay=o['delay'],window=o['window'],
-                margin=o['margin'],first_contact=o['result']['first_contact']) for o in options]
+                margin=o['margin'],first_contact=o['result']['first_contact'],checked_until_seconds=o['checked_until_seconds'],
+                negative_signature=[list(v)for v in sorted(signature(),key=repr)]) for o in options]
         earlier_recovery = (best['result']['recovered_at'] is not None and baseline['recovered_at'] is not None
                             and best['result']['recovered_at'] < baseline['recovered_at']-.1)
         if baseline['safe'] and best['result']['reserve'] >= baseline['reserve'] and not earlier_recovery:
@@ -242,8 +277,10 @@ class InternalController:
         if self.scheduled is None:
             self.scheduled = dict(action=best['action'], due=stamp+best['delay'],
                                   window=absolute,origin_stamp=stamp,
+                                  checked_until=stamp+best['checked_until_seconds'],
                                   checked_offsets_ms=[-self.timing_radius*1000,self.timing_radius*1000])
+            remember_negative()
         delay = best['delay']
-        if delay <= 1/60+.001:
+        if delay <= clock_epsilon:
             return finish(best['action'], 0., best['window'], best['result'], 'execute_center_of_native_safe_window')
         return finish('none', delay, best['window'], best['result'], 'approach_center_of_native_safe_window')

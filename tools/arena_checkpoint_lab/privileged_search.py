@@ -51,7 +51,12 @@ def healthy(observation, health):
 def select_alternative(controller, option, stamp):
     controller.scheduled=dict(action=option['action'],due=stamp+option['delay'],
         window=tuple(stamp+d for d in option['window']),origin_stamp=stamp,
-        checked_offsets_ms=[-40,40],search_choice=True)
+        checked_offsets_ms=[-getattr(controller,'timing_radius',.05)*1000,getattr(controller,'timing_radius',.05)*1000],search_choice=True)
+    if 'checked_until_seconds' in option:
+        controller.scheduled['checked_until']=stamp+option['checked_until_seconds']
+    if 'negative_signature' in option:
+        controller.scheduled['negative_signature']=deepcopy(option['negative_signature'])
+        controller.scheduled['negative_checked_at']=stamp
 
 
 def restore_branch(gate, branch):
@@ -73,7 +78,10 @@ def run(gate, output, *, max_decisions=4000,max_backtracks=80,wall_seconds=1800,
     board=gate.call('exec',code=BOARD)
     initial=gate.snapshot()['result']['id'];initial_observation=deepcopy(observation)
     owned={initial};branches=[];route=[];restores=[];started=time.monotonic()
-    report=dict(schema=1,algorithm='native_internal_action_windows_with_VM_dead_end_backtracking_v1',
+    report=dict(schema=1,algorithm='native_internal_action_windows_with_VM_dead_end_backtracking_v2',
+        timing=dict(requested_offsets_ms=[-controller.requested_timing_radius*1000,controller.requested_timing_radius*1000],
+                    planning_offsets_ms=[-controller.timing_radius*1000,controller.timing_radius*1000],
+                    quantum_ms=controller.timing_quantum*1000,retains_absolute_safety_deadline=True),
         start=dict(state=observation['state'],health=5000,board=board),
         uses_restart_replay=False,uses_vision=False,native_decision=True,
         status='running',nominal_complete=False,timing_robust=False,complete=False,

@@ -102,6 +102,9 @@ def test_native_injury_backtracks_to_model_alternative_and_keeps_rejected_eviden
     native['role']['god']=native['role']['mounted']=False
     start_board=dict(map=42,stage_index=0,stage_count=4,stage_start=0,stage_id=50012,god=False,mounted=False)
     class Controller:
+        requested_timing_radius=.04
+        timing_radius=.05
+        timing_quantum=1/60
         def __init__(self,**kwargs):self.scheduled=None;self.last_inputs={}
         def decide(self,obs):
             action=self.scheduled['action'] if self.scheduled else 'jump'
