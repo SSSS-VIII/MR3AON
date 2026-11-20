@@ -813,7 +813,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
     camera_x = camera.get('position', {}).get('x')
     real_right = camera.get('real_right', {}).get('x')
     family_context={}
-    if trajectory_states is None and any(e['type']in ('EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter')
+    if trajectory_states is None and any(e['type']in ('EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter','EnemySmallSword','EnemyFlyBamboo')
                                         for e in rows(observation['enemies'])):
         _,coast,valid=player.trajectory(times)
         if valid:trajectory_states=coast

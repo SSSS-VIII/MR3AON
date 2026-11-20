@@ -37,6 +37,26 @@ def test_wait_without_follow_cancels_pivot_movement_until_original_charge_starts
     assert abs(q['position']['y']-e['position']['y'])<.0001
 
 
+def test_same_native_slope_reference_does_not_mix_different_sword_charge_phases():
+    # The actor calibration retains the whole original scene, including
+    # multiple original swords sharing the clock but not their local states.
+    o=deepcopy(json.loads((Path(__file__).parent/'fixtures/arena-privileged-slope-slide.json').read_text())['cases'][0]['before'])
+    o['enemies']=[e for e in o['enemies']if e['type']=='EnemySmallSword']
+    assert len(o['enemies'])>3
+    assert len({(e['fields']['_enemyState'],e['fields']['_chargeTime'])for e in o['enemies']})>2
+    times=np.linspace(0.,.7,85);model=PlayerModel(o)
+    together,missing=hazard_forecasts(o,times,model);assert not missing
+    independent=[]
+    for enemy in o['enemies']:
+        single=deepcopy(o);single['enemies']=[enemy]
+        hs,missing=hazard_forecasts(single,times,PlayerModel(single));assert not missing
+        independent.extend(hs)
+    assert len(together)==len(independent)
+    for a,b in zip(together,independent):
+        assert a.id==b.id
+        assert np.array_equal(a.centers,b.centers)and np.array_equal(a.extents,b.extents)
+
+
 @pytest.mark.parametrize('change,reason',[
     ('cache','small_sword_player_speed_transition'),
     ('excluded','small_sword_excluded_platform_transition'),
