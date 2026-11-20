@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools/arena_checkpoint_lab'))
-from arena_privileged_model import PlayerModel
+from arena_privileged_model import PlayerModel,hazard_forecasts,clearance
 from arena_privileged_policy import InternalController,witness_operations
 from privileged_search import select_alternative
 DATA=json.loads((Path(__file__).parent/'fixtures/arena-privileged-joint-maneuver.json').read_text())
@@ -60,3 +60,23 @@ def test_known_native_local_reset_dead_end_is_rejected_before_delivering_down():
     r=InternalController().decide(o)
     assert r.action!='down'
     assert any(v['action']=='down'for v in r.evidence['locally_safe_dead_ends'])
+
+
+def test_local_continuation_retains_all_independent_model_endpoints():
+    o=json.loads((Path(__file__).parent/'fixtures/arena-privileged-native.json').read_text())
+    controller=InternalController();proposal=controller.decide(o)
+    witness=controller.scheduled['witness'];model=PlayerModel(o);times=np.linspace(0.,1.8,217)
+    # This first input alone cannot justify the whole horizon.
+    body,motors,valid=model.trajectory(times,((proposal.delay,controller.scheduled['action']),))
+    hs,missing=hazard_forecasts(o,times,model,motors)
+    assert valid and not missing and any(np.min(clearance(body,h))<=.025 for h in hs)
+    for first in (-controller.timing_radius,0.,controller.timing_radius):
+        anchored=witness_operations(model,times,(proposal.delay+first,controller.scheduled['action']),witness)
+        assert anchored and len(anchored)==2
+        for second in (-controller.timing_radius,0.,controller.timing_radius):
+            operations=(anchored[0],(anchored[1][0]+second,anchored[1][1]))
+            body,motors,valid=model.trajectory(times,operations)
+            hs,missing=hazard_forecasts(o,times,model,motors)
+            assert valid and not missing
+            assert np.min(model.terrain_clearances(motors))>.025
+            assert all(np.min(clearance(body,h))>.025 for h in hs)

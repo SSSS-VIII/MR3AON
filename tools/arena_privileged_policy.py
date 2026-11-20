@@ -68,7 +68,7 @@ class InternalController:
                       e['type']=='EnemyBrambles' and e['fields'].get('_currState','').rsplit(':',1)[-1].strip()=='0' or
                       e['type']=='EnemyRockTiger' and e['fields'].get('currState','').rsplit(':',1)[-1].strip() in ('1','2') or
                       e['type']=='EnemyPiranha' and e['fields'].get('_enemyState','').rsplit(':',1)[-1].strip() in ('0','1')
-                      for e in rows(observation['enemies'])if not e['fields'].get('_dead') and not e['fields'].get('_isRecycled'))
+                      for e in rows(observation['enemies'])if not e['fields'].get('_dead') and not e['fields'].get('_isRecycled')) or bool(rows(observation.get('pending_enemies')))
         stamp = observation['state']['time']
         # Original UI intervals release their input before the next decision.
         # Reserve the keyboard-compatible repeat gap per key, not across K/S.
@@ -79,6 +79,7 @@ class InternalController:
             previous_late = self.timing_radius if self.collect_alternatives else 0.
             return stamp+delay-(self.last_inputs[action]+previous_late) >= .1-clock_epsilon
         evidence = dict(native_types=sorted({e['type'] for e in rows(observation['enemies'])}),
+                        pending_types=sorted({e['info']['_enemyType']for e in rows(observation.get('pending_enemies'))}),
                         models=sorted({h.source for h in hazards}), unsupported_role=player.unsupported,
                         collectibles=[dict(id=e['id'],kind=collectible_kind(e),position=e['position'])
                                       for e in rows(observation['enemies'])if collectible_kind(e)
@@ -179,16 +180,19 @@ class InternalController:
 
         continuation_cache={}
         def continuation_exists(delay,action):
-            """Reject a locally safe reset with no modeled two-key future.
+            """Retain a complete independently jittered follow-up witness.
 
-            This is a viability filter, not a timing certificate. Any route
-            still needs its original per-key endpoint/native-prefix checks.
+            A merely nominal continuation cannot justify approaching a first
+            key. Both keys must have their own original timing endpoints in
+            the same physical future; native certification remains separate.
             """
             key=(delay,action)
-            if key in continuation_cache:return continuation_cache[key]
+            if key in continuation_cache:return continuation_cache[key]is not None
             result=evaluate(((delay,action),),self.horizon)
-            if result['full_horizon_safe']:
-                continuation_cache[key]=True;return True
+            ends=[evaluate(((max(0.,delay+d),action),),self.horizon)
+                  for d in (-self.timing_radius,self.timing_radius)]
+            if all(r['full_horizon_safe']for r in [result]+ends):
+                continuation_cache[key]=dict(nominal=result,endpoints=ends,witness=None);return True
             _,states,_=player.trajectory(times,((delay,action),))
             end=min(self.horizon-.1,result['first_contact']-self.timing_radius)
             start=math.ceil((delay+.1)/.05-1e-8)*.05
@@ -198,8 +202,14 @@ class InternalController:
                     if not player.action(copy(states[ix]),followup,float(when)):continue
                     checked=evaluate(((delay,action),(float(when),followup)),self.horizon)
                     if checked['full_horizon_safe']:
-                        continuation_cache[key]=True;return True
-            continuation_cache[key]=False
+                        target=float(np.interp(when,times,[m.x for m in states]))
+                        witness=dict(action=followup,world_x=target)
+                        checks=[planned_check(delay+d,action,witness,self.horizon)
+                                for d in (0.,-self.timing_radius,self.timing_radius)]
+                        if not all(r['full_horizon_safe']for r in checks):continue
+                        continuation_cache[key]=dict(nominal=checks[0],endpoints=checks[1:],witness=witness)
+                        return True
+            continuation_cache[key]=None
             evidence.setdefault('locally_safe_dead_ends',[]).append(dict(action=action,delay=delay))
             return False
 
@@ -235,7 +245,8 @@ class InternalController:
             return False
         unknown_near = [e for e in rows(observation['enemies'])
                         if any(m['id'] == e['id'] for m in missing)and reaches_actor_corridor(e)]
-        if player.unsupported or unknown_near:
+        pending_missing=[m for m in missing if str(m['id']).startswith('pending')]
+        if player.unsupported or unknown_near or pending_missing:
             return finish('none', 0., None, baseline, 'unsupported_native_mechanism')
         pending = self.scheduled
         def pending_deadline():
@@ -361,12 +372,17 @@ class InternalController:
                              for offset in (-self.timing_radius, self.timing_radius)]
                 if not all(r['safe'] for r in endpoints):
                     continue
-                if not nominal['full_horizon_safe']and not continuation_exists(center,action):continue
+                proof=None
+                if not all(r['full_horizon_safe']for r in [nominal]+endpoints):
+                    if not continuation_exists(center,action):continue
+                    proof=continuation_cache[(center,action)]
+                    nominal,endpoints=proof['nominal'],proof['endpoints']
                 margin = min(r['clearance'] for r in [nominal]+endpoints)
                 options.append(dict(action=action, delay=center, window=(lo, hi),
                                     result=nominal, margin=margin, endpoints=endpoints,
                                     checked_until_seconds=self.horizon if all(r['full_horizon_safe']for r in [nominal]+endpoints) else min(r['required_safe_until_seconds']for r in [nominal]+endpoints),
-                                    survival=min(r['first_contact'] for r in [nominal]+endpoints)))
+                                    survival=min(r['first_contact'] for r in [nominal]+endpoints),
+                                    **(dict(witness=proof['witness'])if proof and proof['witness']else{})))
                 if self.collect_alternatives:
                     # Search branches are physically safe windows from this
                     # model, not every key at every 50ms interval. Different
@@ -378,11 +394,16 @@ class InternalController:
                         ends = [evaluate(((candidate+d,action),))
                                 for d in (-self.timing_radius,self.timing_radius)]
                         if middle['safe'] and all(r['safe'] for r in ends):
-                            if not middle['full_horizon_safe']and not continuation_exists(candidate,action):continue
+                            proof=None
+                            if not all(r['full_horizon_safe']for r in [middle]+ends):
+                                if not continuation_exists(candidate,action):continue
+                                proof=continuation_cache[(candidate,action)]
+                                middle,ends=proof['nominal'],proof['endpoints']
                             options.append(dict(action=action,delay=candidate,window=(lo,hi),result=middle,
                                 checked_until_seconds=self.horizon if all(r['full_horizon_safe']for r in [middle]+ends) else min(r['required_safe_until_seconds']for r in [middle]+ends),
                                 margin=min(r['clearance'] for r in [middle]+ends),endpoints=ends,
-                                survival=min(r['first_contact'] for r in [middle]+ends)))
+                                survival=min(r['first_contact'] for r in [middle]+ends),
+                                **(dict(witness=proof['witness'])if proof and proof['witness']else{})))
         if not options and not baseline['safe']:
             # A single flip cannot express rope-below -> rope-above -> jump.
             # Search short legal maneuvers in the internal model only, keeping

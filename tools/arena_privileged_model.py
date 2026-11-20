@@ -1049,6 +1049,9 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
                                  geometry, quads,
                                  padding=padding,interaction=kind=='EnemyBrambleCollider'))
         if kind in ('EnemyAlarmShooter','EnemyBrambles'):result.extend(predicted[5]['generated_hazards'])
+    from arena_privileged_families import pending_enemy_forecasts
+    pending,pending_missing=pending_enemy_forecasts(observation,times,player,trajectory_states,family_context)
+    result.extend(pending);unsupported.extend(pending_missing)
     for item in player.contact_avoidance:
         for collider in rows(item['colliders']):
             if not collider.get('trigger'):

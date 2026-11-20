@@ -45,12 +45,13 @@ local function values(obj)
     if not obj then return out end
     for _,f in ipairs(fields(obj))do
         local tp=f.FieldType;local name=tp.FullName
-        if tp.IsPrimitive or tp.IsEnum or name=='UnityEngine.Vector3'or name=='UnityEngine.Vector2' then
+        if tp.IsPrimitive or tp.IsEnum or name=='UnityEngine.Vector3'or name=='UnityEngine.Vector2'
+                or name=='PointV3'or name=='PointV2' then
             local v=f:GetValue(obj)
             if v~=nil then
                 if tp.IsEnum then out[f.Name]=tostring(v)
-                elseif name=='UnityEngine.Vector3' then out[f.Name]=vector(v)
-                elseif name=='UnityEngine.Vector2' then out[f.Name]={x=v.x,y=v.y}
+                elseif name=='UnityEngine.Vector3'or name=='PointV3' then out[f.Name]=vector(v)
+                elseif name=='UnityEngine.Vector2'or name=='PointV2' then out[f.Name]={x=v.x,y=v.y}
                 else out[f.Name]=v end
             end
         end
@@ -401,8 +402,12 @@ function E.privileged_state()
     local air=n.OnAirGround
     if air and not air._isFree then out.role.air_ground=values(air)end
     local supports=U.Object.FindObjectsOfType(typeof(CS.LevelBlockCollider))
+    local liveBlocks={}
     for i=0,supports.Length-1 do local s=supports[i]
         if s.enabled and s.isActive and s.gameObject.activeInHierarchy and s.PointEnd.x>p.x-8 and s.PointStart.x<p.x+80 then
+            local key=s.BelongToStageIndex..':'..s.BelongToBlockIndex
+            assert(not liveBlocks[key],'Ambiguous original block spawn queue')
+            liveBlocks[key]=s
             out.supports[#out.supports+1]={id=s:GetInstanceID(),start=vector(s.PointStart),finish=vector(s.PointEnd),
                 is_line=s.IsLine,is_ground=s.IsGround,stage_index=s.BelongToStageIndex,block_index=s.BelongToBlockIndex,
                 info=values(field(s,'_levelBlockInfo'))}
@@ -758,7 +763,68 @@ function E.privileged_state()
     -- Read the actual resolved block list as well as spawned colliders. Unity
     -- instantiates terrain incrementally; missing a not-yet-created collider
     -- must not turn a known continuation into an imaginary pit.
-    out.terrain={}
+    out.terrain={};out.pending_enemies={};out.spawn_templates={}
+    local function swordSpawnTemplate()
+        local candidates=U.Resources.FindObjectsOfTypeAll(typeof(CS.EnemySmallSword))
+        local original
+        for i=0,candidates.Length-1 do local o=candidates[i]
+            if o.name=='EnemySmallSword'and not o.gameObject.activeInHierarchy then
+                assert(not original,'Ambiguous original sword prefab');original=o
+            end
+        end
+        if not original then return {missing=true}end
+        local rotate=field(original,'_rotateObj');local breath=field(original,'breathTween')
+        if not rotate then return {missing=true}end
+        local root=original.transform;local rt=rotate.transform
+        local out={id=original:GetInstanceID(),rotate_position=vector(rt.localPosition),rotate_scale=vector(rt.localScale),
+            rotate_direct_parent=rt.parent==root,appear_seconds=field(original,'appearSpendTime'),
+            appear_effect_present=field(original,'_appearEffect')~=nil,colliders={}}
+        local cs=original.gameObject:GetComponentsInChildren(typeof(U.Collider),true)
+        for i=0,cs.Length-1 do local c=cs[i];local s=shape(c)
+            if s.damage_kind then
+                local row={name=c.name,type=s.type,damage_kind=s.damage_kind,tag=c.tag,
+                    under_rotate=c.transform:IsChildOf(rt),enabled=c.enabled,
+                    under_breath=breath and c.transform:IsChildOf(breath.transform)or false,vertices={}}
+                if s.type=='BoxCollider'then
+                    for _,x in ipairs({-1,1})do for _,y in ipairs({-1,1})do for _,z in ipairs({-1,1})do
+                        local p=c.transform:TransformPoint(c.center+U.Vector3(x*c.size.x/2,y*c.size.y/2,z*c.size.z/2))
+                        row.vertices[#row.vertices+1]=vector(rt:InverseTransformPoint(p))
+                    end end end
+                end
+                out.colliders[#out.colliders+1]=row
+            end
+        end
+        return out
+    end
+    local syncObjects=field(CS.LevelManager.Instance,'syncObjectDic')
+    local function pendingBlock(b,a,stageIndex,blockIndex,uninstantiated)
+        local live=liveBlocks[stageIndex..':'..blockIndex]
+        local function add(info,source)
+            local kind=tostring(info._enemyType);local number=tonumber(kind:match(': (%d+)$'))
+            if number and number>10000 then return end -- Same native InitEnemyInfo filter.
+            local data=values(info);local custom=field(info,'_enemyInfoCustom')
+            local blocked=syncObjects and syncObjects:ContainsKey(info.baseID)or false
+            out.pending_enemies[#out.pending_enemies+1]={id='pending:'..stageIndex..':'..blockIndex..':'..info:GetHashCode(),
+                info_identity=info:GetHashCode(),info=data,custom=values(custom),custom_type=custom and custom:GetType().Name,
+                block_start=vector(live and live.transform.position or a),stage_index=stageIndex,block_index=blockIndex,
+                source=source,sync_blocked=blocked,vertical_gate=live and field(live,'openGenerateDistanceY')or false}
+            if kind=='EnemySmallSword: 250'and not out.spawn_templates.small_sword then
+                out.spawn_templates.small_sword=swordSpawnTemplate()
+            end
+        end
+        if live then
+            -- The original linked list contains only unconsumed spawns.
+            -- PreloadEnemyList and the full authored list include enemies
+            -- which were already created/recycled and cannot substitute it.
+            local list=field(live,'enemyList');assert(list,'Original enemy queue missing')
+            local node=list.First;local count=0
+            while node do add(node.Value,'native_enemyList');count=count+1;node=node.Next end
+            assert(count==list.Count,'Original spawn queue changed during paused read')
+        elseif uninstantiated then
+            local infos=field(b,'enemyInfos')
+            if infos then for i=0,infos.Count-1 do add(infos[i],'resolved_uninstantiated_block')end end
+        end
+    end
     if stage and ground then
         local blocks=field(stage,'_finalBlockList');local anchor=ground.BelongToBlockIndex
         if anchor>=0 and anchor<blocks.Count then
@@ -777,6 +843,7 @@ function E.privileged_state()
                     out.terrain[#out.terrain+1]={id='resolved:'..index..':'..i,start=vector(a),finish=vector(z),
                         kind=tostring(b._groundType),hidden=b._hideGround,block_index=i,stage_index=index,
                         death_offset_y=b._isDeadBlockOffsetY,speed=b._ninjaSpeed}
+                    pendingBlock(b,a,index,i,i>anchor)
                 end
             end
             local tail=blocks[blocks.Count-1]
@@ -793,6 +860,7 @@ function E.privileged_state()
                         out.terrain[#out.terrain+1]={id='resolved:'..nextIndex..':'..i,start=vector(a),finish=vector(z),
                             kind=tostring(b._groundType),hidden=b._hideGround,block_index=i,stage_index=nextIndex,
                             death_offset_y=b._isDeadBlockOffsetY,speed=b._ninjaSpeed}
+                        pendingBlock(b,a,nextIndex,i,true)
                     end
                     nextStart=z
                 end

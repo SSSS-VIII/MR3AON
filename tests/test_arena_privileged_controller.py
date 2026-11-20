@@ -23,9 +23,10 @@ def test_real_rope_encounter_has_proactive_window_without_game_trials(native):
     assert 0 < result.delay < result.evidence['coast']['first_contact']
     assert result.evidence['native_rollouts'] == result.evidence['restores'] == 0
     assert result.evidence['selected']['safe']
-    # Solving the immediate encounter is explicitly distinct from freezing
-    # that pose through every later obstacle without another decision.
-    assert not result.evidence['selected']['full_horizon_safe']
+    # A local first key now retains a complete independently jittered
+    # follow-up witness instead of relying on a nominal Boolean continuation.
+    assert result.evidence['selected']['full_horizon_safe']
+    assert result.evidence['window_choice']['witness']
 
 
 def test_scheduled_window_does_not_slide_forever_into_the_future(native):
