@@ -244,6 +244,61 @@ local function shape(c)
     if owner then out.damage_owner=owner:GetInstanceID()end
     return out
 end
+local function brambleTemplate(owner,render,context)
+    -- ReplenishBlock clones this inactive original block. Its seven thorns
+    -- are serialized collision geometry; GetGround(2) supplies the decoration.
+    -- Read local vertices, including inactive colliders with empty bounds.
+    local prefab=field(owner,'_brambleBlockPrefab');local parent=field(owner,'brambleParent')
+    if not prefab or not parent or not render then return nil end
+    local t=prefab.transform;local p=parent.transform;local list=field(prefab,'thornList')
+    local function scripts(node)
+        local result={};local cs=node:GetComponents(typeof(U.Component))
+        for i=0,cs.Length-1 do result[#result+1]=cs[i]and cs[i]:GetType().FullName or 'missing_component'end
+        return result
+    end
+    local out={id=prefab:GetInstanceID(),active=prefab.gameObject.activeInHierarchy,root_scripts=scripts(t),
+        axis_x=vector(owner.transform:TransformVector(U.Vector3.right)),axis_z=vector(owner.transform:TransformVector(U.Vector3.forward)),
+        parent={direct_render_parent=p.parent==render.transform,position=vector(p.localPosition),rotation=vector(p.localEulerAngles),scale=vector(p.localScale)},
+        thorns={},truncated=list and list.Count>64 or false,native_generation=true,unknown_generation_hooks={}}
+    if not context.decoration_pool then
+        local pool=field(CS.LevelPoolManager.Instance,'_groundList')
+        local proof={count=pool and pool.Count or 0,truncated=pool and pool.Count>512 or false,colliders=0,behaviours=0}
+        if pool then for i=0,math.min(pool.Count-1,511)do local node=pool[i]
+            proof.colliders=proof.colliders+node:GetComponentsInChildren(typeof(U.Collider),true).Length
+            proof.behaviours=proof.behaviours+node:GetComponentsInChildren(typeof(U.MonoBehaviour),true).Length
+        end end
+        context.decoration_pool=proof
+    end
+    out.decoration_pool=context.decoration_pool
+    local staticFlags=CS.System.Reflection.BindingFlags.__CastFrom(56)
+    local length=typeof(CS.EnemyBramblesBlock):GetField('_length',staticFlags)
+    out.cell_length=length and length:GetValue(nil)or nil
+    for _,entry in ipairs({{typeof(CS.EnemyBrambles),'ReplenishBlock'},
+            {typeof(CS.EnemyBrambles),'ShowNextBrambleBlock'},{typeof(CS.EnemyBramblesBlock),'Show'},
+            {typeof(CS.EnemyBramblesSingleThorn),'ThornReset'},{typeof(CS.LevelPoolManager),'GetGround'}})do
+        local hook=entry[1]:GetField('__Hotfix0_'..entry[2],staticFlags)
+        if not hook or hook:GetValue(nil)~=nil then
+            out.native_generation=false;out.unknown_generation_hooks[#out.unknown_generation_hooks+1]=entry[1].Name..'.'..entry[2]
+        end
+    end
+    if list then for i=0,math.min(list.Count-1,63)do local thorn=list[i]
+        local row={id=thorn:GetInstanceID(),type=thorn:GetType().FullName,direct_parent=thorn.transform.parent==t,
+            scripts=scripts(thorn.transform),colliders={}}
+        local cs=thorn:GetComponentsInChildren(typeof(U.Collider),true)
+        for j=0,cs.Length-1 do local c=cs[j]
+            local shape={type=c:GetType().Name,enabled=c.enabled,own_transform=c.transform==thorn.transform,vertices={}}
+            if shape.type=='BoxCollider'then
+                for _,x in ipairs({-1,1})do for _,y in ipairs({-1,1})do for _,z in ipairs({-1,1})do
+                    local point=c.center+U.Vector3(x*c.size.x/2,y*c.size.y/2,z*c.size.z/2)
+                    shape.vertices[#shape.vertices+1]=vector(t:InverseTransformPoint(c.transform:TransformPoint(point)))
+                end end end
+            end
+            row.colliders[#row.colliders+1]=shape
+        end
+        out.thorns[#out.thorns+1]=row
+    end end
+    return out
+end
 local function posedShape(c,root,targetScale,targetPosition)
     -- Evaluate an authored local TRS without changing any Transform.
     -- A hidden blade has zero Y scale: its current bounds cannot describe
@@ -359,7 +414,7 @@ function E.privileged_state()
         end
     end
     local enemies=U.Object.FindObjectsOfType(typeof(CS.EnemyBase))
-    local brambleOwners={};local needBrambleTimers=false
+    local brambleOwners={};local needBrambleTimers=false;local brambleTemplateContext={}
     for i=0,enemies.Length-1 do local o=enemies[i];local kind=o:GetType().Name
         if kind=='EnemyBrambles'and math.abs(o.transform.position.x-p.x)<80 then needBrambleTimers=true end
         if (kind=='EnemyBramblesSingleThorn'or kind=='EnemyBrambleCollider')and
@@ -571,6 +626,9 @@ function E.privileged_state()
                     end
                 end end
                 local render=field(o,'_currRenderObj')
+                if row.fields._currBrambleIndex<row.fields._totalBrambleBlockNum then
+                    row.brambles.template=brambleTemplate(o,render,brambleTemplateContext)
+                end
                 if render then local t=render.transform
                     row.brambles.render={id=t:GetInstanceID(),position=vector(t.localPosition),scale=vector(t.localScale),
                         rotation=vector(t.localEulerAngles),direct_parent=t.parent==o.transform}

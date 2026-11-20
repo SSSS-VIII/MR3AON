@@ -1015,7 +1015,7 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
             result.append(Hazard(c['id'], enemy['id'], kind, center, extent, active, source, approximate,
                                  geometry, quads,
                                  padding=padding,interaction=kind=='EnemyBrambleCollider'))
-        if kind=='EnemyAlarmShooter':result.extend(predicted[5]['generated_hazards'])
+        if kind in ('EnemyAlarmShooter','EnemyBrambles'):result.extend(predicted[5]['generated_hazards'])
     for item in player.contact_avoidance:
         for collider in rows(item['colliders']):
             if not collider.get('trigger'):

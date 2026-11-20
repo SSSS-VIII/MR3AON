@@ -143,3 +143,70 @@ def test_movement_contact_cannot_hide_behind_a_far_spawn_root():
     decision=InternalController().decide(o)
     assert decision.reason=='unsupported_native_mechanism'
     assert any(v['id']==movement['id']for v in decision.evidence['unsupported_enemies'])
+
+
+@pytest.mark.parametrize('case',DATA['future'],ids=lambda c:c['name'])
+def test_original_inactive_template_covers_all_seven_newborn_boxes(case):
+    o=case['before'];original=deepcopy(o);owner=o['enemies'][0];after=case['after']
+    assert owner['fields']['_currBrambleIndex']==1<owner['fields']['_totalBrambleBlockNum']
+    assert owner['brambles']['template']['active']is False
+    dt=after['state']['time']-o['state']['time'];times=np.linspace(0,dt,round(dt*120)+1);model=PlayerModel(o)
+    _,motors,valid=model.trajectory(times);assert valid
+    hs,missing=hazard_forecasts(o,times,model,motors)
+    assert not missing and o==original
+    future=[h for h in hs if isinstance(h.id,str)and ':brambles:'in h.id]
+    assert len(future)==1
+    h=future[0];assert h.enemy==owner['id']and h.active.all()and h.approximate
+    assert 'potential future strip envelope'in h.source
+    for thorn in after['new_thorns']:
+        assert thorn['id']not in case['prior_native_ids']
+        assert thorn['brambles_owner']['id']==owner['id']
+        c=thorn['colliders'][0];center=np.array([c['center'][a]for a in ('x','y')]);ext=np.array([c['extents'][a]for a in ('x','y')])
+        assert np.all(abs(center-h.centers[-1])+ext<=h.extents[-1])
+
+
+@pytest.mark.parametrize('change,reason',[
+    ('active','brambles_original_inactive_clone_template'),
+    ('new_generator','brambles_original_inactive_clone_template'),
+    ('root_animation','brambles_original_inactive_clone_template'),
+    ('container','brambles_original_inactive_clone_template'),
+    ('truncated','brambles_original_inactive_clone_template'),
+    ('decoration_collider','brambles_original_decoration_pool_without_callbacks'),
+    ('decoration_script','brambles_original_decoration_pool_without_callbacks'),
+    ('decoration_truncated','brambles_original_decoration_pool_without_callbacks'),
+    ('decoration_missing','brambles_original_decoration_pool_without_callbacks'),
+    ('axis','brambles_original_clone_parent_axes'),
+    ('length','brambles_original_clone_parent_axes'),
+    ('thorn_animation','brambles_complete_authored_thorn_geometry'),
+    ('nested','brambles_complete_authored_thorn_geometry'),
+    ('missing_corner','brambles_complete_authored_thorn_geometry'),
+    ('unbound_collider','brambles_complete_authored_thorn_geometry'),
+])
+def test_unknown_clone_geometry_or_generation_does_not_bypass_unborn_block_guard(change,reason):
+    o=deepcopy(DATA['future'][0]['before']);owner=o['enemies'][0];template=owner['brambles']['template']
+    if change=='active':template['active']=True
+    if change=='new_generator':template['native_generation']=False
+    if change=='root_animation':template['root_scripts'].append('UnityEngine.Animator')
+    if change=='container':template['parent']['scale']['y']=2
+    if change=='truncated':template['truncated']=True
+    if change=='decoration_collider':template['decoration_pool']['colliders']=1
+    if change=='decoration_script':template['decoration_pool']['behaviours']=1
+    if change=='decoration_truncated':template['decoration_pool']['truncated']=True
+    if change=='decoration_missing':template.pop('decoration_pool')
+    if change=='axis':template['axis_x']['y']=.1
+    if change=='length':template['cell_length']=0
+    if change=='thorn_animation':template['thorns'][0]['scripts'].append('UnityEngine.Animator')
+    if change=='nested':template['thorns'][0]['direct_parent']=False
+    if change=='missing_corner':template['thorns'][0]['colliders'][0]['vertices'].pop()
+    if change=='unbound_collider':template['thorns'][0]['colliders'][0]['own_transform']=False
+    path,missing=brambles_path(owner,np.array([0.,.5]),o,PlayerModel(o))
+    assert path is None and missing==reason
+
+
+def test_recycled_old_cell_is_not_an_unknown_future_cell_or_spawned_again():
+    case=next(c for c in DATA['cases']if c['name']=='native_trailing_cell_recycled');o=case['before'];owner=o['enemies'][0]
+    assert owner['fields']['_currBrambleIndex']==owner['fields']['_totalBrambleBlockNum']==2
+    assert len(owner['brambles']['blocks'])==1
+    hs,missing=hazard_forecasts(o,np.array([0.,.5]),PlayerModel(o))
+    assert not missing and hs
+    assert not any(isinstance(h.id,str)and ':brambles:'in h.id for h in hs)

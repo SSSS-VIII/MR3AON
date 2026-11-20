@@ -598,6 +598,41 @@ def alarm_shooter(enemy,times,observation,player,trajectory_states=None,referenc
     except (KeyError,ValueError)as error:return None,str(error)
 
 
+def brambles_template(enemy):
+    """Validate the original inactive clone source, not a live thorn sample."""
+    from arena_privileged_model import rows
+    template=enemy['brambles'].get('template')
+    if not template:raise ValueError('brambles_future_uninstantiated_blocks')
+    parent=template['parent'];root_scripts={'UnityEngine.Transform','EnemyBramblesBlock','EnemyBaseCollider'}
+    thorn_scripts={'UnityEngine.Transform','UnityEngine.BoxCollider','EnemyBramblesSingleThorn','EnemyBaseCollider'}
+    if (template['active']or not template['native_generation']or template.get('truncated')or
+            not parent['direct_render_parent']or not set(rows(template['root_scripts']))<=root_scripts or
+            'EnemyBramblesBlock'not in template['root_scripts']or
+            any(abs(parent['position'][a])+abs(parent['rotation'][a])+abs(parent['scale'][a]-1)>1e-4 for a in ('x','y','z'))):
+        raise ValueError('brambles_original_inactive_clone_template')
+    pool=template.get('decoration_pool')
+    if (not pool or not 0<pool['count']<=512 or pool.get('truncated')or
+            pool['colliders']!=0 or pool['behaviours']!=0):
+        raise ValueError('brambles_original_decoration_pool_without_callbacks')
+    length=template['cell_length'];axis=np.array([[template[k][a]for a in ('x','y','z')]for k in ('axis_x','axis_z')])
+    if (not math.isfinite(length)or length<=0 or not np.all(np.isfinite(axis))or
+            abs(axis[0,1])+abs(axis[0,2])>1e-5 or abs(axis[0,0])<1e-5):
+        raise ValueError('brambles_original_clone_parent_axes')
+    thorns=rows(template['thorns']);cloud=[]
+    if not 0<len(thorns)<=64:raise ValueError('brambles_complete_authored_thorn_geometry')
+    for thorn in thorns:
+        colliders=rows(thorn['colliders']);scripts=rows(thorn['scripts'])
+        if (thorn['type']!='EnemyBramblesSingleThorn'or not thorn['direct_parent']or
+                not set(scripts)<=thorn_scripts or 'EnemyBramblesSingleThorn'not in scripts or len(colliders)!=1):
+            raise ValueError('brambles_complete_authored_thorn_geometry')
+        c=colliders[0];points=np.array([[v[a]for a in ('x','y','z')]for v in rows(c['vertices'])])
+        if (c['type']!='BoxCollider'or not c['enabled']or not c['own_transform']or
+                points.shape!=(8,3)or not np.all(np.isfinite(points))):
+            raise ValueError('brambles_complete_authored_thorn_geometry')
+        cloud.extend(points)
+    return np.asarray(cloud),length,axis
+
+
 def brambles_path(enemy,times,observation,player,trajectory_states=None):
     """Original lift/stab reducer, retaining the unknown callback phase.
 
@@ -623,9 +658,11 @@ def brambles_path(enemy,times,observation,player,trajectory_states=None):
                     ('_moveOrStabSpeed','_moveOrStabMaxDis','_toNextActionWaitTime','_stabStayTime','_stabBackSpeed'))or
                     action['_moveOrStabMaxDis']<0):raise ValueError('brambles_native_action_parameter_domain')
         if mode and binding['action']!=actions[index]:raise ValueError('brambles_current_action_disagreement')
-        if (binding.get('blocks_truncated')or
-                len(rows(binding['blocks']))!=f['_totalBrambleBlockNum']):
-            raise ValueError('brambles_future_uninstantiated_blocks')
+        created,total=f['_currBrambleIndex'],f['_totalBrambleBlockNum']
+        if (not isinstance(created,int)or not isinstance(total,int)or not 0<=created<=total<=64 or
+                binding.get('blocks_truncated')or len(rows(binding['blocks']))>created):
+            raise ValueError('brambles_original_block_sequence')
+        if created<total:brambles_template(enemy)
         tick=player.tick;age=observation['state']['time']-f['_lastFixedUpdateTime']
         if not -.0002<=age<=tick+.0002:raise ValueError('brambles_original_parent_clock')
         values=[f[k]for k in ('_waitTime','_currUpDis','_stabStayTime','_groundY')]
@@ -729,6 +766,32 @@ def brambles_path(enemy,times,observation,player,trajectory_states=None):
         numeric=8*max(abs(float(np.spacing(np.float32(enemy['position'][a]))))for a in ('x','y'))+.0001
         return (np.asarray(lo),np.asarray(hi),numeric),None
     except (KeyError,ValueError)as error:return None,str(error)
+
+
+def brambles_generated(enemy,times,observation,path):
+    """Conservative original future-strip geometry before its nodes exist.
+
+    The remaining native cells are potentially active throughout the horizon.
+    Their actual camera-culling birth is not guessed. This only enlarges the
+    planning occupancy; no object is instantiated in the client.
+    """
+    from arena_privileged_model import Hazard,xy
+    f=enemy['fields'];created,total=f['_currBrambleIndex'],f['_totalBrambleBlockNum']
+    if created==total:return []
+    vertices,length,axes=brambles_template(enemy);direction=observation['camera']['direction']
+    if direction not in (-1,1):raise ValueError('brambles_original_generation_direction')
+    y_axis=xy(enemy['brambles']['axis_y']);x_axis,z_axis=axes[:,:2]
+    base=xy(enemy['position'])+y_axis*enemy['brambles']['render']['position']['y']
+    # Each original ShowNextBrambleBlock places (index+.5)*length*dir in
+    # its identity container. The union of the first/last remaining cells
+    # encloses every intermediate cell, while retaining the real Y band.
+    points=vertices[:,0,None]*x_axis+vertices[:,1,None]*y_axis+vertices[:,2,None]*z_axis
+    cloud=np.concatenate([points+x_axis*((index+.5)*length*direction)for index in (created,total-1)])+base
+    lo,hi,padding=path;lower=lo+cloud.min(axis=0);upper=hi+cloud.max(axis=0)
+    return [Hazard('spawn:'+str(enemy['id'])+':brambles:'+str(created),enemy['id'],'EnemyBramblesSingleThorn',
+        (lower+upper)/2,(upper-lower)/2+padding,np.ones(len(times),bool),
+        'EnemyBrambles.ReplenishBlock/ShowNextBrambleBlock/EnemyBramblesBlock.Show; original inactive thorn template, potential future strip envelope',
+        approximate=True,geometry='aabb')]
 
 
 def brambles_child(enemy,times,observation,player,trajectory_states=None,context=None):
@@ -1646,9 +1709,14 @@ def forecast(enemy, times, observation, player, trajectory_states=None,context=N
     angles = np.zeros(len(times))
     source = kind+'.FixedUpdateMovement'
     if kind=='EnemyBrambles':
-        path,reason=brambles_path(enemy,times,observation,player,trajectory_states)
+        cache=context.setdefault('brambles_paths',{})if context is not None else{}
+        if enemy['id']not in cache:cache[enemy['id']]=brambles_path(enemy,times,observation,player,trajectory_states)
+        path,reason=cache[enemy['id']]
         if path is None:return None,reason
-        return (zero,angles,'EnemyBrambles.FixedUpdateMovement; original lift/stab owner',np.ones(len(times),bool)),None
+        try:generated=brambles_generated(enemy,times,observation,path)
+        except (KeyError,ValueError)as error:return None,str(error)
+        return (zero,angles,'EnemyBrambles.FixedUpdateMovement; original lift/stab owner',np.ones(len(times),bool),
+                None,dict(generated_hazards=generated)),None
     if kind in ('EnemyBramblesSingleThorn','EnemyBrambleCollider'):
         return brambles_child(enemy,times,observation,player,trajectory_states,context)
     if kind=='EnemySuspendSpecial':
