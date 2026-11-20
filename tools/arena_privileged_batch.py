@@ -75,20 +75,22 @@ def atomic(path,value):
     temporary.replace(path)
 
 
-def pending_cases(cases,ledger,revision,requested=(),certify_cases=()):
+def pending_cases(cases,ledger,revision,requested=(),certify_cases=(),*,include_nominal=False):
     """Cover untouched contexts before revisiting a failed source revision."""
     def priority(c):
         missing=len(c['unimplemented_enemy_classes'])+len(c['unbound_enemy_ids'])
-        return (bool(ledger[c['key']]['attempts']),missing>0,c['kind']!='ordinary',
+        return (bool(ledger[c['key']]['nominal_complete']),
+                bool(ledger[c['key']]['attempts']),missing>0,c['kind']!='ordinary',
                 c['level'] not in (5,6),c['slot'],missing,c['key'])
     explicit=list(dict.fromkeys([*certify_cases,*requested]))
     work=[cases[key] for key in explicit]
     work.extend(sorted((c for key,c in cases.items() if key not in explicit),key=priority))
-    # Native nominal exits retain their frozen evidence for later certification;
-    # model updates must not regenerate them or starve the rest of the catalog.
+    # Preserve frozen candidates while first covering the rest of the catalog.
+    # They still need a fresh search plus native certificate after that pass;
+    # a historical nominal exit must never permanently remove a board.
     def needed(c):
         item=ledger[c['key']]
-        if c['key']in certify_cases:
+        if c['key']in certify_cases or include_nominal and item['nominal_complete']:
             return not item.get('timing_robust') and not any(
                 a.get('revision')==revision and a.get('finished_at') and a.get('certification_requested')
                 for a in item['attempts'])
@@ -153,7 +155,8 @@ def main():
     quality_pending=set(args.certify_case)
     def pending():
         return pending_cases(manifest['cases'],state['cases'],revision,args.case,
-                             [key for key in args.certify_case if key in quality_pending])
+                             [key for key in args.certify_case if key in quality_pending],
+                             include_nominal=True)
     work=pending()
     save()
     if (args.queue/'stop.json').exists():
@@ -217,7 +220,7 @@ def main():
                 case=work[0]
                 key=case['key'];item=state['cases'][key]
                 folder=args.queue/'runs'/key/str(time.time_ns())
-                certify=key in quality_pending or not args.defer_certification
+                certify=key in quality_pending or item['nominal_complete'] or not args.defer_certification
                 attempt=dict(revision=revision,started_at=time.time(),output=str(folder),status='initializing',
                              certification_requested=certify)
                 item['attempts'].append(attempt);item['status']='initializing';state['active']=key;save()

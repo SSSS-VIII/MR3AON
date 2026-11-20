@@ -29,6 +29,24 @@ def test_explicit_research_target_can_still_override_coverage_order():
     assert [c['key'] for c in pending_cases(cases,ledger,'new',['first','first'])]==['first','untouched']
 
 
+def test_full_pass_eventually_researches_and_certifies_historical_nominal_candidates():
+    cases,ledger=inventory()
+    assert [c['key']for c in pending_cases(cases,ledger,'new',include_nominal=True)]==['untouched','first','passed']
+    for key in ('untouched','first'):
+        ledger[key]['attempts'].append(dict(revision='new',finished_at=3))
+    assert [c['key']for c in pending_cases(cases,ledger,'new',include_nominal=True)]==['passed']
+    # A nominal pass without an endpoint check does not finish this phase.
+    ledger['passed']['attempts'].append(dict(revision='new',finished_at=4,certification_requested=False))
+    assert pending_cases(cases,ledger,'new',include_nominal=True)[0]['key']=='passed'
+    # A failed certificate is retained but not repeated indefinitely under
+    # exactly the same model. A new source revision makes it eligible again.
+    ledger['passed']['attempts'].append(dict(revision='new',finished_at=5,certification_requested=True))
+    assert not pending_cases(cases,ledger,'new',include_nominal=True)
+    assert pending_cases(cases,ledger,'next',include_nominal=True)[-1]['key']=='passed'
+    ledger['passed']['timing_robust']=True
+    assert 'passed'not in [c['key']for c in pending_cases(cases,ledger,'next',include_nominal=True)]
+
+
 def test_fresh_certificate_precedes_coverage_and_does_not_repeat_a_finished_check():
     cases,ledger=inventory()
     assert [c['key']for c in pending_cases(cases,ledger,'new',certify_cases=['passed'])]==['passed','untouched','first']
