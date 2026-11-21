@@ -2255,6 +2255,14 @@ def mace_motion(enemy,times,observation,player,trajectory_states=None):
             found=[e for e in rows(origin['enemies'])if e['id']==enemy['id']and e['type']==enemy['type']and
                 e.get('info_identity')==enemy.get('info_identity')and e['fields'].get('m_index')==f.get('m_index')and
                 not e['fields'].get('_dead')and not e['fields'].get('_isRecycled')]
+            if not found:
+                def predict(entry,query,origin,prior):return pending_mace(entry,query,origin,prior,history['motors'],{})
+                historical,independent=pending_motion_history(enemy,times,observation,player,predict,{'rotation'},'_enemyState')
+                if historical is None:raise ValueError('mace_past_activation_history_unbound')
+                enabled,rectangles=historical
+                shapes={identity:dict(center=v[0],extent=v[1],quads=None,geometry='aabb',padding=0.)for identity,v in rectangles.items()}
+                return (np.zeros((len(times),2)),np.zeros(len(times)),
+                    'EnemyMace birth propagated from actual pre-key world',enabled,None,dict(mace_shapes=shapes)),None
             if (len(found)!=1 or found[0]['custom']!=enemy['custom']or found[0]['position']!=enemy['position']or
                     found[0].get('mace_geometry',{}).get('local_scale')!=g['local_scale']or
                     found[0].get('mace_geometry',{}).get('parent_axes')!=g['parent_axes']or
@@ -2391,6 +2399,113 @@ def cached_ghost_radius(geometry,root_scale=None,context=None):
     memo=context['ghost_radii'];key=(id(geometry),repr(root_scale))
     if key not in memo:memo[key]=(geometry,ghost_radius(geometry,root_scale))
     return memo[key][1]
+
+
+def pending_mace(entry,times,observation,player,trajectory_states,context=None):
+    """Original root boxes before birth, with native activation timing.
+
+    Random angular resets retain a complete turn. No native object is created
+    and no original RNG is consumed to initialize this model-only shape.
+    """
+    from arena_privileged_model import Hazard,rows
+    try:
+        info=entry['info'];c=entry['custom'];kind=info['_enemyType'].split(':')[0]
+        t=observation.get('spawn_templates',{}).get('maces',{}).get(kind,{})
+        if not t or t.get('missing'):raise ValueError('pending_mace_original_prefab_missing')
+        if (kind not in ('EnemyMace','EnemyGoldMace')or t.get('source_name')!=kind or t.get('type')!='EnemyMace'or
+                entry.get('custom_type')!='EnemyMaceDataStruct'or entry.get('custom_projection',{}).get('complete')is not True or
+                entry.get('source')not in ('native_enemyList','resolved_uninstantiated_block')or
+                info.get('baseID')!=0 or info.get('createPlayerUID')or observation['camera']['direction']!=1):
+            raise ValueError('pending_mace_source_binding')
+        if (any(t.get(k)is not True for k in ('native_motion','native_spawn','native_initialization','callbacks_clear'))or
+                rows(t.get('unknown_hooks'))or t.get('animated_tree',True)or
+                not set(rows(t['component_types']))<= {'EnemyMace','EnemyFissonablePieces','EnemyBaseCollider'}or
+                'EnemyMace'not in rows(t['component_types'])):raise ValueError('pending_mace_unverified_initialization')
+        basis=np.array([[t['parent_axes'][a][b]for b in ('x','y','z')]for a in ('x','y','z')])
+        if not np.isfinite(basis).all()or not np.allclose(basis,np.eye(3),rtol=0.,atol=1e-6):
+            raise ValueError('pending_mace_unverified_parent')
+        body=t.get('physics',{})
+        if body.get('kinematic')is not True or body.get('gravity')is not False or body.get('interpolation')!='None: 0':
+            raise ValueError('pending_mace_dynamic_geometry')
+        keys={'_render','_speedRotate','_activateDistance','_randomRotateDir','_randomSpeedRotate'}
+        if (set(c)!=keys or c['_render']!=0 or not isinstance(c['_randomRotateDir'],bool)or
+                not np.isfinite(list(c.values())).all()or c['_randomSpeedRotate']<0):raise ValueError('pending_mace_unverified_custom')
+        f=np.float32;spawn=np.array([f(f(entry['block_start'][a])+f(info['_localPosition'][a]))for a in ('x','y','z')]);scale=np.array([info['_localScale'][a]for a in ('x','y','z')])
+        angle=info['_localEulerAngles']
+        if not np.isfinite([*spawn,*scale,*angle.values()]).all()or min(scale)<=0 or abs(angle['x'])+abs(angle['y'])>1e-8:
+            raise ValueError('pending_mace_reset_pose')
+        theta=math.radians(angle['z']);rotation=np.array([[math.cos(theta),-math.sin(theta)],[math.sin(theta),math.cos(theta)]])
+        colliders=[];radius=0.
+        for index,b in enumerate(rows(t['colliders'])):
+            if not b['direct_root']or not b['trigger']or not b['enabled']or b.get('damage_kind')not in ('enemy_tag','enemy_callback'):raise ValueError('pending_mace_original_root_shape')
+            center=np.array([b['center'][a]for a in ('x','y','z')])*scale
+            if not np.isfinite(center).all():raise ValueError('pending_mace_invalid_shape')
+            if b['type']=='BoxCollider':
+                extent=np.array([b['size'][a]for a in ('x','y','z')])*scale/2
+                if not np.isfinite(extent).all()or min(extent)<=0:raise ValueError('pending_mace_invalid_shape')
+                points=np.array([[center[0]+x*extent[0],center[1]+y*extent[1]]for x,y in ((-1,-1),(1,-1),(1,1),(-1,1))])
+                radius=max(radius,float(np.linalg.norm(points,axis=1).max()));points=points@rotation.T+spawn[:2]
+                lo=points.min(axis=0);hi=points.max(axis=0)
+                collider=dict(type='BoxCollider',quad=[dict(x=float(p[0]),y=float(p[1]))for p in points],
+                    center=dict(x=float((lo[0]+hi[0])/2),y=float((lo[1]+hi[1])/2)),
+                    extents=dict(x=float((hi[0]-lo[0])/2),y=float((hi[1]-lo[1])/2)))
+            elif b['type']=='SphereCollider':
+                r=b['radius']*max(scale)
+                if not math.isfinite(r)or r<=0:raise ValueError('pending_mace_invalid_shape')
+                radius=max(radius,float(np.linalg.norm(center[:2]))+r)
+                p=rotation@center[:2]+spawn[:2];collider=dict(type='SphereCollider',center=dict(x=float(p[0]),y=float(p[1])),extents=dict(x=float(r),y=float(r)))
+            else:raise ValueError('pending_mace_original_root_shape')
+            collider.update(id=entry['id']+':'+str(index),damage_kind=b['damage_kind']);colliders.append(collider)
+        if not colliders or not math.isfinite(radius)or radius<=0:raise ValueError('pending_mace_missing_damage_geometry')
+        numeric=.0002+32*abs(float(np.spacing(np.float32(max(1.,abs(spawn).max(),radius)))))
+        fallback=[Hazard(entry['id']+':turn',entry['id'],'EnemyMace',np.tile(spawn[:2],(len(times),1)),
+            np.full((len(times),2),radius+numeric),np.ones(len(times),bool),
+            'Original EnemyMace root geometry; complete birth/activation and random angular reset turn',True,'sphere')]
+        if getattr(player,'_observed_motor',None)is not player.initial:
+            history=hook_reference_history(times,observation,player)
+            if history is None:return fallback,None
+            prior=history['model'];origin=prior.observation
+            matches=[e for e in rows(origin.get('pending_enemies'))if e['info_identity']==entry['info_identity']and e['block_start']==entry['block_start']and e['custom']==c and
+                {k:v for k,v in e['info'].items()if k!='_level'}=={k:v for k,v in info.items()if k!='_level'}]
+            if len(matches)!=1:return fallback,None
+            hs,why=pending_mace(matches[0],history['times'],origin,prior,history['motors'],{})
+            if why:return fallback,None
+            from dataclasses import replace
+            ix=history['indices']
+            return [replace(h,centers=h.centers[ix],extents=h.extents[ix],active=h.active[ix],
+                quads=None if h.quads is None else h.quads[ix],source=h.source+'; actual pre-key world')for h in hs],None
+        if (entry['source']!='native_enemyList'or entry['vertical_gate']or c['_randomRotateDir']or c['_randomSpeedRotate']!=0 or
+                not player.native_samples or player.initial.mode in ('popup','popfall')or
+                any(m.mode in ('popup','popfall')for m in trajectory_states)or not math.isfinite(info['generateDistance'])or info['generateDistance']<0 or
+                abs(float(np.spacing(np.float32(observation['state']['time']))))>player.tick/8):return fallback,None
+        tick=player.tick;age=observation['state']['time']-observation['role']['fields']['_lastFixedUpdateTime']
+        if not -.0002<=age<=tick+.0002:return fallback,None
+        age=float(np.clip(age,0.,tick));count=int(math.floor((age+times[-1]+1e-8)/tick))+2
+        query=np.maximum(0.,np.arange(count+1)*tick-age)
+        low,high=role_reference_rectangles(times,trajectory_states,query,observation['role']['fields']['_lastRoleObjPos'])
+        if np.any(np.diff(low[:,0])<-.00001):return fallback,None
+        def interval(threshold):
+            possible=np.flatnonzero(high[:,0]>=threshold);certain=np.flatnonzero(low[:,0]>=threshold)
+            return (max(0,int(possible[0])-1)if len(possible)else count+1,
+                    min(count,int(certain[0])+1)if len(certain)else count+1)
+        first,last=interval(spawn[0]-info['generateDistance'])
+        if first>count:return [],None
+        a,b=interval(spawn[0]-c['_activateDistance']);a=max(a,first);b=max(b,last)
+        if b-a>8 or last-first>8:return fallback,None
+        epsilon=4*abs(float(np.spacing(np.float32(observation['state']['time']))))+1e-8
+        nlo=np.maximum(0,np.floor((age+np.asarray(times)-epsilon)/tick).astype(int));nhi=np.maximum(0,np.floor((age+np.asarray(times)+epsilon)/tick).astype(int))
+        lower=np.maximum(0,nlo-b);upper=np.maximum(0,nhi-a)
+        step=float(np.float32(np.float32(c['_speedRotate']*np.float32(observation['role']['data']['_moveSpeed']*.125))*np.float32(tick)))
+        angles=np.deg2rad((lower+upper)/2*step);error=np.deg2rad(abs(upper-lower)/2*abs(step)+8*abs(float(np.spacing(np.float32(360.))))*(count+1))
+        virtual=dict(position=dict(x=float(spawn[0]),y=float(spawn[1])),colliders=colliders)
+        predicted=(None,angles,None,None,None,dict(angular_error=error,position_padding=numeric))
+        result=[]
+        for identity,shape in mace_shapes(virtual,times,predicted).items():
+            result.append(Hazard(identity,entry['id'],'EnemyMace',shape['center'],shape['extent'],nhi+1>=first,
+                'Original EnemyMace reset, bounded role-distance birth/activation and fixed Euler steps',True,
+                shape['geometry'],shape['quads'],padding=shape['padding']))
+        return result,None
+    except (KeyError,ValueError,TypeError)as error:return None,str(error)
 
 
 def pending_curve(entry,times,observation,player,context=None):
@@ -2614,8 +2729,8 @@ def pending_motion_history(enemy,times,observation,player,predict,states,state_f
     if reason:return None,False
     indices=history['indices'];lo=np.full((len(times),2),np.inf);hi=-lo.copy();active=np.zeros(len(times),bool)
     for h in hs:
-        lo=np.minimum(lo,np.where(h.active[indices,None],h.centers[indices]-h.extents[indices],np.inf))
-        hi=np.maximum(hi,np.where(h.active[indices,None],h.centers[indices]+h.extents[indices],-np.inf))
+        lo=np.minimum(lo,np.where(h.active[indices,None],h.centers[indices]-h.extents[indices]-h.padding,np.inf))
+        hi=np.maximum(hi,np.where(h.active[indices,None],h.centers[indices]+h.extents[indices]+h.padding,-np.inf))
         active|=h.active[indices]
     pivot=np.array([enemy['position'][a]for a in('x','y')]);lo=np.where(active[:,None],lo,pivot);hi=np.where(active[:,None],hi,pivot)
     shapes={c['id']:((lo+hi)/2,(hi-lo)/2)for c in rows(enemy['colliders'])if c.get('damage_kind')}
@@ -2723,6 +2838,9 @@ def pending_enemy_forecasts(observation,times,player,trajectory_states,context=N
             if hs is not None:result.extend(hs);continue
         elif kind=='EnemySuspendBalloon':
             hs,reason=pending_suspend(entry,times,observation,player)
+            if hs is not None:result.extend(hs);continue
+        elif kind in ('EnemyMace','EnemyGoldMace'):
+            hs,reason=pending_mace(entry,times,observation,player,trajectory_states,context)
             if hs is not None:result.extend(hs);continue
         elif kind in PENDING_CURVE_NAMES:
             hs,reason=pending_curve_phase(entry,times,observation,player,trajectory_states,context)

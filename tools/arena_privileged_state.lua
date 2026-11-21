@@ -494,8 +494,13 @@ local function maceGeometry(obj)
     for i=0,components.Length-1 do out.component_types[#out.component_types+1]=components[i]and components[i]:GetType().FullName or 'missing_component'end
     local cs=obj:GetComponentsInChildren(typeof(U.Collider),true)
     for i=0,cs.Length-1 do local c=cs[i];local data=shape(c)
-        if data.damage_kind then out.colliders[#out.colliders+1]={id=c:GetInstanceID(),type=c:GetType().Name,
-            direct_root=c.transform==root,enabled=c.enabled,trigger=c.isTrigger,damage_kind=data.damage_kind}end
+        if data.damage_kind then
+            local row={id=c:GetInstanceID(),type=c:GetType().Name,direct_root=c.transform==root,
+                enabled=c.enabled,trigger=c.isTrigger,damage_kind=data.damage_kind}
+            if row.type=='BoxCollider'then row.center=vector(c.center);row.size=vector(c.size)
+            elseif row.type=='SphereCollider'then row.center=vector(c.center);row.radius=c.radius end
+            out.colliders[#out.colliders+1]=row
+        end
     end
     return out
 end
@@ -1270,6 +1275,28 @@ function E.privileged_state()
         end
         return out
     end
+    local function maceSpawnTemplate(name)
+        local all=U.Resources.FindObjectsOfTypeAll(typeof(CS.EnemyMace));local original
+        for i=0,all.Length-1 do local o=all[i]
+            if o.name==name and not o.gameObject.activeInHierarchy then
+                assert(not original,'Ambiguous original mace prefab');original=o
+            end
+        end
+        if not original then return {missing=true}end
+        local result=maceGeometry(original);result.source_name=name;result.native_spawn=true;result.native_initialization=true
+        local staticFlags=CS.System.Reflection.BindingFlags.__CastFrom(56)
+        for _,name in ipairs({'CheckEnemy','CheckAddEnemyEntity','CreateEnemy'})do
+            local hook=typeof(CS.LevelBlockCollider):GetField('__Hotfix0_'..name,staticFlags)
+            if not hook or hook:GetValue(nil)~=nil then result.native_spawn=false end
+        end
+        for _,entry in ipairs({{typeof(CS.EnemyFissonable),'Initialize'},
+                {typeof(CS.EnemyBase),'Initialize'},{typeof(CS.EnemyBase),'SetRenderType'},
+                {typeof(CS.EnemyBase),'ResetEnemyInfo'}})do
+            local hook=entry[1]:GetField('__Hotfix0_'..entry[2],staticFlags)
+            if not hook or hook:GetValue(nil)~=nil then result.native_initialization=false end
+        end
+        return result
+    end
     local function ghostSpawnTemplate()
         local all=U.Resources.FindObjectsOfTypeAll(typeof(CS.EnemyGhostFire));local original
         for i=0,all.Length-1 do local o=all[i]
@@ -1582,6 +1609,11 @@ function E.privileged_state()
                 custom_type=custom and custom:GetType().Name,
                 block_start=vector(live and live.transform.position or a),stage_index=stageIndex,block_index=blockIndex,
                 source=source,sync_blocked=blocked,vertical_gate=live and field(live,'openGenerateDistanceY')or false}
+            if kind=='EnemyMace: 105'or kind=='EnemyGoldMace: 288'then
+                out.spawn_templates.maces=out.spawn_templates.maces or{}
+                local name=kind:match('^(.-): ')
+                if not out.spawn_templates.maces[name]then out.spawn_templates.maces[name]=maceSpawnTemplate(name)end
+            end
             if kind=='EnemyGhostFire: 205'then
                 out.spawn_templates.curves=out.spawn_templates.curves or{}
                 if not out.spawn_templates.curves.EnemyGhostFire then out.spawn_templates.curves.EnemyGhostFire=ghostSpawnTemplate()end
