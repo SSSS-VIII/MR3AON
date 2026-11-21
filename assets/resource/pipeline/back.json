@@ -319,22 +319,11 @@
     },
     "处理叉叉弹窗": {
         "recognition": {
-            "type": "TemplateMatch",
+            "type": "And",
             "param": {
-                "roi": [
-                    833,
-                    5,
-                    440,
-                    441
-                ],
-                "template": [
-                    "叉叉0.png",
-                    "叉叉1.png",
-                    "叉叉2.png",
-                    "叉叉3.png",
-                    "叉叉4.png"
-                ],
-                "green_mask": true
+                "all_of": [
+                    "弹窗关闭按钮"
+                ]
             }
         },
         "action": {
@@ -469,5 +458,55 @@
         "on_error": [
             "重启游戏"
         ]
+    },
+    "弹窗关闭按钮": {
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "roi": [
+                                    833,
+                                    5,
+                                    440,
+                                    441
+                                ],
+                                "template": [
+                                    "叉叉0.png",
+                                    "叉叉1.png",
+                                    "叉叉2.png",
+                                    "叉叉3.png",
+                                    "叉叉4.png",
+                                    "叉叉5.png",
+                                    "叉叉6.png"
+                                ],
+                                "green_mask": true
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "roi": [
+                                    800,
+                                    5,
+                                    473,
+                                    441
+                                ],
+                                "template": [
+                                    "渠道可币券关闭.png",
+                                    "渠道可币券关闭小.png"
+                                ],
+                                "threshold": 0.85
+                            }
+                        }
+                    }
+                ]
+            }
+        }
     }
 }
