@@ -158,14 +158,14 @@ def test_long_board_forward_allowance_is_separate_from_short_board_search_budget
     assert duration_allowance(long,300)['effective_wall_seconds']==300
 
 
-def test_legacy_rotate_id_uses_observed_native_class_without_faking_cfg_or_other_ids():
+def test_legacy_ids_use_observed_native_classes_without_faking_unobserved_ids():
     inventory=dict(counts=dict(unique_fixed=1,contexts=1),stages={
-        '1':dict(mechanism=dict(enemy_type_counts={'226':1,'238':2,'257':1},item_type_counts={}))},
+        '1':dict(mechanism=dict(enemy_type_counts={'226':1,'227':1,'238':2,'257':1},item_type_counts={}))},
         contexts=[dict(key='native',stage=1,kind='ordinary')])
     result=dependencies(inventory,[],{})
     case=result['cases']['native']
-    assert case['unbound_enemy_ids']==[226,257]
-    assert case['enemy_classes']==['EnemyRotateElectricBall']
+    assert case['unbound_enemy_ids']==[227]
+    assert case['enemy_classes']==['EnemyDart','EnemyKill','EnemyRotateElectricBall']
     assert result['families']['EnemyRotateElectricBall']['enemy_ids']==[238]
     assert result['families']['EnemyRotateElectricBall']['reducer']
     assert not case['native_no_damage']and not case['timing_robust']
