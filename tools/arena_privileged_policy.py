@@ -136,7 +136,8 @@ class InternalController:
         spring_camera_coupled=bool(player.spring_launches)and any(e['type']in (
             'EnemyFlyBamboo','EnemyBullutFireRobot','EnemyBullutLaser','EnemyAlarmShooter','EnemyHook','EnemyBambooThorn')
             for e in rows(observation['enemies'])if not e['fields'].get('_dead')and not e['fields'].get('_isRecycled'))
-        coupled = any(e['type']=='EnemyPoleaxeWarrior' and e['fields'].get('_enemyState')=='Idle: 0'
+        coupled = any(e['type']=='EnemyMace'and e['fields'].get('_enemyState','').split(':')[0].lower()=='none'
+                      and not e['fields'].get('_dead')and not e['fields'].get('_isRecycled')for e in rows(observation['enemies']))or any(e['type']=='EnemyPoleaxeWarrior' and e['fields'].get('_enemyState')=='Idle: 0'
                       and not e['fields'].get('_dead') and not e['fields'].get('_isRecycled')
                       for e in rows(observation['enemies'])) or any(e['type'] == 'EnemyStraightBat' and
                       (e['custom'].get('_pointToNinja') or e['custom'].get('_followNinjaY')) and

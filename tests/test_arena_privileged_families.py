@@ -18,10 +18,10 @@ def test_half_second_native_future_matches_source_reducer_or_authored_envelope(c
     assert .49<dt<.51
     times=np.linspace(0.,dt,61)
     forecasts,missing=hazard_forecasts(before,times,PlayerModel(before))
-    if case['kind']=='EnemyGhostFire':
-        # This historical fixture predates the hierarchy/Tween channel. Its
-        # current sphere size cannot certify future inflation.
-        assert not forecasts and missing[0]['reason']=='ghost_original_geometry_missing'
+    if case['kind']in ('EnemyGhostFire','EnemyMace'):
+        # Historical captures predate full hierarchy/native-clock binding.
+        # Do not synthesize new read-only proof into the old observations.
+        assert not forecasts and missing[0]['reason']==('ghost_original_geometry_missing'if case['kind']=='EnemyGhostFire'else'mace_original_geometry_missing')
         return
     assert not missing
     truth={c['id']:c for e in rows(after['enemies']) for c in rows(e['colliders'])}

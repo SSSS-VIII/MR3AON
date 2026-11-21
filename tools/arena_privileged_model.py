@@ -1120,6 +1120,12 @@ def hazard_forecasts(observation, times, player, trajectory_states=None,*,foreca
                 colliders = [c for c in rows(enemy['grown_colliders']) if c.get('damage_kind')]
             elif kind=='EnemyArrow' and mode!='onground' and enemy.get('untrimmed_colliders'):
                 colliders = [c for c in rows(enemy['untrimmed_colliders']) if c.get('damage_kind')]
+        if kind=='EnemyMace':
+            from arena_privileged_families import mace_shapes
+            for identity,shape in mace_shapes(enemy,times,predicted).items():
+                result.append(Hazard(identity,enemy['id'],kind,shape['center'],shape['extent'],active,
+                    source,True,shape['geometry'],shape['quads'],padding=shape['padding']))
+            continue
         if kind=='EnemyGhostFire':
             from arena_privileged_families import cached_ghost_radius
             radius,reason=cached_ghost_radius(enemy.get('ghost_geometry'),context=family_context)

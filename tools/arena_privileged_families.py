@@ -2181,6 +2181,121 @@ def pending_hook_phase(entry,times,observation,player,trajectory_states,context=
     except (KeyError,ValueError,IndexError):return fallback,None
 
 
+def mace_shapes(enemy,times,predicted):
+    """Keep the original box orientation; expand only the clock's angle tube."""
+    from arena_privileged_model import rows,xy
+    metadata=predicted[5]
+    if 'mace_shapes'in metadata:return metadata['mace_shapes']
+    angles=predicted[1];uncertainty=metadata['angular_error'];pivot=xy(enemy['position'])
+    rotation=np.stack((np.stack((np.cos(angles),-np.sin(angles)),axis=-1),
+                       np.stack((np.sin(angles),np.cos(angles)),axis=-1)),axis=1)
+    result={}
+    for c in rows(enemy['colliders']):
+        if not c.get('damage_kind'):continue
+        if c['type']=='BoxCollider':
+            points=np.array([xy(p)for p in c['quad']]);lever=np.linalg.norm(points-pivot,axis=1).max()
+            quads=np.einsum('nij,kj->nki',rotation,points-pivot)+pivot
+            u=quads[:,1]-quads[:,0];v=quads[:,3]-quads[:,0]
+            u/=np.linalg.norm(u,axis=1)[:,None];v/=np.linalg.norm(v,axis=1)[:,None]
+            signs=np.array([[-1,-1],[1,-1],[1,1],[-1,1]])
+            pad=lever*uncertainty
+            quads+=pad[:,None,None]*(u[:,None,:]*signs[None,:,0,None]+v[:,None,:]*signs[None,:,1,None])
+            center=quads.mean(axis=1);extent=(quads.max(axis=1)-quads.min(axis=1))/2
+            geometry='obb'
+        else:
+            offset=xy(c['center'])-pivot;center=np.einsum('nij,j->ni',rotation,offset)+pivot
+            radius=max(c['extents'][a]for a in ('x','y'))
+            extent=np.repeat((radius+np.linalg.norm(offset)*uncertainty)[:,None],2,axis=1);quads=None;geometry='sphere'
+        result[c['id']]=dict(center=center,extent=extent,quads=quads,geometry=geometry,padding=metadata['position_padding'])
+    return result
+
+
+def mace_motion(enemy,times,observation,player,trajectory_states=None):
+    """Original fixed-step Euler rotation and role-distance activation.
+
+    GetNinjaSpeed reads NinjaData._moveSpeed, not slope/slide X velocity.
+    Rotation is not BaseObject position interpolation: retain its lattice and
+    float-clock uncertainty rather than rotating continuously in render time.
+    """
+    from arena_privileged_model import rows,phase,xy
+    try:
+        g=enemy.get('mace_geometry')
+        if not g:raise ValueError('mace_original_geometry_missing')
+        scripts=rows(g['component_types']);f=enemy['fields'];mode=phase(f['_enemyState'])
+        if (g.get('type')!='EnemyMace'or g.get('native_motion')is not True or rows(g.get('unknown_hooks'))or
+                g.get('callbacks_clear')is not True or g.get('animated_tree',True)or
+                'EnemyMace'not in scripts or not set(scripts)<= {'EnemyMace','EnemyFissonablePieces','EnemyBaseCollider'}or
+                f.get('_fissonState')or mode not in ('none','rotation')):
+            raise ValueError('mace_unverified_native_motion')
+        local_scale=np.array([g['local_scale'][a]for a in ('x','y','z')])
+        if not np.isfinite(local_scale).all()or min(abs(local_scale))<=0:raise ValueError('mace_invalid_local_scale')
+        body=g.get('physics',{})
+        if body.get('kinematic')is not True or body.get('gravity')is not False or body.get('interpolation')!='None: 0':
+            raise ValueError('mace_nonstatic_physics')
+        basis=g['parent_axes'];x=np.array([basis['x'][a]for a in ('x','y','z')]);y=np.array([basis['y'][a]for a in ('x','y','z')])
+        z=np.array([basis['z'][a]for a in ('x','y','z')]);euler=enemy['info']['_localEulerAngles']
+        if not np.isfinite([*z,euler['x'],euler['y']]).all()or max(abs(z[0]),abs(z[1]),abs(euler['x']),abs(euler['y']))>1e-5:raise ValueError('mace_spatial_rotation')
+        scale=max(np.linalg.norm(x),np.linalg.norm(y),1.)
+        if (not np.isfinite([*x,*y]).all()or min(np.linalg.norm(x),np.linalg.norm(y))<=0 or
+                max(abs(x[2]),abs(y[2]),abs(np.dot(x,y)),abs(np.linalg.norm(x)-np.linalg.norm(y)))>1e-5*scale*scale or
+                x[0]*y[1]-x[1]*y[0]<=0):raise ValueError('mace_spatial_or_nonuniform_parent')
+        damage={c['id']:c for c in rows(enemy['colliders'])if c.get('damage_kind')}
+        if (not damage or {c['id']for c in rows(g['colliders'])}!=damage.keys()or
+                any(not c['direct_root']or not c['trigger']or not c['enabled']or c['type']not in ('BoxCollider','SphereCollider')
+                    for c in rows(g['colliders']))or any(c.get('depth_tilt')or c['type']=='BoxCollider'and len(rows(c.get('quad')))!=4 for c in damage.values())):
+            raise ValueError('mace_unbound_root_collider')
+        tick=player.tick;speed=observation['role']['data']['_moveSpeed'];age=observation['state']['time']-f['_lastFixedUpdateTime']
+        if (not np.isfinite([tick,speed,age,f['_speedRotate']]).all()or tick<=0 or
+                not -.0002<=age<=tick+.0002 or abs(float(np.spacing(np.float32(observation['state']['time']))))>tick/8):
+            raise ValueError('mace_native_clock_or_speed')
+        if getattr(player,'_observed_motor',None)is not player.initial:
+            history=hook_reference_history(times,observation,player)
+            if history is None:raise ValueError('mace_past_activation_history_unbound')
+            prior=history['model'];origin=prior.observation
+            found=[e for e in rows(origin['enemies'])if e['id']==enemy['id']and e['type']==enemy['type']and
+                e.get('info_identity')==enemy.get('info_identity')and e['fields'].get('m_index')==f.get('m_index')and
+                not e['fields'].get('_dead')and not e['fields'].get('_isRecycled')]
+            if (len(found)!=1 or found[0]['custom']!=enemy['custom']or found[0]['position']!=enemy['position']or
+                    found[0].get('mace_geometry',{}).get('local_scale')!=g['local_scale']or
+                    found[0].get('mace_geometry',{}).get('parent_axes')!=g['parent_axes']or
+                    origin['role']['data']['_moveSpeed']!=speed or found[0]['fields']['_speedRotate']!=f['_speedRotate']):
+                raise ValueError('mace_past_activation_history_unbound')
+            old=found[0]
+            if phase(old['fields']['_enemyState'])!='rotation'or mode!='rotation':
+                result,why=mace_motion(old,history['times'],origin,prior,history['motors'])
+                if why:raise ValueError(why)
+                shapes=mace_shapes(old,history['times'],result);ix=history['indices']
+                if shapes.keys()!=damage.keys():raise ValueError('mace_past_collider_identity')
+                sliced={key:dict(center=v['center'][ix],extent=v['extent'][ix],quads=None if v['quads']is None else v['quads'][ix],
+                    geometry=v['geometry'],padding=v['padding'])for key,v in shapes.items()}
+                zeros=np.zeros((len(times),2));angles=np.zeros(len(times))
+                return (zeros,angles,'EnemyMace activation propagated from actual pre-key world',None,None,dict(mace_shapes=sliced)),None
+        age=float(np.clip(age,0.,tick));epsilon=4*abs(float(np.spacing(np.float32(observation['state']['time']))))+1e-8
+        query=np.asarray(times);steps_low=np.maximum(0,np.floor((age+query-epsilon)/tick).astype(int));steps_high=np.maximum(0,np.floor((age+query+epsilon)/tick).astype(int))
+        steps_low[query==0]=0;steps_high[query==0]=0;count=int(steps_high.max())
+        if mode=='rotation':activation_first=activation_last=0
+        else:
+            if not player.native_samples:raise ValueError('mace_activation_actor_samples_missing')
+            if trajectory_states is None:
+                _,trajectory_states,valid=player.trajectory(times)
+                if not valid:raise ValueError('mace_activation_actor_path')
+            native_times=np.maximum(0.,np.arange(count+2)*tick-age)
+            lo,hi=role_reference_rectangles(times,trajectory_states,native_times,observation['role']['fields']['_lastRoleObjPos'])
+            threshold=enemy['position']['x']-enemy['custom']['_activateDistance']
+            possible=np.flatnonzero(hi[:,0]>threshold);certain=np.flatnonzero(lo[:,0]>threshold)
+            activation_first=max(1,int(possible[0])-1)if len(possible)else count+1
+            activation_last=max(1,int(certain[0])+1)if len(certain)else count+1
+        movements_low=np.maximum(0,steps_low-activation_last);movements_high=np.maximum(0,steps_high-activation_first)
+        factor=np.float32(np.float32(speed)*np.float32(.125));step=float(np.float32(np.float32(f['_speedRotate']*factor)*np.float32(tick)))
+        a=np.deg2rad(movements_low*step);b=np.deg2rad(movements_high*step)
+        angles=(a+b)/2;rounding=math.radians(8*abs(float(np.spacing(np.float32(360.))))*(count+1))
+        error=abs(b-a)/2+rounding
+        position_padding=.0002+16*abs(float(np.spacing(np.float32(max(1.,abs(xy(enemy['position'])).max())))))
+        return (np.zeros((len(times),2)),angles,'EnemyMace.ProcessState; original fixed Euler steps and NinjaData moveSpeed',
+            None,None,dict(angular_error=error,position_padding=position_padding)),None
+    except (KeyError,ValueError,TypeError)as error:return None,str(error)
+
+
 def ghost_radius(geometry,root_scale=None):
     """Enclose every original scale-Tween extremum of both hurt spheres.
 
@@ -3565,13 +3680,7 @@ def forecast(enemy, times, observation, player, trajectory_states=None,context=N
         positions,angles=path[:2]
         return (positions-xy(enemy['position']),angles,source),None
     if kind == 'EnemyMace':
-        mode = phase(f['_enemyState'])
-        if mode not in ('none','rotation'):
-            return None, 'mace_entry_phase:'+mode
-        enter=max(0.,(enemy['position']['x']-player.initial.x-c['_activateDistance'])/max(.001,player.speed)) if mode=='none' else 0.
-        # Native NinjaController.GetNinjaSpeed(), not a fitted angular rate.
-        angles = np.deg2rad(f['_speedRotate']*observation['state']['speed']*.125)*np.maximum(0.,times-enter)
-        return (zero, angles, 'EnemyMace.ProcessState'), None
+        return mace_motion(enemy,times,observation,player,trajectory_states)
     if kind in ('EnemyHook','EnemyBambooThorn'):
         observed=getattr(player,'_observed_motor',None)
         if observed is not None and observed is not player.initial and not hook_rotation_precedes_counterfactual_key(enemy,times,observation,player):

@@ -469,6 +469,36 @@ local function ghostGeometry(obj)
     end
     return out
 end
+local function maceGeometry(obj)
+    local root=obj.transform;local body=root:GetComponent(typeof(U.Rigidbody));local parent=root.parent
+    local out={type=obj:GetType().Name,native_motion=true,unknown_hooks={},callbacks_clear=true,
+        animated_tree=obj:GetComponentsInChildren(typeof(U.Animator),true).Length>0 or obj:GetComponentsInChildren(typeof(U.Animation),true).Length>0,
+        physics=body and {kinematic=body.isKinematic,gravity=body.useGravity,interpolation=tostring(body.interpolation)}or nil,
+        local_scale=vector(root.localScale),colliders={},component_types={},
+        parent_axes=parent and {x=vector(parent:TransformVector(U.Vector3.right)),y=vector(parent:TransformVector(U.Vector3.up)),z=vector(parent:TransformVector(U.Vector3.forward))}or
+            {x={x=1,y=0,z=0},y={x=0,y=1,z=0},z={x=0,y=0,z=1}}}
+    for _,name in ipairs({'conditionActionEvent','normalActionEvent','collisionActionEvent',
+            'collisionExitActionEvent','btAnimatorEvent','conditionParamActionEvent','syncComponent'})do
+        if field(obj,name)~=nil then out.callbacks_clear=false end
+    end
+    local graphs=field(obj,'allGraphOwners');if graphs and graphs.Count>0 then out.callbacks_clear=false end
+    local staticFlags=CS.System.Reflection.BindingFlags.__CastFrom(56)
+    for _,entry in ipairs({{typeof(CS.EnemyMace),'Initialize'},{typeof(CS.EnemyMace),'ResetEnemyInfo'},
+            {typeof(CS.EnemyMace),'FixedUpdateMovement'},{typeof(CS.EnemyMace),'ProcessState'},
+            {typeof(CS.EnemyFissonable),'ResetEnemyInfo'},{typeof(CS.EnemyBase),'FixedUpdateMovement'},
+            {typeof(CS.NinjaController),'GetNinjaSpeed'}})do
+        local hook=entry[1]:GetField('__Hotfix0_'..entry[2],staticFlags)
+        if not hook or hook:GetValue(nil)~=nil then out.native_motion=false;out.unknown_hooks[#out.unknown_hooks+1]=entry[1].Name..'.'..entry[2]end
+    end
+    local components=obj:GetComponentsInChildren(typeof(U.MonoBehaviour),true)
+    for i=0,components.Length-1 do out.component_types[#out.component_types+1]=components[i]and components[i]:GetType().FullName or 'missing_component'end
+    local cs=obj:GetComponentsInChildren(typeof(U.Collider),true)
+    for i=0,cs.Length-1 do local c=cs[i];local data=shape(c)
+        if data.damage_kind then out.colliders[#out.colliders+1]={id=c:GetInstanceID(),type=c:GetType().Name,
+            direct_root=c.transform==root,enabled=c.enabled,trigger=c.isTrigger,damage_kind=data.damage_kind}end
+    end
+    return out
+end
 local function brambleTemplate(owner,render,context)
     -- ReplenishBlock clones this inactive original block. Its seven thorns
     -- are serialized collision geometry; GetGround(2) supplies the decoration.
@@ -680,6 +710,7 @@ function E.privileged_state()
             end
             row.info_identity=info and info:GetHashCode()or nil
             if row.type=='EnemyGhostFire'then row.ghost_geometry=ghostGeometry(o)end
+            if row.type=='EnemyMace'then row.mace_geometry=maceGeometry(o)end
             if row.type=='EnemyWarrior'then row.spine=spineState(field(o,'_spineWarrior'))end
             if row.type=='EnemyPoleaxeWarrior'then
                 local animation=o.gameObject:GetComponentInChildren(typeof(CS.Spine.Unity.SkeletonAnimation),true)
