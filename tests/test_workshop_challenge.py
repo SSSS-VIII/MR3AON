@@ -38,7 +38,7 @@ def test_workshop_persists_until_next_saturday(date, target):
     assert next_weekly_reset(now, param['weekday']).isoformat(timespec='minutes') == target + '+08:00'
 
 
-@pytest.mark.parametrize('case', ['eligible', 'only_clear_reward', 'no_claim_button', 'claimed_row', 'missing_claimed_status', 'flags_pending', 'flags_three', 'flags_all', 'fallback_clear', 'no_rewards', 'intro', 'intro_without_button', 'entry_icon', 'entry_icon_lower', 'entry_icon_shifted', 'entry_live', 'entry_icon_lower_old_roi', 'detail_right', 'share_right', 'detail_old_roi', 'share_old_roi', 'share_channel_right'])
+@pytest.mark.parametrize('case', ['eligible', 'only_clear_reward', 'no_claim_button', 'claimed_row', 'missing_claimed_status', 'flags_pending', 'flags_three', 'flags_all', 'fallback_clear', 'no_rewards', 'intro', 'intro_without_button', 'entry_icon', 'entry_icon_lower', 'entry_icon_shifted', 'entry_live', 'entry_live_1121', 'entry_live_1121_old_template', 'entry_icon_lower_old_roi', 'detail_right', 'share_right', 'detail_old_roi', 'share_old_roi', 'share_channel_right', 'share_wide_1121', 'share_wide_old_roi_1121'])
 def test_native_task_row_pairing(case):
     import subprocess
     import sys
@@ -46,7 +46,7 @@ def test_native_task_row_pairing(case):
                             capture_output=True, text=True, timeout=60)
     assert result.returncode == 0, result.stdout[-3000:] + result.stderr[-3000:]
     report = json.loads(result.stdout.strip().splitlines()[-1])
-    assert report['hit'] is (case in {'eligible', 'only_clear_reward', 'claimed_row', 'flags_all', 'fallback_clear', 'intro', 'entry_icon', 'entry_icon_lower', 'entry_icon_shifted', 'entry_live', 'detail_right', 'share_right', 'share_channel_right'})
+    assert report['hit'] is (case in {'eligible', 'only_clear_reward', 'claimed_row', 'flags_all', 'fallback_clear', 'intro', 'entry_icon', 'entry_icon_lower', 'entry_icon_shifted', 'entry_live', 'entry_live_1121', 'detail_right', 'share_right', 'share_channel_right', 'share_wide_1121'})
     if case == 'eligible' and report['hit']:
         x, y, width, height = report['box']
         assert 980 <= x < x + width <= 1240
@@ -90,13 +90,16 @@ def _native_replay(case):
         x,y={'entry_icon':(109,340),'entry_icon_lower':(109,425),'entry_icon_shifted':(229,500),'entry_icon_lower_old_roi':(109,425)}[case]
         image[y:y+45, x:x+57] = np.asarray(Image.open(
             root / 'assets/resource/image/工坊挑战入口.png').convert('RGB'))[:, :, ::-1]
-    if case == 'entry_live':
+    if case in {'entry_live', 'entry_live_1121', 'entry_live_1121_old_template'}:
         image[:] = 0
-        crop=np.asarray(Image.open(root/'tests/fixtures/workshop/home_entry_moved.png').convert('RGB'))[:, :, ::-1]
+        crop=np.asarray(Image.open(root/'tests/fixtures/workshop'/('home_entry_moved.png' if case == 'entry_live' else 'home_entry_1121.png')).convert('RGB'))[:, :, ::-1]
         image[100:600, 0:400]=crop
     if case in {'detail_right','share_right','detail_old_roi','share_old_roi'}:
         image[:]=0
         image[620:720,700:1280]=np.asarray(Image.open(root/'tests/fixtures/workshop/right_map_buttons.png').convert('RGB'))[:,:,::-1]
+    if case in {'share_wide_1121', 'share_wide_old_roi_1121'}:
+        image[:]=0
+        image[620:720,240:1280]=np.asarray(Image.open(root/'tests/fixtures/workshop/wide_map_buttons_1121.png').convert('RGB'))[:,:,::-1]
     if case == 'share_channel_right':
         image[:]=0
         image[540:645,700:1250]=np.asarray(Image.open(root/'tests/fixtures/workshop/right_share_menu.png').convert('RGB'))[:,:,::-1]
@@ -115,11 +118,11 @@ def _native_replay(case):
             node = '工坊逐项领取奖励'
         elif case.startswith('intro'):
             node = '工坊首次说明'
-        elif case.startswith('entry_icon') or case == 'entry_live':
+        elif case.startswith('entry_icon') or case.startswith('entry_live'):
             node = '工坊主页进入'
         if case in {'detail_right','detail_old_roi'}:
             node='工坊地图详情'
-        elif case in {'share_right','share_old_roi'}:
+        elif case in {'share_right','share_old_roi','share_wide_1121','share_wide_old_roi_1121'}:
             node='工坊点击分享'
         elif case=='share_channel_right':
             node='工坊选择分享途径'
@@ -130,9 +133,14 @@ def _native_replay(case):
             assert resource.override_pipeline({name: {'recognition': {'type': 'DirectHit'}} for name in flags[:count]})
             image[:] = 0
         rule = pipeline[node]['recognition']
+        if case in {'entry_live_1121', 'entry_live_1121_old_template'}:
+            rule=rule['param']['any_of'][1]['recognition']
+            if case == 'entry_live_1121_old_template':
+                rule['param']['template']=['工坊挑战入口.png']
         if case == 'entry_icon_lower_old_roi':
             rule['param']['any_of'][1]['recognition']['param']['roi']=[80,320,130,100]
         if case=='detail_old_roi':rule['param']['roi']=[860,630,205,80]
+        if case=='share_wide_old_roi_1121':rule['param']['roi']=[700,620,580,100]
         if case=='share_old_roi':rule['param']['roi']=[300,640,80,80]
         detail = tasker.post_recognition(rule['type'], {'And':JAnd,'Or':JOr,'OCR':JOCR,'TemplateMatch':JTemplateMatch}[rule['type']](**rule['param']), image).wait().get().nodes[0].recognition
         report = {'hit': detail.hit, 'box': list(detail.box) if detail.box else None}
