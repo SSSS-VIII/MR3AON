@@ -8,6 +8,8 @@ on:
       - ".github/workflows/check.yml"
       - "assets/**"
       - "**.py"
+      - "requirements.txt"
+      - "deps/tools/*.schema.json"
   pull_request:
     branches:
       - "**"
@@ -15,6 +17,8 @@ on:
       - ".github/workflows/check.yml"
       - "assets/**"
       - "**.py"
+      - "requirements.txt"
+      - "deps/tools/*.schema.json"
   workflow_dispatch:
 
 jobs:
@@ -32,7 +36,10 @@ jobs:
 
       - name: Run maa-checker
         run: |
-          npx @nekosu/maa-checker@latest ./assets/interface.json --github=.
+          # 1.2.7 incorrectly combines next/on_error when detecting duplicates.
+          # Check each list separately, including option overrides; keep all other checks.
+          python tools/ci/check_routes.py assets/interface.json assets/resource/pipeline assets/resource/tasks
+          npx --yes @nekosu/maa-checker@1.2.7 ./assets/interface.json --github=. --ignore=duplicate-next
 
       - name: Install maafw
         run: |
